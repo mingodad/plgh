@@ -1,0 +1,283 @@
+program ::=  ( ( text )?  ( ( php_tag (  _statement )*  )  )?  )
+
+php_tag ::=  '<?'([pP][hH][pP]|'=')?
+
+text_interpolation ::=  ( '?>'  ( text )?  ( php_tag |  _eof )  )
+
+text ::=  ( ( (   (  '<' )  )*  |  [^\s<][^<]* )  )+
+
+_statement ::=  ( empty_statement |  compound_statement |  named_label_statement |  expression_statement |  if_statement |  switch_statement |  while_statement |  do_statement |  for_statement |  foreach_statement |  goto_statement |  continue_statement |  break_statement |  return_statement |  throw_statement |  try_statement |  declare_statement |  echo_statement |  unset_statement |  const_declaration |  function_definition |  class_declaration |  interface_declaration |  trait_declaration |  namespace_definition |  namespace_use_declaration |  global_declaration |  function_static_declaration )
+
+empty_statement ::=   (  ';'  )
+
+function_static_declaration ::=  ( (  [sS][tT][aA][tT][iI][cC] )  ( static_variable_declaration (  ( ','  static_variable_declaration )  )*  )  _semicolon )
+
+static_variable_declaration ::=  ( (  variable_name )  ( ( '='  (  _expression )  )  )?  )
+
+global_declaration ::=  ( (  [gG][lL][oO][bB][aA][lL] )  ( _variable_name (  ( ','  _variable_name )  )*  )  _semicolon )
+
+namespace_definition ::=  ( (  [nN][aA][mM][eE][sS][pP][aA][cC][eE] )  ( ( (  namespace_name )  _semicolon )  |  ( (  ( namespace_name )?  )  (  compound_statement )  )  )  )
+
+namespace_use_declaration ::=  ( (  [uU][sS][eE] )  ( ( (  [fF][uU][nN][cC][tT][iI][oO][nN] )  |  (  [cC][oO][nN][sS][tT] )  )  )?  ( ( ( namespace_use_clause (  ( ','  namespace_use_clause )  )*  )  )  |  ( ( '\\'  )?  namespace_name '\\'  namespace_use_group )  )  _semicolon )
+
+namespace_use_clause ::=  ( qualified_name ( namespace_aliasing_clause )?  )
+
+qualified_name ::=  ( ( namespace_name_as_prefix )?  ( name |  (  _reserved_identifier )  )  )
+
+namespace_name_as_prefix ::=  ( '\\'  |  ( ( '\\'  )?  namespace_name '\\'  )  |  ( (  [nN][aA][mM][eE][sS][pP][aA][cC][eE] )  '\\'  )  |  ( (  [nN][aA][mM][eE][sS][pP][aA][cC][eE] )  ( '\\'  )?  namespace_name '\\'  )  )
+
+namespace_name ::=  ( name (  ( '\\'  name )  )*  )
+
+namespace_aliasing_clause ::=  ( (  [aA][sS] )  name )
+
+namespace_use_group ::=  ( '{'  ( namespace_use_group_clause (  ( ','  namespace_use_group_clause )  )*  )  '}'  )
+
+namespace_use_group_clause ::=  ( ( ( (  [fF][uU][nN][cC][tT][iI][oO][nN] )  |  (  [cC][oO][nN][sS][tT] )  )  )?  namespace_name ( namespace_aliasing_clause )?  )
+
+trait_declaration ::=  ( (  [tT][rR][aA][iI][tT] )  (  name )  (  declaration_list )  )
+
+interface_declaration ::=  ( (  [iI][nN][tT][eE][rR][fF][aA][cC][eE] )  (  name )  ( base_clause )?  (  declaration_list )  )
+
+base_clause ::=  ( (  [eE][xX][tT][eE][nN][dD][sS] )  ( qualified_name (  ( ','  qualified_name )  )*  )  )
+
+class_declaration ::=   (  ( ( class_modifier )?  (  [cC][lL][aA][sS][sS] )  (  name )  ( base_clause )?  ( class_interface_clause )?  (  declaration_list )  ( _semicolon )?  )  )
+
+declaration_list ::=  ( '{'  (  _member_declaration )*  '}'  )
+
+class_modifier ::=  ( (  [aA][bB][sS][tT][rR][aA][cC][tT] )  |  (  [fF][iI][nN][aA][lL] )  )
+
+class_interface_clause ::=  ( (  [iI][mM][pP][lL][eE][mM][eE][nN][tT][sS] )  ( qualified_name (  ( ','  qualified_name )  )*  )  )
+
+_member_declaration ::=  ( const_declaration |  property_declaration |  method_declaration |  use_declaration )
+
+const_declaration ::=  ( ( visibility_modifier )?  (  [cC][oO][nN][sS][tT] )  ( const_element (  ( ','  const_element )  )*  )  _semicolon )
+
+property_declaration ::=  ( ( _modifier )+  ( property_element (  ( ','  property_element )  )*  )  _semicolon )
+
+_modifier ::=  ( var_modifier |  visibility_modifier |  static_modifier |  class_modifier )
+
+property_element ::=  ( variable_name ( property_initializer )?  )
+
+property_initializer ::=  ( '='  _expression )
+
+method_declaration ::=  ( (  _modifier )*  _function_definition_header ( (  compound_statement )  |  _semicolon )  )
+
+var_modifier ::=  [vV][aA][rR]
+
+static_modifier ::=  (  [sS][tT][aA][tT][iI][cC] )
+
+use_declaration ::=  ( (  [uU][sS][eE] )  ( qualified_name (  ( ','  qualified_name )  )*  )  ( use_list |  _semicolon )  )
+
+use_list ::=  ( '{'  (  ( ( use_instead_of_clause |  use_as_clause )  _semicolon )  )*  '}'  )
+
+use_instead_of_clause ::=   (  ( ( class_constant_access_expression |  name )  (  [iI][nN][sS][tT][eE][aA][dD][oO][fF] )  name )  )
+
+use_as_clause ::=  ( ( class_constant_access_expression |  name )  (  [aA][sS] )  ( ( ( visibility_modifier )?  name )  |  ( visibility_modifier ( name )?  )  )  )
+
+visibility_modifier ::=  ( (  [pP][uU][bB][lL][iI][cC] )  |  (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  |  (  [pP][rR][iI][vV][aA][tT][eE] )  )
+
+function_definition ::=  ( _function_definition_header (  compound_statement )  )
+
+_function_definition_header ::=  ( (  [fF][uU][nN][cC][tT][iI][oO][nN] )  ( '&'  )?  (  ( name |  (  _reserved_identifier )  )  )  (  formal_parameters )  ( _return_type )?  )
+
+formal_parameters ::=  ( '('  ( ( ( simple_parameter |  variadic_parameter )  (  ( ','  ( simple_parameter |  variadic_parameter )  )  )*  )  )?  ')'  )
+
+simple_parameter ::=  ( (  ( _type )?  )  ( '&'  )?  (  variable_name )  ( ( '='  (  _expression )  )  )?  )
+
+variadic_parameter ::=  ( (  ( _type )?  )  ( '&'  )?  '...'  (  variable_name )  )
+
+_type ::=  ( optional_type |  _type_name |  primitive_type )
+
+_type_name ::=  (  qualified_name )
+
+optional_type ::=  ( '?'  ( _type_name |  primitive_type )  )
+
+primitive_type ::=  ( 'array'  |  'callable'  |  'iterable'  |  'bool'  |  'float'  |  'int'  |  'string'  |  'void'  )
+
+cast_type ::=  ( 'array'  |  'binary'  |  'bool'  |  'boolean'  |  'double'  |  'int'  |  'integer'  |  'float'  |  'object'  |  'real'  |  'string'  |  'unset'  )
+
+_return_type ::=  ( ':'  (  _type )  )
+
+const_element ::=  ( ( name |  (  _reserved_identifier )  )  '='  _expression )
+
+echo_statement ::=  ( (  [eE][cC][hH][oO] )  _expressions _semicolon )
+
+unset_statement ::=  ( 'unset'  '('  ( _variable (  ( ','  _variable )  )*  )  ')'  _semicolon )
+
+declare_statement ::=  ( 'declare'  '('  declare_directive ')'  ( _statement |  ( ':'  (  _statement )*  (  [eE][nN][dD][dD][eE][cC][lL][aA][rR][eE] )  _semicolon )  |  _semicolon )  )
+
+declare_directive ::=  ( ( 'ticks'  |  'encoding'  |  'strict_types'  )  '='  _literal )
+
+_literal ::=  ( integer |  float |  _string |  boolean |  null )
+
+float ::=  [0-9]*(([.\d]*)?([eE][\+-]?[\d]+)|([.\d]*)([eE][+-]?[\d]+)?)
+
+try_statement ::=  ( (  [tT][rR][yY] )  (  compound_statement )  ( ( catch_clause |  finally_clause )  )+  )
+
+catch_clause ::=  ( (  [cC][aA][tT][cC][hH] )  '('  (  _type_name )  (  variable_name )  ')'  (  compound_statement )  )
+
+finally_clause ::=  ( (  [fF][iI][nN][aA][lL][lL][yY] )  (  compound_statement )  )
+
+goto_statement ::=  ( (  [gG][oO][tT][oO] )  name _semicolon )
+
+continue_statement ::=  ( (  [cC][oO][nN][tT][iI][nN][uU][eE] )  ( _expression )?  _semicolon )
+
+break_statement ::=  ( (  [bB][rR][eE][aA][kK] )  ( _expression )?  _semicolon )
+
+integer ::=  (  ( [1-9][0-9]* |  '0'[0-7]* |  '0'[xX][0-9a-fA-F]+ |  '0'[bB][01]+ )  )*
+
+return_statement ::=  ( (  [rR][eE][tT][uU][rR][nN] )  ( _expression )?  _semicolon )
+
+throw_statement ::=  ( (  [tT][hH][rR][oO][wW] )  _expression _semicolon )
+
+while_statement ::=  ( (  [wW][hH][iI][lL][eE] )  (  parenthesized_expression )  ( (  _statement )  |  ( (  colon_block )  (  [eE][nN][dD][wW][hH][iI][lL][eE] )  _semicolon )  )  )
+
+do_statement ::=  ( (  [dD][oO] )  (  _statement )  (  [wW][hH][iI][lL][eE] )  (  parenthesized_expression )  _semicolon )
+
+for_statement ::=  ( (  [fF][oO][rR] )  '('  ( _expressions )?  ';'  ( _expressions )?  ';'  ( _expressions )?  ')'  ( _semicolon |  _statement |  ( ':'  (  _statement )*  (  [eE][nN][dD][fF][oO][rR] )  _semicolon )  )  )
+
+_expressions ::=  ( _expression |  sequence_expression )
+
+sequence_expression ::=   (  ( _expression ','  ( sequence_expression |  _expression )  )  )
+
+foreach_statement ::=  ( (  [fF][oO][rR][eE][aA][cC][hH] )  '('  _expression (  [aA][sS] )  ( (  foreach_pair )  |  _foreach_value )  ')'  ( _semicolon |  (  _statement )  |  ( (  colon_block )  (  [eE][nN][dD][fF][oO][rR][eE][aA][cC][hH] )  _semicolon )  )  )
+
+foreach_pair ::=  ( _expression '=>'  _foreach_value )
+
+_foreach_value ::=  ( ( ( '&'  )?  _expression )  |  list_literal )
+
+if_statement ::=   (  ( (  [iI][fF] )  (  parenthesized_expression )  ( ( (  _statement )  (  (  else_if_clause )  )*  ( (  else_clause )  )?  )  |  ( (  colon_block )  (  (  (  else_if_clause_2 )  )  )*  ( (  (  else_clause_2 )  )  )?  (  [eE][nN][dD][iI][fF] )  _semicolon )  )  )  )
+
+colon_block ::=  ( ':'  (  _statement )*  )
+
+else_if_clause ::=  ( (  [eE][lL][sS][eE][iI][fF] )  (  parenthesized_expression )  (  _statement )  )
+
+else_clause ::=  ( (  [eE][lL][sS][eE] )  (  _statement )  )
+
+else_if_clause_2 ::=  ( (  [eE][lL][sS][eE][iI][fF] )  (  parenthesized_expression )  (  colon_block )  )
+
+else_clause_2 ::=  ( (  [eE][lL][sS][eE] )  (  colon_block )  )
+
+switch_statement ::=  ( (  [sS][wW][iI][tT][cC][hH] )  (  parenthesized_expression )  (  switch_block )  )
+
+switch_block ::=  ( ( '{'  (  ( case_statement |  default_statement )  )*  '}'  )  |  ( ':'  (  ( case_statement |  default_statement )  )*  (  [eE][nN][dD][sS][wW][iI][tT][cC][hH] )  _semicolon )  )
+
+case_statement ::=  ( (  [cC][aA][sS][eE] )  (  _expression )  ( ':'  |  ';'  )  (  _statement )*  )
+
+default_statement ::=  ( (  [dD][eE][fF][aA][uU][lL][tT] )  ( ':'  |  ';'  )  (  _statement )*  )
+
+compound_statement ::=  ( '{'  (  _statement )*  '}'  )
+
+named_label_statement ::=  ( name ':'  )
+
+expression_statement ::=  ( _expression _semicolon )
+
+_expression ::=  ( conditional_expression |  augmented_assignment_expression |  assignment_expression |  yield_expression |  _unary_expression |  binary_expression |  include_expression |  include_once_expression |  require_expression |  require_once_expression )
+
+_unary_expression ::=  ( clone_expression |  _primary_expression |  exponentiation_expression |  unary_op_expression |  cast_expression )
+
+unary_op_expression ::=  ( ( '@'  _expression )  |   (  ( ( '+'  |  '-'  |  '~'  |  '!'  )  _expression )  )  )
+
+exponentiation_expression ::=   (  ( ( clone_expression |  _primary_expression )  '**'  ( exponentiation_expression |  clone_expression |  _primary_expression )  )  )
+
+clone_expression ::=  ( 'clone'  _primary_expression )
+
+_primary_expression ::=  ( _variable |  _literal |  class_constant_access_expression |  qualified_name |  array_creation_expression |  print_intrinsic |  anonymous_function_creation_expression |  object_creation_expression |  update_expression |  shell_command_expression |  parenthesized_expression )
+
+parenthesized_expression ::=  ( '('  _expression ')'  )
+
+class_constant_access_expression ::=  ( _scope_resolution_qualifier '::'  ( name |  (  _reserved_identifier )  )  )
+
+print_intrinsic ::=  ( 'print'  _expression )
+
+anonymous_function_creation_expression ::=  ( ( (  [sS][tT][aA][tT][iI][cC] )  )?  (  [fF][uU][nN][cC][tT][iI][oO][nN] )  ( '&'  )?  (  formal_parameters )  ( anonymous_function_use_clause )?  ( _return_type )?  (  compound_statement )  )
+
+anonymous_function_use_clause ::=  ( (  [uU][sS][eE] )  '('  ( ( ( '&'  )?  variable_name )  (  ( ','  ( ( '&'  )?  variable_name )  )  )*  )  ')'  )
+
+object_creation_expression ::=   (  ( ( 'new'  _class_type_designator ( arguments )?  )  |  ( 'new'  (  [cC][lL][aA][sS][sS] )  ( arguments )?  ( base_clause )?  ( class_interface_clause )?  declaration_list )  )  )
+
+_class_type_designator ::=  ( qualified_name |  subscript_expression |  member_access_expression |  scoped_property_access_expression |  _variable_name )
+
+update_expression ::=   (  ( ( _variable '++'  )  |  ( _variable '--'  )  |  ( '++'  _variable )  |  ( '--'  _variable )  )  )
+
+shell_command_expression ::=  (  ( '`'  (  ( ( '\\"'|'\\\\'|'\\\$'|'\\e'|'\\f'|'\\n'|'\\r'|'\\t'|'\\v' |  ( '\\'  [0-7] ( [0-7] )?  ( [0-7] )?  )  |  ( '\\'[xX] [0-9]|[a-f]|[A-F] ( [0-9]|[a-f]|[A-F] )?  )  |  ( '\\u{'  ( [0-9]|[a-f]|[A-F] )+  '}'  )  )  |  [^"\\]|'\\'[^"\\$efnrtv0-7] )  )*  '`'  )  )*
+
+cast_expression ::=   (  ( '('  (  cast_type )  ')'  (  _unary_expression )  )  )
+
+cast_variable ::=   (  ( '('  (  cast_type )  ')'  (  _variable )  )  )
+
+assignment_expression ::=   (  ( (  ( _variable |  list_literal |  array_creation_expression )  )  '='  ( '&'  )?  (  _expression )  )  )
+
+conditional_expression ::=   (  ( (  _expression )  '?'  (  ( _expression )?  )  ':'  (  _expression )  )  )
+
+augmented_assignment_expression ::=   (  ( (  _variable )  (  ( '**='  |  '*='  |  '/='  |  '%='  |  '+='  |  '-='  |  '.='  |  '<<='  |  '>>='  |  '&='  |  '^='  |  '|='  )  )  (  _expression )  )  )
+
+_variable ::=  ( (  cast_variable )  |  _callable_variable |  scoped_property_access_expression |  member_access_expression )
+
+member_access_expression ::=   (  ( (  _dereferencable_expression )  '->'  _member_name )  )
+
+scoped_property_access_expression ::=   (  ( (  _scope_resolution_qualifier )  '::'  (  _variable_name )  )  )
+
+list_literal ::=  ( 'list'  '('  ( ( ( ( ( list_literal |  _variable )  |  ( _expression '=>'  ( list_literal |  _variable )  )  )  )?  (  ( ','  ( ( ( list_literal |  _variable )  |  ( _expression '=>'  ( list_literal |  _variable )  )  )  )?  )  )*  )  )?  ')'  )
+
+_callable_variable ::=  ( _variable_name |  subscript_expression |  member_call_expression |  scoped_call_expression |  function_call_expression )
+
+function_call_expression ::=   (  ( (  ( qualified_name |  _callable_expression )  )  (  arguments )  )  )
+
+_callable_expression ::=  ( _callable_variable |  parenthesized_expression |  array_creation_expression |  _string )
+
+scoped_call_expression ::=   (  ( (  _scope_resolution_qualifier )  '::'  _member_name (  arguments )  )  )
+
+_scope_resolution_qualifier ::=  ( relative_scope |  qualified_name |  _dereferencable_expression )
+
+relative_scope ::=   (  ( 'self'  |  'parent'  |  (  [sS][tT][aA][tT][iI][cC] )  )  )
+
+arguments ::=  ( '('  ( ( ( variadic_unpacking |  _expression )  (  ( ','  ( variadic_unpacking |  _expression )  )  )*  )  )?  ')'  )
+
+member_call_expression ::=   (  ( (  _dereferencable_expression )  '->'  _member_name (  arguments )  )  )
+
+variadic_unpacking ::=  ( '...'  _expression )
+
+_member_name ::=  ( (  ( (  _reserved_identifier )  |  name |  _variable_name )  )  |  ( '{'  (  _expression )  '}'  )  )
+
+subscript_expression ::=  ( _dereferencable_expression ( ( '['  ( _expression )?  ']'  )  |  ( '{'  _expression '}'  )  )  )
+
+_dereferencable_expression ::=   (  ( _variable |  class_constant_access_expression |  parenthesized_expression |  array_creation_expression |  _string )  )
+
+array_creation_expression ::=  ( ( 'array'  '('  ( ( array_element_initializer (  ( ','  array_element_initializer )  )*  )  )?  ( ','  )?  ')'  )  |  ( '['  ( ( array_element_initializer (  ( ','  array_element_initializer )  )*  )  )?  ( ','  )?  ']'  )  )
+
+string ::=  (  ( ( ( [bB] )?  "'"  (  "\\'"|"\\\\"|"\\"?[^'\\] )*  "'"  )  |  ( ( [bB] )?  '"'  (  ( ( '\\"'|'\\\\'|'\\\$'|'\\e'|'\\f'|'\\n'|'\\r'|'\\t'|'\\v' |  ( '\\'  [0-7] ( [0-7] )?  ( [0-7] )?  )  |  ( '\\'[xX] [0-9]|[a-f]|[A-F] ( [0-9]|[a-f]|[A-F] )?  )  |  ( '\\u{'  ( [0-9]|[a-f]|[A-F] )+  '}'  )  )  |  [^"\\]|'\\'[^"\\$efnrtv0-7] )  )*  '"'  )  )  )*
+
+boolean ::=  [Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee]
+
+null ::=  [nN][uU][lL][lL]
+
+_string ::=  ( string |  heredoc )
+
+dynamic_variable_name ::=  ( ( '$'  _variable_name )  |  ( '$'  '{'  _expression '}'  )  )
+
+_variable_name ::=  ( dynamic_variable_name |  variable_name )
+
+variable_name ::=  ( '$'  name )
+
+yield_expression ::=   (  ( 'yield'  ( ( array_element_initializer |  ( 'from'  _expression )  )  )?  )  )
+
+array_element_initializer ::=   (  ( ( ( '&'  )?  _expression )  |  ( _expression '=>'  ( '&'  )?  _expression )  )  )
+
+binary_expression ::=  (  (  ( (  _unary_expression )  (  (  [iI][nN][sS][tT][aA][nN][cC][eE][oO][fF] )  )  (  _class_type_designator )  )  )  |   (  ( _expression '??'  _expression )  )  |   (  ( (  _expression )  (  (  and|AND )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  or|OR )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  xor|XOR )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '||'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '|'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '=='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '!='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '==='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '!=='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<=>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '.'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '*'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '/'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '%'  )  (  _expression )  )  )  )
+
+include_expression ::=  ( (  [iI][nN][cC][lL][uU][dD][eE] )  _expression )
+
+include_once_expression ::=  ( (  [iI][nN][cC][lL][uU][dD][eE][__][oO][nN][cC][eE] )  _expression )
+
+require_expression ::=  ( (  [rR][eE][qQ][uU][iI][rR][eE] )  _expression )
+
+require_once_expression ::=  ( (  [rR][eE][qQ][uU][iI][rR][eE][__][oO][nN][cC][eE] )  _expression )
+
+name ::=  [_a-zA-Z\u00A1-\u00ff][_a-zA-Z\u00A1-\u00ff0-9]*
+
+_reserved_identifier ::=  ( 'self'  |  'parent'  |  (  [sS][tT][aA][tT][iI][cC] )  )
+
+comment ::=  (  ( ( ( '//'  |  '#'  )  (  [^?\r?\n]|'?'[^>\r\n] )*  ( '\'?'\r'?'\n' )?  )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+
+_semicolon ::=  ( _automatic_semicolon |  ';'  )

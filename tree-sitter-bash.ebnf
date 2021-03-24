@@ -1,0 +1,117 @@
+program ::=  ( _statements )?
+
+_statements ::=   (  ( (  ( _statement ( ( '\n'  heredoc_body )  )?  _terminator )  )*  _statement ( ( '\n'  heredoc_body )  )?  ( _terminator )?  )  )
+
+_statements2 ::=  ( ( _statement ( ( '\n'  heredoc_body )  )?  _terminator )  )+
+
+_terminated_statement ::=  ( _statement _terminator )
+
+_statement ::=  ( redirected_statement |  variable_assignment |  command |  declaration_command |  unset_command |  test_command |  negated_command |  for_statement |  c_style_for_statement |  while_statement |  if_statement |  case_statement |  pipeline |  list |  subshell |  compound_statement |  function_definition )
+
+redirected_statement ::=   (  ( (  _statement )  (  ( ( file_redirect |  heredoc_redirect |  herestring_redirect )  )+  )  )  )
+
+for_statement ::=  ( 'for'  (  _simple_variable_name )  ( ( 'in'  (  ( _literal )+  )  )  )?  _terminator (  do_group )  )
+
+c_style_for_statement ::=  ( 'for'  '(('  (  ( _expression )?  )  _terminator (  ( _expression )?  )  _terminator (  ( _expression )?  )  '))'  ( ';'  )?  (  ( do_group |  compound_statement )  )  )
+
+while_statement ::=  ( 'while'  (  _terminated_statement )  (  do_group )  )
+
+do_group ::=  ( 'do'  ( _statements2 )?  'done'  )
+
+if_statement ::=  ( 'if'  (  _terminated_statement )  'then'  ( _statements2 )?  (  elif_clause )*  ( else_clause )?  'fi'  )
+
+elif_clause ::=  ( 'elif'  _terminated_statement 'then'  ( _statements2 )?  )
+
+else_clause ::=  ( 'else'  ( _statements2 )?  )
+
+case_statement ::=  ( 'case'  (  _literal )  ( _terminator )?  'in'  _terminator ( ( (  case_item )*  (  last_case_item )  )  )?  'esac'  )
+
+case_item ::=  ( (  _literal )  (  ( '|'  (  _literal )  )  )*  ')'  ( _statements )?   (  ( (  ';;'  )  |  (  ( ';&'  |  ';;&'  )  )  )  )  )
+
+last_case_item ::=  ( (  _literal )  (  ( '|'  (  _literal )  )  )*  ')'  ( _statements )?  (  (  ';;'  )  )?  )
+
+function_definition ::=  ( ( ( 'function'  (  word )  ( ( '('  ')'  )  )?  )  |  ( (  word )  '('  ')'  )  )  (  ( compound_statement |  subshell |  test_command )  )  )
+
+compound_statement ::=  ( '{'  ( _statements2 )?  '}'  )
+
+subshell ::=  ( '('  _statements ')'  )
+
+pipeline ::=   (  ( _statement ( '|'  |  '|&'  )  _statement )  )
+
+list ::=   (  ( _statement ( '&&'  |  '||'  )  _statement )  )
+
+negated_command ::=  ( '!'  ( command |  test_command |  subshell )  )
+
+test_command ::=  ( ( ( '['  _expression ']'  )  |  ( '[['  _expression ']]'  )  |  ( '(('  _expression '))'  )  )  )
+
+declaration_command ::=   (  ( ( 'declare'  |  'typeset'  |  'export'  |  'readonly'  |  'local'  )  (  ( _literal |  _simple_variable_name |  variable_assignment )  )*  )  )
+
+unset_command ::=   (  ( ( 'unset'  |  'unsetenv'  )  (  ( _literal |  _simple_variable_name )  )*  )  )
+
+command ::=   (  ( (  ( variable_assignment |  file_redirect )  )*  (  command_name )  (  (  ( _literal |  ( ( '=~'  |  '=='  )  ( _literal |  regex )  )  )  )  )*  )  )
+
+command_name ::=  _literal
+
+variable_assignment ::=  ( (  ( variable_name |  subscript )  )  ( '='  |  '+='  )  (  ( _literal |  array |  _empty_value )  )  )
+
+subscript ::=  ( (  variable_name )  '['  (  _literal )  ( _concat )?  ']'  ( _concat )?  )
+
+file_redirect ::=   (  ( (  ( file_descriptor )?  )  ( '<'  |  '>'  |  '>>'  |  '&>'  |  '&>>'  |  '<&'  |  '>&'  |  '>|'  )  (  _literal )  )  )
+
+heredoc_redirect ::=  ( ( '<<'  |  '<<-'  )  heredoc_start )
+
+heredoc_body ::=  ( _simple_heredoc_body |  ( _heredoc_body_beginning (  ( expansion |  simple_expansion |  command_substitution |  _heredoc_body_middle )  )*  _heredoc_body_end )  )
+
+herestring_redirect ::=  ( '<<<'  _literal )
+
+_expression ::=  ( _literal |  unary_expression |  ternary_expression |  binary_expression |  postfix_expression |  parenthesized_expression )
+
+binary_expression ::=   (  ( ( (  _expression )  (  ( '='  |  '=='  |  '=~'  |  '!='  |  '+'  |  '-'  |  '+='  |  '-='  |  '<'  |  '>'  |  '<='  |  '>='  |  '||'  |  '&&'  |  test_operator )  )  (  _expression )  )  |  ( (  _expression )  (  ( '=='  |  '=~'  )  )  (  regex )  )  )  )
+
+ternary_expression ::=   (  ( (  _expression )  '?'  (  _expression )  ':'  (  _expression )  )  )
+
+unary_expression ::=   (  ( ( '!'  |  test_operator )  _expression )  )
+
+postfix_expression ::=  ( _expression ( '++'  |  '--'  )  )
+
+parenthesized_expression ::=  ( '('  _expression ')'  )
+
+_literal ::=  ( concatenation |  _primary_expression |  (   (  ( _special_character )+  )  )  )
+
+_primary_expression ::=  ( word |  string |  raw_string |  ansii_c_string |  expansion |  simple_expansion |  string_expansion |  command_substitution |  process_substitution )
+
+concatenation ::=   (  ( ( _primary_expression |  _special_character )  (  (  ( _concat ( _primary_expression |  _special_character )  )  )  )+  ( ( _concat '$'  )  )?  )  )
+
+_special_character ::=  (   (  ( '{'  |  '}'  |  '['  |  ']'  )  )  )*
+
+string ::=  ( '"'  (  ( ( ( ( '$'  )?  _string_content )  |  expansion |  simple_expansion |  command_substitution )  ( _concat )?  )  )*  ( '$'  )?  '"'  )
+
+_string_content ::=  (   (  ([^"`$\\]|'\\'('.'|'\n'))+ )  )*
+
+array ::=  ( '('  (  _literal )*  ')'  )
+
+raw_string ::=  "'" [^']* "'"
+
+ansii_c_string ::=  '$' "'" ([^']|"\\'")* "'"
+
+simple_expansion ::=  ( '$'  ( _simple_variable_name |  _special_variable_name |  (  '!'  )  |  (  '#'  )  )  )
+
+string_expansion ::=  ( '$'  ( string |  raw_string )  )
+
+expansion ::=  ( '${'  ( ( '#'  |  '!'  )  )?  ( ( ( variable_name '='  ( _literal )?  )  |  ( ( subscript |  _simple_variable_name |  _special_variable_name )  ( ( (   (  '/'  )  )*  ( regex )?  )  )?  (  ( _literal |  ':'  |  ':?'  |  '='  |  ':-'  |  '%'  |  '-'  |  '#'  )  )*  )  )  )?  '}'  )
+
+command_substitution ::=  ( ( '$('  _statements ')'  )  |  ( '$('  file_redirect ')'  )  |   (  ( '`'  _statements '`'  )  )  )
+
+process_substitution ::=  ( ( '<('  |  '>('  )  _statements ')'  )
+
+comment ::=  (   (  '#'[^\n]* )  )*
+
+_simple_variable_name ::=  (  [_a-zA-Z][_a-zA-Z0-9]+ )
+
+_special_variable_name ::=  (  ( '*'  |  '@'  |  '?'  |  '-'  |  '$'  |  '0'  |  '_'  )  )
+
+word ::=  (  ( ( [^'"<>{}#x5b#x5d()`$|&;\\ #x9#xA#xD#x23] |  ( '\\'  [^ #x9#xA#xD] )  )  )+  )*
+
+test_operator ::=  (   (  ( '-'  [a-zA-Z]+ )  )  )*
+
+_terminator ::=  ( ';'  |  ';;'  |  '\n'  |  '&'  )

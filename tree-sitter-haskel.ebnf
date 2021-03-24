@@ -1,0 +1,557 @@
+haskell ::=  ( empty_file |  _module |  ( ( _topdecl (  (  (  ( ';'  |  _layout_semicolon )  )  _topdecl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )
+
+_topdecl ::=  ( (  decl_type )  |  (  decl_tyfam )  |  (  decl_tyinst )  |  (  decl_role )  |  (  decl_adt )  |  (  decl_newtype )  |  (  decl_datafam )  |  (  decl_datainst )  |  (  decl_import )  |  (  decl_class )  |  (  decl_instance )  |  (  decl_default )  |  _decl_foreign |  (  decl_deriving )  |  _decl |  (  decl_pattern )  |  top_splice )
+
+float ::=  (  ( ( [0-9][0-9_]* ( ( '.'[0-9_]+ ( [eE][+-]?[0-9_]+ )?  )  |  [eE][+-]?[0-9_]+ )  )  ( (  '##'? )  )?  )  )*
+
+char ::=  (  ( ( "'"[^']"'" |  "'\\"[^ ]*"'" )  ( (  '##'? )  )?  )  )*
+
+string ::=  (  ( ( '"'  (  ( [^\\"\n] |  "\\"('\\'^)?. |  "\\\n\s"*"\\" )  )*  '"'  )  ( (  '##'? )  )?  )  )*
+
+_integer_literal ::=  (  ( [0-9][0-9_]* ( (  '##'? )  )?  )  )*
+
+_binary_literal ::=  (  ( '0'[bB][01_]+ ( (  '##'? )  )?  )  )*
+
+_octal_literal ::=  (  ( '0'[oO][0-7]+ ( (  '##'? )  )?  )  )*
+
+_hex_literal ::=  (  ( '0'[xX][0-9a-fA-F_]+ ( (  '##'? )  )?  )  )*
+
+integer ::=  ( _binary_literal |  _integer_literal |  _octal_literal |  _hex_literal )
+
+_stringly ::=  ( string |  char )
+
+_number ::=  ( integer |  float )
+
+_literal ::=  ( _stringly |  _number )
+
+pragma ::=  (  ( '{-#'  (  ( [^#] |  '#'[^-] |  '#-'[^}] )  )*  '#-}'  )  )*
+
+_varid ::=  [_a-z]([\w]|"'")*'#'?
+
+label ::=  '#'[_a-z]([\w]|"'")*
+
+variable ::=  _varid
+
+qualified_variable ::=  ( _qualifying_module variable )
+
+_qvarid ::=  ( qualified_variable |  variable )
+
+operator ::=  _varsym
+
+_minus ::=  (  '-'  )
+
+_operator_minus ::=  ( operator |  _minus )
+
+qualified_operator ::=  ( _qualifying_module _operator_minus )
+
+_qvarsym ::=  ( qualified_operator |  _operator_minus )
+
+_qvarsym_nominus ::=  ( qualified_operator |  operator )
+
+_var ::=  ( variable |  ( '('  _operator_minus ')'  )  )
+
+_qvar ::=  ( _qvarid |  ( '('  _qvarsym ')'  )  )
+
+varop ::=  ( _operator_minus |  ( '`'  variable '`'  )  )
+
+_qvarop ::=  ( _qvarsym |  ( '`'  _qvarid '`'  )  )
+
+_qvarop_nominus ::=  ( _qvarsym_nominus |  ( '`'  _qvarid '`'  )  )
+
+implicit_parid ::=  '?'[_a-z]([\w]|"'")*
+
+_conid ::=  [A-Z]([\w]|"'")*'#'?
+
+constructor ::=  _conid
+
+qualified_constructor ::=  ( _qualifying_module constructor )
+
+_qconid ::=  ( qualified_constructor |  constructor )
+
+constructor_operator ::=  _consym
+
+qualified_constructor_operator ::=  ( _qualifying_module constructor_operator )
+
+_qconsym ::=  ( qualified_constructor_operator |  constructor_operator )
+
+_con ::=  ( constructor |  ( '('  constructor_operator ')'  )  )
+
+_qcon ::=  ( _qconid |  ( '('  _qconsym ')'  )  )
+
+_conop ::=  ( constructor_operator |  ( '`'  constructor '`'  )  )
+
+_qconop ::=  ( _qconsym |  ( '`'  _qconid '`'  )  )
+
+_op ::=  ( varop |  _conop )
+
+_qop ::=  ( _qvarop |  _qconop )
+
+_qop_nominus ::=  ( _qvarop_nominus |  _qconop )
+
+_gcon_literal ::=  ( con_unit |  con_list |  con_tuple )
+
+literal ::=  ( _literal |  _gcon_literal )
+
+_gcon ::=  ( _qcon |  _gcon_literal )
+
+_tyconid ::=  (  constructor )
+
+qualified_type ::=  ( _qualifying_module _tyconid )
+
+_qtyconid ::=  ( qualified_type |  _tyconid )
+
+_type_operator ::=  ( (  _tyconsym )  |  constructor_operator )
+
+qualified_type_operator ::=  ( _qualifying_module (  _tyconsym )  )
+
+_qualified_type_operator ::=  ( qualified_type_operator |  qualified_constructor_operator )
+
+_qtyconsym ::=  ( _qualified_type_operator |  _type_operator )
+
+_ticked_tycon ::=  ( '`'  _tyconid '`'  )
+
+_simple_tyconop ::=  ( (  _ticked_tycon )  |  _type_operator )
+
+_simple_tycon ::=  ( _tyconid |  ( '('  _type_operator ')'  )  )
+
+_ticked_qtycon ::=  ( '`'  _qtyconid '`'  )
+
+_qtyconops ::=  ( (  _ticked_qtycon )  |  _qtyconsym )
+
+_promoted_tyconop ::=  ( "'"  _qtyconops )
+
+_qtyconop ::=  ( (  _promoted_tyconop )  |  _qtyconops )
+
+con_unit ::=   (  ( '('  ')'  )  )
+
+con_list ::=  ( '['  ']'  )
+
+tycon_arrow ::=  ( '('  '->'  ')'  )
+
+con_tuple ::=  ( '('  ( comma )+  ')'  )
+
+type_literal ::=  ( _literal |  con_unit |  con_list |  con_tuple )
+
+_qtycon ::=  ( _qtyconid |  ( '('  _qtyconsym ')'  )  )
+
+_promoted_tycon ::=  ( "'"  _qtycon )
+
+_gtycon ::=  ( (  _promoted_tycon )  |  _qtycon |  tycon_arrow )
+
+_name ::=  ( _var |  _con )
+
+_qname ::=  ( _qvar |  _qcon )
+
+type_variable ::=  _varid
+
+annotated_type_variable ::=  ( '('  type_variable _type_annotation ')'  )
+
+_tyvar ::=  ( annotated_type_variable |  type_variable )
+
+_forall_kw ::=  ( 'forall'  |  '∀'  )
+
+_forall_dot ::=  ( '.'  |  '->'  )
+
+_forall ::=  ( _forall_kw ( _tyvar )+  )
+
+_quantifiers ::=  ( (  _forall )  _forall_dot )
+
+forall ::=  _quantifiers
+
+type_parens ::=  ( '('  _type_or_implicit ')'  )
+
+type_list ::=  ( '['  ( _type_or_implicit (  ( comma _type_or_implicit )  )*  )  ']'  )
+
+_type_tuple ::=  ( _type_or_implicit ( ( comma _type_or_implicit )  )+  )
+
+type_tuple ::=  ( '('  _type_tuple ')'  )
+
+_type_promotable_literal ::=  ( type_literal |  type_tuple |  type_list )
+
+_type_promoted_literal ::=  ( "'"  _type_promotable_literal )
+
+_type_literal ::=  ( (  _type_promoted_literal )  |  _type_promotable_literal )
+
+strict_type ::=  ( _strict _atype )
+
+type_name ::=  ( _tyvar |  _gtycon )
+
+type_star ::=  '*'
+
+type_unboxed_tuple ::=  ( '(# '  _type_tuple _unboxed_tuple_close )
+
+_atype ::=  ( type_name |  type_star |  _type_literal |  type_parens |  type_unboxed_tuple |  splice |  quasiquote )
+
+type_apply ::=  ( _atype ( _atype )+  )
+
+_btype ::=  ( _atype |  type_apply )
+
+implicit_param ::=  ( implicit_parid _type_annotation )
+
+type_infix ::=  ( (  _btype )  (  _qtyconop )  (  _type_infix )  )
+
+_type_infix ::=  ( type_infix |  _btype )
+
+constraint ::=  ( ( (  (  type_name )  )  (  _atype )*  )  |  type_infix )
+
+_quantified_constraint ::=  ( _quantifiers _constraint )
+
+_constraint_context ::=  ( _context _constraint )
+
+_constraint ::=  ( (  _quantified_constraint )  |  (  _constraint_context )  |  ( '('  _constraint ')'  )  |  constraint )
+
+_context_constraints ::=  ( ( constraint |   (  ( '('  ( ( ( _constraint |  implicit_param )  (  ( comma ( _constraint |  implicit_param )  )  )*  )  )?  ')'  )  )  )  )
+
+_context ::=  ( _context_constraints '=>'  )
+
+context ::=  _context
+
+_type_quantifiers ::=  ( _quantifiers _type )
+
+_type_context ::=  ( _context _type )
+
+_type_fun ::=   (  ( _type_infix '->'  _type )  )
+
+_type ::=   (  ( (  _type_quantifiers )  |  (  _type_context )  |  (  _type_fun )  |  _type_infix )  )
+
+_type_or_implicit ::=  ( implicit_param |  _type )
+
+_type_annotation ::=  ( '::'  (  _type_or_implicit )  )
+
+_simpletype_infix ::=  ( _tyvar (  _simple_tyconop )  _tyvar )
+
+_simpletype ::=  ( ( '('  _simpletype ')'  )  |  (  _simpletype_infix )  |  ( (  _simple_tycon )  (  _tyvar )*  )  )
+
+decl_type ::=  ( 'type'  _simpletype '='  _type_or_implicit )
+
+decl_type_sig ::=  ( 'type'  ( 'family'  )?  _simpletype _type_annotation )
+
+tyfam_head ::=  _simpletype
+
+_tyfam_pat_prefix ::=  ( (  _qtyconid )  (  _atype )*  )
+
+_tyfam_pat_infix ::=  ( _atype (  _qtyconop )  _atype )
+
+tyfam_pat ::=  ( _tyfam_pat_prefix |  _tyfam_pat_infix )
+
+tyfam_eq ::=  ( (  tyfam_pat )  '='  _type_or_implicit )
+
+decl_tyfam ::=  ( 'type'  'family'  (  tyfam_head )  ( _type_annotation )?  ( ( where ( ( ( '{'  ( ( (  tyfam_eq )  (  ( ';'  (  tyfam_eq )  )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( (  tyfam_eq )  (  (  (  ( ';'  |  _layout_semicolon )  )  (  tyfam_eq )  )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )?  )  )?  )
+
+decl_tyinst ::=  ( 'type'  'instance'  (  _atype )*  '='  _type_or_implicit )
+
+type_role ::=  ( 'representational'  |  'nominal'  |  'phantom'  |  '_'  )
+
+decl_role ::=  ( 'type'  'role'  _qtycon ( type_role )+  )
+
+exp_parens ::=  ( '('  _exp ')'  )
+
+_tuple ::=  ( ( ( ( comma )+  _exp )  |  ( _exp comma ( _exp )?  )  )  (  ( comma ( _exp )?  )  )*  )
+
+exp_tuple ::=  ( '('  _tuple ')'  )
+
+exp_unboxed_tuple ::=  ( '(# '  _tuple _unboxed_tuple_close )
+
+exp_list ::=  ( '['  ( _exp (  ( comma _exp )  )*  )  ']'  )
+
+bind_pattern ::=  ( _typed_pat '<-'  _exp )
+
+exp_arithmetic_sequence ::=  ( '['  (  _exp )  ( ( comma (  _exp )  )  )?  '..'  ( (  _exp )  )?  ']'  )
+
+qual ::=  ( bind_pattern |  let |  _exp )
+
+exp_list_comprehension ::=  ( '['  _exp '|'  ( qual (  ( comma qual )  )*  )  ']'  )
+
+exp_section_left ::=  ( '('  _exp_infix _qop ')'  )
+
+exp_section_right ::=  ( '('  _qop_nominus _exp_infix ')'  )
+
+exp_th_quoted_name ::=  ( ( "'"  ( _qvar |  _qcon )  )  |  ( "''"  _atype )  )
+
+exp_field ::=  ( (  '..'  )  |  ( _qvar ( ( '='  _exp )  )?  )  )
+
+exp_type_application ::=  ( '@'  _atype )
+
+exp_lambda ::=  ( '\\'  ( _apat )+  '->'  _exp )
+
+exp_in ::=  ( 'in'  _exp )
+
+let ::=  ( 'let'  ( decls )?  )
+
+_let_decls ::=  ( ( '{'  ( ( _decl (  ( ';'  _decl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _decl (  (  (  ( ';'  |  _layout_semicolon )  )  _decl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  )  )
+
+exp_let ::=  ( 'let'  ( (  _let_decls )  )?  )
+
+exp_let_in ::=  ( exp_let exp_in )
+
+exp_cond ::=  ( 'if'  (  _exp )  ( ';'  )?  'then'  (  _exp )  ( ';'  )?  'else'  (  _exp )  )
+
+exp_if_guard ::=  ( 'if'   (  ( gdpat )+  )  )
+
+pattern_guard ::=  ( _pat '<-'  _exp_infix )
+
+guard ::=  ( pattern_guard |  let |  _exp_infix )
+
+guards ::=  ( '|'  ( guard (  ( comma guard )  )*  )  )
+
+gdpat ::=  ( guards '->'  _exp )
+
+_alt_variants ::=  ( ( '->'  _exp )  |  ( gdpat )+  )
+
+alt ::=  ( _pat _alt_variants ( ( where ( decls )?  )  )?  )
+
+alts ::=  ( ( '{'  ( ( alt (  ( ';'  alt )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( alt (  (  (  ( ';'  |  _layout_semicolon )  )  alt )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )
+
+exp_case ::=  ( 'case'  _exp 'of'  alts )
+
+exp_lambda_case ::=   (  ( '\\'  'case'  ( alts )?  )  )
+
+rec ::=  ( 'rec'  ( ( '{'  ( ( stmt (  ( ';'  stmt )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( stmt (  (  (  ( ';'  |  _layout_semicolon )  )  stmt )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )
+
+stmt ::=  ( _exp |  bind_pattern |  let |  rec )
+
+_do_keyword ::=  ( 'mdo'  |  'do'  )
+
+do_module ::=  ( _qualifying_module _do_keyword )
+
+exp_do ::=  ( ( do_module |  _do_keyword )  ( ( '{'  ( ( stmt (  ( ';'  stmt )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( stmt (  (  (  ( ';'  |  _layout_semicolon )  )  stmt )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )
+
+exp_negation ::=  ( '-'  _aexp )
+
+exp_record ::=  ( _aexp ( '{'  ( exp_field (  ( comma exp_field )  )*  )  '}'  )  )
+
+exp_name ::=  ( _qvar |  _qcon |  implicit_parid |  label )
+
+_aexp ::=  ( exp_name |  exp_parens |  exp_tuple |  exp_list |  exp_th_quoted_name |  exp_type_application |  exp_lambda_case |  exp_do |  exp_record |  exp_arithmetic_sequence |  exp_list_comprehension |  exp_section_left |  exp_section_right |  exp_unboxed_tuple |  splice |  quasiquote |  (  literal )  )
+
+_exp_apply ::=  ( _aexp |  ( _aexp _exp_apply )  |  ( _aexp exp_lambda )  |  ( _aexp exp_let_in )  |  ( _aexp exp_cond )  |  ( _aexp exp_case )  )
+
+_fexp ::=  ( _aexp |  (  _exp_apply )  )
+
+_lexp ::=  ( exp_let_in |  exp_cond |  exp_if_guard |  exp_case |  exp_negation |  _fexp |  exp_lambda )
+
+exp_infix ::=  ( _exp_infix _qop _lexp )
+
+_exp_infix ::=  ( exp_infix |  _lexp )
+
+_exp ::=   (  ( _exp_infix ( _type_annotation )?  )  )
+
+pat_field ::=  ( (  '..'  )  |  ( _qvar ( ( '='  _nested_pat )  )?  )  )
+
+pat_fields ::=  ( '{'  ( ( pat_field (  ( comma pat_field )  )*  )  )?  '}'  )
+
+pat_as ::=  ( (  variable )  (  '@'  )  (  _apat )  )
+
+pat_parens ::=  ( '('  _nested_pat ')'  )
+
+pat_view ::=  ( _exp '->'  _nested_pat )
+
+pat_tuple ::=  ( '('  ( _nested_pat ( ( comma _nested_pat )  )+  )  ')'  )
+
+pat_unboxed_tuple ::=  ( '(# '  ( _nested_pat (  ( comma _nested_pat )  )*  )  _unboxed_tuple_close )
+
+pat_list ::=  ( '['  ( _nested_pat (  ( comma _nested_pat )  )*  )  ']'  )
+
+pat_strict ::=  ( _strict _apat )
+
+pat_irrefutable ::=  ( '~'  _apat )
+
+pat_negation ::=  ( '-'  _number )
+
+pat_name ::=  _var
+
+_pat_constructor ::=  (  _qcon )
+
+pat_wildcard ::=  '_'
+
+pat_record ::=  ( (  _pat_constructor )  (  pat_fields )  )
+
+_apat ::=  ( pat_name |  pat_as |  _pat_constructor |  pat_record |  (  literal )  |  pat_wildcard |  pat_parens |  pat_tuple |  pat_unboxed_tuple |  pat_list |  pat_strict |  pat_irrefutable |  splice |  quasiquote )
+
+pat_apply ::=  ( _pat_constructor ( _apat )+  )
+
+_lpat ::=  ( _apat |  pat_negation |  pat_apply )
+
+pat_infix ::=  ( _lpat _qconop _pat )
+
+_pat ::=  (  (  pat_infix )  |   (  _lpat )  )
+
+pat_typed ::=  ( (  _pat )  _type_annotation )
+
+_typed_pat ::=  ( _pat |  pat_typed )
+
+_nested_pat ::=  ( _typed_pat |  pat_view )
+
+_import_name ::=  ( _con |  _var )
+
+namespace ::=  ( 'pattern'  |  'type'  )
+
+import_con_names ::=  ( '('  ( ( (  '..'  )  |  ( _import_name (  ( comma _import_name )  )*  )  )  )?  ')'  )
+
+import_item ::=  ( ( namespace )?  ( _var |  ( _simple_tycon ( import_con_names )?  )  )  )
+
+import_list ::=  ( ( 'hiding'  )?  ( '('  ( ( ( import_item (  ( comma import_item )  )*  )  ( comma )?  )  )?  ')'  )  )
+
+decl_import ::=  ( 'import'  ( 'qualified'  )?  ( (  string )  )?  _qmodid ( 'qualified'  )?  ( ( 'as'  _qmodid )  )?  ( import_list )?  )
+
+_modid ::=  (  constructor )
+
+_qualifying_module ::=  ( ( _modid _dot )  )+
+
+qualified_module ::=  ( _qualifying_module _modid )
+
+_qmodid ::=  ( qualified_module |  _modid )
+
+export_names ::=  ( '('  ( ( (  '..'  )  |  ( ( _name (  ( comma _name )  )*  )  )?  )  )?  ')'  )
+
+export ::=  ( _qvar |  ( ( namespace )?  _qtycon ( export_names )?  )  |  ( 'module'  (  _qmodid )  )  )
+
+exports ::=  ( '('  ( ( export (  ( comma export )  )*  )  )?  ( comma )?  ')'  )
+
+_module ::=  ( 'module'  (  _qmodid )  ( exports )?  ( where ( ( ( '{'  ( ( _topdecl (  ( ';'  _topdecl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _topdecl (  (  (  ( ';'  |  _layout_semicolon )  )  _topdecl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )?  )  )
+
+field ::=  ( ( variable (  ( comma variable )  )*  )  '::'  ( strict_type |  _type )  )
+
+data_constructor ::=  ( constructor (  ( strict_type |  _atype )  )*  )
+
+data_constructor_infix ::=  ( ( strict_type |  _type_infix )  _conop ( strict_type |  _type_infix )  )
+
+_record_field ::=  ( '{'  field '}'  )
+
+record_fields ::=  ( '{'  ( field (  ( comma field )  )*  )  '}'  )
+
+data_constructor_record ::=  ( constructor record_fields )
+
+constructors ::=  ( ( ( forall )?  ( context )?  ( data_constructor |  data_constructor_infix |  data_constructor_record )  )  (  ( '|'  ( ( forall )?  ( context )?  ( data_constructor |  data_constructor_infix |  data_constructor_record )  )  )  )*  )
+
+via ::=  ( 'via'  _atype )
+
+deriving_strategy ::=  ( 'stock'  |  'newtype'  |  'anyclass'  )
+
+deriving ::=  ( 'deriving'  ( deriving_strategy )?  ( (  _qtyconid )  |  ( '('  ( ( (  _constraint )  (  ( comma (  _constraint )  )  )*  )  )?  ')'  )  )  ( via )?  )
+
+_adt_rhs ::=  ( '='  constructors (  deriving )*  )
+
+_gadt_fun ::=  ( ( strict_type |  _type_infix )  '->'  _gadt_sig )
+
+_gadt_sig ::=  ( (  _gadt_fun )  |  ( strict_type |  _type_infix )  )
+
+_gadt_constr_type ::=  ( '::'  ( forall )?  ( context )?  ( _gadt_sig |  ( record_fields '->'  _gadt_sig )  )  )
+
+gadt_constructor ::=  ( _con _gadt_constr_type )
+
+_gadt_rhs ::=  ( where ( ( ( '{'  ( ( ( gadt_constructor |  deriving )  (  ( ';'  ( gadt_constructor |  deriving )  )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( ( gadt_constructor |  deriving )  (  (  (  ( ';'  |  _layout_semicolon )  )  ( gadt_constructor |  deriving )  )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )?  )
+
+_adt ::=  ( ( _adt_rhs |  _gadt_rhs )  )
+
+decl_adt ::=  ( 'data'  ( context )?  _simpletype ( _type_annotation )?  ( _adt )?  )
+
+newtype_constructor ::=  ( constructor ( _atype |  _record_field )  )
+
+_newtype ::=  ( '='  newtype_constructor (  deriving )*  )
+
+_context_newtype ::=  ( ( context _simpletype )  |  _simpletype )
+
+decl_newtype ::=  ( 'newtype'  _context_newtype ( _newtype |  _gadt_rhs )  )
+
+decl_datafam ::=  ( 'data'  'family'  _simpletype ( _type_annotation )?  )
+
+_datainst ::=  ( ( forall )?  ( context )?  _type_infix ( _type_annotation )?  )
+
+decl_datainst ::=  ( ( 'data'  'instance'  _datainst ( _adt )?  )  |  ( 'newtype'  'instance'  _datainst _newtype )  )
+
+default_signature ::=  ( 'default'  signature )
+
+class_datafam ::=  ( 'data'  ( 'family'  )?  _simpletype ( _type_annotation )?  )
+
+_cdecl ::=  ( _gendecl |  default_signature |  function |  decl_type_sig |  decl_type |  (  class_datafam )  )
+
+fundep ::=  ( ( type_variable )+  '->'  ( type_variable )+  )
+
+fundeps ::=  ( '|'  ( fundep (  ( comma fundep )  )*  )  )
+
+class_body ::=  ( where ( ( ( '{'  ( ( _cdecl (  ( ';'  _cdecl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _cdecl (  (  (  ( ';'  |  _layout_semicolon )  )  _cdecl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )?  )
+
+decl_class ::=  ( 'class'  ( context )?  (  constraint )  ( fundeps )?  ( class_body )?  )
+
+inst_datainst ::=  ( ( 'data'  ( 'instance'  )?  _datainst ( _adt )?  )  |  ( 'newtype'  ( 'instance'  )?  _datainst _newtype )  )
+
+inst_tyinst ::=  ( 'type'  ( 'instance'  )?  (  _atype )*  '='  _type )
+
+_idecl ::=  ( function |  signature |  inst_datainst |  inst_tyinst )
+
+_instance ::=  ( 'instance'  ( forall )?  ( context )?  (  constraint )  )
+
+decl_instance ::=  ( _instance ( ( where ( ( ( '{'  ( ( _idecl (  ( ';'  _idecl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _idecl (  (  (  ( ';'  |  _layout_semicolon )  )  _idecl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )?  )  )?  )
+
+decl_deriving ::=  ( 'deriving'  ( ( deriving_strategy |  via )  )?  _instance )
+
+_funpat_infix ::=  ( (  _pat )  (  varop )  (  _pat )  )
+
+_funpat ::=  ( (  _typed_pat )  _funrhs )
+
+_fun_name ::=  (  ( _var |  implicit_parid )  )
+
+guard_equation ::=  ( guards '='  _exp )
+
+_fun_guards ::=  ( guard_equation )+
+
+_funrhs ::=  ( ( ( '='  (  _exp )  )  |  _fun_guards )  ( ( where ( decls )?  )  )?  )
+
+_fun_patterns ::=  ( _apat )+
+
+_funvar ::=  ( _fun_name (  ( (  _fun_patterns )  )?  )  )
+
+_funlhs ::=  (  (  _funvar )  |   (  (  (  _funpat_infix )  )  )  )
+
+function ::=  ( _funlhs _funrhs )
+
+fixity ::=  ( ( 'infixl'  |  'infixr'  |  'infix'  )  ( integer )?  ( _op (  ( comma _op )  )*  )  )
+
+signature ::=  ( (  ( (  _var )  (  ( comma (  _var )  )  )*  )  )  (  _type_annotation )  )
+
+_gendecl ::=  ( signature |  fixity )
+
+_decl_fun ::=  ( function |   (  (  _funpat )  )  )
+
+_decl ::=  ( _gendecl |  _decl_fun )
+
+decls ::=  ( ( '{'  ( ( _decl (  ( ';'  _decl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _decl (  (  (  ( ';'  |  _layout_semicolon )  )  _decl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )
+
+calling_convention ::=  ( 'ccall'  |  'stdcall'  |  'cplusplus'  |  'jvm'  |  'dotnet'  )
+
+safety ::=  ( 'unsafe'  |  'safe'  )
+
+impent ::=  string
+
+expent ::=  string
+
+_foreign_pre ::=  ( calling_convention ( safety )?  )
+
+decl_foreign_import ::=  ( 'foreign'  'import'  _foreign_pre ( impent )?  signature )
+
+decl_foreign_export ::=  ( 'foreign'  'export'  _foreign_pre ( expent )?  signature )
+
+_decl_foreign ::=  ( (  decl_foreign_import )  |  (  decl_foreign_export )  )
+
+_pattern_type ::=  ( _con _type_annotation )
+
+_pattern_equals ::=  ( (  _pat )  '='  (  _pat )  )
+
+_pattern_decl ::=  ( _pat _funrhs )
+
+_pattern_arrow ::=  ( (  _pat )  '<-'  (  _pat )  ( ( where ( ( '{'  ( ( _pattern_decl (  ( ';'  _pattern_decl )  )*  )  )?  ( ';'  )?  '}'  )  |  ( _layout_start ( ( ( _pattern_decl (  (  (  ( ';'  |  _layout_semicolon )  )  _pattern_decl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )?  _layout_end )  )  )  )?  )
+
+decl_pattern ::=  ( 'pattern'  ( (  _pattern_type )  |  (  _pattern_equals )  |  (  _pattern_arrow )  )  )
+
+decl_default ::=  ( 'default'  ( '('  ( ( _type_infix (  ( comma _type_infix )  )*  )  )?  ')'  )  )
+
+_splice_exp ::=  ( exp_name |  exp_parens )
+
+splice ::=  ( _splice_dollar _splice_exp )
+
+top_splice ::=  _exp_infix
+
+quasiquote_body ::=  (  ( ( [^|] |  '\\'|[^#x5d] )  )+  )*
+
+quasiquote ::=  ( _qq_start ( (  _varid )  )?  '|'  ( quasiquote_body )?  (  '|]'  )*  )

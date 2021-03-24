@@ -1,0 +1,75 @@
+source_file ::=  rulelist
+
+rulelist ::=  ( ( rule |   (  ( (  _c_wsp )*  _c_nl )  )  )  )+
+
+rule ::=  ( rulename defined_as elements _c_nl )
+
+rulename ::=  [A-Za-z][A-Za-z0-9-]*
+
+defined_as ::=  ( (  _c_wsp )*  ( '='  |  '=/'  )  (  _c_wsp )*  )
+
+elements ::=   (  ( alternation (  _c_wsp )*  )  )
+
+_c_wsp ::=  ( _WSP |  ( _c_nl _WSP )  )
+
+_c_nl ::=  ( comment |  _CRLF )
+
+comment ::=  ';'[ \t\x21-\x7E]*'\r\n'
+
+alternation ::=  ( concatenation (  ( (  _c_wsp )*  '/'  (  _c_wsp )*  concatenation )  )*  )
+
+concatenation ::=  ( repetition (  ( ( _c_wsp )+  repetition )  )*  )
+
+repetition ::=  ( ( repeat )?  element )
+
+repeat ::=  ( ( DIGIT )+  |  ( (  DIGIT )*  '*'  (  DIGIT )*  )  )
+
+element ::=  ( core_rulename |  rulename |  group |  option |  char_val |  num_val |  prose_val )
+
+group ::=  ( '('  (  _c_wsp )*  alternation (  _c_wsp )*  ')'  )
+
+option ::=  ( '['  (  _c_wsp )*  alternation (  _c_wsp )*  ']'  )
+
+char_val ::=  ( case_insensitive_string |  case_sensitive_string )
+
+case_insensitive_string ::=  ( ( '%i'  )?  quoted_string )
+
+case_sensitive_string ::=  ( '%s'  quoted_string )
+
+quoted_string ::=  ( _DQUOTE [\x20-\x21\x23-\x7E]* _DQUOTE )
+
+num_val ::=  ( '%'  ( bin_val |  dec_val |  hex_val )  )
+
+bin_val ::=  ( 'b'  ( BIT )+  ( ( ( ( '.'  ( BIT )+  )  )+  |  ( '-'  ( BIT )+  )  )  )?  )
+
+dec_val ::=  ( 'd'  ( DIGIT )+  ( ( ( ( '.'  ( DIGIT )+  )  )+  |  ( '-'  ( DIGIT )+  )  )  )?  )
+
+hex_val ::=  ( 'x'  ( HEXDIG )+  ( ( ( ( '.'  ( HEXDIG )+  )  )+  |  ( '-'  ( HEXDIG )+  )  )  )?  )
+
+prose_val ::=  ( '<'  [\x20-\x3D\x3F-\x7E]* '>'  )
+
+core_rulename ::=  ( 'ALPHA'  |  'BIT'  |  'CHAR'  |  'CR'  |  'CRLF'  |  'CTL'  |  'DIGIT'  |  'DQUOTE'  |  'HEXDIG'  |  'HTAB'  |  'LF'  |  'LWSP'  |  'OCTET'  |  'SP'  |  'VCHAR'  |  'WSP'  )
+
+ALPHA ::=  [A-Za-z]
+
+BIT ::=  ( '0'  |  '1'  )
+
+DIGIT ::=  [0-9]
+
+_CR ::=  '\r'
+
+_CRLF ::=  ( _CR _LF )
+
+_DQUOTE ::=  '"'
+
+HEXDIG ::=  [0-9A-Fa-f]
+
+_HTAB ::=  '\t'
+
+_LF ::=  '\n'
+
+_SP ::=  ' '
+
+VCHAR ::=  [\x21-\x7E]
+
+_WSP ::=  ( _SP |  _HTAB )

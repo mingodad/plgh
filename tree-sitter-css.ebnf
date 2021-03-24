@@ -1,0 +1,106 @@
+stylesheet ::=  (  _top_level_item )*
+
+_top_level_item ::=  ( declaration |  rule_set |  import_statement |  media_statement |  charset_statement |  namespace_statement |  keyframes_statement |  supports_statement |  at_rule )
+
+import_statement ::=  ( '@import'  _value ( ( _query (  ( ','  _query )  )*  )  )?  ';'  )
+
+media_statement ::=  ( '@media'  ( _query (  ( ','  _query )  )*  )  block )
+
+charset_statement ::=  ( '@charset'  _value ';'  )
+
+namespace_statement ::=  ( '@namespace'  ( (  identifier )  )?  ( string_value |  call_expression )  ';'  )
+
+keyframes_statement ::=  ( ( '@keyframes'  |  (  '@'[-a-z]+keyframes )  )  (  identifier )  keyframe_block_list )
+
+keyframe_block_list ::=  ( '{'  (  keyframe_block )*  '}'  )
+
+keyframe_block ::=  ( ( from |  to |  integer_value )  block )
+
+from ::=  'from'
+
+to ::=  'to'
+
+supports_statement ::=  ( '@supports'  _query block )
+
+at_rule ::=  ( at_keyword ( ( _query (  ( ','  _query )  )*  )  )?  ( ';'  |  block )  )
+
+rule_set ::=  ( selectors block )
+
+selectors ::=  ( _selector (  ( ','  _selector )  )*  )
+
+block ::=  ( '{'  (  _block_item )*  ( (  last_declaration )  )?  '}'  )
+
+_block_item ::=  ( declaration |  rule_set |  import_statement |  media_statement |  charset_statement |  namespace_statement |  keyframes_statement |  supports_statement |  at_rule )
+
+_selector ::=  ( universal_selector |  (  identifier )  |  class_selector |  nesting_selector |  pseudo_class_selector |  pseudo_element_selector |  id_selector |  attribute_selector |  string_value |  child_selector |  descendant_selector |  sibling_selector |  adjacent_sibling_selector )
+
+nesting_selector ::=  '&'
+
+universal_selector ::=  '*'
+
+class_selector ::=   (  ( ( _selector )?  '.'  (  identifier )  )  )
+
+pseudo_class_selector ::=  ( ( _selector )?  ':'  (  identifier )  ( (  pseudo_class_arguments )  )?  )
+
+pseudo_element_selector ::=  ( ( _selector )?  '::'  (  identifier )  )
+
+id_selector ::=  ( ( _selector )?  '#'  (  identifier )  )
+
+attribute_selector ::=  ( ( _selector )?  '['  (  identifier )  ( ( ( '='  |  '~='  |  '^='  |  '|='  |  '*='  |  '$='  )  _value )  )?  ']'  )
+
+child_selector ::=   (  ( _selector '>'  _selector )  )
+
+descendant_selector ::=   (  ( _selector _descendant_operator _selector )  )
+
+sibling_selector ::=   (  ( _selector '~'  _selector )  )
+
+adjacent_sibling_selector ::=   (  ( _selector '+'  _selector )  )
+
+pseudo_class_arguments ::=  ( (  '('  )  ( ( ( _selector |  ( _value )+  )  (  ( ','  ( _selector |  ( _value )+  )  )  )*  )  )?  ')'  )
+
+declaration ::=  ( (  identifier )  ':'  _value (  ( ( ','  )?  _value )  )*  ( important )?  ';'  )
+
+last_declaration ::=   (  ( (  identifier )  ':'  _value (  ( ( ','  )?  _value )  )*  ( important )?  )  )
+
+important ::=  '!important'
+
+_query ::=  ( (  identifier )  |  feature_query |  binary_query |  unary_query |  selector_query |  parenthesized_query )
+
+feature_query ::=  ( '('  (  identifier )  ':'  ( _value )+  ')'  )
+
+parenthesized_query ::=  ( '('  _query ')'  )
+
+binary_query ::=   (  ( _query ( 'and'  |  'or'  )  _query )  )
+
+unary_query ::=   (  ( ( 'not'  |  'only'  )  _query )  )
+
+selector_query ::=  ( 'selector'  '('  _selector ')'  )
+
+_value ::=   (  ( (  identifier )  |  plain_value |  color_value |  integer_value |  float_value |  string_value |  binary_expression |  parenthesized_value |  call_expression )  )
+
+parenthesized_value ::=  ( '('  _value ')'  )
+
+color_value ::=  ( '#'  (  [0-9a-fA-F]/*{3,8}*/ )  )
+
+string_value ::=  (  ( ( "'"  ([^'\n]|'\\'('.'|'\n'))* "'"  )  |  ( '"'  ([^"\n]|'\\'('.'|'\n'))* '"'  )  )  )*
+
+integer_value ::=  ( (  ( ( ( '+'  |  '-'  )  )?  [0-9]+ )  )*  ( unit )?  )
+
+float_value ::=  ( (  ( ( ( '+'  |  '-'  )  )?  [0-9]* ( ( '.'  [0-9]+ )  |  ( [eE] ( '-'  )?  [0-9]+ )  |  ( '.'  [0-9]+ [eE] ( '-'  )?  [0-9]+ )  )  )  )*  ( unit )?  )
+
+unit ::=  (  [a-zA-Z%]+ )
+
+call_expression ::=  ( (  identifier )  arguments )
+
+binary_expression ::=   (  ( _value ( '+'  |  '-'  |  '*'  |  '/'  )  _value )  )
+
+arguments ::=  ( (  '('  )  ( ( ( _value )+  (  ( ( ','  |  ';'  )  ( _value )+  )  )*  )  )?  ')'  )
+
+identifier ::=  ('--'|'-'?[a-zA-Z_])[a-zA-Z0-9-_]*
+
+at_keyword ::=  '@'[a-zA-Z-_]+
+
+comment ::=  (  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )*
+
+plain_value ::=  (  ( (  ( [-_] |  '/'[^\*\s,;!{}()\[#x5d] )  )*  [a-zA-Z] (  ( [^/\s,;!{}()\[#x5d] |  '/'[^\*\s,;!{}()\[#x5d] )  )*  )  )*
+

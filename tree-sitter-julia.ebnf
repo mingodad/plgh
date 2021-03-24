@@ -1,0 +1,173 @@
+source_file ::=  ( _expression_list )?
+
+_expression_list ::=  ( ( ( _expression |  assignment_expression |  bare_tuple_expression )  (  ( _terminator ( _expression |  assignment_expression |  bare_tuple_expression )  )  )*  )  ( _terminator )?  )
+
+_definition ::=  ( struct_definition |  module_definition |  function_definition |  macro_definition )
+
+function_definition ::=  ( 'function'  identifier ( type_parameter_list )?  parameter_list ( _expression_list )?  'end'  )
+
+struct_definition ::=  ( ( 'mutable'  )?  'struct'  identifier ( type_parameter_list )?  ( subtype_clause )?  ( _expression_list )?  'end'  )
+
+module_definition ::=  ( 'module'  identifier ( _expression_list )?  'end'  )
+
+macro_definition ::=  ( 'macro'  identifier parameter_list ( _expression_list )?  'end'  )
+
+parameter_list ::=  ( '('  ( ( ( identifier |  spread_parameter |  optional_parameter |  typed_parameter )  (  ( ','  ( identifier |  spread_parameter |  optional_parameter |  typed_parameter )  )  )*  )  )?  ( keyword_parameters )?  ')'  )
+
+keyword_parameters ::=  ( ';'  ( ( identifier |  spread_parameter |  optional_parameter |  typed_parameter )  (  ( ','  ( identifier |  spread_parameter |  optional_parameter |  typed_parameter )  )  )*  )  )
+
+optional_parameter ::=  ( ( identifier |  typed_parameter )  '='  _expression )
+
+spread_parameter ::=  ( identifier '...'  )
+
+typed_parameter ::=  ( identifier '::'  ( identifier |  parameterized_identifier )  )
+
+type_parameter_list ::=  ( '{'  ( ( identifier |  constrained_parameter )  (  ( ','  ( identifier |  constrained_parameter )  )  )*  )  '}'  )
+
+constrained_parameter ::=  ( identifier '<:'  _expression )
+
+subtype_clause ::=  ( '<:'  _expression )
+
+_statement ::=  ( if_statement |  try_statement |  for_statement |  while_statement |  let_statement |  const_statement |  quote_statement |  break_statement |  continue_statement |  return_statement |  import_statement |  export_statement )
+
+if_statement ::=  ( 'if'  _expression ( _terminator )?  ( _expression_list )?  (  elseif_clause )*  ( else_clause )?  'end'  )
+
+elseif_clause ::=  ( 'elseif'  _expression _expression_list )
+
+else_clause ::=  ( 'else'  _expression_list )
+
+try_statement ::=  ( 'try'  ( _expression_list )?  ( catch_clause )?  ( finally_clause )?  'end'  )
+
+catch_clause ::=   (  ( 'catch'  ( identifier )?  ( _terminator )?  ( _expression_list )?  )  )
+
+finally_clause ::=  ( 'finally'  ( _terminator )?  ( _expression_list )?  )
+
+for_statement ::=  ( 'for'  for_binding ( _terminator )?  ( _expression_list )?  'end'  )
+
+while_statement ::=  ( 'while'  _expression ( _terminator )?  ( _expression_list )?  'end'  )
+
+break_statement ::=  'break'
+
+continue_statement ::=  'continue'
+
+return_statement ::=   (  ( 'return'  ( ( _expression |  bare_tuple_expression )  )?  )  )
+
+let_statement ::=  ( 'let'  ( variable_declaration (  ( ','  variable_declaration )  )*  )  ( _terminator )?  ( _expression_list )?  'end'  )
+
+const_statement ::=  ( 'const'   (  ( variable_declaration (  ( ','  variable_declaration )  )*  )  )  )
+
+variable_declaration ::=   (  ( identifier ( ( '='  _expression )  )?  )  )
+
+quote_statement ::=  ( 'quote'  ( _expression_list )?  'end'  )
+
+import_statement ::=   (  ( ( 'using'  |  'import'  )  ( ( identifier |  scoped_identifier |  selected_import )  (  ( ','  ( identifier |  scoped_identifier |  selected_import )  )  )*  )  )  )
+
+selected_import ::=  ( ( identifier |  scoped_identifier )  (  ':'  )   (  ( ( identifier |  macro_identifier )  (  ( ','  ( identifier |  macro_identifier )  )  )*  )  )  )
+
+scoped_identifier ::=   (  ( ( ( identifier |  scoped_identifier )  )?  '.'  identifier )  )
+
+export_statement ::=   (  ( 'export'  ( identifier (  ( ','  identifier )  )*  )  )  )
+
+_expression ::=  ( _statement |  _definition |  parenthesized_expression |  typed_expression |  compound_expression |  pair_expression |  field_expression |  subscript_expression |  macro_expression |  call_expression |  broadcast_call_expression |  unary_expression |  binary_expression |  ternary_expression |  parameterized_identifier |  array_expression |  matrix_expression |  tuple_expression |  generator_expression |  array_comprehension_expression |  function_expression |  coefficient_expression |  spread_expression |  range_expression |  quote_expression |  interpolation_expression |  identifier |  operator |  number |  string |  command_string |  character |  triple_string )
+
+bare_tuple_expression ::=   (  ( _expression (  (  ( ','  _expression )  )  )+  )  )
+
+operator ::=  ( ':'  |  '+'  |  _plus_operator |  _times_operator |  _power_operator )
+
+parenthesized_expression ::=   (  ( '('  ( _expression_list |  spread_expression )  ')'  )  )
+
+field_expression ::=   (  ( ( identifier |  array_expression |  tuple_expression |  field_expression |  call_expression |  subscript_expression |  parenthesized_expression )  '.'  identifier )  )
+
+subscript_expression ::=  ( ( identifier |  array_expression |  tuple_expression |  field_expression |  call_expression |  parenthesized_expression )  (  '['  )  _expression ']'  )
+
+typed_expression ::=   (  ( _expression ( '::'  |  '<:'  )  ( identifier |  parameterized_identifier )  )  )
+
+parameterized_identifier ::=  ( ( identifier |  field_expression )  type_argument_list )
+
+type_argument_list ::=  ( '{'  ( ( _expression )  (  ( ','  ( _expression )  )  )*  )  '}'  )
+
+compound_expression ::=  ( 'begin'  _expression_list 'end'  )
+
+call_expression ::=   (  ( ( identifier |  parameterized_identifier |  field_expression |  call_expression |  parenthesized_expression )  _immediate_paren ( argument_list |  generator_expression )  ( do_clause )?  )  )
+
+broadcast_call_expression ::=   (  ( ( identifier |  parameterized_identifier |  field_expression |  call_expression )  '.'  _immediate_paren ( argument_list |  generator_expression )  ( do_clause )?  )  )
+
+macro_expression ::=   (  ( macro_identifier ( ( ( _immediate_paren argument_list )  |  macro_argument_list )  )?  )  )
+
+macro_argument_list ::=   (  (  (  _expression )  )+  )
+
+argument_list ::=  ( '('  ( ( ( _expression |  (  named_field )  )  (  ( ','  ( _expression |  (  named_field )  )  )  )*  )  )?  ( ( ';'  ( (  named_field )  (  ( ','  (  named_field )  )  )*  )  )  )?  ')'  )
+
+do_clause ::=  ( 'do'  _expression_list 'end'  )
+
+named_field ::=  ( identifier '='  _expression )
+
+spread_expression ::=   (  ( _expression '...'  )  )
+
+assignment_expression ::=   (  ( ( _expression |  bare_tuple_expression )  ( _assign_operator |  '='  )  ( _expression |  assignment_expression |  bare_tuple_expression )  )  )
+
+unary_expression ::=  (  (  ( ( '>:'  |  '+'  |  '-'  |  '!'  |  '~'  |  '¬'  |  '√'  |  '∛'  |  '∜'  )  _expression )  )  |   (  ( _expression ( "'"  |  ".'"  )  )  )  )
+
+binary_expression ::=  (  (  ( _expression _power_operator _expression )  )  |   (  ( _expression _times_operator _expression )  )  |   (  ( _expression ( '+'  |  _plus_operator )  _expression )  )  |   (  ( _expression _arrow_operator _expression )  )  |   (  ( _expression ( 'in'  |  'isa'  |  _comparison_operator )  _expression )  )  |   (  ( _expression '||'  _expression )  )  |   (  ( _expression '&&'  _expression )  )  )
+
+ternary_expression ::=   (  ( _expression '?'  _expression ':'  _expression )  )
+
+pair_expression ::=   (  ( _expression '=>'  _expression )  )
+
+tuple_expression ::=  ( '('  ( ( ','  )?  |  ( ( _expression |  named_field )  ','  )  |  ( ( _expression |  named_field )  ( ( ','  ( _expression |  named_field )  )  )+  ( ','  )?  )  )  ')'  )
+
+array_expression ::=  ( '['  ( ( _expression (  ( ','  _expression )  )*  )  )?  ( ','  )?  ']'  )
+
+matrix_expression ::=   (  ( '['  ( ( matrix_row (  ( ';'  matrix_row )  )*  )  )?  ( ';'  )?  ']'  )  )
+
+matrix_row ::=  (  (  _expression )  )+
+
+generator_expression ::=  ( '('  _expression _comprehension_clause ')'  )
+
+array_comprehension_expression ::=  ( '['  _expression _comprehension_clause ']'  )
+
+_comprehension_clause ::=  ( for_clause (  ( for_clause |  if_clause )  )*  )
+
+if_clause ::=  ( 'if'  _expression )
+
+for_clause ::=  ( 'for'  ( for_binding (  ( ','  for_binding )  )*  )  )
+
+for_binding ::=  ( ( identifier |  tuple_expression )  ( 'in'  |  '='  |  '∈'  )  _expression )
+
+function_expression ::=   (  ( ( identifier |  parameter_list )  '->'  ( _expression |  assignment_expression )  )  )
+
+range_expression ::=   (  ( _expression ':'  _expression )  )
+
+coefficient_expression ::=   (  ( number ( parenthesized_expression |  identifier )  )  )
+
+quote_expression ::=   (  ( ':'  _expression )  )
+
+interpolation_expression ::=   (  ( '$'  _expression )  )
+
+macro_identifier ::=  ( '@'  identifier )
+
+identifier ::=  [_a-zA-Z][_a-zA-Z0-9]*
+
+number ::=  (  ( ( ( '0'[xX] [0-9a-fA-F][0-9a-fA-F_]* )  |  ( [0-9][0-9_]* ( '.'  )?  ( [0-9][0-9_]* )?  )  |  ( '.'  [0-9][0-9_]* )  )  ( [eE][+-]?[0-9]+ )?  )  )*
+
+string ::=  (  ( '"'  (  ( [^"\\\n] )  )*  '"'  )  )*
+
+command_string ::=  (  ( '`'  (  ( [^`\\\n] )  )*  '`'  )  )*
+
+character ::=  (  ( "'"  ( [^'\\] )  "'"  )  )*
+
+_power_operator ::=  (  ( ( '.'  )?  ( '^'  |  '↑'  |  '↓'  |  '⇵'  |  '⟰'  |  '⟱'  |  '⤈'  |  '⤉'  |  '⤊'  |  '⤋'  |  '⤒'  |  '⤓'  |  '⥉'  |  '⥌'  |  '⥍'  |  '⥏'  |  '⥑'  |  '⥔'  |  '⥕'  |  '⥘'  |  '⥙'  |  '⥜'  |  '⥝'  |  '⥠'  |  '⥡'  |  '⥣'  |  '⥥'  |  '⥮'  |  '⥯'  |  '￪'  |  '￬'  )  )  )*
+
+_times_operator ::=  (  ( ( '.'  )?  ( '*'  |  '/'  |  '÷'  |  '%'  |  '&'  |  '⋅'  |  '∘'  |  '×'  |  '\\'  |  '∩'  |  '∧'  |  '⊗'  |  '⊘'  |  '⊙'  |  '⊚'  |  '⊛'  |  '⊠'  |  '⊡'  |  '⊓'  |  '∗'  |  '∙'  |  '∤'  |  '⅋'  |  '≀'  |  '⊼'  |  '⋄'  |  '⋆'  |  '⋇'  |  '⋉'  |  '⋊'  |  '⋋'  |  '⋌'  |  '⋏'  |  '⋒'  |  '⟑'  |  '⦸'  |  '⦼'  |  '⦾'  |  '⦿'  |  '⧶'  |  '⧷'  |  '⨇'  |  '⨰'  |  '⨱'  |  '⨲'  |  '⨳'  |  '⨴'  |  '⨵'  |  '⨶'  |  '⨷'  |  '⨸'  |  '⨻'  |  '⨼'  |  '⨽'  |  '⩀'  |  '⩃'  |  '⩄'  |  '⩋'  |  '⩍'  |  '⩎'  |  '⩑'  |  '⩓'  |  '⩕'  |  '⩘'  |  '⩚'  |  '⩜'  |  '⩞'  |  '⩟'  |  '⩠'  |  '⫛'  |  '⊍'  |  '▷'  |  '⨝'  |  '⟕'  |  '⟖'  |  '⟗'  )  )  )*
+
+_plus_operator ::=  (  ( '$'  |  ( ( '.'  )?  ( '+'  |  '-'  |  '|||'  |  '⊕'  |  '⊖'  |  '⊞'  |  '⊟'  |  '|++|'  |  '∪'  |  '∨'  |  '⊔'  |  '±'  |  '∓'  |  '∔'  |  '∸'  |  '≂'  |  '≏'  |  '⊎'  |  '⊻'  |  '⊽'  |  '⋎'  |  '⋓'  |  '⧺'  |  '⧻'  |  '⨈'  |  '⨢'  |  '⨣'  |  '⨤'  |  '⨥'  |  '⨦'  |  '⨧'  |  '⨨'  |  '⨩'  |  '⨪'  |  '⨫'  |  '⨬'  |  '⨭'  |  '⨮'  |  '⨹'  |  '⨺'  |  '⩁'  |  '⩂'  |  '⩅'  |  '⩊'  |  '⩌'  |  '⩏'  |  '⩐'  |  '⩒'  |  '⩔'  |  '⩖'  |  '⩗'  |  '⩛'  |  '⩝'  |  '⩡'  |  '⩢'  |  '⩣'  )  )  )  )*
+
+_arrow_operator ::=  (  ( '--'  |  '-->'  |  ( ( '.'  )?  ( '←'  |  '→'  |  '↔'  |  '↚'  |  '↛'  |  '↞'  |  '↠'  |  '↢'  |  '↣'  |  '↦'  |  '↤'  |  '↮'  |  '⇎'  |  '⇍'  |  '⇏'  |  '⇐'  |  '⇒'  |  '⇔'  |  '⇴'  |  '⇶'  |  '⇷'  |  '⇸'  |  '⇹'  |  '⇺'  |  '⇻'  |  '⇼'  |  '⇽'  |  '⇾'  |  '⇿'  |  '⟵'  |  '⟶'  |  '⟷'  |  '⟹'  |  '⟺'  |  '⟻'  |  '⟼'  |  '⟽'  |  '⟾'  |  '⟿'  |  '⤀'  |  '⤁'  |  '⤂'  |  '⤃'  |  '⤄'  |  '⤅'  |  '⤆'  |  '⤇'  |  '⤌'  |  '⤍'  |  '⤎'  |  '⤏'  |  '⤐'  |  '⤑'  |  '⤔'  |  '⤕'  |  '⤖'  |  '⤗'  |  '⤘'  |  '⤝'  |  '⤞'  |  '⤟'  |  '⤠'  |  '⥄'  |  '⥅'  |  '⥆'  |  '⥇'  |  '⥈'  |  '⥊'  |  '⥋'  |  '⥎'  |  '⥐'  |  '⥒'  |  '⥓'  |  '⥖'  |  '⥗'  |  '⥚'  |  '⥛'  |  '⥞'  |  '⥟'  |  '⥢'  |  '⥤'  |  '⥦'  |  '⥧'  |  '⥨'  |  '⥩'  |  '⥪'  |  '⥫'  |  '⥬'  |  '⥭'  |  '⥰'  |  '⧴'  |  '⬱'  |  '⬰'  |  '⬲'  |  '⬳'  |  '⬴'  |  '⬵'  |  '⬶'  |  '⬷'  |  '⬸'  |  '⬹'  |  '⬺'  |  '⬻'  |  '⬼'  |  '⬽'  |  '⬾'  |  '⬿'  |  '⭀'  |  '⭁'  |  '⭂'  |  '⭃'  |  '⭄'  |  '⭇'  |  '⭈'  |  '⭉'  |  '⭊'  |  '⭋'  |  '⭌'  |  '￩'  |  '￫'  |  '⇜'  |  '⇝'  |  '↜'  |  '↝'  |  '↩'  |  '↪'  |  '↫'  |  '↬'  |  '↼'  |  '↽'  |  '⇀'  |  '⇁'  |  '⇄'  |  '⇆'  |  '⇇'  |  '⇉'  |  '⇋'  |  '⇌'  |  '⇚'  |  '⇛'  |  '⇠'  |  '⇢'  )  )  )  )*
+
+_comparison_operator ::=  (  ( '|<:|'  |  '|>:|'  |  ( ( '.'  )?  ( '>'  |  '<'  |  '>='  |  '≥'  |  '<='  |  '≤'  |  '=='  |  '==='  |  '≡'  |  '!='  |  '≠'  |  '!=='  |  '≢'  |  '∈'  |  '∉'  |  '∋'  |  '∌'  |  '⊆'  |  '⊈'  |  '⊂'  |  '⊄'  |  '⊊'  |  '∝'  |  '∊'  |  '∍'  |  '∥'  |  '∦'  |  '∷'  |  '∺'  |  '∻'  |  '∽'  |  '∾'  |  '≁'  |  '≃'  |  '≂'  |  '≄'  |  '≅'  |  '≆'  |  '≇'  |  '≈'  |  '≉'  |  '≊'  |  '≋'  |  '≌'  |  '≍'  |  '≎'  |  '≐'  |  '≑'  |  '≒'  |  '≓'  |  '≖'  |  '≗'  |  '≘'  |  '≙'  |  '≚'  |  '≛'  |  '≜'  |  '≝'  |  '≞'  |  '≟'  |  '≣'  |  '≦'  |  '≧'  |  '≨'  |  '≩'  |  '≪'  |  '≫'  |  '≬'  |  '≭'  |  '≮'  |  '≯'  |  '≰'  |  '≱'  |  '≲'  |  '≳'  |  '≴'  |  '≵'  |  '≶'  |  '≷'  |  '≸'  |  '≹'  |  '≺'  |  '≻'  |  '≼'  |  '≽'  |  '≾'  |  '≿'  |  '⊀'  |  '⊁'  |  '⊃'  |  '⊅'  |  '⊇'  |  '⊉'  |  '⊋'  |  '⊏'  |  '⊐'  |  '⊑'  |  '⊒'  |  '⊜'  |  '⊩'  |  '⊬'  |  '⊮'  |  '⊰'  |  '⊱'  |  '⊲'  |  '⊳'  |  '⊴'  |  '⊵'  |  '⊶'  |  '⊷'  |  '⋍'  |  '⋐'  |  '⋑'  |  '⋕'  |  '⋖'  |  '⋗'  |  '⋘'  |  '⋙'  |  '⋚'  |  '⋛'  |  '⋜'  |  '⋝'  |  '⋞'  |  '⋟'  |  '⋠'  |  '⋡'  |  '⋢'  |  '⋣'  |  '⋤'  |  '⋥'  |  '⋦'  |  '⋧'  |  '⋨'  |  '⋩'  |  '⋪'  |  '⋫'  |  '⋬'  |  '⋭'  |  '⋲'  |  '⋳'  |  '⋴'  |  '⋵'  |  '⋶'  |  '⋷'  |  '⋸'  |  '⋹'  |  '⋺'  |  '⋻'  |  '⋼'  |  '⋽'  |  '⋾'  |  '⋿'  |  '⟈'  |  '⟉'  |  '⟒'  |  '⦷'  |  '⧀'  |  '⧁'  |  '⧡'  |  '⧣'  |  '⧤'  |  '⧥'  |  '⩦'  |  '⩧'  |  '⩪'  |  '⩫'  |  '⩬'  |  '⩭'  |  '⩮'  |  '⩯'  |  '⩰'  |  '⩱'  |  '⩲'  |  '⩳'  |  '⩵'  |  '⩶'  |  '⩷'  |  '⩸'  |  '⩹'  |  '⩺'  |  '⩻'  |  '⩼'  |  '⩽'  |  '⩾'  |  '⩿'  |  '⪀'  |  '⪁'  |  '⪂'  |  '⪃'  |  '⪄'  |  '⪅'  |  '⪆'  |  '⪇'  |  '⪈'  |  '⪉'  |  '⪊'  |  '⪋'  |  '⪌'  |  '⪍'  |  '⪎'  |  '⪏'  |  '⪐'  |  '⪑'  |  '⪒'  |  '⪓'  |  '⪔'  |  '⪕'  |  '⪖'  |  '⪗'  |  '⪘'  |  '⪙'  |  '⪚'  |  '⪛'  |  '⪜'  |  '⪝'  |  '⪞'  |  '⪟'  |  '⪠'  |  '⪡'  |  '⪢'  |  '⪣'  |  '⪤'  |  '⪥'  |  '⪦'  |  '⪧'  |  '⪨'  |  '⪩'  |  '⪪'  |  '⪫'  |  '⪬'  |  '⪭'  |  '⪮'  |  '⪯'  |  '⪰'  |  '⪱'  |  '⪲'  |  '⪳'  |  '⪴'  |  '⪵'  |  '⪶'  |  '⪷'  |  '⪸'  |  '⪹'  |  '⪺'  |  '⪻'  |  '⪼'  |  '⪽'  |  '⪾'  |  '⪿'  |  '⫀'  |  '⫁'  |  '⫂'  |  '⫃'  |  '⫄'  |  '⫅'  |  '⫆'  |  '⫇'  |  '⫈'  |  '⫉'  |  '⫊'  |  '⫋'  |  '⫌'  |  '⫍'  |  '⫎'  |  '⫏'  |  '⫐'  |  '⫑'  |  '⫒'  |  '⫓'  |  '⫔'  |  '⫕'  |  '⫖'  |  '⫗'  |  '⫘'  |  '⫙'  |  '⫷'  |  '⫸'  |  '⫹'  |  '⫺'  |  '⊢'  |  '⊣'  |  '⟂'  )  )  )  )*
+
+_assign_operator ::=  (  ( ':='  |  '~'  |  '$='  |  ( ( '.'  )?  ( '='  |  '+='  |  '-='  |  '*='  |  '/='  |  '//='  |  '|=|'  |  '^='  |  '÷='  |  '%='  |  '<<='  |  '>>='  |  '>>>='  |  '||=|'  |  '&='  |  '⊻='  |  '≔'  |  '⩴'  |  '≕'  )  )  )  )*
+
+_terminator ::=  ( '\n'  |  ';'  )
+
+comment ::=  (  ( '#'  [^\n]* )  )*
