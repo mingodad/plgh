@@ -1,0 +1,411 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-cpp
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+translation_unit ::=  (  _top_level_item )*
+
+_top_level_item ::=  ( ( function_definition |  linkage_specification |  declaration |  _statement |  type_definition |  _empty_declaration |  preproc_if |  preproc_ifdef |  preproc_include |  preproc_def |  preproc_function_def |  preproc_call )  |  namespace_definition |  using_declaration |  alias_declaration |  static_assert_declaration |  template_declaration |  template_instantiation |  (  constructor_or_destructor_definition )  |  (  operator_cast_definition )  |  (  operator_cast_declaration )  )
+
+preproc_include ::=  ( (  '#'[ \t]*'include' )  (  ( string_literal |  system_lib_string |  identifier |  (  preproc_call_expression )  )  )  '\n'  )
+
+preproc_def ::=  ( (  '#'[ \t]*'define' )  (  identifier )  (  ( preproc_arg )?  )  '\n'  )
+
+preproc_function_def ::=  ( (  '#'[ \t]*'define' )  (  identifier )  (  preproc_params )  (  ( preproc_arg )?  )  '\n'  )
+
+preproc_params ::=  ( (  '('  )  ( ( ( identifier |  '...'  )  (  ( ','  ( identifier |  '...'  )  )  )*  )  )?  ')'  )
+
+preproc_call ::=  ( (  preproc_directive )  (  ( preproc_arg )?  )  '\n'  )
+
+preproc_if ::=  ( (  '#'[ \t]*'if' )  (  _preproc_expression )  '\n'  (  _top_level_item )*  (  ( ( preproc_else |  preproc_elif )  )?  )  (  '#'[ \t]*'endif' )  )
+
+preproc_ifdef ::=  ( ( (  '#'[ \t]*'ifdef' )  |  (  '#'[ \t]*'ifndef' )  )  (  identifier )  (  _top_level_item )*  (  ( ( preproc_else |  preproc_elif )  )?  )  (  '#'[ \t]*'endif' )  )
+
+preproc_else ::=  ( (  '#'[ \t]*'else' )  (  _top_level_item )*  )
+
+preproc_elif ::=  ( (  '#'[ \t]*'elif' )  (  _preproc_expression )  '\n'  (  _top_level_item )*  (  ( ( preproc_else |  preproc_elif )  )?  )  )
+
+preproc_if_in_field_declaration_list ::=  ( (  '#'[ \t]*'if' )  (  _preproc_expression )  '\n'  (  _field_declaration_list_item )*  (  ( ( (  preproc_else_in_field_declaration_list )  |  (  preproc_elif_in_field_declaration_list )  )  )?  )  (  '#'[ \t]*'endif' )  )
+
+preproc_ifdef_in_field_declaration_list ::=  ( ( (  '#'[ \t]*ifdef )  |  (  '#'[ \t]*'ifndef' )  )  (  identifier )  (  _field_declaration_list_item )*  (  ( ( (  preproc_else_in_field_declaration_list )  |  (  preproc_elif_in_field_declaration_list )  )  )?  )  (  '#'[ \t]*'endif' )  )
+
+preproc_else_in_field_declaration_list ::=  ( (  '#'[ \t]*else )  (  _field_declaration_list_item )*  )
+
+preproc_elif_in_field_declaration_list ::=  ( (  '#'[ \t]*elif )  (  _preproc_expression )  '\n'  (  _field_declaration_list_item )*  (  ( ( (  preproc_else_in_field_declaration_list )  |  (  preproc_elif_in_field_declaration_list )  )  )?  )  )
+
+preproc_directive ::=  '#'[ \t]*[a-zA-Z][\w]*
+
+preproc_arg ::=  (   (  ( [.]|'\\\r'?'\n' )+  )  )*
+
+_preproc_expression ::=  ( identifier |  (  preproc_call_expression )  |  number_literal |  char_literal |  preproc_defined |  (  preproc_unary_expression )  |  (  preproc_binary_expression )  |  (  preproc_parenthesized_expression )  )
+
+preproc_parenthesized_expression ::=  ( '('  _preproc_expression ')'  )
+
+preproc_defined ::=  (  (  ( 'defined'  '('  identifier ')'  )  )  |  ( 'defined'  identifier )  )
+
+preproc_unary_expression ::=   (  ( (  ( '!'  |  '~'  |  '-'  |  '+'  )  )  (  _preproc_expression )  )  )
+
+preproc_call_expression ::=   (  ( (  identifier )  (  (  preproc_argument_list )  )  )  )
+
+preproc_argument_list ::=  ( '('  ( ( _preproc_expression (  ( ','  _preproc_expression )  )*  )  )?  ')'  )
+
+preproc_binary_expression ::=  (  (  ( (  _preproc_expression )  (  '+'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '-'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '*'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '/'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '%'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '||'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '&&'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '|'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '^'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '&'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '=='  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '!='  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '>'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '>='  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '<='  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '<'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '<<'  )  (  _preproc_expression )  )  )  |   (  ( (  _preproc_expression )  (  '>>'  )  (  _preproc_expression )  )  )  )
+
+function_definition ::=  ( (  attribute )*  ( ( ms_call_modifier )?  _declaration_specifiers (  _declarator )  (  compound_statement )  )  )
+
+declaration ::=  ( (  attribute )*  ( _declaration_specifiers ( (  ( _declarator |  init_declarator )  )  (  ( ','  (  ( _declarator |  init_declarator )  )  )  )*  )  ';'  )  )
+
+type_definition ::=  ( 'typedef'  (  type_qualifier )*  (  _type_specifier )  ( (  _type_declarator )  (  ( ','  (  _type_declarator )  )  )*  )  ';'  )
+
+_declaration_specifiers ::=  ( (  ( storage_class_specifier |  type_qualifier |  attribute_specifier |  ms_declspec_modifier )  )*  (  _type_specifier )  (  ( storage_class_specifier |  type_qualifier |  attribute_specifier |  ms_declspec_modifier )  )*  )
+
+linkage_specification ::=  ( 'extern'  (  string_literal )  (  ( function_definition |  declaration |  declaration_list )  )  )
+
+attribute_specifier ::=  ( '__attribute__'  '('  argument_list ')'  )
+
+ms_declspec_modifier ::=  ( '__declspec'  '('  identifier ')'  )
+
+ms_based_modifier ::=  ( '__based'  argument_list )
+
+ms_call_modifier ::=  ( '__cdecl'  |  '__clrcall'  |  '__stdcall'  |  '__fastcall'  |  '__thiscall'  |  '__vectorcall'  )
+
+ms_restrict_modifier ::=  '__restrict'
+
+ms_unsigned_ptr_modifier ::=  '__uptr'
+
+ms_signed_ptr_modifier ::=  '__sptr'
+
+ms_unaligned_ptr_modifier ::=  ( '_unaligned'  |  '__unaligned'  )
+
+ms_pointer_modifier ::=  ( ms_unaligned_ptr_modifier |  ms_restrict_modifier |  ms_unsigned_ptr_modifier |  ms_signed_ptr_modifier )
+
+declaration_list ::=  ( '{'  (  _top_level_item )*  '}'  )
+
+_declarator ::=  ( ( pointer_declarator |  function_declarator |  array_declarator |  parenthesized_declarator |  identifier )  |  reference_declarator |  scoped_identifier |  template_function |  operator_name |  destructor_name |  structured_binding_declarator )
+
+_field_declarator ::=  ( ( (  pointer_field_declarator )  |  (  function_field_declarator )  |  (  array_field_declarator )  |  (  parenthesized_field_declarator )  |  _field_identifier )  |  (  reference_field_declarator )  |  template_method |  operator_name )
+
+_type_declarator ::=  ( (  pointer_type_declarator )  |  (  function_type_declarator )  |  (  array_type_declarator )  |  (  parenthesized_type_declarator )  |  _type_identifier )
+
+_abstract_declarator ::=  ( ( abstract_pointer_declarator |  abstract_function_declarator |  abstract_array_declarator |  abstract_parenthesized_declarator )  |  abstract_reference_declarator )
+
+parenthesized_declarator ::=   (  ( '('  _declarator ')'  )  )
+
+parenthesized_field_declarator ::=   (  ( '('  _field_declarator ')'  )  )
+
+parenthesized_type_declarator ::=   (  ( '('  _type_declarator ')'  )  )
+
+abstract_parenthesized_declarator ::=   (  ( '('  _abstract_declarator ')'  )  )
+
+pointer_declarator ::=   (   (  ( ( ms_based_modifier )?  '*'  (  ms_pointer_modifier )*  (  type_qualifier )*  (  _declarator )  )  )  )
+
+pointer_field_declarator ::=   (   (  ( ( ms_based_modifier )?  '*'  (  ms_pointer_modifier )*  (  type_qualifier )*  (  _field_declarator )  )  )  )
+
+pointer_type_declarator ::=   (   (  ( ( ms_based_modifier )?  '*'  (  ms_pointer_modifier )*  (  type_qualifier )*  (  _type_declarator )  )  )  )
+
+abstract_pointer_declarator ::=   (   (  ( '*'  (  type_qualifier )*  (  ( _abstract_declarator )?  )  )  )  )
+
+function_declarator ::=  (  (  ( (  _declarator )  (  parameter_list )  (  attribute_specifier )*  )  )  (  ( type_qualifier |  virtual_specifier |  noexcept |  throw_specifier |  trailing_return_type )  )*  )
+
+function_field_declarator ::=  (  (  ( (  _field_declarator )  (  parameter_list )  )  )  (  ( type_qualifier |  virtual_specifier |  noexcept |  throw_specifier |  trailing_return_type )  )*  )
+
+function_type_declarator ::=   (  ( (  _type_declarator )  (  parameter_list )  )  )
+
+abstract_function_declarator ::=   (  (  (  ( (  ( _abstract_declarator )?  )  (  parameter_list )  )  )  (  ( type_qualifier |  noexcept |  throw_specifier )  )*  ( trailing_return_type )?  )  )
+
+array_declarator ::=   (  ( (  _declarator )  '['  (  type_qualifier )*  (  ( ( _expression |  '*'  )  )?  )  ']'  )  )
+
+array_field_declarator ::=   (  ( (  _field_declarator )  '['  (  type_qualifier )*  (  ( ( _expression |  '*'  )  )?  )  ']'  )  )
+
+array_type_declarator ::=   (  ( (  _type_declarator )  '['  (  type_qualifier )*  (  ( ( _expression |  '*'  )  )?  )  ']'  )  )
+
+abstract_array_declarator ::=   (  ( (  ( _abstract_declarator )?  )  '['  (  type_qualifier )*  (  ( ( _expression |  '*'  )  )?  )  ']'  )  )
+
+init_declarator ::=  ( ( (  _declarator )  '='  (  ( initializer_list |  _expression )  )  )  |  ( (  _declarator )  (  ( argument_list |  initializer_list )  )  )  )
+
+compound_statement ::=   (  ( '{'  (  _top_level_item )*  '}'  )  )
+
+storage_class_specifier ::=  ( 'extern'  |  'static'  |  'register'  |  'inline'  )
+
+type_qualifier ::=  ( ( 'const'  |  'volatile'  |  'restrict'  |  '_Atomic'  )  |  'mutable'  |  'constexpr'  )
+
+_type_specifier ::=  ( struct_specifier |  union_specifier |  enum_specifier |  class_specifier |  sized_type_specifier |  primitive_type |  template_type |  auto |  dependent_type |  decltype |   (  ( scoped_type_identifier |  _type_identifier )  )  )
+
+sized_type_specifier ::=  ( ( ( 'signed'  |  'unsigned'  |  'long'  |  'short'  )  )+  (  ( (  (  _type_identifier )  |  primitive_type )  )?  )  )
+
+primitive_type ::=  (  ( 'bool'  |  'char'  |  'int'  |  'float'  |  'double'  |  'void'  |  'size_t'  |  'ssize_t'  |  'intptr_t'  |  'uintptr_t'  |  'charptr_t'  |  'int8_t'  |  'int16_t'  |  'int32_t'  |  'int64_t'  |  'uint8_t'  |  'uint16_t'  |  'uint32_t'  |  'uint64_t'  |  'char8_t'  |  'char16_t'  |  'char32_t'  |  'char64_t'  )  )*
+
+enum_specifier ::=   (  ( 'enum'  ( ( 'class'  |  'struct'  )  )?  ( ( (  _class_name )  ( _enum_base_clause )?  ( (  enumerator_list )  )?  )  |  (  enumerator_list )  )  )  )
+
+enumerator_list ::=  ( '{'  ( ( enumerator (  ( ','  enumerator )  )*  )  )?  ( ','  )?  '}'  )
+
+struct_specifier ::=   (  ( 'struct'  ( ms_declspec_modifier )?  ( (  _class_name )  |  ( ( (  _class_name )  )?  ( virtual_specifier )?  ( base_class_clause )?  (  field_declaration_list )  )  )  )  )
+
+union_specifier ::=   (  ( 'union'  ( ms_declspec_modifier )?  ( (  _class_name )  |  ( ( (  _class_name )  )?  ( virtual_specifier )?  ( base_class_clause )?  (  field_declaration_list )  )  )  )  )
+
+field_declaration_list ::=  ( '{'  (  _field_declaration_list_item )*  '}'  )
+
+_field_declaration_list_item ::=  ( ( field_declaration |  preproc_def |  preproc_function_def |  preproc_call |  (  preproc_if_in_field_declaration_list )  |  (  preproc_ifdef_in_field_declaration_list )  )  |  template_declaration |  (  inline_method_definition )  |  (  constructor_or_destructor_definition )  |  (  constructor_or_destructor_declaration )  |  (  operator_cast_definition )  |  (  operator_cast_declaration )  |  friend_declaration |  access_specifier |  alias_declaration |  using_declaration |  type_definition |  static_assert_declaration )
+
+field_declaration ::=  ( (  attribute )*  ( virtual_function_specifier )?  _declaration_specifiers ( ( (  _field_declarator )  (  ( ','  (  _field_declarator )  )  )*  )  )?  ( ( bitfield_clause |  (  initializer_list )  |  ( '='  (  ( _expression |  initializer_list )  )  )  )  )?  ';'  )
+
+bitfield_clause ::=  ( ':'  _expression )
+
+enumerator ::=  ( (  identifier )  ( ( '='  (  _expression )  )  )?  )
+
+parameter_list ::=  ( '('  ( ( ( parameter_declaration |  optional_parameter_declaration |  variadic_parameter_declaration |  '...'  )  (  ( ','  ( parameter_declaration |  optional_parameter_declaration |  variadic_parameter_declaration |  '...'  )  )  )*  )  )?  ')'  )
+
+parameter_declaration ::=  ( (  attribute )*  ( _declaration_specifiers ( (  ( _declarator |  _abstract_declarator )  )  )?  )  )
+
+_statement ::=  ( ( case_statement |  _non_case_statement )  |  for_range_loop |  try_statement |  throw_statement )
+
+_non_case_statement ::=  ( labeled_statement |  compound_statement |  expression_statement |  if_statement |  switch_statement |  do_statement |  while_statement |  for_statement |  return_statement |  break_statement |  continue_statement |  goto_statement )
+
+labeled_statement ::=  ( (  _statement_identifier )  ':'  _statement )
+
+expression_statement ::=  ( ( ( _expression |  comma_expression )  )?  ';'  )
+
+if_statement ::=   (  ( 'if'  ( 'constexpr'  )?  (  condition_clause )  (  _statement )  ( ( 'else'  (  _statement )  )  )?  )  )
+
+switch_statement ::=  ( 'switch'  (  condition_clause )  (  compound_statement )  )
+
+case_statement ::=   (  ( ( ( 'case'  (  _expression )  )  |  'default'  )  ':'  (  ( _non_case_statement |  declaration |  type_definition )  )*  )  )
+
+while_statement ::=  ( 'while'  (  condition_clause )  (  _statement )  )
+
+do_statement ::=  ( 'do'  (  _statement )  'while'  (  parenthesized_expression )  ';'  )
+
+for_statement ::=  ( 'for'  '('  ( (  declaration )  |  ( (  ( ( _expression |  comma_expression )  )?  )  ';'  )  )  (  ( _expression )?  )  ';'  (  ( ( _expression |  comma_expression )  )?  )  ')'  _statement )
+
+return_statement ::=  ( ( 'return'  ( ( _expression |  comma_expression )  )?  ';'  )  |  ( 'return'  initializer_list ';'  )  )
+
+break_statement ::=  ( 'break'  ';'  )
+
+continue_statement ::=  ( 'continue'  ';'  )
+
+goto_statement ::=  ( 'goto'  (  _statement_identifier )  ';'  )
+
+_expression ::=  ( ( conditional_expression |  assignment_expression |  binary_expression |  unary_expression |  update_expression |  cast_expression |  pointer_expression |  sizeof_expression |  subscript_expression |  call_expression |  field_expression |  compound_literal_expression |  identifier |  number_literal |  string_literal |  true |  false |  null |  concatenated_string |  char_literal |  parenthesized_expression )  |  template_function |  scoped_identifier |  new_expression |  delete_expression |  lambda_expression |  parameter_pack_expansion |  nullptr |  this |  raw_string_literal )
+
+comma_expression ::=  ( (  _expression )  ','  (  ( _expression |  comma_expression )  )  )
+
+conditional_expression ::=   (  ( (  _expression )  '?'  (  _expression )  ':'  (  _expression )  )  )
+
+_assignment_left_expression ::=  ( ( identifier |  call_expression |  field_expression |  pointer_expression |  subscript_expression |  parenthesized_expression )  |  scoped_namespace_identifier )
+
+assignment_expression ::=   (  ( (  _assignment_left_expression )  ( '='  |  '*='  |  '/='  |  '%='  |  '+='  |  '-='  |  '<<='  |  '>>='  |  '&='  |  '^='  |  '|='  )  (  _expression )  )  )
+
+pointer_expression ::=   (  ( (  ( '*'  |  '&'  )  )  (  _expression )  )  )
+
+unary_expression ::=   (  ( (  ( '!'  |  '~'  |  '-'  |  '+'  )  )  (  _expression )  )  )
+
+binary_expression ::=  (  (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '*'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '/'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '%'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '||'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '|'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '=='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '!='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  )
+
+update_expression ::=   (  ( ( (  ( '--'  |  '++'  )  )  (  _expression )  )  |  ( (  _expression )  (  ( '--'  |  '++'  )  )  )  )  )
+
+cast_expression ::=   (  ( '('  (  type_descriptor )  ')'  (  _expression )  )  )
+
+type_descriptor ::=  ( (  type_qualifier )*  (  _type_specifier )  (  type_qualifier )*  (  ( _abstract_declarator )?  )  )
+
+sizeof_expression ::=  (  (  ( 'sizeof'  ( (  _expression )  |  ( '('  (  type_descriptor )  ')'  )  )  )  )  |  ( 'sizeof'  '...'  '('  (  identifier )  ')'  )  )
+
+subscript_expression ::=   (  ( (  _expression )  '['  (  _expression )  ']'  )  )
+
+call_expression ::=  (  (  ( (  _expression )  (  argument_list )  )  )  |  ( (  primitive_type )  (  argument_list )  )  )
+
+argument_list ::=  ( '('  ( ( ( _expression |  initializer_list )  (  ( ','  ( _expression |  initializer_list )  )  )*  )  )?  ')'  )
+
+field_expression ::=  ( (  (  ( (  _expression )  ( '.'  |  '->'  )  )  )  (  _field_identifier )  )  |  (  (  ( (  _expression )  ( '.'  |  '->'  )  )  )  (  ( destructor_name |  template_method )  )  )  )
+
+compound_literal_expression ::=  ( ( '('  (  type_descriptor )  ')'  (  initializer_list )  )  |  ( (  ( _type_identifier |  template_type |  scoped_type_identifier )  )  (  initializer_list )  )  )
+
+parenthesized_expression ::=  ( '('  ( _expression |  comma_expression )  ')'  )
+
+initializer_list ::=  ( '{'  ( ( ( initializer_pair |  _expression |  initializer_list )  (  ( ','  ( initializer_pair |  _expression |  initializer_list )  )  )*  )  )?  ( ','  )?  '}'  )
+
+initializer_pair ::=  ( (  ( ( subscript_designator |  field_designator )  )+  )  '='  (  ( _expression |  initializer_list )  )  )
+
+subscript_designator ::=  ( '['  _expression ']'  )
+
+field_designator ::=  ( '.'  _field_identifier )
+
+number_literal ::=  (  ( ( [-\+] )?  ( ( '0x'  |  '0b'  )  )?  ( ( ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  |  ( '0b'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  |  ( '0x'  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )  ( ( '.'  ( ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )?  )  )?  )  |  ( '.'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  )  ( ( [eEpP] ( ( ( [-\+] )?  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )?  )  )?  (  ( 'u'  |  'l'  |  'U'  |  'L'  |  'f'  |  'F'  )  )*  )  )*
+
+char_literal ::=  ( ( "L'"  |  "u'"  |  "U'"  |  "u8'"  |  "'"  )  ( escape_sequence |  (  [^\n'] )  )  "'"  )
+
+concatenated_string ::=  ( ( raw_string_literal |  string_literal )  ( ( raw_string_literal |  string_literal )  )+  )
+
+string_literal ::=  ( ( 'L"'  |  'u"'  |  'U"'  |  'u8"'  |  '"'  )  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
+
+escape_sequence ::=  (   (  ( '\\'  ( [^xuU] |  [0-9]/*{2,3}*/ |  'x'[0-9a-fA-F]/*{2,}*/ |  'u'[0-9a-fA-F]/*{4}*/ |  'U'[0-9a-fA-F]/*{8}*/ )  )  )  )*
+
+system_lib_string ::=  (  ( '<'  (  ( [^>\n] |  '\\>'  )  )*  '>'  )  )*
+
+true ::=  (  ( 'TRUE'  |  'true'  )  )*
+
+false ::=  (  ( 'FALSE'  |  'false'  )  )*
+
+null ::=  'NULL'
+
+identifier ::=  [a-zA-Z_][\w]*
+
+_type_identifier ::=  (  identifier )
+
+_field_identifier ::=  (  identifier )
+
+_statement_identifier ::=  (  identifier )
+
+_empty_declaration ::=  ( _type_specifier ';'  )
+
+macro_type_specifier ::=   (  ( (  identifier )  '('  (  type_descriptor )  ')'  )  )
+
+comment ::=  (  ( ( '//'  ('\'([.]|[\r]?[\n])|[^\\\n])* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+
+decltype ::=  ( 'decltype'  '('  _expression ')'  )
+
+class_specifier ::=   (  ( 'class'  ( ms_declspec_modifier )?  ( (  _class_name )  |  ( ( (  _class_name )  )?  ( virtual_specifier )?  ( base_class_clause )?  (  field_declaration_list )  )  )  )  )
+
+_class_name ::=   (  ( _type_identifier |  scoped_type_identifier |  template_type )  )
+
+virtual_specifier ::=  ( 'final'  |  'override'  )
+
+virtual_function_specifier ::=  ( 'virtual'  )
+
+explicit_function_specifier ::=  ( 'explicit'  |   (  ( 'explicit'  '('  _expression ')'  )  )  )
+
+base_class_clause ::=  ( ':'  ( ( ( ( 'public'  |  'private'  |  'protected'  )  )?  _class_name ( '...'  )?  )  (  ( ','  ( ( ( 'public'  |  'private'  |  'protected'  )  )?  _class_name ( '...'  )?  )  )  )*  )  )
+
+_enum_base_clause ::=   (  ( ':'  (  ( scoped_type_identifier |  _type_identifier |  sized_type_specifier )  )  )  )
+
+auto ::=  'auto'
+
+dependent_type ::=   (  ( 'typename'  _type_specifier )  )
+
+template_declaration ::=  ( 'template'  (  template_parameter_list )  ( _empty_declaration |  alias_declaration |  declaration |  template_declaration |  function_definition |  (  constructor_or_destructor_declaration )  |  (  constructor_or_destructor_definition )  |  (  operator_cast_declaration )  |  (  operator_cast_definition )  )  )
+
+template_instantiation ::=  ( 'template'  ( _declaration_specifiers )?  (  _declarator )  ';'  )
+
+template_parameter_list ::=  ( '<'  ( ( ( parameter_declaration |  optional_parameter_declaration |  type_parameter_declaration |  variadic_parameter_declaration |  variadic_type_parameter_declaration |  optional_type_parameter_declaration |  template_template_parameter_declaration )  (  ( ','  ( parameter_declaration |  optional_parameter_declaration |  type_parameter_declaration |  variadic_parameter_declaration |  variadic_type_parameter_declaration |  optional_type_parameter_declaration |  template_template_parameter_declaration )  )  )*  )  )?  (  (   (  '>'  )  )*  )  )
+
+type_parameter_declaration ::=   (  ( ( 'typename'  |  'class'  )  ( _type_identifier )?  )  )
+
+variadic_type_parameter_declaration ::=   (  ( ( 'typename'  |  'class'  )  '...'  ( _type_identifier )?  )  )
+
+optional_type_parameter_declaration ::=  ( ( 'typename'  |  'class'  )  ( (  _type_identifier )  )?  '='  (  _type_specifier )  )
+
+template_template_parameter_declaration ::=  ( 'template'  (  template_parameter_list )  ( type_parameter_declaration |  variadic_type_parameter_declaration |  optional_type_parameter_declaration )  )
+
+optional_parameter_declaration ::=  ( _declaration_specifiers (  ( _declarator )?  )  '='  (  _expression )  )
+
+variadic_parameter_declaration ::=  ( _declaration_specifiers (  ( variadic_declarator |  (  variadic_reference_declarator )  )  )  )
+
+variadic_declarator ::=  ( '...'  ( identifier )?  )
+
+variadic_reference_declarator ::=  ( ( '&&'  |  '&'  )  variadic_declarator )
+
+operator_cast ::=   (  ( ( ( (  ( ( _namespace_identifier |  template_type |  scoped_namespace_identifier )  )?  )  '::'  )  )?  'operator'  _declaration_specifiers (  _abstract_declarator )  )  )
+
+field_initializer_list ::=  ( ':'  ( field_initializer (  ( ','  field_initializer )  )*  )  )
+
+field_initializer ::=   (  ( ( _field_identifier |  scoped_field_identifier )  ( initializer_list |  argument_list )  ( '...'  )?  )  )
+
+inline_method_definition ::=  ( (  attribute )*  ( virtual_function_specifier )?  _declaration_specifiers (  _field_declarator )  ( (  compound_statement )  |  default_method_clause |  delete_method_clause )  )
+
+_constructor_specifiers ::=  (  (  ( storage_class_specifier |  type_qualifier |  attribute_specifier |  virtual_function_specifier |  explicit_function_specifier )  )  )+
+
+operator_cast_definition ::=  ( ( _constructor_specifiers )?  (  operator_cast )  ( (  compound_statement )  |  default_method_clause |  delete_method_clause )  )
+
+operator_cast_declaration ::=   (  ( ( _constructor_specifiers )?  (  operator_cast )  ( ( '='  (  _expression )  )  )?  ';'  )  )
+
+constructor_or_destructor_definition ::=  ( ( _constructor_specifiers )?  (  function_declarator )  ( field_initializer_list )?  ( (  compound_statement )  |  default_method_clause |  delete_method_clause )  )
+
+constructor_or_destructor_declaration ::=  ( ( _constructor_specifiers )?  (  function_declarator )  ';'  )
+
+default_method_clause ::=  ( '='  'default'  ';'  )
+
+delete_method_clause ::=  ( '='  'delete'  ';'  )
+
+friend_declaration ::=  ( 'friend'  ( declaration |  function_definition |  ( ( ( 'class'  |  'struct'  |  'union'  )  )?  _class_name ';'  )  )  )
+
+access_specifier ::=  ( ( 'public'  |  'private'  |  'protected'  )  ':'  )
+
+reference_declarator ::=   (   (  ( ( '&'  |  '&&'  )  _declarator )  )  )
+
+reference_field_declarator ::=   (   (  ( ( '&'  |  '&&'  )  _field_declarator )  )  )
+
+abstract_reference_declarator ::=   (  ( ( '&'  |  '&&'  )  ( _abstract_declarator )?  )  )
+
+structured_binding_declarator ::=   (  ( '['  ( identifier (  ( ','  identifier )  )*  )  ']'  )  )
+
+trailing_return_type ::=   (  ( '->'  ( type_qualifier )?  _type_specifier ( _abstract_declarator )?  )  )
+
+noexcept ::=   (  ( 'noexcept'  ( ( '('  ( _expression )?  ')'  )  )?  )  )
+
+throw_specifier ::=  ( 'throw'  ( '('  ( ( type_descriptor (  ( ','  type_descriptor )  )*  )  )?  ')'  )  )
+
+template_type ::=  ( (  ( _type_identifier |  scoped_type_identifier )  )  (  template_argument_list )  )
+
+template_method ::=  ( (  ( _field_identifier |  scoped_field_identifier )  )  (  template_argument_list )  )
+
+template_function ::=  ( (  ( identifier |  scoped_identifier )  )  (  template_argument_list )  )
+
+template_argument_list ::=  ( '<'  ( ( (  (  type_descriptor )  |   (  (  type_parameter_pack_expansion )  )  |   (  _expression )  )  (  ( ','  (  (  type_descriptor )  |   (  (  type_parameter_pack_expansion )  )  |   (  _expression )  )  )  )*  )  )?  (  (   (  '>'  )  )*  )  )
+
+namespace_definition ::=  ( 'namespace'  (  ( identifier )?  )  (  declaration_list )  )
+
+using_declaration ::=  ( 'using'  ( 'namespace'  )?  ( identifier |  scoped_identifier )  ';'  )
+
+alias_declaration ::=  ( 'using'  (  _type_identifier )  '='  (  type_descriptor )  ';'  )
+
+static_assert_declaration ::=  ( 'static_assert'  '('  (  _expression )  ( ( ','  (  ( string_literal |  raw_string_literal |  concatenated_string )  )  )  )?  ')'  ';'  )
+
+condition_clause ::=  ( '('  ( ( (  ( ( declaration |  expression_statement )  )?  )  (  ( _expression |  comma_expression )  )  )  |  (  (  condition_declaration )  )  )  ')'  )
+
+condition_declaration ::=  ( _declaration_specifiers (  _declarator )  ( ( '='  (  _expression )  )  |  (  initializer_list )  )  )
+
+for_range_loop ::=  ( 'for'  '('  _declaration_specifiers (  _declarator )  ':'  (  ( _expression |  initializer_list )  )  ')'  (  _statement )  )
+
+throw_statement ::=  ( 'throw'  ( _expression )?  ';'  )
+
+try_statement ::=  ( 'try'  (  compound_statement )  ( catch_clause )+  )
+
+catch_clause ::=  ( 'catch'  (  parameter_list )  (  compound_statement )  )
+
+attribute ::=  ( '[['  ( _expression (  ( ','  _expression )  )*  )  ']]'  )
+
+new_expression ::=   (  ( ( '::'  )?  'new'  (  ( argument_list )?  )  (  _type_specifier )  (  ( new_declarator )?  )  (  ( ( argument_list |  initializer_list )  )?  )  )  )
+
+new_declarator ::=   (  ( '['  (  _expression )  ']'  ( new_declarator )?  )  )
+
+delete_expression ::=  ( ( '::'  )?  'delete'  ( ( '['  ']'  )  )?  _expression )
+
+lambda_expression ::=  ( (  lambda_capture_specifier )  ( (  abstract_function_declarator )  )?  (  compound_statement )  )
+
+lambda_capture_specifier ::=   (  ( '['  ( lambda_default_capture |  ( ( _expression (  ( ','  _expression )  )*  )  )?  |  ( lambda_default_capture ','  ( _expression (  ( ','  _expression )  )*  )  )  )  ']'  )  )
+
+lambda_default_capture ::=  ( '='  |  '&'  )
+
+parameter_pack_expansion ::=   (  ( (  _expression )  '...'  )  )
+
+type_parameter_pack_expansion ::=  ( (  type_descriptor )  '...'  )
+
+destructor_name ::=   (  ( '~'  identifier )  )
+
+scoped_field_identifier ::=   (  ( (  ( ( _namespace_identifier |  template_type |  scoped_namespace_identifier )  )?  )  '::'  (  ( _field_identifier |  operator_name |  destructor_name )  )  )  )
+
+scoped_identifier ::=   (  ( (  ( ( _namespace_identifier |  template_type |  scoped_namespace_identifier )  )?  )  '::'  (  ( identifier |  operator_name |  destructor_name )  )  )  )
+
+scoped_type_identifier ::=   (  ( (  ( ( _namespace_identifier |  template_type |  scoped_namespace_identifier )  )?  )  '::'  (  _type_identifier )  )  )
+
+scoped_namespace_identifier ::=   (  ( (  ( ( _namespace_identifier |  template_type |  scoped_namespace_identifier )  )?  )  '::'  (  _namespace_identifier )  )  )
+
+operator_name ::=  (  ( 'operator'  ( '+'  |  '-'  |  '*'  |  '/'  |  '%'  |  '^'  |  '&'  |  '|'  |  '~'  |  '!'  |  '='  |  '<'  |  '>'  |  '+='  |  '-='  |  '*='  |  '/='  |  '%='  |  '^='  |  '&='  |  '|='  |  '<<'  |  '>>'  |  '>>='  |  '<<='  |  '=='  |  '!='  |  '<='  |  '>='  |  '&&'  |  '||'  |  '++'  |  '--'  |  ','  |  '->*'  |  '->'  |  '()'  |  '[]'  )  )  )*
+
+this ::=  'this'
+
+nullptr ::=  'nullptr'
+
+_namespace_identifier ::=  (  identifier )
+

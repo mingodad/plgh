@@ -1,0 +1,61 @@
+/*
+Grammar originally from https://github.com/ikatyang/tree-sitter-toml
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+document ::=  ( (  ( pair |  [\r]?[\n] )  )*  (  ( table |  table_array_element )  )*  )
+
+comment ::=  (   (  ( '#'  (  [^\u0000-\u0008\u000a-\u001f\u007f] )*  )  )  )*
+
+table ::=  ( '['  ( dotted_key |  _key )  ']'  _line_ending_or_eof (  ( pair |  [\r]?[\n] )  )*  )
+
+table_array_element ::=  ( '[['  ( dotted_key |  _key )  ']]'  _line_ending_or_eof (  ( pair |  [\r]?[\n] )  )*  )
+
+pair ::=  ( _inline_pair _line_ending_or_eof )
+
+_inline_pair ::=  ( ( dotted_key |  _key )  '='  _inline_value )
+
+_key ::=  ( bare_key |  quoted_key )
+
+dotted_key ::=  ( ( dotted_key |  _key )  '.'  _key )
+
+bare_key ::=  [A-Za-z0-9_-]+
+
+quoted_key ::=  ( _basic_string |  _literal_string )
+
+_inline_value ::=  ( string |  integer |  float |  boolean |  offset_date_time |  local_date_time |  local_date |  local_time |  array |  inline_table )
+
+string ::=  ( _basic_string |  _multiline_basic_string |  _literal_string |  _multiline_literal_string )
+
+_basic_string ::=  ( '"'  (  ( (  ( [^\u0000-\u0008\u000a-\u001f\u0022\u005c\u007f] )+  )  |  escape_sequence )  )*  (  '"'  )  )
+
+_multiline_basic_string ::=  ( '"""'  (  ( (  ( [^\u0000-\u0008\u000a-\u001f\u0022\u005c\u007f] )+  )  |  _multiline_basic_string_content |  (  [\r]?[\n] )  |  escape_sequence |  (  _escape_line_ending )  )  )*  _multiline_basic_string_end )
+
+escape_sequence ::=  (  '\'([btnfr"\\]|'u'[0-9a-fA-F]/*{4}*/|'U'[0-9a-fA-F]/*{8}*/) )
+
+_escape_line_ending ::=  (  ( '\' [\r]?[\n] )  )
+
+_literal_string ::=  ( "'"  ( (  ( [^\u0000-\u0008\u000a-\u001f\u0027\u007f] )+  )  )?  (  "'"  )  )
+
+_multiline_literal_string ::=  ( "'''"  (  ( (  ( [^\u0000-\u0008\u000a-\u001f\u0027\u007f] )+  )  |  _multiline_literal_string_content |  (  [\r]?[\n] )  )  )*  _multiline_literal_string_end )
+
+integer ::=  ( [+-]?('0'|[1-9]('_'?[0-9])*) |  '0x'[0-9a-fA-F]('_'?[0-9a-fA-F])* |  '0o'[0-7]('_'?[0-7])* |  '0b'[01]('_'?[01])* )
+
+float ::=  ( (  ( [+-]?('0'|[1-9]('_'?[0-9])*) ( [.][0-9](_?[0-9])* |  ( ( [.][0-9](_?[0-9])* )?  ( [eE] [+-]?[0-9](_?[0-9])* )  )  )  )  )*  |  [+-]?('inf'|'nan') )
+
+boolean ::=  true|false
+
+offset_date_time ::=  (  ( ([0-9]+)'-'('0'[1-9]|'1'[012])'-'('0'[1-9]|[12][0-9]|'3'[01]) [ tT] ([01][0-9]|'2'[0-3])':'([0-5][0-9])':'([0-5][0-9]|'60')([.][0-9]+)? ([zZ])|([+-]([01][0-9]|'2'[0-3])':'[0-5][0-9]) )  )*
+
+local_date_time ::=  (  ( ([0-9]+)'-'('0'[1-9]|'1'[012])'-'('0'[1-9]|[12][0-9]|'3'[01]) [ tT] ([01][0-9]|'2'[0-3])':'([0-5][0-9])':'([0-5][0-9]|'60')([.][0-9]+)? )  )*
+
+local_date ::=  ([0-9]+)'-'('0'[1-9]|'1'[012])'-'('0'[1-9]|[12][0-9]|'3'[01])
+
+local_time ::=  ([01][0-9]|'2'[0-3])':'([0-5][0-9])':'([0-5][0-9]|'60')([.][0-9]+)?
+
+array ::=  ( '['  (  [\r]?[\n] )*  ( ( _inline_value (  [\r]?[\n] )*  (  ( ','  (  [\r]?[\n] )*  _inline_value (  [\r]?[\n] )*  )  )*  ( ( ','  (  [\r]?[\n] )*  )  )?  )  )?  ']'  )
+
+inline_table ::=  ( '{'  ( ( (  _inline_pair )  (  ( ','  (  _inline_pair )  )  )*  )  )?  '}'  )
+
