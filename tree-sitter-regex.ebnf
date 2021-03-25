@@ -1,0 +1,70 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-regex
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+pattern ::=  ( disjunction |  term )
+
+disjunction ::=  ( ( term )?  ( ( '|'  ( term )?  )  )+  )
+
+term ::=  ( ( ( start_assertion |  end_assertion |  boundary_assertion |  non_boundary_assertion |  lookahead_assertion |  pattern_character |  character_class |  any_character |  decimal_escape |  character_class_escape |  _character_escape |  backreference_escape |  anonymous_capturing_group |  named_capturing_group |  non_capturing_group )  ( ( zero_or_more |  one_or_more |  optional |  count_quantifier )  )?  )  )+
+
+any_character ::=  '.'
+
+start_assertion ::=  '^'
+
+end_assertion ::=  '$'
+
+boundary_assertion ::=  '\b'
+
+non_boundary_assertion ::=  '\B'
+
+lookahead_assertion ::=  ( '(?'  ( '='  |  '!'  |  '<='  |  '<!'  )  pattern ')'  )
+
+pattern_character ::=  [^\^\$\\\.\*\+\?\(\)\[#x5d\{\}\|\n]
+
+character_class ::=  ( '['  ( '^'  )?  (  ( class_range |  _class_atom )  )*  ']'  )
+
+class_range ::=   (  ( _class_atom '-'  _class_atom )  )
+
+_class_atom ::=  ( (  '-'  )  |  class_character |  (  '\-'  )  |  character_class_escape |  _character_escape )
+
+class_character ::=  [^\\#x5d'-']
+
+anonymous_capturing_group ::=  ( '('  pattern ')'  )
+
+named_capturing_group ::=  ( '(?<'  group_name '>'  pattern ')'  )
+
+non_capturing_group ::=  ( '(?:'  pattern ')'  )
+
+zero_or_more ::=  ( '*'  ( (  '?'  )  )?  )
+
+one_or_more ::=  ( '+'  ( (  '?'  )  )?  )
+
+optional ::=  ( '?'  ( (  '?'  )  )?  )
+
+count_quantifier ::=  ( ( '{'  ( decimal_digits ( ( ','  decimal_digits )  )?  )  '}'  )  ( (  '?'  )  )?  )
+
+backreference_escape ::=  ( '\k'  group_name )
+
+decimal_escape ::=  '\'[1-9][0-9]+
+
+character_class_escape ::=  ( '\'[dDsSwW] |  ( '\'[pP] '{'  unicode_property_value_expression '}'  )  )
+
+unicode_property_value_expression ::=  ( ( ( (  unicode_property )  '='  )  )?  (  unicode_property )  )
+
+unicode_property ::=  [a-zA-Z_0-9]+
+
+_character_escape ::=  ( control_escape |  control_letter_escape |  identity_escape )
+
+control_escape ::=  '\'[bfnrtv0]
+
+control_letter_escape ::=  '\c'[a-zA-Z]
+
+identity_escape ::=  (  ( '\'  [^kdDsSpPwWbfnrtv0-9] )  )*
+
+group_name ::=  [A-Za-z0-9]+
+
+decimal_digits ::=  [0-9]+

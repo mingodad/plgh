@@ -1,0 +1,208 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-ql
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+ql ::=  (  moduleMember )*
+
+module ::=  ( 'module'  (  moduleName )  ( ( '{'  (  moduleMember )*  '}'  )  |  moduleAliasBody )  )
+
+moduleMember ::=  ( ( (  annotation )*  ( importDirective |  classlessPredicate |  dataclass |  datatype |  select |  module )  )  |  qldoc )
+
+importDirective ::=  ( 'import'  importModuleExpr ( ( 'as'  moduleName )  )?  )
+
+moduleAliasBody ::=  ( '='  moduleExpr ';'  )
+
+predicateAliasBody ::=  ( '='  predicateExpr ';'  )
+
+typeAliasBody ::=  ( '='  typeExpr ';'  )
+
+typeUnionBody ::=  ( '='  typeExpr 'or'  ( ( typeExpr (  ( 'or'  typeExpr )  )*  )  )?  ';'  )
+
+classlessPredicate ::=  ( (  ( predicate |  typeExpr )  )  (  predicateName )  ( ( '('  ( ( varDecl (  ( ','  varDecl )  )*  )  )?  ')'  _optbody )  |  predicateAliasBody )  )
+
+datatype ::=  ( 'newtype'  (  className )  '='  datatypeBranches )
+
+datatypeBranches ::=  ( datatypeBranch (  ( 'or'  datatypeBranch )  )*  )
+
+datatypeBranch ::=  ( ( qldoc )?  ( annotation )?  (  className )  '('  ( ( varDecl (  ( ','  varDecl )  )*  )  )?  ')'  ( body )?  )
+
+select ::=  ( ( ( 'from'  ( ( varDecl (  ( ','  varDecl )  )*  )  )?  )  )?  ( ( 'where'  _exprOrTerm )  )?  ( 'select'  asExprs ( orderBys )?  )  )
+
+dataclass ::=  ( 'class'  (  className )  ( ( 'extends'  ( typeExpr (  ( ','  typeExpr )  )*  )  '{'  (  classMember )*  '}'  )  |  typeAliasBody |  typeUnionBody )  )
+
+classMember ::=  ( ( (  annotation )*  ( charpred |  memberPredicate |  field )  )  |  qldoc )
+
+charpred ::=  ( className '('  ')'  '{'  _exprOrTerm '}'  )
+
+memberPredicate ::=  ( (  ( predicate |  typeExpr )  )  (  predicateName )  '('  ( ( varDecl (  ( ','  varDecl )  )*  )  )?  ')'  _optbody )
+
+field ::=  ( varDecl ';'  )
+
+_optbody ::=  ( empty |  body |  higherOrderTerm )
+
+empty ::=  ';'
+
+body ::=  ( '{'  _exprOrTerm '}'  )
+
+higherOrderTerm ::=  ( '='  (  literalId )  '('  ( ( predicateExpr (  ( ','  predicateExpr )  )*  )  )?  ')'  '('  ( ( _call_arg (  ( ','  _call_arg )  )*  )  )?  ')'  )
+
+special_call ::=  ( specialId '('  ')'  )
+
+prefix_cast ::=   (  ( '('  typeExpr ')'  _exprOrTerm )  )
+
+unary_expr ::=  ( unop _exprOrTerm )
+
+mul_expr ::=   (  ( (  _exprOrTerm )  mulop (  _exprOrTerm )  )  )
+
+add_expr ::=   (  ( (  _exprOrTerm )  addop (  _exprOrTerm )  )  )
+
+in_expr ::=   (  ( (  _exprOrTerm )  'in'  (  _primary )  )  )
+
+comp_term ::=   (  ( (  _exprOrTerm )  compop (  _exprOrTerm )  )  )
+
+instance_of ::=   (  ( _exprOrTerm 'instanceof'  typeExpr )  )
+
+negation ::=   (  ( 'not'  _exprOrTerm )  )
+
+if_term ::=   (  ( 'if'  (  _exprOrTerm )  'then'  (  _exprOrTerm )  'else'  (  _exprOrTerm )  )  )
+
+conjunction ::=   (  ( (  _exprOrTerm )  'and'  (  _exprOrTerm )  )  )
+
+disjunction ::=   (  ( (  _exprOrTerm )  'or'  (  _exprOrTerm )  )  )
+
+implication ::=   (  ( (  _exprOrTerm )  'implies'  (  _exprOrTerm )  )  )
+
+quantified ::=  ( quantifier '('  ( ( ( ( varDecl (  ( ','  varDecl )  )*  )  )?  ( ( '|'  _exprOrTerm ( ( '|'  _exprOrTerm )  )?  )  )?  )  |  _exprOrTerm )  ')'  )
+
+specialId ::=  'none'
+
+quantifier ::=  ( 'exists'  |  'forall'  |  'forex'  )
+
+_call_arg ::=  ( _exprOrTerm |  underscore )
+
+underscore ::=  '_'
+
+qualifiedRhs ::=  ( ( (  predicateName )  ( closure )?  '('  ( ( _call_arg (  ( ','  _call_arg )  )*  )  )?  ')'  )  |  ( '('  typeExpr ')'  )  )
+
+call_body ::=  ( '('  ( ( _call_arg (  ( ','  _call_arg )  )*  )  )?  ')'  )
+
+unqual_agg_body ::=  ( '('  ( ( varDecl (  ( ','  varDecl )  )*  )  )?  '|'  ( _exprOrTerm )?  ( ( '|'  asExprs )  )?  ')'  )
+
+_call_or_unqual_agg_body ::=  ( call_body |  unqual_agg_body )
+
+call_or_unqual_agg_expr ::=   (  ( aritylessPredicateExpr ( closure )?  _call_or_unqual_agg_body )  )
+
+qualified_expr ::=  ( _primary '.'  qualifiedRhs )
+
+super_ref ::=  ( ( ( typeExpr '.'  )  )?  super )
+
+full_aggregate_body ::=  ( ( ( ( varDecl (  ( ','  varDecl )  )*  )  )?  ( '|'  ( _exprOrTerm )?  ( ( '|'  asExprs ( orderBys )?  )  )?  )  )  |  ( varDecl (  ( ','  varDecl )  )*  )  )
+
+expr_aggregate_body ::=  ( asExprs ( orderBys )?  )
+
+aggregate ::=  ( aggId ( ( '['  ( _exprOrTerm (  ( ','  _exprOrTerm )  )*  )  ']'  )  )?  '('  ( ( full_aggregate_body |  expr_aggregate_body )  )?  ')'  )
+
+range ::=  ( '['  (  _exprOrTerm )  '..'  (  _exprOrTerm )  ']'  )
+
+set_literal ::=  ( '['  ( ( _exprOrTerm (  ( ','  _exprOrTerm )  )*  )  )?  ']'  )
+
+par_expr ::=  ( '('  _exprOrTerm ')'  )
+
+_exprOrTerm ::=  ( special_call |  prefix_cast |  _primary |  unary_expr |  mul_expr |  add_expr |  in_expr |  comp_term |  instance_of |  negation |  if_term |  conjunction |  disjunction |  implication |  quantified )
+
+_primary ::=  ( call_or_unqual_agg_expr |  qualified_expr |  literal |  variable |  super_ref |  aggregate |  range |  set_literal |  par_expr )
+
+literal ::=  ( integer |  float |  bool |  string )
+
+bool ::=  ( true |  false )
+
+variable ::=  ( this |  result |  varName )
+
+compop ::=  ( '='  |  '!='  |  '<'  |  '>'  |  '<='  |  '>='  )
+
+unop ::=  ( '+'  |  '-'  )
+
+mulop ::=  ( '*'  |  '/'  |  '%'  )
+
+addop ::=  ( '+'  |  '-'  )
+
+closure ::=  ( '*'  |  '+'  )
+
+direction ::=  ( 'asc'  |  'desc'  )
+
+varDecl ::=  ( typeExpr varName )
+
+asExprs ::=  ( asExpr (  ( ','  asExpr )  )*  )
+
+asExpr ::=  ( _exprOrTerm ( ( 'as'  varName )  )?  )
+
+orderBys ::=  ( 'order'  'by'  ( orderBy (  ( ','  orderBy )  )*  )  )
+
+orderBy ::=  ( _exprOrTerm ( direction )?  )
+
+qldoc ::=  '/**'[^*]*'*'+([^/*][^*]*'*'+)*'/'
+
+literalId ::=  ( _lower_id |  _upper_id )
+
+annotation ::=  ( (  annotName )  |  ( (  annotName )  '['  (  ( annotArg (  ( ','  annotArg )  )*  )  )  ']'  )  )
+
+annotName ::=  _lower_id
+
+annotArg ::=  ( simpleId |  this |  result )
+
+moduleName ::=  simpleId
+
+qualModuleExpr ::=  ( (  simpleId )  (  ( '.'  (  simpleId )  )  )*  )
+
+importModuleExpr ::=  ( qualModuleExpr (  ( '::'  (  simpleId )  )  )*  )
+
+moduleExpr ::=  ( simpleId |  ( moduleExpr '::'  (  simpleId )  )  )
+
+primitiveType ::=  ( 'boolean'  |  'date'  |  'float'  |  'int'  |  'string'  )
+
+simpleId ::=  ( _lower_id |  _upper_id )
+
+className ::=  _upper_id
+
+dbtype ::=  '@'[a-z][A-Za-z0-9_]*
+
+typeExpr ::=  ( ( ( ( moduleExpr '::'  )  )?  (  className )  )  |  dbtype |  primitiveType )
+
+predicateName ::=  _lower_id
+
+aritylessPredicateExpr ::=  ( ( ( moduleExpr '::'  )  )?  (  literalId )  )
+
+predicateExpr ::=  ( aritylessPredicateExpr '/'  integer )
+
+varName ::=  simpleId
+
+aggId ::=  ( 'avg'  |  'concat'  |  'strictconcat'  |  'count'  |  'max'  |  'min'  |  'rank'  |  'strictcount'  |  'strictsum'  |  'sum'  |  'any'  )
+
+_upper_id ::=  [A-Z][A-Za-z0-9_]*
+
+_lower_id ::=  [a-z][A-Za-z0-9_]*
+
+integer ::=  [0-9]+
+
+float ::=  [0-9]+'.'[0-9]+
+
+string ::=  '"'([^"\\\r\n\t]|'\\'["\\nrt])*'"'
+
+line_comment ::=  '//'[^\r\n]*
+
+block_comment ::=  '/*'([^*]+'*'+([^/*][^*]*'*'+)*|'*')'/'
+
+false ::=  'false'
+
+predicate ::=  'predicate'
+
+result ::=  'result'
+
+super ::=  'super'
+
+this ::=  'this'
+
+true ::=  'true'
