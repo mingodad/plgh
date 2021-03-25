@@ -1,0 +1,399 @@
+/*
+Grammar originally from  https://github.com/ikatyang/tree-sitter-yaml
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+stream ::=  ( ( ( ( ( (  _bgn_imp_doc )  |  (  _drs_doc )  |  (  _exp_doc )  )  ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq )  )?  )  |  ( ( (  _bgn_imp_doc_end )  |  (  _drs_doc_end )  |  (  _exp_doc_end )  |  (  _doc_end )  )  ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq |  _doc_wo_bgn_w_end_seq |  _doc_wo_bgn_wo_end_seq )  )?  )  )  )?  _eof )
+
+_doc_w_bgn_w_end_seq ::=  ( _doc_w_bgn_w_end ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq |  _doc_wo_bgn_w_end_seq |  _doc_wo_bgn_wo_end_seq )  )?  )
+
+_doc_w_bgn_wo_end_seq ::=  ( _doc_w_bgn_wo_end ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq )  )?  )
+
+_doc_wo_bgn_w_end_seq ::=  ( _doc_wo_bgn_w_end ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq |  _doc_wo_bgn_w_end_seq |  _doc_wo_bgn_wo_end_seq )  )?  )
+
+_doc_wo_bgn_wo_end_seq ::=  ( _doc_wo_bgn_wo_end ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq )  )?  )
+
+_doc_w_bgn_w_end ::=  ( (  _exp_doc_end )  |  (  _doc_end )  )
+
+_doc_w_bgn_wo_end ::=  (  _exp_doc )
+
+_doc_wo_bgn_w_end ::=  ( (  _drs_doc_end )  |  (  _imp_doc_end )  )
+
+_doc_wo_bgn_wo_end ::=  ( (  _drs_doc )  |  (  _imp_doc )  )
+
+_bgn_imp_doc ::=  ( _exp_doc_tal |  (  _r_blk_seq_r_val )  |  (  _r_blk_map_r_val )  )
+
+_drs_doc ::=  ( ( _s_dir )+  _exp_doc )
+
+_exp_doc ::=  ( (  _s_drs_end )  ( _exp_doc_tal )?  )
+
+_imp_doc ::=  ( (  _br_blk_seq_val )  |  (  _br_blk_map_val )  |  (  _br_blk_str_val )  |  _br_flw_val_blk )
+
+_drs_doc_end ::=   (  ( _drs_doc (  _s_doc_end )  )  )
+
+_exp_doc_end ::=   (  ( _exp_doc (  _s_doc_end )  )  )
+
+_imp_doc_end ::=   (  ( _imp_doc (  _s_doc_end )  )  )
+
+_bgn_imp_doc_end ::=   (  ( _bgn_imp_doc (  _s_doc_end )  )  )
+
+_doc_end ::=  (  _s_doc_end )
+
+_exp_doc_tal ::=  ( (  _r_blk_seq_br_val )  |  (  _br_blk_seq_val )  |  (  _r_blk_map_br_val )  |  (  _br_blk_map_val )  |  (  _r_blk_str_val )  |  (  _br_blk_str_val )  |  _r_flw_val_blk |  _br_flw_val_blk )
+
+_s_dir ::=  ( (  _s_dir_yml )  |  (  _s_dir_tag )  |  (  _s_dir_rsv )  )
+
+_s_dir_yml ::=  ( _s_dir_yml_bgn (  _r_dir_yml_ver )  )
+
+_s_dir_tag ::=  ( _s_dir_tag_bgn (  _r_dir_tag_hdl )  (  _r_dir_tag_pfx )  )
+
+_s_dir_rsv ::=  ( (  _s_dir_rsv_bgn )  (  (  _r_dir_rsv_prm )  )*  )
+
+_r_prp_val ::=  _r_prp
+
+_br_prp_val ::=  _br_prp
+
+_r_sgl_prp_val ::=  _r_sgl_prp
+
+_br_sgl_prp_val ::=  _br_sgl_prp
+
+_b_sgl_prp_val ::=  _b_sgl_prp
+
+_r_prp ::=  ( ( (  _r_acr )  ( ( (  _r_tag )  |  (  _br_tag )  )  )?  )  |  ( (  _r_tag )  ( ( (  _r_acr )  |  (  _br_acr )  )  )?  )  )
+
+_br_prp ::=  ( ( (  _br_acr )  ( ( (  _r_tag )  |  (  _br_tag )  )  )?  )  |  ( (  _br_tag )  ( ( (  _r_acr )  |  (  _br_acr )  )  )?  )  )
+
+_r_sgl_prp ::=  ( ( (  _r_acr )  ( (  _r_tag )  )?  )  |  ( (  _r_tag )  ( (  _r_acr )  )?  )  )
+
+_br_sgl_prp ::=  ( ( (  _br_acr )  ( (  _r_tag )  )?  )  |  ( (  _br_tag )  ( (  _r_acr )  )?  )  )
+
+_b_sgl_prp ::=  ( ( (  _b_acr )  ( (  _r_tag )  )?  )  |  ( (  _b_tag )  ( (  _r_acr )  )?  )  )
+
+_r_blk_seq_val ::=  ( (  _r_blk_seq_r_val )  |  (  _r_blk_seq_br_val )  )
+
+_r_blk_seq_r_val ::=  (  _r_blk_seq )
+
+_r_blk_seq_br_val ::=  ( _r_prp (  _br_blk_seq )  )
+
+_br_blk_seq_val ::=  ( (  _br_blk_seq )  |  ( _br_prp (  _br_blk_seq )  )  )
+
+_r_blk_seq_spc_val ::=  ( _r_prp (  _b_blk_seq_spc )  )
+
+_br_blk_seq_spc_val ::=  ( _br_prp (  _b_blk_seq_spc )  )
+
+_b_blk_seq_spc_val ::=  (  _b_blk_seq_spc )
+
+_r_blk_seq ::=  ( (  _r_blk_seq_itm )  (  (  _b_blk_seq_itm )  )*  _bl )
+
+_br_blk_seq ::=  ( (  _br_blk_seq_itm )  (  (  _b_blk_seq_itm )  )*  _bl )
+
+_b_blk_seq_spc ::=  ( ( (  _b_blk_seq_itm )  )+  _bl )
+
+_r_blk_seq_itm ::=  ( (  _r_blk_seq_bgn )  ( _blk_seq_itm_tal )?  )
+
+_br_blk_seq_itm ::=  ( (  _br_blk_seq_bgn )  ( _blk_seq_itm_tal )?  )
+
+_b_blk_seq_itm ::=  ( (  _b_blk_seq_bgn )  ( _blk_seq_itm_tal )?  )
+
+_blk_seq_itm_tal ::=  ( _r_blk_seq_val |  (  _br_blk_seq_val )  |  _r_blk_map_val |  (  _br_blk_map_val )  |  (  _r_blk_str_val )  |  (  _br_blk_str_val )  |  _r_flw_val_blk |  _br_flw_val_blk )
+
+_r_blk_map_val ::=  ( (  _r_blk_map_r_val )  |  (  _r_blk_map_br_val )  )
+
+_r_blk_map_r_val ::=  (  _r_blk_map )
+
+_r_blk_map_br_val ::=  ( _r_prp (  _br_blk_map )  )
+
+_br_blk_map_val ::=  ( (  _br_blk_map )  |  ( _br_prp (  _br_blk_map )  )  )
+
+_r_blk_map ::=  ( _r_blk_map_itm (  _b_blk_map_itm )*  _bl )
+
+_br_blk_map ::=  ( _br_blk_map_itm (  _b_blk_map_itm )*  _bl )
+
+_r_blk_map_itm ::=  ( (  _r_blk_exp_itm )  |  (  _r_blk_imp_itm )  )
+
+_br_blk_map_itm ::=  ( (  _br_blk_exp_itm )  |  (  _br_blk_imp_itm )  )
+
+_b_blk_map_itm ::=  ( (  _b_blk_exp_itm )  |  (  _b_blk_imp_itm )  )
+
+_r_blk_exp_itm ::=   (  ( ( _r_blk_key_itm ( _b_blk_val_itm )?  )  |  _r_blk_val_itm )  )
+
+_br_blk_exp_itm ::=   (  ( ( _br_blk_key_itm ( _b_blk_val_itm )?  )  |  _br_blk_val_itm )  )
+
+_b_blk_exp_itm ::=   (  ( ( _b_blk_key_itm ( _b_blk_val_itm )?  )  |  _b_blk_val_itm )  )
+
+_r_blk_key_itm ::=  ( (  _r_blk_key_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_br_blk_key_itm ::=  ( (  _br_blk_key_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_b_blk_key_itm ::=  ( (  _b_blk_key_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_r_blk_val_itm ::=  ( (  _r_blk_val_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_br_blk_val_itm ::=  ( (  _br_blk_val_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_b_blk_val_itm ::=  ( (  _b_blk_val_bgn )  ( (  _blk_exp_itm_tal )  )?  )
+
+_r_blk_imp_itm ::=  ( (  _r_sgl_flw_val_blk )  _blk_imp_itm_tal )
+
+_br_blk_imp_itm ::=  ( (  _br_sgl_flw_val_blk )  _blk_imp_itm_tal )
+
+_b_blk_imp_itm ::=  ( (  _b_sgl_flw_val_blk )  _blk_imp_itm_tal )
+
+_blk_exp_itm_tal ::=  ( _blk_seq_itm_tal |  (  _r_blk_seq_spc_val )  |  (  _br_blk_seq_spc_val )  |  (  _b_blk_seq_spc_val )  )
+
+_blk_imp_itm_tal ::=  ( (  _r_blk_imp_bgn )  ( (  ( (  _r_blk_seq_br_val )  |  (  _br_blk_seq_val )  |  (  _r_blk_seq_spc_val )  |  (  _br_blk_seq_spc_val )  |  (  _b_blk_seq_spc_val )  |  (  _r_blk_map_br_val )  |  (  _br_blk_map_val )  |  (  _r_blk_str_val )  |  (  _br_blk_str_val )  |  _r_flw_val_blk |  _br_flw_val_blk )  )  )?  )
+
+_r_blk_str_val ::=  ( (  _r_blk_str )  |  ( _r_prp ( (  _r_blk_str )  |  (  _br_blk_str )  )  )  )
+
+_br_blk_str_val ::=  ( (  _br_blk_str )  |  ( _br_prp ( (  _r_blk_str )  |  (  _br_blk_str )  )  )  )
+
+_r_blk_str ::=  ( ( (  _r_blk_lit_bgn )  |  (  _r_blk_fld_bgn )  )  (  _br_blk_str_ctn )*  _bl )
+
+_br_blk_str ::=  ( ( (  _br_blk_lit_bgn )  |  (  _br_blk_fld_bgn )  )  (  _br_blk_str_ctn )*  _bl )
+
+_r_flw_val_blk ::=  ( _r_flw_jsl_val |  _r_flw_njl_val_blk )
+
+_br_flw_val_blk ::=  ( _br_flw_jsl_val |  _br_flw_njl_val_blk )
+
+_r_sgl_flw_val_blk ::=  ( _r_sgl_flw_jsl_val |  _r_sgl_flw_njl_val_blk )
+
+_br_sgl_flw_val_blk ::=  ( _br_sgl_flw_jsl_val |  _br_sgl_flw_njl_val_blk )
+
+_b_sgl_flw_val_blk ::=  ( _b_sgl_flw_jsl_val |  _b_sgl_flw_njl_val_blk )
+
+_r_flw_val_flw ::=  ( _r_flw_jsl_val |  _r_flw_njl_val_flw )
+
+_br_flw_val_flw ::=  ( _br_flw_jsl_val |  _br_flw_njl_val_flw )
+
+_r_sgl_flw_val_flw ::=  ( _r_sgl_flw_jsl_val |  _r_sgl_flw_njl_val_flw )
+
+_r_flw_jsl_val ::=  ( (  _r_flw_seq_val )  |  (  _r_flw_map_val )  |  (  _r_dqt_str_val )  |  (  _r_sqt_str_val )  )
+
+_br_flw_jsl_val ::=  ( (  _br_flw_seq_val )  |  (  _br_flw_map_val )  |  (  _br_dqt_str_val )  |  (  _br_sqt_str_val )  )
+
+_r_sgl_flw_jsl_val ::=  ( (  _r_sgl_flw_seq_val )  |  (  _r_sgl_flw_map_val )  |  (  _r_sgl_dqt_str_val )  |  (  _r_sgl_sqt_str_val )  )
+
+_br_sgl_flw_jsl_val ::=  ( (  _br_sgl_flw_seq_val )  |  (  _br_sgl_flw_map_val )  |  (  _br_sgl_dqt_str_val )  |  (  _br_sgl_sqt_str_val )  )
+
+_b_sgl_flw_jsl_val ::=  ( (  _b_sgl_flw_seq_val )  |  (  _b_sgl_flw_map_val )  |  (  _b_sgl_dqt_str_val )  |  (  _b_sgl_sqt_str_val )  )
+
+_r_flw_njl_val_blk ::=  ( (  _r_als_val )  |  (  _r_prp_val )  |  (  _r_pln_blk_val )  )
+
+_br_flw_njl_val_blk ::=  ( (  _br_als_val )  |  (  _br_prp_val )  |  (  _br_pln_blk_val )  )
+
+_r_sgl_flw_njl_val_blk ::=  ( (  _r_als_val )  |  (  _r_sgl_prp_val )  |  (  _r_sgl_pln_blk_val )  )
+
+_br_sgl_flw_njl_val_blk ::=  ( (  _br_als_val )  |  (  _br_sgl_prp_val )  |  (  _br_sgl_pln_blk_val )  )
+
+_b_sgl_flw_njl_val_blk ::=  ( (  _b_als_val )  |  (  _b_sgl_prp_val )  |  (  _b_sgl_pln_blk_val )  )
+
+_r_flw_njl_val_flw ::=  ( (  _r_als_val )  |  (  _r_prp_val )  |  (  _r_pln_flw_val )  )
+
+_br_flw_njl_val_flw ::=  ( (  _br_als_val )  |  (  _br_prp_val )  |  (  _br_pln_flw_val )  )
+
+_r_sgl_flw_njl_val_flw ::=  ( (  _r_als_val )  |  (  _r_sgl_prp_val )  |  (  _r_sgl_pln_flw_val )  )
+
+_r_flw_seq_val ::=  ( (  _r_flw_seq )  |  ( _r_prp ( (  _r_flw_seq )  |  (  _br_flw_seq )  )  )  )
+
+_br_flw_seq_val ::=  ( (  _br_flw_seq )  |  ( _br_prp ( (  _r_flw_seq )  |  (  _br_flw_seq )  )  )  )
+
+_r_sgl_flw_seq_val ::=  ( (  _r_sgl_flw_seq )  |  ( _r_sgl_prp (  _r_sgl_flw_seq )  )  )
+
+_br_sgl_flw_seq_val ::=  ( (  _br_sgl_flw_seq )  |  ( _br_sgl_prp (  _r_sgl_flw_seq )  )  )
+
+_b_sgl_flw_seq_val ::=  ( (  _b_sgl_flw_seq )  |  ( _b_sgl_prp (  _r_sgl_flw_seq )  )  )
+
+_r_flw_seq ::=  ( (  _r_flw_seq_bgn )  _flw_seq_tal )
+
+_br_flw_seq ::=  ( (  _br_flw_seq_bgn )  _flw_seq_tal )
+
+_r_sgl_flw_seq ::=  ( (  _r_flw_seq_bgn )  _sgl_flw_seq_tal )
+
+_br_sgl_flw_seq ::=  ( (  _br_flw_seq_bgn )  _sgl_flw_seq_tal )
+
+_b_sgl_flw_seq ::=  ( (  _b_flw_seq_bgn )  _sgl_flw_seq_tal )
+
+_flw_seq_tal ::=  ( ( ( _r_flw_seq_dat |  _br_flw_seq_dat )  )?  ( (  _r_flw_seq_end )  |  (  _br_flw_seq_end )  )  )
+
+_sgl_flw_seq_tal ::=  ( ( _r_sgl_flw_col_dat )?  (  _r_flw_seq_end )  )
+
+_r_flw_map_val ::=  ( (  _r_flw_map )  |  ( _r_prp ( (  _r_flw_map )  |  (  _br_flw_map )  )  )  )
+
+_br_flw_map_val ::=  ( (  _br_flw_map )  |  ( _br_prp ( (  _r_flw_map )  |  (  _br_flw_map )  )  )  )
+
+_r_sgl_flw_map_val ::=  ( (  _r_sgl_flw_map )  |  ( _r_sgl_prp (  _r_sgl_flw_map )  )  )
+
+_br_sgl_flw_map_val ::=  ( (  _br_sgl_flw_map )  |  ( _br_sgl_prp (  _r_sgl_flw_map )  )  )
+
+_b_sgl_flw_map_val ::=  ( (  _b_sgl_flw_map )  |  ( _b_sgl_prp (  _r_sgl_flw_map )  )  )
+
+_r_flw_map ::=  ( (  _r_flw_map_bgn )  _flw_map_tal )
+
+_br_flw_map ::=  ( (  _br_flw_map_bgn )  _flw_map_tal )
+
+_r_sgl_flw_map ::=  ( (  _r_flw_map_bgn )  _sgl_flw_map_tal )
+
+_br_sgl_flw_map ::=  ( (  _br_flw_map_bgn )  _sgl_flw_map_tal )
+
+_b_sgl_flw_map ::=  ( (  _b_flw_map_bgn )  _sgl_flw_map_tal )
+
+_flw_map_tal ::=  ( ( ( _r_flw_map_dat |  _br_flw_map_dat )  )?  ( (  _r_flw_map_end )  |  (  _br_flw_map_end )  )  )
+
+_sgl_flw_map_tal ::=  ( ( _r_sgl_flw_col_dat )?  (  _r_flw_map_end )  )
+
+_r_flw_seq_dat ::=  ( _r_flw_seq_itm (  _flw_seq_dat_rpt )*  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  )?  )
+
+_br_flw_seq_dat ::=  ( _br_flw_seq_itm (  _flw_seq_dat_rpt )*  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  )?  )
+
+_r_flw_map_dat ::=  ( _r_flw_map_itm (  _flw_map_dat_rpt )*  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  )?  )
+
+_br_flw_map_dat ::=  ( _br_flw_map_itm (  _flw_map_dat_rpt )*  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  )?  )
+
+_r_sgl_flw_col_dat ::=  ( _r_sgl_flw_col_itm (  _sgl_flw_col_dat_rpt )*  ( (  _r_flw_sep_bgn )  )?  )
+
+_flw_seq_dat_rpt ::=  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  ( _r_flw_seq_itm |  _br_flw_seq_itm )  )
+
+_flw_map_dat_rpt ::=  ( ( (  _r_flw_sep_bgn )  |  (  _br_flw_sep_bgn )  )  ( _r_flw_map_itm |  _br_flw_map_itm )  )
+
+_sgl_flw_col_dat_rpt ::=  ( (  _r_flw_sep_bgn )  _r_sgl_flw_col_itm )
+
+_r_flw_seq_itm ::=  ( _r_flw_val_flw |  (  _r_flw_exp_par )  |  (  _r_flw_imp_r_par )  |  (  _r_flw_njl_ann_par )  )
+
+_br_flw_seq_itm ::=  ( _br_flw_val_flw |  (  _br_flw_exp_par )  |  (  _br_flw_imp_r_par )  |  (  _br_flw_njl_ann_par )  )
+
+_r_flw_map_itm ::=  ( _r_flw_val_flw |  (  _r_flw_exp_par )  |  (  _r_flw_imp_r_par )  |  (  _r_flw_imp_br_par )  |  (  _r_flw_njl_ann_par )  )
+
+_br_flw_map_itm ::=  ( _br_flw_val_flw |  (  _br_flw_exp_par )  |  (  _br_flw_imp_r_par )  |  (  _br_flw_imp_br_par )  |  (  _br_flw_njl_ann_par )  )
+
+_r_sgl_flw_col_itm ::=  ( _r_sgl_flw_val_flw |  (  _r_sgl_flw_exp_par )  |  (  _r_sgl_flw_imp_par )  |  (  _r_sgl_flw_njl_ann_par )  )
+
+_r_flw_exp_par ::=  ( (  _r_flw_key_bgn )  ( ( _r_flw_imp_r_par |  _r_flw_imp_br_par |  _br_flw_imp_r_par |  _br_flw_imp_br_par )  )?  )
+
+_br_flw_exp_par ::=  ( (  _br_flw_key_bgn )  ( ( _r_flw_imp_r_par |  _r_flw_imp_br_par |  _br_flw_imp_r_par |  _br_flw_imp_br_par )  )?  )
+
+_r_sgl_flw_exp_par ::=  ( (  _r_flw_key_bgn )  ( _r_sgl_flw_imp_par )?  )
+
+_r_flw_imp_r_par ::=  ( ( (  _r_flw_jsl_val )  _r_flw_jsl_ann_par )  |  ( (  _r_flw_njl_val_flw )  _r_flw_njl_ann_par )  )
+
+_r_flw_imp_br_par ::=  ( ( (  _r_flw_jsl_val )  _br_flw_jsl_ann_par )  |  ( (  _r_flw_njl_val_flw )  _br_flw_njl_ann_par )  )
+
+_br_flw_imp_r_par ::=  ( ( (  _br_flw_jsl_val )  _r_flw_jsl_ann_par )  |  ( (  _br_flw_njl_val_flw )  _r_flw_njl_ann_par )  )
+
+_br_flw_imp_br_par ::=  ( ( (  _br_flw_jsl_val )  _br_flw_jsl_ann_par )  |  ( (  _br_flw_njl_val_flw )  _br_flw_njl_ann_par )  )
+
+_r_sgl_flw_imp_par ::=  ( ( (  _r_sgl_flw_jsl_val )  _r_sgl_flw_jsl_ann_par )  |  ( (  _r_sgl_flw_njl_val_flw )  _r_sgl_flw_njl_ann_par )  )
+
+_r_flw_jsl_ann_par ::=  ( (  _r_flw_jsv_bgn )  ( (  _flw_ann_par_tal )  )?  )
+
+_br_flw_jsl_ann_par ::=  ( (  _br_flw_jsv_bgn )  ( (  _flw_ann_par_tal )  )?  )
+
+_r_sgl_flw_jsl_ann_par ::=  ( (  _r_flw_jsv_bgn )  ( (  _sgl_flw_ann_par_tal )  )?  )
+
+_r_flw_njl_ann_par ::=  ( (  _r_flw_njv_bgn )  ( (  _flw_ann_par_tal )  )?  )
+
+_br_flw_njl_ann_par ::=  ( (  _br_flw_njv_bgn )  ( (  _flw_ann_par_tal )  )?  )
+
+_r_sgl_flw_njl_ann_par ::=  ( (  _r_flw_njv_bgn )  ( (  _sgl_flw_ann_par_tal )  )?  )
+
+_flw_ann_par_tal ::=  ( _r_flw_val_flw |  _br_flw_val_flw )
+
+_sgl_flw_ann_par_tal ::=  _r_sgl_flw_val_flw
+
+_r_dqt_str_val ::=  ( (  _r_dqt_str )  |  ( _r_prp ( (  _r_dqt_str )  |  (  _br_dqt_str )  )  )  )
+
+_br_dqt_str_val ::=  ( (  _br_dqt_str )  |  ( _br_prp ( (  _r_dqt_str )  |  (  _br_dqt_str )  )  )  )
+
+_r_sgl_dqt_str_val ::=  ( (  _r_sgl_dqt_str )  |  ( _r_sgl_prp (  _r_sgl_dqt_str )  )  )
+
+_br_sgl_dqt_str_val ::=  ( (  _br_sgl_dqt_str )  |  ( _br_sgl_prp (  _r_sgl_dqt_str )  )  )
+
+_b_sgl_dqt_str_val ::=  ( (  _b_sgl_dqt_str )  |  ( _b_sgl_prp (  _r_sgl_dqt_str )  )  )
+
+_r_dqt_str ::=  ( (  _r_dqt_str_bgn )  ( _r_sgl_dqt_ctn )?  ( (  _r_dqt_esc_nwl )  )?  (  _br_mtl_dqt_ctn )*  ( (  _r_dqt_str_end )  |  (  _br_dqt_str_end )  )  )
+
+_br_dqt_str ::=  ( (  _br_dqt_str_bgn )  ( _r_sgl_dqt_ctn )?  ( (  _r_dqt_esc_nwl )  )?  (  _br_mtl_dqt_ctn )*  ( (  _r_dqt_str_end )  |  (  _br_dqt_str_end )  )  )
+
+_r_sgl_dqt_str ::=  ( (  _r_dqt_str_bgn )  ( _r_sgl_dqt_ctn )?  (  _r_dqt_str_end )  )
+
+_br_sgl_dqt_str ::=  ( (  _br_dqt_str_bgn )  ( _r_sgl_dqt_ctn )?  (  _r_dqt_str_end )  )
+
+_b_sgl_dqt_str ::=  ( (  _b_dqt_str_bgn )  ( _r_sgl_dqt_ctn )?  (  _r_dqt_str_end )  )
+
+_r_sgl_dqt_ctn ::=  ( ( _r_dqt_str_ctn |  (  _r_dqt_esc_seq )  )  )+
+
+_br_mtl_dqt_ctn ::=  ( (  _br_dqt_esc_nwl )  |  ( ( _br_dqt_str_ctn |  (  _br_dqt_esc_seq )  )  (  ( _r_dqt_str_ctn |  (  _r_dqt_esc_seq )  )  )*  ( (  _r_dqt_esc_nwl )  )?  )  )
+
+_r_sqt_str_val ::=  ( (  _r_sqt_str )  |  ( _r_prp ( (  _r_sqt_str )  |  (  _br_sqt_str )  )  )  )
+
+_br_sqt_str_val ::=  ( (  _br_sqt_str )  |  ( _br_prp ( (  _r_sqt_str )  |  (  _br_sqt_str )  )  )  )
+
+_r_sgl_sqt_str_val ::=  ( (  _r_sgl_sqt_str )  |  ( _r_sgl_prp (  _r_sgl_sqt_str )  )  )
+
+_br_sgl_sqt_str_val ::=  ( (  _br_sgl_sqt_str )  |  ( _br_sgl_prp (  _r_sgl_sqt_str )  )  )
+
+_b_sgl_sqt_str_val ::=  ( (  _b_sgl_sqt_str )  |  ( _b_sgl_prp (  _r_sgl_sqt_str )  )  )
+
+_r_sqt_str ::=  ( (  _r_sqt_str_bgn )  ( _r_sgl_sqt_ctn )?  (  _br_mtl_sqt_ctn )*  ( (  _r_sqt_str_end )  |  (  _br_sqt_str_end )  )  )
+
+_br_sqt_str ::=  ( (  _br_sqt_str_bgn )  ( _r_sgl_sqt_ctn )?  (  _br_mtl_sqt_ctn )*  ( (  _r_sqt_str_end )  |  (  _br_sqt_str_end )  )  )
+
+_r_sgl_sqt_str ::=  ( (  _r_sqt_str_bgn )  ( _r_sgl_sqt_ctn )?  (  _r_sqt_str_end )  )
+
+_br_sgl_sqt_str ::=  ( (  _br_sqt_str_bgn )  ( _r_sgl_sqt_ctn )?  (  _r_sqt_str_end )  )
+
+_b_sgl_sqt_str ::=  ( (  _b_sqt_str_bgn )  ( _r_sgl_sqt_ctn )?  (  _r_sqt_str_end )  )
+
+_r_sgl_sqt_ctn ::=  ( ( _r_sqt_str_ctn |  (  _r_sqt_esc_sqt )  )  )+
+
+_br_mtl_sqt_ctn ::=  ( ( _br_sqt_str_ctn |  (  _br_sqt_esc_sqt )  )  (  ( _r_sqt_str_ctn |  (  _r_sqt_esc_sqt )  )  )*  )
+
+_r_pln_blk_val ::=  ( _r_pln_blk |  ( _r_prp ( _r_pln_blk |  _br_pln_blk )  )  )
+
+_br_pln_blk_val ::=  ( _br_pln_blk |  ( _br_prp ( _r_pln_blk |  _br_pln_blk )  )  )
+
+_r_sgl_pln_blk_val ::=  ( (  _r_sgl_pln_blk )  |  ( _r_sgl_prp (  _r_sgl_pln_blk )  )  )
+
+_br_sgl_pln_blk_val ::=  ( (  _br_sgl_pln_blk )  |  ( _br_sgl_prp (  _r_sgl_pln_blk )  )  )
+
+_b_sgl_pln_blk_val ::=  ( (  _b_sgl_pln_blk )  |  ( _b_sgl_prp (  _r_sgl_pln_blk )  )  )
+
+_r_pln_blk ::=  ( (  _r_sgl_pln_blk )  |  (  _r_mtl_pln_blk )  )
+
+_br_pln_blk ::=  ( (  _br_sgl_pln_blk )  |  (  _br_mtl_pln_blk )  )
+
+_r_pln_flw_val ::=  ( _r_pln_flw |  ( _r_prp ( _r_pln_flw |  _br_pln_flw )  )  )
+
+_br_pln_flw_val ::=  ( _br_pln_flw |  ( _br_prp ( _r_pln_flw |  _br_pln_flw )  )  )
+
+_r_sgl_pln_flw_val ::=  ( (  _r_sgl_pln_flw )  |  ( _r_sgl_prp (  _r_sgl_pln_flw )  )  )
+
+_r_pln_flw ::=  ( (  _r_sgl_pln_flw )  |  (  _r_mtl_pln_flw )  )
+
+_br_pln_flw ::=  ( (  _br_sgl_pln_flw )  |  (  _br_mtl_pln_flw )  )
+
+_r_sgl_pln_blk ::=  ( (  _r_sgl_pln_nul_blk )  |  (  _r_sgl_pln_bol_blk )  |  (  _r_sgl_pln_int_blk )  |  (  _r_sgl_pln_flt_blk )  |  (  _r_sgl_pln_str_blk )  )
+
+_br_sgl_pln_blk ::=  ( (  _br_sgl_pln_nul_blk )  |  (  _br_sgl_pln_bol_blk )  |  (  _br_sgl_pln_int_blk )  |  (  _br_sgl_pln_flt_blk )  |  (  _br_sgl_pln_str_blk )  )
+
+_b_sgl_pln_blk ::=  ( (  _b_sgl_pln_nul_blk )  |  (  _b_sgl_pln_bol_blk )  |  (  _b_sgl_pln_int_blk )  |  (  _b_sgl_pln_flt_blk )  |  (  _b_sgl_pln_str_blk )  )
+
+_r_sgl_pln_flw ::=  ( (  _r_sgl_pln_nul_flw )  |  (  _r_sgl_pln_bol_flw )  |  (  _r_sgl_pln_int_flw )  |  (  _r_sgl_pln_flt_flw )  |  (  _r_sgl_pln_str_flw )  )
+
+_br_sgl_pln_flw ::=  ( (  _br_sgl_pln_nul_flw )  |  (  _br_sgl_pln_bol_flw )  |  (  _br_sgl_pln_int_flw )  |  (  _br_sgl_pln_flt_flw )  |  (  _br_sgl_pln_str_flw )  )
+
+_r_mtl_pln_blk ::=  (  _r_mtl_pln_str_blk )
+
+_br_mtl_pln_blk ::=  (  _br_mtl_pln_str_blk )
+
+_r_mtl_pln_flw ::=  (  _r_mtl_pln_str_flw )
+
+_br_mtl_pln_flw ::=  (  _br_mtl_pln_str_flw )
+
+_r_als_val ::=  (  _r_als )
+
+_br_als_val ::=  (  _br_als )
+
+_b_als_val ::=  (  _b_als )
+

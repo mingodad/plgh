@@ -1,0 +1,212 @@
+/*
+Grammar originally from https://github.com/GrayJack/tree-sitter-zig
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  _statement )*
+
+doc_comment ::=  (  ( '///'  .* )  )*
+
+line_comment ::=  (  ( '//'  .* )  )*
+
+_any ::=  ( _statement |  _expression )
+
+_statement ::=  ( _expression_statement |  _declaration_statement )
+
+_expression_statement ::=   (  ( ( _expression ';'  )  |   (  _expression_ending_with_block )  )  )
+
+_expression_ending_with_block ::=   (  ( block |  comptime_block |  defer_block |  suspend_block |  resume_block |  if_expression |  while_expression |  for_expression |  test_expression )  )
+
+_declaration_statement ::=  ( empty_statement |  assignment_statement |  function_signature |  function_declaration )
+
+_expression ::=   (  ( build_in_call_expr |  call_expression |  await_expression |  suspend_expression |  resume_expression |  index_expression |  field_expression |  _expression_ending_with_block |  struct_expression |  struct_construction |  anonymous_struct_enum |  enum_expression |  union_expression |  error_expression |  switch_expression |  continue_expression |  break_expression |  return_expression |  assignment_expression |  array_expression |  anonymous_array_expr |  compound_assignment_expr |  payload_expression |  unary_expression |  binary_expression |  reference_expression |  dereference_expression |  orelse_postfix_expression |  try_expression |  range_pattern |  unreachable_expression |  usingnamespace_expression |  defer_expression |  _type |  _literals |  identifier )  )
+
+empty_statement ::=  ';'
+
+assignment_statement ::=  ( ( visibility_modifier )?  ( (  ( 'threadlocal'  |  'comptime'  )  )  )?  ( 'const'  |  'var'  )  (  identifier )  ( ( ':'  (  _type )  )  )?  '='  (  _expression )  ';'  )
+
+function_signature ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  identifier )  (  parameters )  ( (  _expression )  )?  ';'  )
+
+function_declaration ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  identifier )  (  parameters )  ( (  _expression )  )?  (  block )  )
+
+visibility_modifier ::=  ( 'pub'  )
+
+function_modifiers ::=  ( 'export'  |  'stdcallcc'  |  'nakedcc'  |  'inline'  |  extern_modifier )
+
+extern_modifier ::=  ( 'extern'  ( string_literal )?  )
+
+parameters ::=  ( '('  ( ( parameter (  ( ','  parameter )  )*  ( ','  )?  )  )?  ')'  )
+
+parameter ::=  ( ( 'comptime'  )?  (  identifier )  ':'  (  ( _type |  (  'var'  )  |  variadic_parameter )  )  )
+
+variadic_parameter ::=  '...'
+
+build_in_call_expr ::=   (  ( '@'  (  identifier )  (  arguments )  )  )
+
+call_expression ::=   (  ( ( (  'async'  )  )?  (  identifier )  (  arguments )  )  )
+
+await_expression ::=   (  ( 'await'  _expression )  )
+
+suspend_expression ::=   (  ( 'suspend'  ( _expression )?  )  )
+
+resume_expression ::=   (  ( 'resume'  ( _expression )?  )  )
+
+arguments ::=  ( '('  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  ')'  )
+
+field_expression ::=   (  ( (  _expression )  '.'  (  ( (  identifier )  |  _expression )  )  )  )
+
+index_expression ::=   (  ( _expression '['  ( _expression |  slice_pattern )  ']'  )  )
+
+_pattern ::=  ( slice_pattern |  range_pattern |  (  field_expression )  |  (  _literals )  )
+
+slice_pattern ::=   (  ( ( (  _expression )  )?  '..'  ( (  _expression )  )?  )  )
+
+range_pattern ::=   (  ( (  _expression )  '...'  (  _expression )  )  )
+
+switch_expression ::=  ( 'switch'  '('  (  _expression )  ')'  (  switch_block )  )
+
+switch_block ::=  ( '{'  ( ( (  switch_arm )*  switch_last_arm )  )?  '}'  )
+
+switch_arm ::=  ( (  switch_pattern )  '=>'  ( ( (  _expression )  ','  )  |  (   (  _expression_ending_with_block )  )  )  )
+
+switch_last_arm ::=  ( (  ( (  'else'  )  |  switch_pattern )  )  '=>'  (  _expression )  ( ','  )?  )
+
+switch_pattern ::=  ( _pattern |  ( _pattern (  ( ','  _pattern )  )*  ( ','  )?  )  )
+
+if_expression ::=   (  ( 'if'  _condition (  ( _expression |  block )  )  ( _else_tail )?  )  )
+
+while_expression ::=   (  ( ( loop_label )?  ( (  'inline'  )  )?  'while'  ( _condition |  _condition_with_continue )  (  block )  ( _else_tail )?  )  )
+
+for_expression ::=   (  ( ( loop_label )?  ( (  'inline'  )  )?  'for'  _condition (  block )  ( _else_tail )?  )  )
+
+_condition ::=   (  ( '('  (  _expression )  ')'  ( payload )?  )  )
+
+_condition_with_continue ::=  ( '('  (  _expression )  ')'  ':'  '('  (  ( _expression |  ( '{'  ( _expression (  ( ';'  _expression )  )*  ( ';'  )?  )  '}'  )  )  )  ')'  )
+
+_else_tail ::=   (  ( 'else'  _else_case )  )
+
+_else_case ::=   (  (  ( _expression |  block |  if_expression |  payload_expression )  )  )
+
+loop_label ::=  ( (  (  identifier )  )  ':'  )
+
+payload ::=  ( '|'  ( '*'  )?  (  ( (  identifier )  (  ( ','  (  identifier )  )  )*  ( ','  )?  )  )  '|'  )
+
+payload_expression ::=   (  ( payload ( _expression |  block )  )  )
+
+break_expression ::=   (  ( 'break'  ( (  loop_label_inverse )  )?  ( (  _expression )  )?  )  )
+
+continue_expression ::=  ( 'continue'  ( (  loop_label_inverse )  )?  )
+
+loop_label_inverse ::=  ( ':'  (  (  identifier )  )  )
+
+return_expression ::=  (  (  ( 'return'  _expression )  )  |   (  'return'  )  )
+
+test_expression ::=  ( 'test'  (  string_literal )  (  block )  )
+
+try_expression ::=   (  ( 'try'  (  _expression )  )  )
+
+usingnamespace_expression ::=   (  ( ( visibility_modifier )?  'usingnamespace'  (  _expression )  )  )
+
+_type ::=   (  ( primitive_type |  optional_type |  pointer_type |  error_type |  array_type |  custom_number_type |  (  identifier )  )  )
+
+primitive_type ::=  ( 'i8'  |  'u8'  |  'i16'  |  'u16'  |  'i32'  |  'u32'  |  'i64'  |  'u64'  |  'i128'  |  'u128'  |  'isize'  |  'usize'  |  'c_short'  |  'c_ushort'  |  'c_int'  |  'c_uint'  |  'c_long'  |  'c_ulong'  |  'c_longlong'  |  'c_ulonglong'  |  'c_longdouble'  |  'c_void'  |  'f16'  |  'f32'  |  'f64'  |  'f128'  |  'comptime_int'  |  'comptime_float'  |  'bool'  |  'void'  |  'noreturn'  |  'type'  |  'anyerror'  )
+
+custom_number_type ::=  (i|u)[0-9]+
+
+error_type ::=   (  ( (  _type )  '!'  (  _type )  )  )
+
+optional_type ::=   (  ( '?'  _type )  )
+
+array_type ::=   (  ( (  ( '['  (  ( ( integer_literal |  identifier |  (  ( '*'  ( 'c'  )?  )  )  )  )?  )  ']'  )  )*  ( (  type_prefix )*  )?  ( primitive_type |  optional_type |  pointer_type |  error_type |  custom_number_type |  (  identifier )  )  )  )
+
+pointer_type ::=   (  ( '*'  ( (  type_prefix )*  )?  _type )  )
+
+type_prefix ::=   (  ( 'null'  |  'const'  |  'volatile'  |  'allowzero'  |  ( 'align'  '('  _expression ')'  )  |  ( 'promise'  '-'  )  )  )
+
+defer_expression ::=   (  ( ( 'defer'  |  'errdefer'  )  _expression )  )
+
+comptime_block ::=  ( 'comptime'  block )
+
+defer_block ::=  ( ( 'defer'  |  'errdefer'  )  block )
+
+suspend_block ::=  ( 'suspend'  block )
+
+resume_block ::=  ( 'resume'  block )
+
+block ::=   (  ( ( (  loop_label )  )?  '{'  ( (  _statement )*  )?  ( _expression )?  '}'  )  )
+
+reference_expression ::=   (  ( '&'  (  _expression )  )  )
+
+dereference_expression ::=  ( (  _expression )  '.*'  )
+
+orelse_postfix_expression ::=  ( (  _expression )  '.?'  )
+
+struct_construction ::=  ( (  identifier )  '{'  (  ( ( field_init (  ( ','  field_init )  )*  ( ','  )?  )  )?  )  '}'  )
+
+anonymous_struct_enum ::=  ( '.{'  (  ( field_init (  ( ','  field_init )  )*  ( ','  )?  )  )  '}'  )
+
+field_init ::=  ( '.'  (  (  identifier )  )  '='  (  _expression )  )
+
+union_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'union'  ( ( '('  (  ( _type |  (  'enum'  )  )  )  ')'  )  )?  '{'  (  ( ( union_field_variant (  ( ','  union_field_variant )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+
+union_field_variant ::=   (  ( (  (  identifier )  )  ( ( ':'  (  ( _type |  (  'var'  )  )  )  )  )?  )  )
+
+enum_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'enum'  ( ( '('  (  _type )  ')'  )  )?  '{'  (  ( ( variant_declaration (  ( ','  variant_declaration )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+
+variant_declaration ::=   (  ( (  (  identifier )  )  ( ( '='  (  _expression )  )  )?  )  )
+
+struct_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'struct'  '{'  (  ( ( field_declaration (  ( ','  field_declaration )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+
+field_declaration ::=   (  ( ( visibility_modifier )?  (  (  identifier )  )  ':'  (  ( _type |  (  'var'  )  )  )  ( ( '='  (  _expression )  )  )?  )  )
+
+error_expression ::=  ( 'error'  ( _error_one_shorthand |  _default_error )  )
+
+_error_one_shorthand ::=  ( '.'  (  (  identifier )  )  )
+
+_default_error ::=  ( '{'  (  ( ( (  identifier )  (  ( ','  (  identifier )  )  )*  ( ','  )?  )  )?  )  '}'  )
+
+array_expression ::=  ( (  ( '['  (  ( integer_literal |  identifier )  )  ']'  )  )*  (  _type )  (  array_values )  )
+
+anonymous_array_expr ::=  ( '.{'  (  (  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  )  )  '}'  )
+
+array_values ::=  ( '{'  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  '}'  )
+
+assignment_expression ::=   (  ( ( ( 'defer'  |  'errdefer'  )  )?  (  _expression )  '='  (  _expression )  )  )
+
+compound_assignment_expr ::=   (  ( (  _expression )  (  assignment_operator )  (  _expression )  )  )
+
+unary_expression ::=   (  ( (  unary_operator )  (  _expression )  )  )
+
+unreachable_expression ::=  'unreachable'
+
+binary_expression ::=  (  (  ( (  _expression )  (  (  'and'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  'or'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '&'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '|'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '^'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '=='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '<<'  |  '>>'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '+'  |  '-'  |  '++'  |  '+%'  |  '-%'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '*'  |  '/'  |  '%'  |  '**'  |  '*%'  |  '||'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( 'orelse'  |  'catch'  )  )  )  (  _expression )  )  )  )
+
+_literals ::=  ( integer_literal |  float_literal |  boolean_literal |  null_literal |  undefined_literal |  char_literal |  string_literal |  multiline_string_literal |  enum_literal )
+
+enum_literal ::=   (  ( '.'  (  (  identifier )  )  )  )
+
+integer_literal ::=  (  ( ( [0-9]+ |  '0x'[0-9a-fA-F]+ |  '0b'[01]+ |  '0o'[0-7]+ )  )  )*
+
+float_literal ::=  (  ( ( ( '0'[xX] [0-9a-fA-F][0-9a-fA-F_]* ( '.'  )?  ( [0-9a-fA-F][0-9a-fA-F_]* )?  )  |  ( [0-9][0-9_]* ( '.'  )?  ( [0-9][0-9_]* )?  )  )  ( [eEpP][+-]?[0-9]+ )?  )  )*
+
+char_literal ::=  ( "'"  ( ( escape_sequence |  . )  )?  "'"  )
+
+string_literal ::=  ( ( '"'  |  'c"'  )  (  ( escape_sequence |  [^"\\]+ )  )*  (  '"'  )  )
+
+multiline_string_literal ::=  ( ( '\\\'  |  'c\\\'  )  (  ( escape_sequence |  [.]+ )  )*  )
+
+escape_sequence ::=  (  ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]/*{2}*/ )  )  )
+
+boolean_literal ::=  ( 'true'  |  'false'  )
+
+null_literal ::=  'null'
+
+undefined_literal ::=  'undefined'
+
+assignment_operator ::=  ( '+='  |  '-='  |  '*='  |  '+%='  |  '-%='  |  '*%='  |  '/='  |  '%='  |  '&='  |  '|='  |  '^='  |  '<<='  |  '>>='  )
+
+unary_operator ::=  ( '~'  |  '!'  |  '-'  |  '-%'  )
+
+identifier ::=  [a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ0-9_]*
