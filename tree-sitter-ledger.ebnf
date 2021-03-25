@@ -1,0 +1,88 @@
+/*
+Grammar originally from https://github.com/cbarrete/tree-sitter-ledger
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  ( journal_item |  '\n'  )  )*
+
+journal_item ::=  ( comment |  directive |  xact )
+
+comment ::=  ( ( ';'  |  '*'  )  [.]*'\n' )
+
+indented_line ::=  ( whitespace [^\n]+'\n' )
+
+directive ::=  ( account_directive |  commodity_directive |  word_directive |  char_directive )
+
+account_directive ::=  ( ( 'account'  whitespace account '\n'  )  (  account_subdirective )*  )
+
+account_subdirective ::=  ( alias_subdirective |  assert_subdirective |  check_subdirective |  default_subdirective |  eval_subdirective |  note_subdirective |  payee_subdirective )
+
+commodity_directive ::=  ( ( 'commodity'  whitespace commodity '\n'  )  (  commodity_subdirective )*  )
+
+commodity_subdirective ::=  ( alias_subdirective |  default_subdirective |  format_subdirective |  note_subdirective |  nomarket_subdirective )
+
+word_directive ::=  ( ( 'include'  [.]+ )  |  'end'  |  ( 'alias'  [^=]+ '='  [.]+ )  |  ( 'def'  [.]+ )  |  ( 'year'  [0-9]+/*{4}*/ )  |  ( 'bucket'  account )  )
+
+char_directive ::=  ( check_in |  check_out |  ( 'A'  account )  |  ( 'Y'  [0-9]+/*{4}*/ )  |  ( 'N'  commodity )  |  ( 'D'  amount )  |  ( 'C'  ( commodity '='  amount )  )  |  ( 'P'  ( date commodity amount )  )  )
+
+alias_subdirective ::=  ( whitespace 'alias'  whitespace [.]+'\n' )
+
+assert_subdirective ::=  ( whitespace 'assert'  whitespace [.]+'\n' )
+
+check_subdirective ::=  ( whitespace 'check'  whitespace [.]+'\n' )
+
+default_subdirective ::=  ( whitespace 'default'  '\n' )
+
+eval_subdirective ::=  ( whitespace 'eval'  whitespace [.]+'\n' )
+
+format_subdirective ::=  ( whitespace 'format'  whitespace amount )
+
+nomarket_subdirective ::=  ( whitespace 'nomarket'  '\n' )
+
+note_subdirective ::=  ( whitespace 'note'  whitespace [.]+'\n' )
+
+payee_subdirective ::=  ( whitespace 'payee'  whitespace [.]+'\n' )
+
+check_in ::=  ( ( 'i'  |  'I'  )  date time account ( ( spacer payee )  )?  )
+
+check_out ::=  ( ( 'o'  |  'O'  )  date time )
+
+xact ::=  ( plain_xact )
+
+plain_xact ::=  ( ( date ( ( whitespace status )  )?  ( ( whitespace payee )  )?  '\n'  )  ( ( posting |  ( whitespace note '\n'  )  )  )+  )
+
+date ::=  ( single_date ( ( '='  single_date )  )?  )
+
+single_date ::=  [0-9]+/*{4}*/[-\.\/][\d]+/*{2}*/[-\.\/][\d]+/*{2}*/
+
+time ::=  [0-9]+/*{2}*/':'[\d]+/*{2}*/':'[\d]+/*{2}*/
+
+status ::=  ( '*'  |  '!'  )
+
+payee ::=  [^*!\n]+
+
+note ::=  ( ';'  [^\n]* )
+
+posting ::=  ( whitespace ( status )?  account ( values )?  ( note )?  '\n'  )
+
+account ::=  (  ( account_name |  ( '('  account_name ')'  )  |  ( '['  account_name ']'  )  )  )
+
+account_name ::=  ('p{L}' 'p{L}'|'p{L}' ':'?)+
+
+values ::=  ( spacer amount ( price )?  ( balance_assertion )?  )
+
+amount ::=  ( ( quantity commodity )  |  ( commodity quantity )  )
+
+quantity ::=  ( ( '-'  )?  [0-9]([\d., ]*[\d])? )
+
+commodity ::=  ( 'p{L}'+ |  '"'[^"\n]*'"' )
+
+price ::=  ( ( '@'  |  '@@'  )  amount )
+
+balance_assertion ::=  ( '='  ( amount )  )
+
+whitespace ::=  ( ( ' '  |  '\t'  )  )+
+
+spacer ::=  ( '  '  |  '\t'  |  ' \t'  )

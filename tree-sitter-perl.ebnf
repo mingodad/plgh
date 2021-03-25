@@ -1,0 +1,206 @@
+/*
+Grammar originally from https://github.com/ganezdragon/tree-sitter-perl
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  _statement )*
+
+_statement ::=  ( use_statement |  use_feature_statement |  use_version |  require_statement |  _expression_statement |  _declaration |  single_line_statement |  _compound_statement |  standalone_block |  ellipsis_statement )
+
+ellipsis_statement ::=  ( '...'  ( semi_colon )?  )
+
+use_version ::=  ( 'use'  (  version )  semi_colon )
+
+use_feature_statement ::=  ( 'use'  'feature'  _experimental_feature semi_colon )
+
+_experimental_feature ::=  ( '"switch"'  |  "'switch'"  )
+
+_expression_or_return_expression ::=  ( _expression |  return_expression )
+
+single_line_statement ::=   (  ( _expression_or_return_expression _statement_modifiers )  )
+
+_statement_modifiers ::=  ( if_simple_statement |  unless_simple_statement |  while_simple_statement |  until_simple_statement |  for_simple_statement |  foreach_simple_statement |  when_simple_statement )
+
+_compound_statement ::=  ( if_statement |  unless_statement |  while_statement |  until_statement |  for_statement_1 |  for_statement_2 |  foreach_statement )
+
+_expression_statement ::=  ( _expression semi_colon )
+
+use_statement ::=  ( 'use'  package_name semi_colon )
+
+require_statement ::=  ( 'require'  package_name semi_colon )
+
+if_simple_statement ::=   (  ( 'if'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+
+unless_simple_statement ::=   (  ( 'unless'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+
+while_simple_statement ::=   (  ( 'while'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+
+until_simple_statement ::=   (  ( 'until'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+
+for_simple_statement ::=   (  ( 'for'  (  ( _list |  ( '('  _list ')'  )  )  )  semi_colon )  )
+
+foreach_simple_statement ::=   (  ( 'foreach'  (  ( _list |  ( '('  _list ')'  )  )  )  semi_colon )  )
+
+when_simple_statement ::=   (  ( 'when'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+
+if_statement ::=   (  ( 'if'  (  parenthesized_expression )  (  block )  ( (  ( 'elsif'  (  parenthesized_expression )  (  block )  )  )*  )?  ( ( 'else'  (  block )  )  )?  )  )
+
+unless_statement ::=   (  ( 'unless'  (  parenthesized_expression )  (  block )  ( (  ( 'elsif'  (  parenthesized_expression )  (  block )  )  )*  )?  ( ( 'else'  (  block )  )  )?  )  )
+
+while_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'while'  (  empty_parenthesized_expression )  (  block )  ( ( 'continue'  (  block )  )  )?  )
+
+until_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'until'  (  empty_parenthesized_expression )  (  block )  ( ( 'continue'  (  block )  )  )?  )
+
+for_statement_1 ::=  ( ( ( (  identifier )  ':'  )  )?  ( 'for'  |  'foreach'  )  _for_parenthesize (  block )  )
+
+for_statement_2 ::=  ( ( ( (  identifier )  ':'  )  )?  'for'  ( ( ( scope )?  scalar_variable )  |  ( '\\'  ( scope )?  hash_variable )  )  '('  _list ')'  (  block )  ( ( 'continue'  (  block )  )  )?  )
+
+_for_parenthesize ::=  ( '('  ( (  _expression )  )?  semi_colon ( (  _expression )  )?  semi_colon ( (  _expression )  )?  ')'  )
+
+foreach_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'foreach'  ( ( ( scope )?  scalar_variable )  |  ( '\\'  ( scope )?  hash_variable )  )  '('  _list ')'  (  block )  ( ( 'continue'  (  block )  )  )?  )
+
+_declaration ::=  ( function_definition |  variable_declaration )
+
+variable_declaration ::=  ( scope ( multi_var_declaration |  single_var_declaration )  semi_colon )
+
+multi_var_declaration ::=  ( '('  ( variable_declarator (  ( ','  variable_declarator )  )*  ( ','  )?  )  ')'  )
+
+single_var_declaration ::=  (  variable_declarator )
+
+variable_declarator ::=  ( (  ( scalar_variable |  array_variable |  hash_variable )  )  ( _initializer )?  )
+
+_initializer ::=  ( '='  (  _expression )  )
+
+scope ::=  ( 'our'  |  'state'  |  'my'  )
+
+function_definition ::=  ( 'sub'  (  identifier )  (  block )  )
+
+block ::=  ( '{'  ( (  _block_statements )*  )?  '}'  )
+
+standalone_block ::=  ( ( ( ( (  identifier )  ':'  )  |  phase )  )?  '{'  ( (  _block_statements )*  )?  '}'  ( ( 'continue'  (  block )  )  )?  )
+
+_block_statements ::=  ( _statement |  ( return_expression semi_colon )  |  loop_control_statement )
+
+loop_control_statement ::=  ( loop_control_keyword ( (  identifier )  )?  ( _statement_modifiers )?  semi_colon )
+
+parenthesized_expression ::=  ( '('  _expression ')'  )
+
+empty_parenthesized_expression ::=  ( '('  ( _expression )?  ')'  )
+
+return_expression ::=  ( 'return'  ( _expression )?  )
+
+_expression ::=  ( _primitive_expression |  _variables |  binary_expression |  unary_expression |  ternary_expression |  call_expression |  goto_expression )
+
+goto_expression ::=  ( 'goto'  ( ( (  identifier )  ':'  )  |  (  _expression )  |  (  call_expression )  )  )
+
+binary_expression ::=  (  (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |  _exponentiation |  _binding_expression |  _bodmas_1 |  _bodmas_2 |  _shift_expression |  _relational_expression |  _equality_expression |  _class_instance_exp |  _bitwise_and_exp |  _bitwise_or_xor_exp |  _logical_and_exp |  _logical_ors_exp |  _range_exp |  _assignment_exp |  _logical_verbal_or_xor )
+
+unary_expression ::=  ( _auto_increment_decrement |  _symbolic_unary |  _unary_not |  _unary_and )
+
+ternary_expression ::=   (  ( (  _expression )  (  '?'  )  (  _expression )  (  ':'  )  (  _expression )  )  )
+
+_auto_increment_decrement ::=   (  ( ( (  ( '++'  |  '--'  )  )  (  _expression )  )  |  ( (  _expression )  (  ( '++'  |  '--'  )  )  )  )  )
+
+_exponentiation ::=   (  ( (  _expression )  (  '**'  )  (  _expression )  )  )
+
+_symbolic_unary ::=   (  ( ( (  '!'  )  (  _expression )  )  |  ( (  '~'  )  (  _expression )  )  |  ( (  '\\'  )  (  _expression )  )  |  ( (  '+'  )  (  _expression )  )  |  ( (  '-'  )  (  _expression )  )  )  )
+
+_binding_expression ::=   (  ( ( (  _expression )  (  '=~'  )  (  _expression )  )  |  ( (  _expression )  (  '!~'  )  (  _expression )  )  )  )
+
+_bodmas_1 ::=   (  ( ( (  _expression )  (  '*'  )  (  _expression )  )  |  ( (  _expression )  (  '/'  )  (  _expression )  )  |  ( (  _expression )  (  '%'  )  (  _expression )  )  |  ( (  _expression )  (  'X'  )  (  _expression )  )  )  )
+
+_bodmas_2 ::=   (  ( ( (  _expression )  (  '+'  )  (  _expression )  )  |  ( (  _expression )  (  '-'  )  (  _expression )  )  |  ( (  _expression )  (  '.'  )  (  _expression )  )  )  )
+
+_shift_expression ::=   (  ( ( (  _expression )  (  '<<'  )  (  _expression )  )  |  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  )
+
+_relational_expression ::=   (  ( (  _expression )  ( ( ( '<'  |  '>'  |  '<='  |  '>='  |  'lt'  |  'gt'  |  'le'  |  'ge'  )  _expression )  )+  )  )
+
+_equality_expression ::=   (  ( ( (  _expression )  ( ( ( '=='  |  '!='  |  'eq'  |  'ne'  )  _expression )  )+  )  |  ( (  _expression )  (  '<=>'  )  (  _expression )  )  |  ( (  _expression )  (  'cmp'  )  (  _expression )  )  |  ( (  _expression )  (  '~~'  )  (  _expression )  )  )  )
+
+_class_instance_exp ::=   (  ( (  _expression )  (  'isa'  )  (  _expression )  )  )
+
+_bitwise_and_exp ::=   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )
+
+_bitwise_or_xor_exp ::=   (  ( ( (  _expression )  (  '|'  )  (  _expression )  )  |  ( (  _expression )  (  '^'  )  (  _expression )  )  )  )
+
+_logical_and_exp ::=   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )
+
+_logical_ors_exp ::=   (  ( ( (  _expression )  (  '||'  )  (  _expression )  )  |  ( (  _expression )  (  '//'  )  (  _expression )  )  )  )
+
+_range_exp ::=   (  ( ( (  _expression )  (  '..'  )  (  _expression )  )  |  ( (  _expression )  (  '...'  )  (  _expression )  )  )  )
+
+_assignment_exp ::=   (  ( ( (  _expression )  (  '='  )  (  _expression )  )  |  ( (  _expression )  (  '**='  )  (  _expression )  )  |  ( (  _expression )  (  '+='  )  (  _expression )  )  |  ( (  _expression )  (  '*='  )  (  _expression )  )  |  ( (  _expression )  (  '&='  )  (  _expression )  )  |  ( (  _expression )  (  '&.='  )  (  _expression )  )  |  ( (  _expression )  (  '<<='  )  (  _expression )  )  |  ( (  _expression )  (  '&&='  )  (  _expression )  )  |  ( (  _expression )  (  '-='  )  (  _expression )  )  |  ( (  _expression )  (  '/='  )  (  _expression )  )  |  ( (  _expression )  (  '|='  )  (  _expression )  )  |  ( (  _expression )  (  '|.='  )  (  _expression )  )  |  ( (  _expression )  (  '>>='  )  (  _expression )  )  |  ( (  _expression )  (  '||='  )  (  _expression )  )  |  ( (  _expression )  (  '.='  )  (  _expression )  )  |  ( (  _expression )  (  '%='  )  (  _expression )  )  |  ( (  _expression )  (  '^='  )  (  _expression )  )  |  ( (  _expression )  (  '^.='  )  (  _expression )  )  |  ( (  _expression )  (  '//='  )  (  _expression )  )  |  ( (  _expression )  (  'X='  )  (  _expression )  )  )  )
+
+_unary_not ::=   (  ( (  'not'  )  (  _expression )  )  )
+
+_unary_and ::=   (  ( (  'and'  )  (  _expression )  )  )
+
+_logical_verbal_or_xor ::=   (  ( ( (  _expression )  (  'or'  )  (  _expression )  )  |  ( (  _expression )  (  'xor'  )  (  _expression )  )  )  )
+
+call_expression ::=   (  ( ( '&'  )?  (  identifier )  (  ( ( parenthesized_arguments |  arguments )  )?  )  )  )
+
+parenthesized_arguments ::=   (  ( '('  ( arguments )?  ')'  )  )
+
+arguments ::=   (  ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )
+
+_primitive_expression ::=  ( _scalar_type |  _boolean |  array |  hash )
+
+_variables ::=  ( scalar_variable |  array_variable |  hash_variable )
+
+_scalar_type ::=  ( string_single_quoted |  string_double_quoted |  _numeric_literals |  array_ref |  hash_ref )
+
+_numeric_literals ::=  ( integer |  floating_point |  scientific_notation |  hexadecimal |  octal )
+
+integer ::=  '-'?[0-9]+
+
+floating_point ::=  '-'?[0-9]+'.'[\d]+
+
+scientific_notation ::=  [-+]?[0-9]*'.'?[0-9]+([eE][-+]?[0-9]+)?
+
+hexadecimal ::=  '0'[xX][0-9a-fA-F]+
+
+octal ::=  '0'[1-7][0-7]*
+
+version ::=  'v'[0-9.]+
+
+identifier ::=  [a-zA-z0-9_]+
+
+loop_control_keyword ::=  ( 'next'  |  'last'  |  'redo'  )
+
+phase ::=  ( 'BEGIN'  )
+
+package_name ::=  [A-Z_a-z][0-9A-Z_a-z]*('?:::'[0-9A-Z_a-z]+)*
+
+semi_colon ::=  ';'
+
+string_single_quoted ::=   (  "'"[.]*"'" )
+
+string_double_quoted ::=   (  '"'[.]*'"' )
+
+_boolean ::=  ( true |  false )
+
+true ::=  'true'
+
+false ::=  'false'
+
+scalar_variable ::=  ( '$'[0-9]+ |  '$'[!] |  '$#' '_'?[a-zA-z0-9_]+ |  '$'[A-Z^_?\\] |  '$' '_'?[a-zA-z0-9_]+ )
+
+array_variable ::=  '@'[a-zA-z0-9_]+
+
+hash_variable ::=  '%'[a-zA-z0-9_]+
+
+_list ::=  ( array |  array_variable )
+
+array ::=   (  ( '('  ( ( _primitive_expression (  ( ','  _primitive_expression )  )*  ( ','  )?  )  )?  ')'  )  )
+
+array_ref ::=  ( '['  ( ( _primitive_expression (  ( ','  _primitive_expression )  )*  ( ','  )?  )  )?  ']'  )
+
+hash ::=   (  ( '('  ( ( _key_value_pair (  ( ','  _key_value_pair )  )*  ( ','  )?  )  )?  ')'  )  )
+
+hash_ref ::=  ( '{'  ( ( _key_value_pair (  ( ','  _key_value_pair )  )*  ( ','  )?  )  )?  '}'  )
+
+_key_value_pair ::=  ( ( identifier |  ( "'"  identifier "'"  )  |  ( '"'  identifier '"'  )  )  '=>'  _primitive_expression )
+
+comments ::=  (   (  ( '#'[^\n]* )  )  )*

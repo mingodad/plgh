@@ -1,0 +1,152 @@
+/*
+Grammar originally from https://github.com/euclidianAce/tree-sitter-teal
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+program ::=  ( (  ( (  '#!'[^\n\r]* )  )?  )  (  _statement )*  )
+
+_statement ::=   (  ( ( var_declaration |  var_assignment |  type_declaration |  record_declaration |  enum_declaration |  return_statement |  break |  for_statement |  do_statement |  while_statement |  repeat_statement |  function_call |  function_statement |  if_statement |  ( '::'  (  identifier )  '::'  )  |  goto )  ( ';'  )?  )  )
+
+return_statement ::=   (  ( 'return'  ( ( ( _expression (  ( ','  _expression )  )*  )  |  ( '('  ( _expression (  ( ','  _expression )  )*  )  ')'  )  )  )?  )  )
+
+break ::=  'break'
+
+if_statement ::=  ( 'if'  (  _expression )  'then'  (  _statement )*  (  elseif_block )*  ( else_block )?  'end'  )
+
+elseif_block ::=  ( 'elseif'  (  _expression )  'then'  (  _statement )*  )
+
+else_block ::=  ( 'else'  (  _statement )*  )
+
+for_statement ::=  ( ( 'for'  identifier '='  _expression ','  _expression ( ( ','  _expression )  )?  (  do_statement )  )  |  ( 'for'  ( identifier (  ( ','  identifier )  )*  )  'in'  ( _expression (  ( ','  _expression )  )*  )  (  do_statement )  )  )
+
+while_statement ::=  ( 'while'  (  _expression )  (  do_statement )  )
+
+repeat_statement ::=  ( 'repeat'  (  _statement )*  'until'  (  _expression )  )
+
+do_statement ::=  ( 'do'  (  _statement )*  'end'  )
+
+_expression ::=  ( identifier |  _var |  number |  string |  boolean |  nil |  table_constructor |  anon_function |  function_call |  _prefix_expression |  bin_op |  unary_op |  varargs |  type_cast )
+
+unary_op ::=   (  ( (  (  ( 'not'  |  '#'  |  '-'  |  '~'  )  )  )  _expression )  )
+
+bin_op ::=  (  (  ( _expression (  (  'or'  )  )  _expression )  )  |   (  ( _expression (  (  'and'  )  )  _expression )  )  |   (  ( _expression (  (  '<'  )  )  _expression )  )  |   (  ( _expression (  (  '<='  )  )  _expression )  )  |   (  ( _expression (  (  '=='  )  )  _expression )  )  |   (  ( _expression (  (  '~='  )  )  _expression )  )  |   (  ( _expression (  (  '>='  )  )  _expression )  )  |   (  ( _expression (  (  '>'  )  )  _expression )  )  |   (  ( _expression (  (  '|'  )  )  _expression )  )  |   (  ( _expression (  (  '~'  )  )  _expression )  )  |   (  ( _expression (  (  '&'  )  )  _expression )  )  |   (  ( _expression (  (  '<<'  )  )  _expression )  )  |   (  ( _expression (  (  '>>'  )  )  _expression )  )  |   (  ( _expression (  (  '+'  )  )  _expression )  )  |   (  ( _expression (  (  '-'  )  )  _expression )  )  |   (  ( _expression (  (  '*'  )  )  _expression )  )  |   (  ( _expression (  (  '/'  )  )  _expression )  )  |   (  ( _expression (  (  '//'  )  )  _expression )  )  |   (  ( _expression (  (  '%'  )  )  _expression )  )  |   (  ( _expression (  (  '..'  )  )  _expression )  )  |   (  ( _expression (  (  '^'  )  )  _expression )  )  |   (  ( _expression (  (  'is'  )  )  _type )  )  )
+
+type_cast ::=   (  ( _expression 'as'  ( _type |  type_tuple )  )  )
+
+type_tuple ::=   (  ( '('  ( _type (  ( ','  _type )  )*  )  ')'  )  )
+
+type_union ::=   (  ( _type '|'  _type )  )
+
+var_declarator ::=  ( (  identifier )  ( ( '<'  (  (  identifier )  )  '>'  )  )?  )
+
+var_declaration ::=  ( scope ( (  var_declarator )  (  ( ','  (  var_declarator )  )  )*  )  ( (  type_annotation )  )?  ( ( '='  ( _expression (  ( ','  _expression )  )*  )  )  )?  )
+
+type_declaration ::=  ( ( scope 'type'  (  identifier )  '='  ( _type |  _newtype )  )  |  record_declaration |  enum_declaration )
+
+var_assignment ::=  ( ( (  _var )  (  ( ','  (  _var )  )  )*  )  '='  ( _expression (  ( ','  _expression )  )*  )  )
+
+_prefix_expression ::=   (  ( _var |  function_call |  ( '('  _expression ')'  )  )  )
+
+method_index ::=  ( _prefix_expression ':'  (  identifier )  )
+
+arguments ::=  ( ( '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )  |  string |  table_constructor )
+
+function_call ::=   (  ( (  ( _prefix_expression |  method_index )  )  (  arguments )  )  )
+
+table_entry ::=  ( ( '['  (  _expression )  ']'  '='  (  _expression )  )  |   (  ( (  identifier )  (  ( ( ':'  _type )  )?  )  '='  (  _expression )  )  )  |   (  (  _expression )  )  )
+
+table_constructor ::=  ( '{'  ( ( table_entry (  ( ( ','  |  ';'  )  table_entry )  )*  )  )?  ( ( ','  |  ';'  )  )?  '}'  )
+
+function_name ::=  ( (  identifier )  ( ( (  ( '.'  (  identifier )  )  )*  ( ':'  (  identifier )  )  )  |  ( ( '.'  (  identifier )  )  )+  )  )
+
+scope ::=  (  ( 'local'  |  'global'  )  )
+
+function_statement ::=  ( ( scope 'function'  (  identifier )  (  function_signature )  (  function_body )  )  |  ( 'function'  (  function_name )  (  function_signature )  (  function_body )  )  )
+
+variadic_type ::=   (  ( _type '...'  )  )
+
+_type_list_maybe_vararg ::=  ( ( _type (  ( ','  _type )  )*  )  ( ( ','  variadic_type )  )?  )
+
+return_type ::=  ( variadic_type |   (  _type_list_maybe_vararg )  |   (  ( '('  _type_list_maybe_vararg ')'  )  )  )
+
+_partypelist ::=  ( (  _partype )  (  ( ','  (  _partype )  )  )*  )
+
+_partype ::=  ( ( ( (  identifier )  ':'  )  )?  (  _type )  )
+
+_parnamelist ::=  ( (  _parname )  (  ( ','  (  _parname )  )  )*  )
+
+_parname ::=  ( (  identifier )  ( ( ':'  (  _type )  )  )?  )
+
+typeargs ::=  ( '<'  ( identifier (  ( ','  identifier )  )*  )  '>'  )
+
+anon_function ::=  ( 'function'  (  function_signature )  (  function_body )  )
+
+_annotated_var_arg ::=  ( '...'  ':'  (  _type )  )
+
+signature_arguments ::=  ( '('  ( ( _parnamelist |  ( _parnamelist ','  (  _annotated_var_arg )  )  |  (  _annotated_var_arg )  )  )?  ')'  )
+
+function_signature ::=  ( (  ( typeargs )?  )  (  (  signature_arguments )  )  ( ( ':'  (  return_type )  )  )?  )
+
+function_body ::=  ( (  _statement )*  'end'  )
+
+record_entry ::=  ( ( (  identifier )  ':'  (  _type )  )  |  ( '['  (  string )  ']'  ':'  (  _type )  )  |  ( (  (  'type'  )  )  ':'  (  _type )  )  |  ( (  (  'record'  )  )  ':'  (  _type )  )  |  ( (  (  'enum'  )  )  ':'  (  _type )  )  |  ( (  (  'userdata'  )  )  ':'  (  _type )  )  |  ( (  (  'metamethod'  )  )  ':'  (  _type )  )  |  ( 'type'  (  identifier )  '='  (  ( _type |  _newtype )  )  )  |  ( 'record'  (  identifier )  (  ( typeargs )?  )  (  record_body )  )  |  ( 'enum'  (  identifier )  (  enum_body )  )  )
+
+metamethod_annotation ::=  ( 'metamethod'  (  identifier )  ':'  (  _type )  )
+
+record_body ::=  ( ( ( '{'  (  _type )  '}'  )  )?  (  ( record_entry |  (  'userdata'  )  |  (  metamethod_annotation )  )  )*  'end'  )
+
+_record_def ::=  ( 'record'  (  identifier )  ( typeargs )?  record_body )
+
+record_declaration ::=  ( scope _record_def )
+
+enum_body ::=  ( (  string )*  'end'  )
+
+_enum_def ::=  ( 'enum'  (  identifier )  enum_body )
+
+enum_declaration ::=  ( scope _enum_def )
+
+anon_record ::=  ( 'record'  ( typeargs )?  record_body )
+
+_anon_enum ::=  ( 'enum'  enum_body )
+
+_newtype ::=  ( _anon_enum |  anon_record )
+
+type_annotation ::=  ( ':'  ( _type (  ( ','  _type )  )*  )  )
+
+_type ::=   (  ( simple_type |  type_index |  table_type |  function_type |  type_union |  ( '('  _type ')'  )  )  )
+
+typearg_params ::=   (  ( '<'  ( _type (  ( ','  _type )  )*  )  '>'  )  )
+
+type_index ::=   (  ( ( identifier |  type_index )  '.'  identifier ( (  typearg_params )  )?  )  )
+
+simple_type ::=   (  ( (  identifier )  ( (  typearg_params )  )?  )  )
+
+table_type ::=  ( '{'  ( (  _type )  |  ( (  _type )  ':'  (  _type )  )  |  ( (  _type )  ( ( ','  (  _type )  )  )+  )  )  '}'  )
+
+function_type_args ::=  ( '('  ( ( ( _partypelist ( ( ','  (  _annotated_var_arg )  )  )?  )  |  (  _annotated_var_arg )  )  )?  ')'  )
+
+function_type ::=   (  ( 'function'  (  ( typeargs )?  )  ( ( (  (  function_type_args )  )  ( ( ':'  (  return_type )  )  )?  )  )?  )  )
+
+goto ::=  ( 'goto'  identifier )
+
+index ::=  ( _prefix_expression ( (  ( '.'  identifier )  )  |  (  ( '['  _expression ']'  )  )  )  )
+
+_var ::=   (  ( identifier |  index )  )
+
+varargs ::=  '...'
+
+identifier ::=  [a-zA-Z_][a-zA-Z_0-9]*
+
+number ::=  ( [0-9]+('.'[\d]+)?('e'[\d]+)? |  '.'[0-9]+('e'[\d]+)? |  '0x'[0-9a-fA-F]+('.'[0-9a-fA-F]+)?('p'[0-9]+)? )
+
+boolean ::=  ( 'true'  |  'false'  )
+
+string ::=   (  ( ( _short_string_start (  ( format_specifier |  escape_sequence |  (   (  '%'  )  )  |   (  _short_string_char )  )  )*  _short_string_end )  |  ( _long_string_start (  ( format_specifier |  _long_string_char |  (   (  '%'  )  )  )  )*  _long_string_end )  )  )
+
+format_specifier ::=  (   (  ( '%'  ( '%'  |  ( ( ( '+'  |  '-'  )  )?  ( ' '  )?  ( '#'  )?  ( [0-9]+ )?  ( '.'  )?  ( [0-9]+ )?  [AaEefGgcdiouXxpqs] )  )  )  )  )
+
+escape_sequence ::=  (   (  ( '\\'  ( [abfnrtvz"'\\] |  ( 'x'  [0-9a-fA-F]/*{2}*/ )  |  ( 'd'  [0-7]/*{3}*/ )  |  ( 'u{'  [0-9a-fA-F]/*{1,8}*/ '}'  )  )  )  )  )
+
+nil ::=  'nil'

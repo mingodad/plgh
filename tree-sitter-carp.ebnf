@@ -1,0 +1,158 @@
+/*
+Grammar originally from https://github.com/GrayJack/tree-sitter-carp
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  _expr )*
+
+line_comment ::=  (  ( ';'  .* )  )*
+
+_expr ::=  ( _special_forms |  _literals |  _shorthand |  _identifier |  _defs |  _specials |  call |  array |  map |  register |  hidden |  doc |  signature |  private )
+
+call ::=  ( '('  (  _call_name )  ( (  (  _expr )  )*  )?  ')'  )
+
+_call_name ::=  ( _identifier |  short_fn_ref )
+
+array ::=  ( '['  ( (  (  _expr )  )*  )?  ']'  )
+
+map ::=  ( '{'  ( (  ( (  _expr )  (  _expr )  )  )*  )?  '}'  )
+
+hidden ::=  ( '('  'hidden'  (  _identifier )  ')'  )
+
+doc ::=  ( '('  'doc'  (  _identifier )  (  str_literal )  ')'  )
+
+signature ::=  ( '('  'sig'  (  _identifier )  '('  (  interface_fn )  ')'  ')'  )
+
+private ::=  ( '('  'private'  (  _identifier )  ')'  )
+
+register ::=  ( '('  'register'  (  _defs_name )  ( (  ( type |  _shorthand )  )  ( (  _expr )  )?  )  ')'  )
+
+_special_forms ::=  ( fn |  let |  do |  if |  while |  use |  with |  ref |  address |  set |  the |  match )
+
+fn ::=  ( '('  'fn'  (  _parameters )  ( (  _expr )  )?  ')'  )
+
+_parameters ::=  ( _identifier |  parameters |  quote |  short_quote )
+
+parameters ::=  ( '['  ( (  (  _identifier )  )*  )?  ']'  )
+
+let ::=  ( '('  'let'  (  _let_pairs )  ( (  _expr )  )?  ')'  )
+
+_let_pairs ::=  ( _identifier |  call |  pairs |  quote |  short_quote )
+
+pairs ::=  ( '['  (  ( (  _expr )  (  _expr )  )  )*  ']'  )
+
+do ::=  ( '('  'do'  (  (  _expr )  )*  ')'  )
+
+if ::=  ( '('  'if'  (  _expr )  (  _expr )  (  _expr )  ')'  )
+
+while ::=  ( '('  'while'  (  _expr )  ( (  _expr )  )?  ')'  )
+
+use ::=  ( '('  'use'  (  _use_module )  ')'  )
+
+with ::=  ( '('  'with'  (  _use_module )  (  (  _expr )  )*  ')'  )
+
+_use_module ::=  ( (  symbol )  |  (  scoped_identifier )  |  quote |  short_quote |  call )
+
+ref ::=  ( '('  'ref'  ( _expr )?  ')'  )
+
+address ::=  ( '('  'address'  _expr ')'  )
+
+set ::=  ( '('  'set!'  (  _expr )  (  _expr )  ')'  )
+
+the ::=  ( '('  'the'  (  type )  (  _expr )  ')'  )
+
+match ::=  ( '('  'match'  (  _expr )  ( (  match_case )*  )?  ')'  )
+
+match_case ::=  ( (  _expr )  (  _expr )  )
+
+_defs ::=  ( def |  defn |  definterface |  defmacro |  defndynamic |  defmodule |  deftype |  deftemplate )
+
+def ::=  ( '('  'def'  (  _defs_name )  (  _expr )  ')'  )
+
+defn ::=  ( '('  'defn'  (  _defs_name )  (  _parameters )  ( (  _expr )  )?  ')'  )
+
+definterface ::=  ( '('  'definterface'  (  _defs_name )  ( (  _identifier )  |  (  _sig )  )  ')'  )
+
+_sig ::=  ( quote |  short_quote |  ( '('  interface_fn ')'  )  )
+
+defmacro ::=  ( '('  'defmacro'  (  _defs_name )  (  _parameters )  ( (  _expr )  )?  ')'  )
+
+defndynamic ::=  ( '('  'defndynamic'  (  _defs_name )  (  _parameters )  ( (  _expr )  )?  ')'  )
+
+defmodule ::=  ( '('  'defmodule'  (  _defmodule_name )  (  (  _expr )  )*  ')'  )
+
+_defmodule_name ::=  ( (  symbol )  |  quote |  short_quote )
+
+deftype ::=  ( '('  'deftype'  _deftype_names ( _deftype_struct |  (  _deftype_enum1 )*  |  (  _deftype_enum2 )*  )  ')'  )
+
+_deftype_struct ::=  ( '['  (  ( (  _field )  (  type )  )  )*  ']'  )
+
+_deftype_enum1 ::=  ( '('  (  (  symbol )  )  '['  (  (  _field )  )*  ']'  ')'  )
+
+_deftype_enum2 ::=  (  symbol )
+
+_deftype_names ::=  ( (  (  symbol )  )  |  ( '('  (  (  symbol )  )  ( (  (  (  symbol )  )  )*  )?  ')'  )  )
+
+_field ::=  ( (  symbol )  |  call |  quote |  short_quote )
+
+deftemplate ::=  ( '('  'deftemplate'  (  _defs_name )  (  type )  (  _deftemplate_str )  (  _deftemplate_str )  ')'  )
+
+_deftemplate_str ::=  ( str_literal |  pattern_literal |  quote |  short_quote )
+
+_defs_name ::=  ( _identifier |  quote |  short_quote )
+
+_specials ::=  ( quote )
+
+quote ::=  ( '('  'quote'  _expr ')'  )
+
+_shorthand ::=  ( short_ref |  short_copy |  short_fn_ref |  short_quote )
+
+short_ref ::=  ( '&'  _expr )
+
+short_copy ::=  ( '@'  _expr )
+
+short_fn_ref ::=  ( '~'  _expr )
+
+short_quote ::=  ( "'"  _expr )
+
+type ::=  ( (  ( 'Bool'  |  'Byte'  |  'Char'  |  'Int'  |  'Long'  |  'Float'  |  'Double'  |  'Vector2'  |  'Vector3'  |  'VectorN'  |  'String'  |  'Pattern'  |  'Array'  |  'Map'  |  'Maybe'  |  'Result'  |  'Id'  |  'Ptr'  )  )  |  complex_type |  symbol )
+
+complex_type ::=  ( '('  (  ( (  ( 'Bool'  |  'Byte'  |  'Char'  |  'Int'  |  'Long'  |  'Float'  |  'Double'  |  'Vector2'  |  'Vector3'  |  'VectorN'  |  'String'  |  'Pattern'  |  'Array'  |  'Map'  |  'Maybe'  |  'Result'  |  'Id'  |  'Ptr'  )  )  |  complex_type |  symbol |  interface_fn |  static_lifetime )  )*  ')'  )
+
+interface_fn ::=  ( ( 'Fn'  |  'λ'  )  (  ( _type_parameters )  )  (  ( _shorthand |  type )  )  )
+
+_type_parameters ::=  ( (  symbol )  |  call |  type_parameters |  quote |  short_quote )
+
+static_lifetime ::=  'StaticLifetime'
+
+type_parameters ::=  ( '['  (  ( type |  _shorthand )  )*  ']'  )
+
+_literals ::=  ( unit |  str_literal |  char_literal |  pattern_literal |  bool_literal |  integer_literal |  float_literal )
+
+integer_literal ::=  (  ( ( '-'  )?  ( '0x'[0-9a-fA-F]+ |  '0x'[0-9a-fA-F]+l |  '0b'[01]+ |  '0b'[01]+'l' |  '0b'[01]+'b' |  [0-9][0-9]* |  [0-9][0-9]*'l' |  [0-9][0-9]*'b' )  )  )*
+
+float_literal ::=  (  ( ( '-'  )?  ( [0-9][0-9]*'f' |  [0-9][0-9]*'.'[0-9][0-9]*'f'? )  )  )*
+
+bool_literal ::=  ( 'true'  |  'false'  )
+
+str_literal ::=  ( '"'  (  ( [^"\\$]+ |  escape_sequence |  meta_symbol )  )*  (  '"'  )  )
+
+char_literal ::=  ( '\\'  ( escape_sequence |  [\s] |  [.] )  )
+
+pattern_literal ::=  ( '#"'  (  ( (  [^"]+ )  )  )*  '"'  )
+
+meta_symbol ::=  (  '$'[^({\[#x5d})"'@&|`;.,~#\s\\:][^({\[#x5d})"'@&|`;.,~#\s\\]* )
+
+escape_sequence ::=  (  ( '\'[^xu] |  'u'[0-9a-fA-F]+/*{4}*/ |  '\u{'[0-9a-fA-F]+'}' |  '\x'[0-9a-fA-F]+/*{2}*/ )  )
+
+unit ::=  '()'
+
+_identifier ::=  ( keyword |  symbol |  scoped_identifier )
+
+scoped_identifier ::=   (  ( (  ( scoped_identifier |  (  symbol )  |  (  keyword )  )  )  '.'  _identifier )  )
+
+keyword ::=  ':'[^({\[#x5d})"'@&|`;.,~#\s\\]
+
+symbol ::=  [^({\[#x5d})"'@&|`;.,~#\s\\:][^({\[#x5d})"'@&|`;.,~#\s\\]*

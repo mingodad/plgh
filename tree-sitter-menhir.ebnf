@@ -1,0 +1,88 @@
+/*
+Grammar originally from https://github.com/Kerl13/tree-sitter-menhir
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  ( (  declaration )*  '%%'  (  rule )*  ( ( '%%'  ( postlude )?  )  )?  )
+
+_high_prec_bar ::=   (  '|'  )
+
+_low_prec_bar ::=   (  '|'  )
+
+lid ::=  [a-zß-öø-ÿ_][a-zA-Z_À-ÖØ-öø-ÿ0-9]*
+
+uid ::=  [A-ZÀ-ÖØ-Þ][a-zA-Z_À-ÖØ-öø-ÿ0-9]*
+
+qid ::=  "[\x23-\x5b\x5d-\x7e\x20\x21]+"
+
+symbol ::=  ( lid |  uid |  qid )
+
+declaration ::=  ( header |  ( '%parameter'  type )  |  ( '%token'  ( type )?  ( terminal_alias_attrs (  ( ( ','  )?  terminal_alias_attrs )  )*  )  )  |  ( priority_keyword ( symbol (  ( ( ','  )?  symbol )  )*  )  )  |  ( '%type'  type ( strict_actual (  ( ( ','  )?  strict_actual )  )*  )  )  |  ( '%start'  ( type )?  ( non_terminal (  ( ( ','  )?  non_terminal )  )*  )  )  |  ( '%attribute'  ( strict_actual (  ( ( ','  )?  strict_actual )  )*  )  ( attribute )+  )  |  grammar_attribute |  ( '%on_error_reduce'  ( strict_actual (  ( ( ','  )?  strict_actual )  )*  )  )  |  ';'  )
+
+terminal_alias_attrs ::=  ( uid ( qid )?  (  attribute )*  )
+
+priority_keyword ::=  ( '%left'  |  '%right'  |  '%nonassoc'  )
+
+non_terminal ::=  lid
+
+rule ::=  ( old_rule |  new_rule )
+
+old_rule ::=  ( ( flags )?  symbol (  attribute )*  ( ( '('  ( symbol (  ( ','  symbol )  )*  )  ')'  )  )?  ':'  ( _low_prec_bar )?  ( production_group (  ( _high_prec_bar production_group )  )*  )  (  ';'  )*  )
+
+flags ::=  ( '%public'  |  '%inline'  |  ( '%public'  '%inline'  )  |  ( '%inline'  '%public'  )  )
+
+production_group ::=  ( ( ( (  producer )*  ( precedence )?  )  (  ( _high_prec_bar ( (  producer )*  ( precedence )?  )  )  )*  )  ( action |  type )  ( precedence )?  )
+
+precedence ::=  ( '%prec'  symbol )
+
+producer ::=  ( ( ( lid '='  )  )?  actual (  attribute )*  (  ';'  )*  )
+
+strict_actual ::=  ( ( symbol ( ( '('  ( strict_actual (  ( ','  strict_actual )  )*  )  ')'  )  )?  )  |  ( strict_actual modifier )  )
+
+actual ::=  ( ( symbol ( ( '('  ( lax_actual (  ( ','  lax_actual )  )*  )  ')'  )  )?  )  |  ( actual modifier )  )
+
+lax_actual ::=  ( ( ( symbol ( ( '('  ( lax_actual (  ( ','  lax_actual )  )*  )  ')'  )  )?  )  |  ( actual modifier )  )  |  ( production_group (  ( _high_prec_bar production_group )  )*  )  )
+
+modifier ::=  ( '?'  |  '*'  |  '+'  )
+
+new_rule ::=  ( ( '%public'  )?  'let'  lid (  attribute )*  ( ( '('  ( symbol (  ( ','  symbol )  )*  )  ')'  )  )?  equality_symbol expression )
+
+equality_symbol ::=  ( '=='  |  ':='  )
+
+expression ::=  ( ( '|'  )?  ( seq_expression (  ( '|'  seq_expression )  )*  )  )
+
+seq_expression ::=  ( ( symbol_expression continuation )  |  ( pattern '='  symbol_expression continuation )  |  symbol_expression |  action_expression )
+
+continuation ::=  ( ';'  seq_expression )
+
+symbol_expression ::=  ( ( symbol ( ( '('  ( expression (  ( ','  expression )  )*  )  ')'  )  )?  (  attribute )*  )  |  ( symbol_expression modifier (  attribute )*  )  )
+
+action_expression ::=  ( menhir_action |  ( precedence menhir_action )  |  ( menhir_action precedence )  )
+
+menhir_action ::=  ( action |  type )
+
+pattern ::=  ( lid |  '_'  |  '~'  |  ( '('  ')'  )  |  ( '('  ( pattern (  ( ','  pattern )  )*  )  ')'  )  )
+
+line_comment ::=  '//'[^\n]*
+
+comment ::=  (  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )*
+
+header ::=  ( '%{'  ( ocaml )?  '%}'  )
+
+action ::=  ( '{'  ( ocaml )?  '}'  )
+
+attribute ::=  ( '[@'  ( ocaml )?  ']'  )
+
+grammar_attribute ::=  ( '%[@'  ( ocaml )?  ']'  )
+
+type ::=  ( '<'  ( ocaml_type )?  '>'  )
+
+postlude ::=  ocaml
+
+ocaml ::=  _ocaml
+
+_ocaml ::=  ( ( ( '{'  ( _ocaml )?  '}'  )  |  ( '['  ( _ocaml )?  ']'  )  |  '"'([^"\\]|'x00'|'\'('.'|'\n'))*'"' |  "'"([^'\\]|'x00'|'\'[\\"'ntbr ]|'\'[0-9][0-9][0-9]|'\x'[0-9A-Fa-f][0-9A-Fa-f]|'\o'[0-3][0-7][0-7])' |  '?[A-Za-z_][a-zA-Z0-9_']* |  [^{}\[#x5d"'%(A-Za-z_]+ |  '%'  |  '('  )  )+
+
+ocaml_type ::=  ( '->'?|'[>'?|[^-\[>]+ )+

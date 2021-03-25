@@ -1,0 +1,194 @@
+/*
+Grammar originally from https://github.com/oakmac/tree-sitter-clojure
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+program ::=  (  _anything )*
+
+_anything ::=  ( _literals |  symbol |  interop |  _functions |  quote |  comment |  deref |  syntax_quote |  var_quote |  unquote |  unquote_splice |  gensym |  shorthand_function_arg |  reader_conditional )
+
+_literals ::=  ( nil |  boolean |  number |  symbolic_value |  character |  string |  regex |  keyword |  _collection_literals |  tagged_literal )
+
+_collection_literals ::=  ( ( metadata )?  ( list |  vector |  hash_map |  set )  )
+
+nil ::=  'nil'
+
+boolean ::=  ( true |  false )
+
+true ::=  'true'
+
+false ::=  'false'
+
+number ::=  _number
+
+_number ::=  ( number_long |  number_double |  number_bigint |  number_bigdecimal |  number_ratio )
+
+number_long ::=  ( _normal_long |  _number_hex |  _number_arbitrary_radix |  _number_octal )
+
+_normal_long ::=  [-+]?[0-9]+
+
+_number_hex ::=  '-'?'0'[xX][0-9a-fA-F]+
+
+_number_arbitrary_radix ::=  '-'?[0-9]+[rR][0-9a-zA-Z]+
+
+_number_octal ::=  '-'?'0'[0-9]+
+
+number_double ::=  (  ( ( (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  '.'  ( (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  )?  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  )  )?  ( [fFdD] )?  )  |  ( '.'  (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  )  )?  ( [fFdD] )?  )  |  ( (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  ( [fFdD] )?  )  |  ( (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( '_'+ [0-9]+ )  )*  )  )*  )  )?  [fFdD] )  )  )*
+
+number_bigint ::=  [-+]?[0-9]+'N'
+
+number_bigdecimal ::=  '-'?[0-9]+'.' [\d]+([eE][+-]?[\d]+)?'M'
+
+number_ratio ::=  [-+]?[0-9]+'/'[\d]+
+
+symbolic_value ::=  ( '##'  ( infinity |  negative_infinity |  not_a_number )  )
+
+infinity ::=  'Inf'
+
+negative_infinity ::=  '-Inf'
+
+not_a_number ::=  'NaN'
+
+character ::=  _character
+
+_character ::=  ( '\\'  ( _normal_char |  _special_char |  _unicode_char |  _octal_char )  )
+
+_normal_char ::=  .
+
+_special_char ::=  ( 'newline'  |  'space'  |  'tab'  |  'formfeed'  |  'backspace'  |  'return'  )
+
+_unicode_char ::=  ( 'u'  _hex_char _hex_char _hex_char _hex_char )
+
+_hex_char ::=  [A-Fa-f0-9]
+
+_octal_char ::=  ( 'o'  _octal_num )
+
+_octal_num ::=  ( [0-3][0-7][0-7] |  [0-7][0-7] |  [0-7] )
+
+string ::=  _string
+
+_string ::=  ( '"'  (  ( '\\"'  |  [^"] )  )*  '"'  )
+
+regex ::=  _regex
+
+_regex ::=  ( '#"'  (  ( '\\"'  |  [^"\n\r] )  )*  '"'  )
+
+quote ::=  _quote
+
+_quote ::=  ( ( "'"  _anything )  |  ( '(quote'  _anything ')'  )  )
+
+keyword ::=  _keyword
+
+_keyword ::=  ( _unqualified_keyword |  qualified_keyword )
+
+_unqualified_keyword ::=  ( ':'  _keyword_chars )
+
+qualified_keyword ::=  ( ( '::'  _keyword_chars )  |  ( '::'  _keyword_chars '/'  _keyword_chars )  )
+
+_keyword_chars ::=  [a-zA-Z0-9\-_\!\+\.][a-zA-Z0-9\-_\!\+\.:\?]*
+
+symbol ::=  _symbol
+
+_symbol ::=  ( threading_macro |  _symbol_chars |  qualified_symbol )
+
+threading_macro ::=  ( '->'  |  '->>'  |  'as->'  |  'some->'  |  'some->>'  |  'cond->'  |  'cond->>'  )
+
+_symbol_chars ::=  [a-zA-Z\*\+\!\-_\?][a-zA-Z0-9\*\+\!\-_\?\':]*
+
+qualified_symbol ::=  _qualified_symbol
+
+_qualified_symbol ::=  ( _symbol_chars '/'  _symbol_chars )
+
+interop ::=  ( member_access |  field_access |  new_class )
+
+member_access ::=  '.'[a-zA-Z_][\w]*
+
+field_access ::=  '.-'[a-zA-Z_][\w]*
+
+new_class ::=  ([a-zA-Z_][\w]*'.')([\w]+'.')*
+
+list ::=  _list
+
+_list ::=  ( '('  (  _anything )*  ')'  )
+
+vector ::=  _vector
+
+_vector ::=  ( '['  (  _anything )*  ']'  )
+
+hash_map ::=  _hash_map
+
+_hash_map ::=  ( ( '{'  (  _hash_map_kv_pair )*  '}'  )  |  namespace_map )
+
+namespace_map ::=  ( ( '#::{'  (  _hash_map_kv_pair )*  '}'  )  |  ( '#:'[a-zA-Z\*\+\!\-_\?][a-zA-Z0-9\*\+\!\-_\?\':]* '{'  (  _hash_map_kv_pair )*  '}'  )  )
+
+_hash_map_kv_pair ::=  ( _hash_map_key _hash_map_value )
+
+_hash_map_key ::=  _anything
+
+_hash_map_value ::=  _anything
+
+set ::=  _set
+
+_set ::=  ( '#{'  (  _anything )*  '}'  )
+
+comment ::=  ( semicolon |  shebang_line |  ignore_form |  comment_macro )
+
+semicolon ::=  ( ';'  .* )
+
+shebang_line ::=  ( '#!'  .* )
+
+ignore_form ::=  ( '#_'  _anything )
+
+comment_macro ::=  ( '('  'comment'  (  _anything )*  ')'  )
+
+_functions ::=  ( anonymous_function |  shorthand_function |  defn )
+
+anonymous_function ::=  ( '('  'fn'  ( function_name )?  _after_the_fn_name ')'  )
+
+_after_the_fn_name ::=  ( _single_arity_fn |  _multi_arity_fn )
+
+function_name ::=  symbol
+
+_single_arity_fn ::=  ( params ( function_body )?  )
+
+_multi_arity_fn ::=  ( ( '('  _single_arity_fn ')'  )  )+
+
+function_body ::=  ( _anything )+
+
+params ::=  vector
+
+shorthand_function ::=  ( '#('  (  _anything )*  ')'  )
+
+shorthand_function_arg ::=  '%'[1-9&]*
+
+defn ::=  ( '('  ( 'defn'  |  'defn-'  )  ( metadata )?  function_name ( docstring )?  ( attr_map )?  _after_the_fn_name ')'  )
+
+docstring ::=  string
+
+attr_map ::=  hash_map
+
+metadata ::=  ( ( metadata_shorthand )+  |  _metadata_map )
+
+_metadata_map ::=  ( '^'  hash_map )
+
+metadata_shorthand ::=  ( ( '^:'  _keyword_chars )  |  ( '^"'  (  ( '\\"'  |  [^"] )  )*  '"'  )  |  ( '^'  _symbol_chars )  )
+
+syntax_quote ::=  ( '`'  _anything )
+
+var_quote ::=  ( "#'"  symbol )
+
+unquote ::=  ( '~'  _anything )
+
+unquote_splice ::=  ( '~@'  _anything )
+
+gensym ::=  [a-zA-Z\*\+\!\-_\?][a-zA-Z0-9\*\+\!\-_\?\':]*'#'
+
+deref ::=  ( '@'  ( symbol |  list )  )
+
+tagged_literal ::=  ( '#'  ( _symbol_chars |  _qualified_symbol )  _anything )
+
+reader_conditional ::=  ( _reader_conditional_symbol '('  (  ( keyword _anything )  )*  ')'  )
+
+_reader_conditional_symbol ::=  ( '#?'  |  '#?@'  )

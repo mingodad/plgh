@@ -1,0 +1,94 @@
+/*
+Grammar originally from https://github.com/Dekker1/tree-sitter-minizinc
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  ( ( (  ( _item ';'  )  )*  ( _item )?  )  )
+
+_item ::=  ( annotation |  assignment |  constraint |  declaration |  enumeration |  function_item |  goal |  include |  output |  predicate )
+
+annotation ::=  ( 'annotation'  (  identifier )  ( (  _parameters )  )?  ( ( '='  (  _expression )  )  )?  )
+
+assignment ::=  ( (  identifier )  '='  (  _expression )  )
+
+constraint ::=  ( 'constraint'  _expression )
+
+declaration ::=  ( (  _type )  ':'  (  identifier )  ( (  _annotations )  )?  ( ( '='  (  _expression )  )  )?  )
+
+enumeration ::=  ( 'enum'  (  identifier )  ( (  _annotations )  )?  ( ( '='  '{'  (  ( (  ( identifier ','  )  )*  ( identifier )?  )  )  '}'  )  )?  )
+
+function_item ::=  ( 'function'  (  _type )  ':'  (  identifier )  (  _parameters )  ( (  _annotations )  )?  ( ( '='  (  _expression )  )  )?  )
+
+goal ::=  ( 'solve'  (  ( 'satisfy'  |  ( 'maximize'  _expression )  |  ( 'minimize'  _expression )  )  )  )
+
+include ::=  ( 'include'  string_literal )
+
+output ::=  ( 'output'  _expression )
+
+predicate ::=  ( (  ( 'predicate'  |  'test'  )  )  (  identifier )  (  _parameters )  ( (  _annotations )  )?  ( ( '='  (  _expression )  )  )?  )
+
+_annotations ::=  ( ( '::'  _expression )  )+
+
+_parameters ::=  ( '('  ( (  ( ( _type ( ( ':'  identifier )  )?  )  ','  )  )*  ( ( _type ( ( ':'  identifier )  )?  )  )?  )  ')'  )
+
+_expression ::=  ( identifier |  _literal |  array_comprehension |  call |  generator_call |  if_then_else |  indexed_access |  infix_operator |  let_expression |  prefix_operator |  set_comprehension |  string_interpolation |  parenthesised_expression )
+
+parenthesised_expression ::=  ( '('  _expression ')'  )
+
+array_comprehension ::=  ( '['  _expression '|'  ( generator (  ( ','  generator )  )*  ( ','  )?  )  ']'  )
+
+call ::=   (  ( (  identifier )  '('  (  ( (  ( _expression ','  )  )*  ( _expression )?  )  )  ')'  )  )
+
+generator_call ::=   (  ( (  identifier )  '('  (  ( generator (  ( ','  generator )  )*  ( ','  )?  )  )  ')'  '('  (  _expression )  ')'  )  )
+
+generator ::=  ( identifier 'in'  _expression ( ( 'where'  _expression )  )?  )
+
+if_then_else ::=  ( 'if'  _expression 'then'  _expression (  ( 'elseif'  _expression 'then'  _expression )  )*  ( ( 'else'  _expression )  )?  'endif'  )
+
+indexed_access ::=   (  ( (  _expression )  '['  (  ( _expression (  ( ','  _expression )  )*  )  )  ']'  )  )
+
+infix_operator ::=  (  (  ( (  _expression )  (  '<->'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '->'  |  '<-'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '\\/'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  'xor'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '/\\'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '='  |  '=='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  |  'in'  |  'subset'  |  'superset'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  'union'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  'diff'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  'symdiff'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  'intersect'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '..'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '+'  |  '-'  |  '++'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '*'  |  '/'  |  'div'  |  'mod'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '::'  )  (  _expression )  )  )  )
+
+let_expression ::=  ( 'let'  '{'  (  ( (  ( ( declaration |  constraint )  ( ','  |  ';'  )  )  )*  ( ( declaration |  constraint )  )?  )  )  '}'  'in'  (  _expression )  )
+
+prefix_operator ::=   (  ( (  ( '-'  |  'not'  |  '¬'  )  )  _expression )  )
+
+set_comprehension ::=  ( '{'  _expression '|'  ( generator (  ( ','  generator )  )*  ( ','  )?  )  '}'  )
+
+string_interpolation ::=  ( '"'  ( string_content )?  ( ( '\\('  _expression ')'  ( string_content )?  )  )+  '"'  )
+
+_type ::=  ( array_type |  type_base )
+
+array_type ::=  ( 'array'  '['  ( type_base (  ( ','  type_base )  )*  ( ','  )?  )  ']'  'of'  _type )
+
+type_base ::=  ( ( (  ( 'var'  |  'par'  )  )  )?  ( (  'opt'  )  )?  ( (  ( 'set'  'of'  )  )  )?  ( primitive_type |  _expression )  )
+
+primitive_type ::=  ( 'ann'  |  'bool'  |  'float'  |  'int'  |  'string'  )
+
+_literal ::=  ( absent |  array_literal |  boolean_literal |  float_literal |  integer_literal |  set_literal |  string_literal )
+
+absent ::=  '<>'
+
+array_literal ::=  ( '['  ( (  ( _expression ','  )  )*  ( _expression )?  )  ']'  )
+
+boolean_literal ::=  ( 'true'  |  'false'  )
+
+float_literal ::=  (  ( [0-9]+'.'[\d]+ |  [0-9]+('.'[\d]+)?[Ee][+-]?[\d]+ )  )*
+
+integer_literal ::=  (  ( [0-9]+ |  '0x'[0-9a-fA-F]+ |  '0b'[01]+ |  '0o'[0-7]+ )  )*
+
+set_literal ::=  ( '{'  ( (  ( _expression ','  )  )*  ( _expression )?  )  '}'  )
+
+string_literal ::=  ( '"'  (  ( string_content )?  )  '"'  )
+
+string_content ::=  ( ( (   (  [^"\n\\]+ )  )  |  escape_sequence )  )+
+
+escape_sequence ::=  (  ( '\\'  ( [^xuU] |  [0-9]+/*{2,3}*/ |  'x'[0-9a-fA-F]+/*{2,}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'U'[0-9a-fA-F]/*{8}*/ )  )  )
+
+identifier ::=  [A-Za-z][A-Za-z0-9_]*
+
+line_comment ::=  (  ( '%'  .* )  )*
+
+block_comment ::=  (  ( '/*'  ([^*]|'*'[^\/]|'\n')*?'*'? '*/'  )  )*

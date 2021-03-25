@@ -1,0 +1,116 @@
+/*
+Grammar originally from https://github.com/GrayJack/tree-sitter-janet
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  _expr )*
+
+line_comment ::=  (  ( '#'  .* )  )*
+
+_expr ::=  ( _literals |  _identifier |  _special_forms |  _shorthand |  _specials |  array |  sqr_array |  tuple |  sqr_tuple |  struct |  table |  peg_set )
+
+tuple ::=  ( '('  (  (  _expr )  )*  ')'  )
+
+sqr_tuple ::=  ( '['  (  (  _expr )  )*  ']'  )
+
+array ::=  ( '@('  (  (  _expr )  )*  ')'  )
+
+sqr_array ::=  ( '@['  (  (  _expr )  )*  ']'  )
+
+struct ::=  ( '{'  (  _struct_tables_commom )*  '}'  )
+
+table ::=  ( '@{'  (  _struct_tables_commom )*  '}'  )
+
+_struct_tables_commom ::=  ( (  _expr )  (  _expr )  )
+
+peg_set ::=  ( '('  'set'  ( str_literal |  long_str_literal |  quote |  short_quote )  ')'  )
+
+_special_forms ::=  ( def |  var |  quote |  splice |  quasiquote |  unquote |  break |  set |  if |  do |  while |  fn |  upscope )
+
+def ::=  ( '('  'def'  (  _expr )  (  (  metadata )  )*  (  _expr )  ')'  )
+
+var ::=  ( '('  'var'  (  _expr )  (  (  metadata )  )*  (  _expr )  ')'  )
+
+quote ::=  ( '('  'quote'  ( _expr )?  ')'  )
+
+splice ::=  ( '('  'splice'  ( _expr )?  ')'  )
+
+quasiquote ::=  ( '('  'quasiquote'  ( _expr )?  ')'  )
+
+unquote ::=  ( '('  'unquote'  ( _expr )?  ')'  )
+
+break ::=  ( '('  'break'  ( _expr )?  ')'  )
+
+set ::=  ( '('  'set'  (  _expr )  (  _expr )  ')'  )
+
+if ::=  ( '('  'if'  (  _expr )  (  _expr )  ( (  _expr )  )?  ')'  )
+
+do ::=  ( '('  'do'  ( (  body )  )?  ')'  )
+
+while ::=  ( '('  'while'  (  _expr )  (  (  _expr )  )*  ')'  )
+
+fn ::=  ( '('  'fn'  ( (  _name )  )?  (  _parameters )  ( (  body )  )?  ')'  )
+
+upscope ::=  ( '('  'upscope'  ( (  body )  )?  ')'  )
+
+_parameters ::=   (  ( _identifier |  quote |  splice |  quasiquote |  unquote |  short_quote |  short_splice |  short_quasiquote |  short_unquote |  parameters |  tuple_parameters )  )
+
+parameters ::=  ( '['  (  (  _expr )  )*  ( ( ( variadic_marker |  optional_marker |  keys_marker )  (  (  _expr )  )*  )  )?  ']'  )
+
+tuple_parameters ::=  ( '('  (  (  _expr )  )*  ( ( ( variadic_marker |  optional_marker |  keys_marker )  (  (  _expr )  )*  )  )?  ')'  )
+
+variadic_marker ::=  '&'
+
+optional_marker ::=  '&opt'
+
+keys_marker ::=  '&keys'
+
+_shorthand ::=  ( short_quote |  short_splice |  short_quasiquote |  short_unquote |  short_fn )
+
+short_quote ::=  ( "'"  _expr )
+
+short_splice ::=  ( ';'  _expr )
+
+short_quasiquote ::=  ( '~'  _expr )
+
+short_unquote ::=  ( ','  _expr )
+
+short_fn ::=  ( '|'  (  _expr )  )
+
+_specials ::=  ( extra_defs )
+
+extra_defs ::=  ( '('  ( 'defn'  |  'defn-'  |  'varfn'  |  'varfn-'  |  'defmacro'  |  'defmacro-'  )  (  _name )  (  (  metadata )  )*  (  _parameters )  ( (  body )  )?  ')'  )
+
+_literals ::=  ( bool_literal |  nil_literal |  number_literal |  str_literal |  long_str_literal |  buffer_literal |  long_buffer_literal )
+
+str_literal ::=  (  ( '"'  (  ( [^"\\]+ |  '\'[^xu] |  '\u'[0-9a-fA-F]/*{4}*/ |  '\u{'[0-9a-fA-F]+'}' |  '\x'[0-9a-fA-F]/*{2}*/ )  )*  '"'  )  )*
+
+long_str_literal ::=  _long_str
+
+buffer_literal ::=  (  ( '@"'  (  ( [^"\\]+ |  '\'[^xu] |  '\u'[0-9a-fA-F]/*{4}*/ |  '\u{'[0-9a-fA-F]+'}' |  '\x'[0-9a-fA-F]/*{2}*/ )  )*  '"'  )  )*
+
+long_buffer_literal ::=  _long_buffer
+
+number_literal ::=  ( [-+]?([0-9][_\d]*|[\d][_\d]*'.'[_\d]*|'.'[_\d]+)([eE&][+-]?[\d]+)? |  [-+]?'0x'([_0-9a-fA-F]+|[_\da-fA-F]+'.'[_\da-fA-F]*|'.'[_\da-fA-F]+)('&'[+-]?[\da-fA-F]+)? |  [-+]?[0-9][\d]?'r'([_\w]+|[_\w]+'.'[_\w]*|'.'[_\w]+)('&'[+-]?[\w]+)? )
+
+bool_literal ::=  ( 'true'  |  'false'  )
+
+nil_literal ::=  'nil'
+
+escape_sequence ::=  (  ( '\'[^xu] |  '\u'[0-9a-fA-F]+/*{4}*/ |  '\u{'[0-9a-fA-F]+'}' |  '\x'[0-9a-fA-F]+/*{2}*/ )  )
+
+metadata ::=   (  ( keyword |  str_literal |  long_str_literal |  quote |  splice |  quasiquote |  unquote |  short_quote |  short_splice |  short_quasiquote |  short_unquote )  )
+
+_name ::=   (  ( _identifier |  quote |  splice |  quasiquote |  unquote |  short_quote |  short_splice |  short_quasiquote |  short_unquote )  )
+
+doc_str ::=  ( str_literal |  long_str_literal )
+
+body ::=  ( (  _expr )  )+
+
+_identifier ::=  ( symbol |  keyword )
+
+keyword ::=  ':'[^({\["'|`;,~#x5d}\s)]*
+
+symbol ::=  [^({\["'|`;,~#x5d}\s):][^({\["'|`;,~#x5d}\s)]*

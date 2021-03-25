@@ -1,0 +1,112 @@
+/*
+Grammar originally from https://github.com/yagebu/tree-sitter-beancount
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+beancount_file ::=  (  ( _dated_directives |  _undated_directives |  _skipped_lines )  )*
+
+_skipped_lines ::=  ( ( [!&?%PSTCURM*#] [.]* [\n] )  |  ( ':'  [.]* [\n] )  |  [\n] |  ( ';'[.]* [\n] )  )
+
+_key_value_value ::=  ( string |  account |  date |  currency |  tag |  bool |  _num_expr |  amount )
+
+key_value ::=  ( key ( _key_value_value )?  )
+
+metadata ::=  ( ( [\n][ \r\t]+ key_value )  )+
+
+_undated_directives ::=  ( include |  option |  plugin |  popmeta |  poptag |  pushmeta |  pushtag )
+
+include ::=  ( 'include'  string '\n' )
+
+option ::=  ( 'option'  (  string )  (  string )  '\n' )
+
+plugin ::=  ( 'plugin'  (  string )  (  ( string )?  )  '\n' )
+
+pushtag ::=  ( 'pushtag'  (  tag )  '\n' )
+
+poptag ::=  ( 'poptag'  (  tag )  '\n' )
+
+pushmeta ::=  ( 'pushmeta'  (  key_value )  '\n' )
+
+popmeta ::=  ( 'popmeta'  (  key )  '\n' )
+
+_dated_directives ::=  ( balance |  close |  commodity |  custom |  document |  event |  note |  open |  pad |  price |  transaction |  query )
+
+cost_spec ::=  ( ( '{'  (  ( cost_comp_list )?  )  '}'  )  |  ( '{{'  (  ( cost_comp_list )?  )  '}}'  )  )
+
+cost_comp_list ::=  ( cost_comp (  ( ','  cost_comp )  )*  )
+
+cost_comp ::=  ( compound_amount |  date |  string |  '*'  )
+
+compound_amount ::=  ( ( (  ( _num_expr )?  )  (  currency )  )  |  ( (  _num_expr )  (  ( currency )?  )  )  |  ( (  ( _num_expr )?  )  '#'  (  ( _num_expr )?  )  (  currency )  )  )
+
+incomplete_amount ::=  ( ( _num_expr currency )  |  ( _num_expr )  |  ( currency )  )
+
+price_annotation ::=  ( ( '@@'  ( incomplete_amount )?  )  |  ( '@'  ( incomplete_amount )?  )  )
+
+posting ::=  ( '\n'[ \r\t]+ (  ( flag )?  )  (  account )  (  ( incomplete_amount )?  )  (  ( cost_spec )?  )  (  ( price_annotation )?  )  ( ';'[.]* )?  (  ( metadata )?  )  )
+
+postings ::=  ( ( posting |  ( '\n'[ \r\t]+ ';'[.]* )  )  )+
+
+tags_and_links ::=  ( ( ( '\n'[ \r\t]+ )?  ( tag |  link )  )  )+
+
+txn_strings ::=  ( string ( string )?  )
+
+transaction ::=  ( (  date )  (  flag )  (  ( txn_strings )?  )  (  ( tags_and_links )?  )  (  ( metadata )?  )  (  postings )  '\n' )
+
+balance ::=  ( (  date )  'balance'  (  account )  (  ( amount |  amount_with_tolerance )  )  (  ( metadata )?  )  '\n' )
+
+close ::=  ( (  date )  'close'  (  account )  (  ( metadata )?  )  '\n' )
+
+commodity ::=  ( (  date )  'commodity'  (  currency )  (  ( metadata )?  )  '\n' )
+
+custom ::=  ( (  date )  'custom'  (  string )  (  ( string |  date |  account |  bool |  amount |  _num_expr )  )*  (  ( metadata )?  )  '\n' )
+
+document ::=  ( (  date )  'document'  (  account )  (  string )  (  ( tags_and_links )?  )  (  ( metadata )?  )  '\n' )
+
+event ::=  ( (  date )  'event'  (  string )  (  string )  (  ( metadata )?  )  '\n' )
+
+note ::=  ( (  date )  'note'  (  account )  (  string )  (  ( metadata )?  )  '\n' )
+
+open ::=  ( (  date )  'open'  (  account )  (  ( currency_list )?  )  (  ( string )?  )  (  ( metadata )?  )  '\n' )
+
+pad ::=  ( (  date )  'pad'  (  account )  (  account )  (  ( metadata )?  )  '\n' )
+
+price ::=  ( (  date )  'price'  (  currency )  (  amount )  (  ( metadata )?  )  '\n' )
+
+query ::=  ( (  date )  'query'  (  string )  (  string )  (  ( metadata )?  )  '\n' )
+
+currency_list ::=  ( currency (  ( ','  currency )  )*  )
+
+amount ::=  ( _num_expr currency )
+
+amount_with_tolerance ::=  ( _num_expr '~'  _num_expr currency )
+
+_num_expr ::=  ( number |  _paren_num_expr |  unary_num_expr |  binary_num_expr )
+
+_paren_num_expr ::=  ( '('  _num_expr ')'  )
+
+unary_num_expr ::=   (  ( ( '-'  _num_expr )  |  ( '+'  _num_expr )  )  )
+
+binary_num_expr ::=  (  (  ( _num_expr '*'  _num_expr )  )  |   (  ( _num_expr '/'  _num_expr )  )  |   (  ( _num_expr '+'  _num_expr )  )  |   (  ( _num_expr '-'  _num_expr )  )  )
+
+bool ::=  (  TRUE|FALSE )*
+
+date ::=  (  [0-9]+/*{4,}*/[\-/][0-9]+[\-/][0-9]+ )*
+
+key ::=  (  [a-z][a-zA-Z0-9\-_]+':' )*
+
+tag ::=  (  '#'[A-Za-z0-9\-_/.]+ )*
+
+link ::=  (  '^'[A-Za-z0-9\-_/.]+ )*
+
+string ::=  (  '"'[^"]*'"' )*
+
+currency ::=  (  [A-Z][A-Z0-9\'\._\-]+/*{0,22}*/[A-Z0-9] )*
+
+number ::=  (  ([0-9]+|[0-9][0-9,]+[0-9])(.[0-9]*)? )*
+
+flag ::=  (  [!&?%PSTCURM*#] )*
+
+account ::=  (  ( [A-Z]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  ( ( ':'  [A-Z0-9]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  )  )+  )  )*
