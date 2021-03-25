@@ -1,0 +1,198 @@
+/*
+Grammar originally from https://github.com/AbstractMachinesLab/tree-sitter-erlang
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  _structure_item )*
+
+_structure_item ::=  (  (  expression )  |   (  _module )  )
+
+_module ::=  ( type_declaration |  function_spec |  function_declaration |  module_attribute |  module_name |  module_export )
+
+module_attribute ::=  ( '-'  atom ( '('  expression ')'  )  '.'  )
+
+module_name ::=  ( '-'  'module'  ( '('  atom ')'  )  '.'  )
+
+module_export ::=  ( '-'  ( 'export'  |  'export_type'  )  ( '('  ( '['  ( ( ( atom '/'  integer )  (  ( ','  ( atom '/'  integer )  )  )*  )  )?  ']'  )  ')'  )  '.'  )
+
+function_declaration ::=  ( ( function_clause (  ( ';'  function_clause )  )*  )  '.'  )
+
+function_clause ::=   (  ( (  atom )  lambda_clause )  )
+
+comment ::=  '%'[^\n]*[\n]
+
+type_declaration ::=  ( '-'  ( 'type'  |  'opaque'  )  (  atom )  (  ( '('  ( ( variable (  ( ','  variable )  )*  )  )?  ')'  )  )  '::'  (  type_expression )  '.'  )
+
+function_spec ::=  ( '-'  ( 'spec'  |  'callback'  )  (  atom )  (  ( '('  ( ( type_expression (  ( ','  type_expression )  )*  )  )?  ')'  )  )  '->'  (  type_expression )  '.'  )
+
+type_expression ::=  ( ( type_atom |  type_application |  type_bitstring |  type_fun |  type_integer |  type_map |  type_record |  type_tuple |  type_variable |  _type_list )  (  ( '|'  ( type_atom |  type_application |  type_bitstring |  type_fun |  type_integer |  type_map |  type_record |  type_tuple |  type_variable |  _type_list )  )  )*  )
+
+type_variable ::=  variable
+
+type_atom ::=  atom
+
+type_application ::=   (  ( ( ( atom ':'  )  )?  atom (  ( '('  ( ( type_expression (  ( ','  type_expression )  )*  )  )?  ')'  )  )  )  )
+
+type_bitstring ::=  ( '<<'  ( ( '_'  ':'  variable )  |  ( '_'  ':'  '_'  '*'  variable )  |  ( '_'  ':'  variable '_'  ':'  '_'  '*'  variable )  |  '>>'  )  )
+
+type_fun ::=  ( 'fun'  ( '('  ( ( ( ( '('  '...'  ')'  )  '->'  type_expression )  |  ( (  ( '('  ( ( type_expression (  ( ','  type_expression )  )*  )  )?  ')'  )  )  '->'  type_expression )  )  )?  ')'  )  )
+
+type_integer ::=  ( integer |  ( integer '..'  integer )  )
+
+_type_list ::=  ( type_list |  type_nonempty_list )
+
+type_list ::=  ( '['  type_expression ']'  )
+
+type_nonempty_list ::=  ( '['  ( type_expression ','  '...'  )  ']'  )
+
+type_tuple ::=  ( '{'  ( ( type_expression (  ( ','  type_expression )  )*  )  )?  '}'  )
+
+type_map ::=  ( '#'  '{'  ( ( type_map_entry (  ( ','  type_map_entry )  )*  )  )?  '}'  )
+
+type_map_entry ::=  ( type_expression ( '=>'  |  ':='  )  type_expression )
+
+type_record ::=  ( '#'  atom '{'  ( ( type_record_field (  ( ','  type_record_field )  )*  )  )?  '}'  )
+
+type_record_field ::=  ( type_expression '::'  type_expression )
+
+pattern ::=   (  ( term |  variable |  pat_list |  pat_tuple )  )
+
+pat_list ::=   (  ( '['  ( ( pattern (  ( ','  pattern )  )*  )  )?  ']'  )  )
+
+pat_tuple ::=   (  ( '{'  ( ( pattern (  ( ','  pattern )  )*  )  )?  '}'  )  )
+
+pat_map ::=  ( '#'  '{'  ( ( pat_map_entry (  ( ','  pat_map_entry )  )*  )  )?  '}'  )
+
+pat_map_entry ::=  ( term ':='  pattern )
+
+expression ::=  (  (  ( '('  _expr ')'  )  )  |   (  _expr )  )
+
+_expr ::=  ( expr_begin_block |  expr_bitstring_comprehension |  expr_case |  expr_catch |  expr_function_call |  expr_if |  expr_lambda |  expr_list |  expr_list_comprehension |  expr_macro_application |  expr_map_update |  expr_match |  expr_receive |  expr_record_access |  expr_record_update |  expr_send |  expr_throw |  expr_try |  expr_op |  term |  variable )
+
+expr_map_update ::=   (  ( expression map )  )
+
+expr_record_access ::=   (  ( expression '#'  atom '.'  atom )  )
+
+expr_record_update ::=   (  ( expression record )  )
+
+expr_try ::=  ( 'try'  expression ( ( 'of'  ( case_clause (  ( ';'  case_clause )  )*  )  )  )?  ( expr_try_catch |  expr_try_after |  _expr_try_catch_after )  'end'  )
+
+expr_try_catch ::=  ( 'catch'  ( catch_clause (  ( ';'  catch_clause )  )*  )  )
+
+expr_try_after ::=  ( 'after'  expression )
+
+_expr_try_catch_after ::=  ( expr_try_catch expr_try_after )
+
+catch_clause ::=  ( (  catch_pattern )  ( guard_clause )?  '->'  (  ( expression (  ( ','  expression )  )*  )  )  )
+
+catch_pattern ::=  ( (  pattern )  (  ( ( ':'  pattern )  )?  )  (  ( ( ':'  variable )  )?  )  )
+
+expr_catch ::=   (  ( 'catch'  expression )  )
+
+expr_throw ::=   (  ( 'throw'  expression )  )
+
+expr_begin_block ::=  ( 'begin'  ( expression (  ( ','  expression )  )*  )  'end'  )
+
+expr_list_comprehension ::=  ( '['  expression '||'  expr_list_generator ( ( ','  expr_list_filter )  )?  ']'  )
+
+expr_list_generator ::=  ( expression '<-'  expression )
+
+expr_list_filter ::=  ( expression (  ( ','  expression )  )*  )
+
+expr_bitstring_comprehension ::=  ( '<<'  term '||'  expr_bitstring_generator ( ( ','  expr_bitstring_filter )  )?  '>>'  )
+
+expr_bitstring_generator ::=  ( '<<'  expression '>>'  '<='  expression )
+
+expr_bitstring_filter ::=  ( expression (  ( ','  expression )  )*  )
+
+expr_op ::=  ( _expr_operator_unary |  _expr_operator_binary )
+
+_expr_operator_unary ::=   (  ( (  ( '+'  |  '-'  |  'bnot'  |  'not'  )  )  (  expression )  )  )
+
+_expr_operator_binary ::=  (  (  ( (  expression )  (  ( '*'  |  '+'  |  '-'  |  '/'  |  '/='  |  '<'  |  '=/='  |  '=:='  |  '=<'  |  '=='  |  '>'  |  '>='  |  'and'  |  'andalso'  |  'band'  |  'bor'  |  'bsl'  |  'bsr'  |  'bxor'  |  'div'  |  'or'  |  'orelse'  |  'rem'  |  'xor'  )  )  (  expression )  )  )  |   (  ( (  expression )  (  ( '=!'  |  '++'  |  '--'  )  )  (  expression )  )  )  )
+
+expr_send ::=   (  ( expression '!'  expression )  )
+
+expr_receive ::=  ( 'receive'  (  ( ( case_clause (  ( ';'  case_clause )  )*  )  )?  )  ( expr_receive_after )?  'end'  )
+
+expr_receive_after ::=  ( 'after'  case_clause )
+
+expr_if ::=  ( 'if'  ( if_clause (  ( ';'  if_clause )  )*  )  'end'  )
+
+if_clause ::=  ( (  guard_seq )  '->'  (  ( expression (  ( ','  expression )  )*  )  )  )
+
+expr_list ::=   (  ( ( '['  ( ( expression (  ( ','  expression )  )*  )  )?  ']'  )  |  expr_list_cons )  )
+
+expr_list_cons ::=  ( '['  ( (  ( expression (  ( ','  expression )  )*  )  )  '|'  (  expression )  )  ']'  )
+
+expr_case ::=  ( 'case'  expression 'of'  ( case_clause (  ( ';'  case_clause )  )*  )  'end'  )
+
+case_clause ::=  ( (  pattern )  ( guard_clause )?  '->'  (  ( expression (  ( ','  expression )  )*  )  )  )
+
+guard_clause ::=  ( 'when'  guard_seq )
+
+guard_seq ::=  ( guard (  ( ';'  guard )  )*  )
+
+guard ::=  ( expression (  ( ','  expression )  )*  )
+
+expr_match ::=   (  ( expression '='  expression )  )
+
+expr_lambda ::=  ( 'fun'  ( lambda_clause (  ( ';'  lambda_clause )  )*  )  'end'  )
+
+lambda_clause ::=  ( (  (  ( '('  ( ( pattern (  ( ','  pattern )  )*  )  )?  ')'  )  )  )  ( guard_clause )?  '->'  (  ( expression (  ( ','  expression )  )*  )  )  )
+
+expr_function_call ::=  ( (  _function_name )  (  ( '('  ( ( expression (  ( ','  expression )  )*  )  )?  ')'  )  )  )
+
+_function_name ::=   (  ( computed_function_name |  qualified_function_name )  )
+
+qualified_function_name ::=  ( (  ( variable |  atom |  ( '('  expression ')'  )  )  )  ':'  (  ( variable |  atom |  ( '('  expression ')'  )  )  )  )
+
+computed_function_name ::=   (  ( variable |  atom |  ( '('  expression ')'  )  )  )
+
+expr_macro_application ::=   (  ( '?'  _macro_name ( (  ( '('  ( ( expression (  ( ','  expression )  )*  )  )?  ')'  )  )  )?  )  )
+
+_macro_name ::=  ( variable |  atom )
+
+variable ::=  [_A-Z\xC0-\xD6\xD8-\xDE][_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF]*
+
+term ::=  ( atom |  binary_string |  char |  float |  integer |  list |  tuple |  map |  record |  string )
+
+list ::=  ( '['  ( ( expression (  ( ','  expression )  )*  )  )?  ']'  )
+
+tuple ::=  ( '{'  ( ( expression (  ( ','  expression )  )*  )  )?  '}'  )
+
+atom ::=  (  ( _unquoted_atom |  _quoted_atom )  )
+
+_unquoted_atom ::=  [a-z\xDF-\xF6\xF8-\xFF][_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF]*
+
+_quoted_atom ::=  ( "'"  (  ( [^'\\]+ |  _escape )  )*  "'"  )
+
+integer ::=  ( '-'?'2#'[01_]+ |  '-'?'16#'[a-fA-F0-9_]+ |  '-'?([0-9]*|'_'*'#')?[\d_]+ )
+
+float ::=  '-'?([0-9_]*'#')?[\d_]+'.'[\d_]+('e' '-'?[\d_]+)?
+
+string ::=  ( '"'  (  ( [^"\\]+ |  _escape )  )*  '"'  )
+
+char ::=  ( '$'  ( [^\\] |  _escape )  )
+
+_escape ::=  (  ( '\'  ( [0-7]/*{1,3}*/ |  'x'[0-9a-fA-F]/*{2}*/ |  'x{'[0-9a-fA-F]+'}' |  '\n'  |  [nrtvbfesd] )  )  )*
+
+binary_string ::=  ( '<<'  ( ( bin_part (  ( ','  bin_part )  )*  )  )?  '>>'  )
+
+bin_part ::=  ( ( ( integer |  float |  string )  ( bin_sized )?  ( bin_type_list )?  )  |  ( ( '('  expression ')'  )  ( bin_sized )?  ( bin_type_list )?  )  )
+
+bin_sized ::=  ( ':' integer )
+
+bin_type_list ::=  ( '/' ( bin_type (  ( '-'  bin_type )  )*  )  )
+
+bin_type ::=  ( 'big'  |  'binary'  |  'bits'  |  'bitstring'  |  'bytes'  |  'float'  |  'integer'  |  'little'  |  'native'  |  'signed'  |  'unsigned'  |  'utf16'  |  'utf32'  |  'utf8'  )
+
+map ::=  ( '#'  '{'  ( ( map_entry (  ( ','  map_entry )  )*  )  )?  '}'  )
+
+map_entry ::=  ( term ( '=>'  |  ':='  )  expression )
+
+record ::=  ( '#'  atom '{'  ( ( record_field (  ( ','  record_field )  )*  )  )?  '}'  )
+
+record_field ::=  ( term '='  expression )

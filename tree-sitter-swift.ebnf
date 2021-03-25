@@ -1,0 +1,222 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-swift
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+program ::=  (  _statement )*
+
+_statement ::=  ( ( _expression |  _declaration |  _loop_statement |  if_statement |  guard_statement |  switch_statement |  labeled_statement |  break_statement |  continue_statement |  fallthrough_statement |  return_statement |  throw_statement |  defer_statement |  do_statement |  build_configuration_statement |  diagnostic_statement |  line_control_statement )  ( ';'  |  '\n' )  )
+
+_loop_statement ::=  ( for_statement |  while_statement |  repeat_while_statement )
+
+for_statement ::=  ( 'for'  ( 'case'  )?  ( _pattern ( _type_annotation )?  )  'in'  _expression _code_block )
+
+while_statement ::=  ( 'while'  _condition_clause _code_block )
+
+_condition_clause ::=  ( ( _expression ( ( ','  ( _condition (  ( ','  _condition )  )*  )  )  )?  )  |  ( ( _condition (  ( ','  _condition )  )*  )  )  |  ( availability_condition ','  _expression )  )
+
+_condition ::=  ( availability_condition |  case_condition |  optional_binding_condition )
+
+_availability_platforms ::=  ( 'iOS'  |  'iOSApplicationExtension'  |  'macOS'  |  'macOSApplicationExtension'  |  'watchOS'  |  'tvOS'  )
+
+availability_condition ::=  ( '#available'  '('  ( ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )*  )  )  (  ( ','  ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )*  )  )  )  )*  )  ')'  )
+
+case_condition ::=  ( 'case'  _pattern '='  _expression )
+
+optional_binding_condition ::=   (  ( ( 'let'  |  'var'  )  optional_binding ( ( ','  ( optional_binding (  ( ','  optional_binding )  )*  )  )  )?  )  )
+
+optional_binding ::=  ( _pattern '='  _expression )
+
+repeat_while_statement ::=  ( 'repeat'  _code_block 'while'  _expression )
+
+if_statement ::=  ( 'if'  _condition_clause _code_block ( ( 'else'  ( _code_block |  if_statement )  )  )?  )
+
+guard_statement ::=  ( 'guard'  _condition_clause 'else'  _code_block )
+
+switch_statement ::=  ( 'switch'  _expression '{'  (  case_statement )*  '}'  )
+
+case_statement ::=  ( ( ( 'case'  ( ( _pattern )  (  ( ','  ( _pattern )  )  )*  )  ':'  )  |  ( 'default'  ':'  )  )  (  _statement )*  )
+
+_code_block ::=  ( '{'  (  _statement )*  '}'  )
+
+labeled_statement ::=  ( identifier ':'  ( _loop_statement |  if_statement )  )
+
+break_statement ::=  ( 'break'  ( identifier )?  )
+
+continue_statement ::=  ( 'continue'  ( identifier )?  )
+
+fallthrough_statement ::=  'fallthrough'
+
+return_statement ::=  ( 'return'  ( _expression )?  )
+
+throw_statement ::=  ( 'throw'  ( _expression )?  )
+
+defer_statement ::=  ( 'defer'  _code_block )
+
+do_statement ::=  ( 'do'  _code_block (  catch_clause )*  )
+
+catch_clause ::=  ( 'catch'  ( _pattern )?  _code_block )
+
+build_configuration_statement ::=  ( '#if'  _build_configuration (  _statement )*  (  ( '#elseif'  _build_configuration (  _statement )*  )  )*  ( ( '#else'  (  _statement )*  )  )?  '#endif'  )
+
+_build_configuration ::=  ( ( 'os'  '('  ( 'iOS'  |  'macOS'  |  'watchOS'  |  'tvOS'  |  'Linux'  )  ')'  )  |  ( 'arch'  '('  ( 'i386'  |  'x86_64'  |  'arm'  |  'arm64'  )  ')'  )  |  ( 'canImport'  '('  identifier ')'  )  |  ( 'targetEnvironment'  '('  ( 'simulator'  |  'macCatalyst'  )  ')'  )  |  ( ( 'compiler'  |  'swift'  )  '('  ( '>='  |  '<'  )  semantic_version ')'  )  |  identifier |  boolean_literal |  ( '('  _build_configuration ')'  )  |  ( '!'  _build_configuration )  |   (  ( _build_configuration '&&'  _build_configuration )  )  |   (  ( _build_configuration '||'  _build_configuration )  )  )
+
+line_control_statement ::=  ( '#line'  ( ( [0-9]+ static_string_literal )  )?  )
+
+diagnostic_statement ::=  ( ( '#error'  |  '#warning'  )  '('  static_string_literal ')'  )
+
+_declaration ::=  ( import_declaration |  constant_declaration |  variable_declaration |  typealias_declaration |  function_declaration |  enum_declaration |  struct_declaration |  class_declaration |  protocol_declaration |  initializer_declaration |  deinitializer_declaration |  extension_declaration |  subscript_declaration |  operator_declaration )
+
+import_declaration ::=  ( 'import'  ( ( 'typealias'  |  'struct'  |  'class'  |  'enum'  |  'protocol'  |  'var'  |  'func'  )  )?  ( ( identifier |  operator )  (  ( '.'  ( identifier |  operator )  )  )*  )  )
+
+constant_declaration ::=  ( (  modifier )*  'let'  ( _pattern_initializer (  ( ','  _pattern_initializer )  )*  )  )
+
+_pattern_initializer ::=  ( (  _pattern )  ( (  _type_annotation )  )?  ( ( '='  (  _expression )  )  )?  )
+
+variable_declaration ::=  ( _variable_declaration_head ( ( _pattern_initializer (  ( ','  _pattern_initializer )  )*  )  |  ( (  _variable_name )  (  _type_annotation )  ( _code_block |  _getter_setter_keyword_block )  )  )  )
+
+_variable_declaration_head ::=  ( (  modifier )*  'var'  )
+
+_variable_name ::=  identifier
+
+_getter_setter_keyword_block ::=  ( '{'  ( ( _getter_keyword_clause ( _setter_keyword_clause )?  )  |  ( _setter_keyword_clause _getter_keyword_clause )  )  '}'  )
+
+_getter_keyword_clause ::=  ( 'get'  )
+
+_setter_keyword_clause ::=  ( 'set'  )
+
+typealias_declaration ::=  ( _typealias_head '='  type )
+
+_typealias_head ::=  ( ( modifier )?  'typealias'  identifier )
+
+function_declaration ::=  ( _function_head _function_signature ( _code_block )?  )
+
+_function_head ::=  ( (  modifier )*  'func'  (  ( identifier |  operator )  )  )
+
+_function_signature ::=  ( ( generic_clause )?  parameter_list ( ( 'throws'  |  'rethrows'  )  )?  ( _function_return_statement )?  )
+
+parameter_list ::=  ( '('  ( ( ( (  _single_parameter )  (  ( ','  (  _single_parameter )  )  )*  )  )  )?  ')'  )
+
+_function_return_statement ::=  ( '->'  (  ( type ( ( '!'  |  '?'  )  )?  )  )  )
+
+_parameter_clause ::=  ( '('  ( ( ( _single_parameter (  ( ','  _single_parameter )  )*  )  ( ','  )?  )  )?  ')'  )
+
+_single_parameter ::=  ( ( ( identifier |  '_'  )  )?  ( identifier )?  _type_annotation ( ( '!'  |  '?'  )  )?  ( ( '='  _expression )  )?  )
+
+enum_declaration ::=  ( (  modifier )*  ( 'indirect'  )?  'enum'  identifier '{'  (  ( _declaration |  case_declaration )  )*  '}'  )
+
+case_declaration ::=  ( ( 'indirect'  )?  'case'  identifier ( ( tuple_type |  ( '='  ( static_string_literal |  boolean_literal )  )  )  )?  )
+
+modifier ::=  ( _access_control_modifier |  _declaration_modifier )
+
+_declaration_modifier ::=  ( 'static'  |  'final'  |  'class'  )
+
+_access_control_modifier ::=  ( 'public'  |  'private'  |  'fileprivate'  |  'open'  |  'internal'  |  'private(set)'  |  'fileprivate(set)'  |  'internal(set)'  )
+
+generic_clause ::=  ( '<'  ( ( _single_generic_parameter (  ( ','  _single_generic_parameter )  )*  )  )?  '>'  )
+
+_single_generic_parameter ::=  ( (  identifier )  ( ( ':'  (  _type_declarator )  )  )?  )
+
+struct_declaration ::=  ( (  modifier )*  'struct'  identifier '{'  (  _declaration )*  '}'  )
+
+class_declaration ::=  ( (  modifier )*  'class'  identifier '{'  (  _declaration )*  '}'  )
+
+protocol_declaration ::=  ( (  modifier )*  'protocol'  identifier '{'  (  ( protocol_variable_declaration |  protocol_method_declaration |  protocol_initializer_declaration |  protocol_subscript_declaration |  protocol_typealias_declaration |  associatedtype_declaration )  )*  '}'  )
+
+protocol_variable_declaration ::=  ( _variable_declaration_head identifier _type_annotation _getter_setter_keyword_block )
+
+protocol_method_declaration ::=  ( _function_head _function_signature )
+
+protocol_initializer_declaration ::=  ( _initializer_head _parameter_clause ( ( 'throws'  |  'rethrows'  )  )?  )
+
+protocol_subscript_declaration ::=  ( _subscript_head _subscript_result _getter_setter_keyword_block )
+
+protocol_typealias_declaration ::=  ( _typealias_head ( ( '='  type )  )?  )
+
+associatedtype_declaration ::=  ( 'associatedtype'  identifier ( _type_annotation )?  )
+
+initializer_declaration ::=  ( _initializer_head _parameter_clause ( ( 'throws'  |  'rethrows'  )  )?  _code_block )
+
+_initializer_head ::=  ( 'init'  ( ( '!'  |  '?'  )  )?  )
+
+deinitializer_declaration ::=  ( 'deinit'  _code_block )
+
+extension_declaration ::=  ( (  modifier )*  'extension'  _type_identifier '{'  (  _declaration )*  '}'  )
+
+subscript_declaration ::=  ( _subscript_head _subscript_result ( _code_block |  _getter_setter_keyword_block )  )
+
+_subscript_head ::=  ( 'subscript'  _parameter_clause )
+
+_subscript_result ::=  ( '->'  type )
+
+operator_declaration ::=  ( ( 'prefix'  'operator'  operator '{'  '}'  )  |  ( 'postfix'  'operator'  operator '{'  '}'  )  |  ( 'infix'  'operator'  operator '{'  ( ( ( precedence_clause )?  ( associativity_clause )?  )  |  ( associativity_clause ( precedence_clause )?  )  )  '}'  )  )
+
+precedence_clause ::=  ( 'precedence'  [0-9]|[1-9][0-9]|'1'[0-9][0-9]|'2'([0-4][0-9]|'5'[0-5]) )
+
+associativity_clause ::=  ( 'associativity'  ( 'left'  |  'right'  |  'none'  )  )
+
+_pattern ::=  ( wildcard_pattern |  value_binding_pattern |  enum_case_pattern |  optional_pattern |  is_pattern |  as_pattern |  _expression )
+
+wildcard_pattern ::=  '_'
+
+value_binding_pattern ::=  ( ( 'var'  |  'let'  )  _pattern )
+
+enum_case_pattern ::=  ( ( _type_identifier )?  '.'  identifier ( (  _tuple_declaration )  )?  )
+
+optional_pattern ::=   (  ( _pattern '?'  )  )
+
+is_pattern ::=  ( 'is'  type )
+
+as_pattern ::=   (  ( _pattern 'as'  type )  )
+
+_expression ::=  ( identifier |  number |  (  boolean_literal )  |  nil |  (  static_string_literal )  |  (  _array_declaration )  |  (  _dictionary_declaration )  |  (  _tuple_declaration )  )
+
+boolean_literal ::=  ( 'true'  |  'false'  )
+
+static_string_literal ::=  '"'(('\'([\\0tnr'"]|'u{'[a-fA-F0-9]/*{1,8}*/'}'))|[^"\\\u000a\u000d])*'"'
+
+number ::=  (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  '.'  ( [0-9]('_'?[\d])* )?  ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  '.'  [0-9]('_'?[\d])* ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )  |  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  ( ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  [0-9]('_'?[\d])* )  'n'  )  )  )*
+
+nil ::=  'nil'
+
+type ::=  ( (  tuple_type )  |  standard_type |  _type_identifier )
+
+_type_declarator ::=  ( standard_type |  tuple_type |  array_type |  dictionary_type |  (  identifier )  )
+
+standard_type ::=  (  ( 'Bool'  |  'Character'  |  'StaticString'  |  'String'  |  'Void'  |  'Double'  |  'Float'  |  'Int'  |  'UInt'  |  'UInt8'  |  'UInt16'  |  'UInt32'  |  'UInt64'  |  'Int8'  |  'Int16'  |  'Int32'  |  'Int64'  |  'Float32'  |  'Float64'  |  'Float80'  )  )*
+
+tuple_type ::=  ( '('  ( ( ( ( _variable_name _type_annotation )  |  _type_declarator )  (  ( ','  ( ( _variable_name _type_annotation )  |  _type_declarator )  )  )*  )  )?  ')'  )
+
+_tuple_declaration ::=  ( '('  ( ( ( ( ( identifier ':'  )  )?  _expression )  (  ( ','  ( ( ( identifier ':'  )  )?  _expression )  )  )*  )  )?  ')'  )
+
+array_type ::=  ( _array_type_shorthand |  _array_type_full )
+
+_array_type_full ::=  ( 'Array'  '<'  _type_declarator '>'  )
+
+_array_type_shorthand ::=  ( '['  _type_declarator ']'  )
+
+_array_declaration ::=  ( '['  ( ( ( _expression )?  (  ( ','  ( _expression )?  )  )*  )  )?  ']'  )
+
+dictionary_type ::=  ( _dictionary_type_shorthand |  _dictionary_type_full )
+
+_dictionary_type_full ::=  ( 'Dictionary'  '<'  _type_declarator ','  _type_declarator '>'  )
+
+_dictionary_type_shorthand ::=  ( '['  _type_declarator ':'  _type_declarator ']'  )
+
+_dictionary_declaration ::=  ( '['  ( ( ( ( _expression )?  ':'  ( _expression )?  )  (  ( ','  ( ( _expression )?  ':'  ( _expression )?  )  )  )*  )  )?  ']'  )
+
+_type_annotation ::=  ( ':'  ( type |  array_type |  dictionary_type )  )
+
+_type_identifier ::=   (  ( _type_name ( ( '.'  _type_identifier )  )?  )  )
+
+_type_name ::=  identifier
+
+identifier ::=  (  ( ( [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  )  |  ( '`'  [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  '`'  )  )  )*
+
+operator ::=  (  ( ( '/'  |  '='  |  '-'  |  '+'  |  '!'  |  '*'  |  '%'  |  '<'  |  '>'  |  '&'  |  '|'  |  '^'  |  '~'  |  '?'  )  )+  )*
+
+semantic_version ::=  ([0-9]+'.')?([\d]+'.')?('*'|[\d]+)
+
+comment ::=  (  ( ( '//'/*{2,3}*/[^/][^\n]* )  |  ( '/*'/*{1,}*/[^*]*'*'+([^/*][^*]*'*'+)*'/' )  )  )*

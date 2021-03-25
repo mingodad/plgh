@@ -1,0 +1,245 @@
+/*
+Grammar originally from https://github.com/nilshelmig/tree-sitter-sourcepawn
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_file ::=  (  ( function_declaration |  function_definition |  callback_implementation |  enum |  enum_struct |  typedef |  typeset |  methodmap |  struct |  global_variable |  _top_level_statements |  preproc_include |  preproc_tryinclude |  preproc_define |  preproc_undefine |  preproc_pragma_semicolon |  preproc_pragma_newdecls |  preproc_pragma_deprecated |  preproc_pragma_dynamic )  )*
+
+preproc_include ::=  ( (  '#'[ \t]*'include' )  (  ( string_literal |  system_lib_string )  )  '\n'  )
+
+preproc_tryinclude ::=  ( (  '#'[ \t]*'tryinclude' )  (  ( string_literal |  system_lib_string )  )  '\n'  )
+
+preproc_define ::=  ( (  '#'[ \t]*'define' )  (  symbol )  (  ( preproc_arg )?  )  '\n'  )
+
+preproc_arg ::=  (   (  ( '.'|'\\\r'?'\n' )+  )  )*
+
+preproc_undefine ::=  ( (  '#'[ \t]*'undef' )  (  symbol )  '\n'  )
+
+preproc_if ::=  ( (  '#'[ \t]*'if' )  (  ( symbol |  preproc_defined_condition )  )  ( comment )?  '\n'  )
+
+preproc_defined_condition ::=  ( (  ( ( '!'  )?  'defined'  )  )*  (  symbol )  )
+
+preproc_else ::=  ( (  '#'[ \t]*'else' )  ( comment )?  '\n'  )
+
+preproc_endif ::=  ( (  '#'[ \t]*'endif' )  ( comment )?  '\n'  )
+
+preproc_pragma_semicolon ::=  ( (  '#'[ \t]*'pragma' )  'semicolon'  (  int_literal )  ( semicolon )?  '\n'  )
+
+preproc_pragma_newdecls ::=  ( (  '#'[ \t]*'pragma' )  'newdecls'  (  symbol )  ( semicolon )?  '\n'  )
+
+preproc_pragma_deprecated ::=  ( (  '#'[ \t]*'pragma' )  'deprecated'  (  ( preproc_arg )?  )  '\n'  )
+
+preproc_pragma_dynamic ::=  ( (  '#'[ \t]*'pragma' )  'dynamic'  (  int_literal )  '\n'  )
+
+function_declaration ::=  ( ( function_storage_class )?  (  ( _type )?  )  (  symbol )  (  argument_declarations )  block )
+
+function_storage_class ::=  ( 'stock'  |  'static'  |  ( 'stock'  'static'  )  |  ( 'static'  'stock'  )  )
+
+function_definition ::=  ( function_definition_type (  ( _type )?  )  (  symbol )  (  argument_declarations )  ( semicolon )?  )
+
+function_definition_type ::=  ( 'forward'  |  'native'  )
+
+callback_implementation ::=  ( 'public'  (  ( _type )?  )  (  symbol )  (  argument_declarations )  ( block |  _statement )  )
+
+argument_declarations ::=  ( '('  ( rest_argument |  ( ( ( argument_declaration (  ( ','  argument_declaration )  )*  )  )?  ( ( ','  rest_argument )  )?  )  )  ')'  )
+
+argument_declaration ::=   (  ( ( 'const'  )?  ( '&'  )?  (  ( ( type_expression |  old_type_expression )  )?  )  ( '&'  )?  (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  ( _literal |  old_type_cast |  symbol |  vector )  )  )?  )  )  )
+
+rest_argument ::=  ( (  ( type_expression |  old_type_expression )  )  '...'  )
+
+variable_declaration_statement ::=   (  ( ( variable_storage_class )?  (  type_expression )  ( variable_declaration (  ( ','  variable_declaration )  )*  )  ( semicolon )?  )  )
+
+variable_storage_class ::=  ( 'const'  |  'static'  )
+
+variable_declaration ::=  ( (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  ( _expression |  dynamic_array |  new_instance )  )  )?  )  )
+
+dynamic_array ::=  ( 'new'  (  ( builtin_type |  symbol )  )  ( fixed_dimension )+  )
+
+new_instance ::=  ( 'new'  (  symbol )  (  function_call_arguments )  )
+
+old_variable_declaration_statement ::=   (  ( old_variable_storage_class ( old_variable_declaration (  ( ','  old_variable_declaration )  )*  )  ( semicolon )?  )  )
+
+old_variable_storage_class ::=  ( ( 'new'  ( 'const'  )?  )  |  'decl'  |  'static'  )
+
+old_variable_declaration ::=  ( (  ( _old_type )?  )  (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  _expression )  )?  )  )
+
+enum ::=  ( 'enum'  (  ( symbol )?  )  enum_entries ( semicolon )?  )
+
+enum_entries ::=  ( '{'  ( enum_entry (  ( ','  enum_entry )  )*  )  ( ','  )?  '}'  )
+
+enum_entry ::=  ( (  symbol )  (  ( ( '='  _expression )  )?  )  )
+
+enum_struct ::=  ( 'enum'  'struct'  (  symbol )  '{'  ( ( enum_struct_field |  enum_struct_method )  )+  '}'  )
+
+enum_struct_field ::=  ( (  ( builtin_type |  symbol )  )  (  symbol )  ( fixed_dimension )?  semicolon )
+
+enum_struct_method ::=  ( (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations block )
+
+typedef ::=  ( 'typedef'  (  symbol )  '='  typedef_expression ( semicolon )?  )
+
+typeset ::=  ( 'typeset'  (  symbol )  '{'  ( ( typedef_expression ( semicolon )?  )  )+  '}'  ( semicolon )?  )
+
+typedef_expression ::=  ( 'function'  (  ( builtin_type |  symbol )  )  typedef_args )
+
+typedef_args ::=  ( '('  ( ( typedef_arg (  ( ','  typedef_arg )  )*  )  )?  ')'  )
+
+typedef_arg ::=  ( ( 'const'  )?  (  type_expression )  ( '&'  )?  (  symbol )  ( fixed_dimension )?  )
+
+methodmap ::=  ( 'methodmap'  (  symbol )  ( ( '<'  (  symbol )  )  )?  '{'  (  ( methodmap_alias |  methodmap_native |  methodmap_native_constructor |  methodmap_native_destructor |  methodmap_method |  methodmap_method_constructor |  methodmap_method_destructor |  methodmap_property )  )*  '}'  ( semicolon )?  )
+
+methodmap_alias ::=  ( methodmap_visibility ( '~'  )?  (  symbol )  '('  ')'  '='  (  symbol )  semicolon )
+
+methodmap_native ::=  ( methodmap_visibility 'native'  (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations semicolon )
+
+methodmap_native_constructor ::=  ( methodmap_visibility 'native'  (  symbol )  argument_declarations semicolon )
+
+methodmap_native_destructor ::=  ( methodmap_visibility 'native'  '~'  (  symbol )  '('  ')'  semicolon )
+
+methodmap_method ::=  ( methodmap_visibility ( 'static'  )?  (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations block )
+
+methodmap_method_constructor ::=  ( methodmap_visibility (  symbol )  argument_declarations block )
+
+methodmap_method_destructor ::=  ( methodmap_visibility '~'  (  symbol )  '('  ')'  block )
+
+methodmap_property ::=  ( 'property'  (  ( builtin_type |  symbol )  )  (  symbol )  '{'  ( ( methodmap_property_alias |  methodmap_property_native |  methodmap_property_method )  )+  '}'  )
+
+methodmap_property_alias ::=  ( methodmap_visibility methodmap_property_getter '='  (  symbol )  semicolon )
+
+methodmap_property_native ::=  ( methodmap_visibility 'native'  ( methodmap_property_getter |  methodmap_property_setter )  semicolon )
+
+methodmap_property_method ::=  ( methodmap_visibility ( methodmap_property_getter |  methodmap_property_setter )  block )
+
+methodmap_property_getter ::=  ( 'get'  '('  ')'  )
+
+methodmap_property_setter ::=  ( 'set'  '('  (  ( builtin_type |  symbol )  )  (  symbol )  ')'  )
+
+methodmap_visibility ::=  'public'
+
+struct ::=  ( 'struct'  (  symbol )  '{'  (  struct_field )*  '}'  ( semicolon )?  )
+
+struct_field ::=  ( 'public'  ( 'const'  )?  (  type_expression )  (  symbol )  semicolon )
+
+global_variable ::=  ( 'public'  (  ( symbol |  ( symbol (  ':'  )  )  )  )  (  symbol )  '='  (  struct_constructor )  ( semicolon )?  )
+
+struct_constructor ::=  ( '{'  ( ( struct_field_value (  ( ','  struct_field_value )  )*  )  )?  ( ','  )?  '}'  )
+
+struct_field_value ::=  ( (  symbol )  '='  (  _expression )  )
+
+type_expression ::=  ( ( builtin_type |  symbol |  any_type )  (  dimension )*  )
+
+old_type_expression ::=  ( ( _old_type |  ( any_type (  ':'  )  )  )  (  dimension )*  )
+
+dimension ::=  ( '['  ']'  )
+
+fixed_dimension ::=  ( '['  _expression ']'  )
+
+_type ::=  ( builtin_type |  symbol |  _old_type )
+
+_old_type ::=  ( old_builtin_type |  ( symbol (  ':'  )  )  )
+
+builtin_type ::=  ( 'void'  |  'bool'  |  'int'  |  'float'  |  'char'  )
+
+old_builtin_type ::=  (  ( ( '_'  |  'Float'  |  'bool'  |  'String'  )  (  ':'  )  )  )*
+
+any_type ::=  'any'
+
+block ::=  ( '{'  (  _statement )*  '}'  )
+
+_statement ::=  ( block |  _top_level_statements |  for_loop |  while_loop |  do_while_loop |  break_statement |  continue_statement |  condition_statement |  switch_statement |  return_statement |  delete_statement |  expression_statement )
+
+_top_level_statements ::=  ( variable_declaration_statement |  old_variable_declaration_statement )
+
+for_loop ::=  ( 'for'  '('  (  ( ( _top_level_statements |  assignment_expression )  )?  )  semicolon (  ( _expression )?  )  semicolon (  ( _statement )?  )  ')'  _statement )
+
+while_loop ::=  ( 'while'  '('  (  _expression )  ')'  _statement )
+
+do_while_loop ::=   (  ( 'do'  block 'while'  '('  (  _expression )  ')'  ( semicolon )?  )  )
+
+break_statement ::=   (  ( 'break'  ( semicolon )?  )  )
+
+continue_statement ::=   (  ( 'continue'  ( semicolon )?  )  )
+
+condition_statement ::=   (  ( 'if'  '('  (  _expression )  ')'  (  _statement )  ( ( 'else'  (  _statement )  )  )?  )  )
+
+switch_statement ::=  ( 'switch'  '('  (  _expression )  ')'  '{'  (  ( switch_case |  switch_default_case )  )*  '}'  )
+
+switch_case ::=  ( 'case'  (  switch_case_values )  ':'  _statement ( break_statement )?  )
+
+switch_case_values ::=   (  ( ( _literal |  symbol )  (  ( ','  ( _literal |  symbol )  )  )*  )  )
+
+switch_default_case ::=  ( 'default'  ':'  _statement ( break_statement )?  )
+
+expression_statement ::=   (  ( ( _expression |  comma_expression )  ( semicolon )?  )  )
+
+return_statement ::=   (  ( 'return'  ( ( _expression |  comma_expression )  )?  ( semicolon )?  )  )
+
+delete_statement ::=   (  ( 'delete'  (  _expression )  ( semicolon )?  )  )
+
+semicolon ::=  ';'
+
+_expression ::=  ( assignment_expression |  function_call |  array_indexed_access |  conditional_expression |  field_access |  binary_expression |  unary_expression |  update_expression |  sizeof_expression |  view_as |  old_type_cast |  symbol |  _literal |  concatenated_string |  char_literal |  parenthesized_expression |  vector |  this )
+
+assignment_expression ::=   (  ( (  ( array_indexed_access |  field_access |  symbol |  this )  )  (  ( '='  |  '+='  |  '-='  |  '*='  |  '/='  |  '|='  |  '&='  |  '^='  |  '~='  |  '<<='  |  '>>='  )  )  (  ( _expression |  dynamic_array |  new_instance )  )  )  )
+
+function_call ::=   (  ( (  ( symbol |  field_access )  )  function_call_arguments )  )
+
+function_call_arguments ::=   (  ( '('  ( ( ( ( '&'  symbol )  |  _expression |  named_arg |  ignore_argument )  (  ( ','  ( ( '&'  symbol )  |  _expression |  named_arg |  ignore_argument )  )  )*  )  )?  ')'  )  )
+
+named_arg ::=  ( '.'  (  symbol )  '='  (  ( ( '&'  symbol )  |  _expression )  )  )
+
+ignore_argument ::=  '_'
+
+array_indexed_access ::=   (  ( (  ( symbol |  array_indexed_access |  field_access )  )  '['  (  _expression )  ']'  )  )
+
+parenthesized_expression ::=  ( '('  ( _expression |  comma_expression )  ')'  )
+
+comma_expression ::=  ( (  _expression )  ','  (  ( _expression |  comma_expression )  )  )
+
+conditional_expression ::=   (  ( (  _expression )  '?'  (  _expression )  ':'  (  _expression )  )  )
+
+field_access ::=   (  ( (  _expression )  '.'  (  symbol )  )  )
+
+unary_expression ::=   (  ( (  ( '!'  |  '~'  |  '-'  |  '+'  )  )  (  _expression )  )  )
+
+binary_expression ::=  (  (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '*'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '/'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '%'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '||'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '|'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '=='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '!='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>>'  )  (  _expression )  )  )  )
+
+update_expression ::=   (  ( ( (  ( '--'  |  '++'  )  )  (  _expression )  )  |  ( (  _expression )  (  ( '--'  |  '++'  )  )  )  )  )
+
+sizeof_expression ::=   (  ( 'sizeof'  ( ( '('  (  symbol )  (  dimension )*  ')'  )  |  ( (  symbol )  (  dimension )*  )  )  )  )
+
+view_as ::=   (  ( 'view_as'  '<'  (  ( builtin_type |  symbol )  )  '>'  '('  (  _expression )  ')'  )  )
+
+old_type_cast ::=   (  ( (  _old_type )  (  _expression )  )  )
+
+vector ::=   (  ( '{'  ( ( vector |  _literal |  symbol )  (  ( ','  ( vector |  _literal |  symbol )  )  )*  )  ( ( ','  rest_operator )  )?  '}'  )  )
+
+_literal ::=   (  ( int_literal |  float_literal |  char_literal |  string_literal |  concatenated_string |  bool_literal |  null )  )
+
+int_literal ::=  (  ( ( [-\+] )?  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  |  ( '0b'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  |  ( '0x'  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )  ( ( [eEpP] ( ( ( [-\+] )?  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )?  )  )?  )  )*
+
+float_literal ::=  (  ( ( [-\+] )?  ( ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  ( ( '.'  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )?  )  )?  )  |  ( '.'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  )  )  )*
+
+char_literal ::=  ( "'"  ( escape_sequence |  (  [^\n'] )  )  "'"  )
+
+concatenated_string ::=   (  ( (  ( string_literal |  symbol )  )  '...'  (  ( string_literal |  symbol |  concatenated_string )  )  )  )
+
+string_literal ::=  ( '"'  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
+
+escape_sequence ::=  (   (  ( '\'  ( [^xuU] |  [0-9]/*{2,3}*/ |  'x'[0-9a-fA-F]/*{2,}*/ |  'u'[0-9a-fA-F]/*{4}*/ |  'U'[0-9a-fA-F]/*{8}*/ )  )  )  )*
+
+bool_literal ::=  (  ( 'true'  |  'false'  )  )*
+
+null ::=  'null'
+
+this ::=  'this'
+
+rest_operator ::=  '...'
+
+system_lib_string ::=  (  ( '<'  (  ( [^>\n] |  '\\>'  )  )*  '>'  )  )*
+
+symbol ::=  [a-zA-Z_][\w]*
+
+comment ::=  (  ( ( '//'  ('\'('.'|[\r]?[\n])|[^\\\n])* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+

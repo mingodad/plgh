@@ -1,0 +1,96 @@
+/*
+Grammar originally from https://github.com/cstrahan/tree-sitter-nix
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+source_expression ::=  (  _expression )
+
+_expression ::=  _expr_function
+
+identifier ::=  [a-zA-Z_][a-zA-Z0-9_\'\-]*
+
+integer ::=  [0-9]+
+
+float ::=  (([1-9][0-9]*'.'[0-9]*)|('0'?'.'[0-9]+))([Ee][+-]?[0-9]+)?
+
+path ::=  [a-zA-Z0-9\._\-\+]*('/'[a-zA-Z0-9\._\-\+]+)+'/'?
+
+hpath ::=  '~'('/'[a-zA-Z0-9\._\-\+]+)+'/'?
+
+spath ::=  '<'[a-zA-Z0-9\._\-\+]+('/'[a-zA-Z0-9\._\-\+]+)*'>'
+
+uri ::=  [a-zA-Z][a-zA-Z0-9\+\-\.]*':'[a-zA-Z0-9%\/\?:@\&=\+\$,\-_\.\!\~\*\']+
+
+_expr_function ::=  ( function |  assert |  with |  let |  _expr_if )
+
+function ::=  ( ( (  identifier )  ':'  (  _expr_function )  )  |  ( (  formals )  ':'  (  _expr_function )  )  |  ( (  formals )  '@'  (  identifier )  ':'  (  _expr_function )  )  |  ( (  identifier )  '@'  (  formals )  ':'  (  _expr_function )  )  )
+
+formals ::=  ( ( '{'  '}'  )  |  ( '{'  ( (  formal )  (  ( ','  (  formal )  )  )*  )  '}'  )  |  ( '{'  ( (  formal )  (  ( ','  (  formal )  )  )*  )  ','  (  ellipses )  '}'  )  |  ( '{'  (  ellipses )  '}'  )  )
+
+formal ::=  ( (  identifier )  ( ( '?'  (  _expression )  )  )?  )
+
+ellipses ::=  '...'
+
+assert ::=  ( 'assert'  (  _expression )  ';'  (  _expr_function )  )
+
+with ::=  ( 'with'  (  _expression )  ';'  (  _expr_function )  )
+
+let ::=  ( 'let'  ( _binds )?  'in'  (  _expr_function )  )
+
+_expr_if ::=  ( if |  _expr_op )
+
+if ::=  ( 'if'  (  _expression )  'then'  (  _expression )  'else'  (  _expression )  )
+
+_expr_op ::=  ( unary |  binary |  _expr_app )
+
+unary ::=  (  (  ( (  '!'  )  (  _expr_op )  )  )  |   (  ( (  '-'  )  (  _expr_op )  )  )  )
+
+binary ::=  (  (  ( (  _expr_op )  (  '=='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '!='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '<'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '<='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '>'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '>='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '&&'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '||'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '?'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '+'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '-'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '*'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '/'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '->'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '//'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '++'  )  (  _expr_op )  )  )  )
+
+_expr_app ::=  ( app |  _expr_select )
+
+app ::=  ( (  _expr_app )  (  _expr_select )  )
+
+_expr_select ::=  ( select |  _expr_simple )
+
+select ::=  ( ( (  _expr_simple )  '.'  (  attrpath )  )  |  ( (  _expr_simple )  '.'  (  attrpath )  'or'  (  _expr_select )  )  )
+
+_expr_simple ::=  ( identifier |  integer |  float |  string |  indented_string |  path |  hpath |  spath |  uri |  parenthesized |  attrset |  let_attrset |  rec_attrset |  list )
+
+parenthesized ::=  ( '('  (  _expression )  ')'  )
+
+attrset ::=  ( '{'  ( _binds )?  '}'  )
+
+let_attrset ::=  ( 'let'  '{'  ( _binds )?  '}'  )
+
+rec_attrset ::=  ( 'rec'  '{'  ( _binds )?  '}'  )
+
+string ::=  ( '"'  ( _string_parts )?  '"'  )
+
+indented_string ::=  ( "''"  ( _ind_string_parts )?  "''"  )
+
+_string_parts ::=  ( ( _str_content |  interpolation |  escape_sequence )  )+
+
+_ind_string_parts ::=  ( ( _ind_str_content |  interpolation |  (  ind_escape_sequence )  )  )+
+
+_binds ::=  ( (  ( bind |  inherit |  inherit_from )  )  )+
+
+bind ::=  ( (  attrpath )  '='  (  _expression )  ';'  )
+
+inherit ::=  ( 'inherit'  (  attrs_inherited )  ';'  )
+
+inherit_from ::=  ( 'inherit'  '('  (  _expression )  ')'  (  attrs_inherited_from )  ';'  )
+
+attrpath ::=  ( (  ( (  identifier )  |  string |  interpolation )  )  (  ( '.'  (  ( (  identifier )  |  string |  interpolation )  )  )  )*  )
+
+attrs_inherited ::=  ( (  ( identifier |  string |  interpolation )  )  )+
+
+attrs_inherited_from ::=  ( (  ( (  identifier )  |  string |  interpolation )  )  )+
+
+interpolation ::=  ( '${'  (  _expression )  '}'  )
+
+list ::=  ( '['  (  (  _expr_select )  )*  ']'  )
+
+comment ::=  (  ( ( '#'  [^\n]* )  |  ( '/*'  (  ( [^*] |  '*'[^/] )  )*  '*/'  )  )  )*
