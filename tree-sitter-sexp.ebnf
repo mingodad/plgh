@@ -1,0 +1,14 @@
+/*
+Grammar originally from https://github.com/AbstractMachinesLab/tree-sitter-sexp
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+sexp ::=  _sexp
+
+_sexp ::=  ( atom |  list )
+
+atom ::=  [_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF:-]+
+
+list ::=  ( '('  (  _sexp )*  ')'  )

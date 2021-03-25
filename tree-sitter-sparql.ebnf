@@ -1,0 +1,288 @@
+/*
+Grammar originally from https://github.com/BonaBeavis/tree-sitter-sparql
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+unit ::=  (  ( _query |  _update )  )*
+
+comment ::=  '#' [^\n]*
+
+_query ::=  ( ( prologue )?  ( select_query |  construct_query |  describe_query |  ask_query )  ( values_clause )?  )
+
+_update ::=  ( ( prologue )?  ( ( load |  clear |  drop |  add |  move |  copy |  create |  insert_data |  delete_data |  delete_where |  modify )  ( ( ';'  _update )  )?  )  )
+
+prologue ::=  ( ( base_declaration |  prefix_declaration )  )+
+
+base_declaration ::=  ( (  (  [Bb][Aa][Ss][Ee] )*  )  iri_reference )
+
+prefix_declaration ::=  ( (  (  [Pp][Rr][Ee][Ff][Ii][Xx] )*  )  namespace iri_reference )
+
+select_query ::=  ( select_clause (  dataset_clause )*  where_clause ( solution_modifier )?  )
+
+sub_select ::=  ( select_clause where_clause ( solution_modifier )?  ( values_clause )?  )
+
+select_clause ::=  ( (  (  [Ss][Ee][Ll][Ee][Cc][Tt] )*  )  ( ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  |  (  (  [Rr][Ee][Dd][Uu][Cc][Ee][Dd] )*  )  )  )?  ( ( ( (  var )  |  ( '('  _expression (  (  [Aa][Ss] )*  )  (  var )  ')'  )  )  )+  |  '*'  )  )
+
+construct_query ::=  ( (  (  [Cc][Oo][Nn][Ss][Tt][Rr][Uu][Cc][Tt] )*  )  ( ( construct_template (  dataset_clause )*  where_clause ( solution_modifier )?  )  |  ( (  dataset_clause )*  (  (  [Ww][Hh][Ee][Rr][Ee] )*  )  '{'  triples_template '}'  ( solution_modifier )?  )  )  )
+
+describe_query ::=  ( (  (  [Dd][Ee][Ss][Cc][Rr][Ii][Bb][Ee] )*  )  ( ( _var_or_iri )+  |  '*'  )  (  dataset_clause )*  ( where_clause )?  ( solution_modifier )?  )
+
+ask_query ::=  ( (  (  [Aa][Ss][Kk] )*  )  (  dataset_clause )*  where_clause ( solution_modifier )?  )
+
+dataset_clause ::=  ( (  (  [Ff][Rr][Oo][Mm] )*  )  ( default_graph_clause |  named_graph_clause )  )
+
+default_graph_clause ::=  (  _iri )
+
+named_graph_clause ::=  ( (  (  [Nn][Aa][Mm][Ee][Dd] )*  )  (  _iri )  )
+
+where_clause ::=  ( ( (  (  [Ww][Hh][Ee][Rr][Ee] )*  )  )?  group_graph_pattern )
+
+solution_modifier ::=  ( ( group_clause ( having_clause )?  ( order_clause )?  ( limit_offset_clauses )?  )  |  ( ( group_clause )?  having_clause ( order_clause )?  ( limit_offset_clauses )?  )  |  ( ( group_clause )?  ( having_clause )?  order_clause ( limit_offset_clauses )?  )  |  ( ( group_clause )?  ( having_clause )?  ( order_clause )?  limit_offset_clauses )  )
+
+group_clause ::=  ( (  (  [Gg][Rr][Oo][Uu][Pp] )*  )  (  (  [Bb][Yy] )*  )  ( group_condition )+  )
+
+group_condition ::=  ( _build_in_call |  function_call |  ( '('  _expression ( ( (  (  [Aa][Ss] )*  )  (  var )  )  )?  ')'  )  |  (  var )  )
+
+having_clause ::=  ( (  (  [Hh][Aa][Vv][Ii][Nn][Gg] )*  )  ( having_condition )+  )
+
+having_condition ::=  _constraint
+
+order_clause ::=  ( (  (  [Oo][Rr][Dd][Ee][Rr] )*  )  (  (  [Bb][Yy] )*  )  ( order_condition )+  )
+
+order_condition ::=  ( ( ( (  (  [Aa][Ss][Cc] )*  )  |  (  (  [Dd][Ee][Ss][Cc] )*  )  )  bracketted_expression )  |  ( _constraint |  var )  )
+
+limit_offset_clauses ::=  ( ( limit_clause ( offset_clause )?  )  |  ( offset_clause ( limit_clause )?  )  )
+
+limit_clause ::=  ( (  (  [Ll][Ii][Mm][Ii][Tt] )*  )  integer )
+
+offset_clause ::=  ( (  (  [Oo][Ff][Ff][Ss][Ee][Tt] )*  )  integer )
+
+values_clause ::=  ( (  (  [Vv][Aa][Ll][Uu][Ee][Ss] )*  )  data_block )
+
+load ::=  ( (  (  [Ll][Oo][Aa][Dd] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  _iri ( ( (  (  [Ii][Nn][Tt][Oo] )*  )  graph_ref )  )?  )
+
+clear ::=  ( (  (  [Cc][Ll][Ee][Aa][Rr] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_ref_all )
+
+drop ::=  ( (  (  [Dd][Rr][Oo][Pp] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_ref_all )
+
+create ::=  ( (  (  [Cc][Rr][Ee][Aa][Tt][Ee] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_ref )
+
+add ::=  ( (  (  [Aa][Dd][Dd] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_or_default (  (  [Tt][Oo] )*  )  graph_or_default )
+
+move ::=  ( (  (  [Mm][Oo][Vv][Ee] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_or_default (  (  [Tt][Oo] )*  )  graph_or_default )
+
+copy ::=  ( (  (  [Cc][Oo][Pp][Yy] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  graph_or_default (  (  [Tt][Oo] )*  )  graph_or_default )
+
+insert_data ::=  ( 'INSERT DATA'  quads )
+
+delete_data ::=  ( 'DELETE DATA'  quads )
+
+delete_where ::=  ( 'DELETE WHERE'  quads )
+
+modify ::=  ( ( ( (  (  [Ww][Ii][Tt][Hh] )*  )  _iri )  )?  ( ( delete_clause ( insert_clause )?  )  |  insert_clause )  (  using_clause )*  (  (  [Ww][Hh][Ee][Rr][Ee] )*  )  group_graph_pattern )
+
+delete_clause ::=  ( (  (  [Dd][Ee][Ll][Ee][Tt][Ee] )*  )  quads )
+
+insert_clause ::=  ( (  (  [Ii][Nn][Ss][Ee][Rr][Tt] )*  )  quads )
+
+using_clause ::=  ( (  (  [Uu][Ss][Ii][Nn][Gg] )*  )  ( _iri |  ( (  (  [Nn][Aa][Mm][Ee][Dd] )*  )  _iri )  )  )
+
+graph_or_default ::=  ( (  (  [Dd][Ee][Ff][Aa][Uu][Ll][Tt] )*  )  |  ( ( (  (  [Gg][Rr][Aa][Pp][Hh] )*  )  )?  _iri )  )
+
+graph_ref ::=  ( (  (  [Gg][Rr][Aa][Pp][Hh] )*  )  _iri )
+
+graph_ref_all ::=  ( graph_ref |  (  (  [Dd][Ee][Ff][Aa][Uu][Ll][Tt] )*  )  |  (  (  [Nn][Aa][Mm][Ee][Dd] )*  )  |  (  (  [Aa][Ll][Ll] )*  )  )
+
+quads ::=  ( '{'  ( triples_template )?  (  ( quads_not_triples ( '.'  )?  ( triples_template )?  )  )*  '}'  )
+
+quads_not_triples ::=  ( (  (  [Gg][Rr][Aa][Pp][Hh] )*  )  _var_or_iri '{'  ( triples_template )?  '}'  )
+
+triples_template ::=  ( triples_same_subject (  ( '.'  triples_same_subject )  )*  ( '.'  )?  )
+
+group_graph_pattern ::=  ( '{'  ( sub_select |  ( ( triples_block )?  (  ( _graph_pattern_not_triples ( '.'  )?  ( triples_block )?  )  )*  )  )  '}'  )
+
+triples_block ::=  ( (  triples_same_subject_path )  (  ( '.'  (  triples_same_subject_path )  )  )*  ( '.'  )?  )
+
+_graph_pattern_not_triples ::=  ( group_or_union_graph_pattern |  optional_graph_pattern |  minus_graph_pattern |  graph_graph_pattern |  service_graph_pattern |  filter |  bind |  inline_data )
+
+optional_graph_pattern ::=  ( (  (  [Oo][Pp][Tt][Ii][Oo][Nn][Aa][Ll] )*  )  group_graph_pattern )
+
+graph_graph_pattern ::=  ( (  (  [Gg][Rr][Aa][Pp][Hh] )*  )  _var_or_iri group_graph_pattern )
+
+service_graph_pattern ::=  ( (  (  [Ss][Ee][Rr][Vv][Ii][Cc][Ee] )*  )  ( (  (  [Ss][Ii][Ll][Ee][Nn][Tt] )*  )  )?  _var_or_iri group_graph_pattern )
+
+bind ::=  ( (  (  [Bb][Ii][Nn][Dd] )*  )  '('  _expression (  (  [Aa][Ss] )*  )  (  var )  ')'  )
+
+inline_data ::=  ( (  (  [Vv][Aa][Ll][Uu][Ee][Ss] )*  )  data_block )
+
+data_block ::=  ( _inline_data_one_var |  _inline_data_full )
+
+_inline_data_one_var ::=  ( (  var )  '{'  (  _data_block_value )*  '}'  )
+
+_inline_data_full ::=  ( ( nil |  ( '('  ( (  var )  )+  ')'  )  )  '{'  (  ( ( '('  ( _data_block_value )+  ')'  )  |  nil )  )*  '}'  )
+
+_data_block_value ::=  ( _iri |  rdf_literal |  _numeric_literal |  boolean_literal |  (  (  [Uu][Nn][Dd][Ee][Ff] )*  )  )
+
+minus_graph_pattern ::=  ( (  (  [Mm][Ii][Nn][Uu][Ss] )*  )  group_graph_pattern )
+
+group_or_union_graph_pattern ::=  ( group_graph_pattern (  ( (  (  [Uu][Nn][Ii][Oo][Nn] )*  )  group_graph_pattern )  )*  )
+
+filter ::=  ( (  (  [Ff][Ii][Ll][Tt][Ee][Rr] )*  )  _constraint )
+
+_constraint ::=  ( bracketted_expression |  _build_in_call |  function_call )
+
+function_call ::=  ( (  _iri )  arg_list )
+
+arg_list ::=  ( nil |  ( '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression (  ( ','  _expression )  )*  ')'  )  )
+
+expression_list ::=  ( nil |  ( '('  _expression (  ( ','  _expression )  )*  ')'  )  )
+
+construct_template ::=  ( '{'  construct_triples '}'  )
+
+construct_triples ::=  ( triples_same_subject (  ( '.'  triples_same_subject )  )*  ( '.'  )?  )
+
+triples_same_subject ::=  ( ( _var_or_term property_list )  |  ( _triples_node ( property_list )?  )  )
+
+property_list ::=  ( property (  ( ';'  ( property )?  )  )*  )
+
+property ::=  ( _predicate object_list )
+
+_predicate ::=  ( _var_or_iri |  'a'  )
+
+object_list ::=  ( _graph_node (  ( ','  _graph_node )  )*  )
+
+triples_same_subject_path ::=  ( ( (  _var_or_term )  (  property_list_path )  )  |  ( _triples_node_path ( (  property_list_path )  )?  )  )
+
+property_list_path ::=  ( (  property_path )  (  ( ';'  ( (  property_path_rest )  )?  )  )*  )
+
+property_path ::=  ( _predicate_path (  object_list_path )  )
+
+property_path_rest ::=  ( _predicate_path object_list )
+
+_predicate_path ::=  ( _path |  var )
+
+object_list_path ::=  ( _graph_node_path (  ( ','  _graph_node_path )  )*  )
+
+_path ::=  ( path_element |  binary_path )
+
+binary_path ::=  (  (  ( _path '/'  _path )  )  |   (  ( _path '|'  _path )  )  )
+
+path_element ::=  ( ( path_inverse )?  _primary_path ( path_mod )?  )
+
+path_inverse ::=  '^'
+
+path_mod ::=  (  ( '?'  |  '*'  |  '+'  )  )*
+
+_primary_path ::=  ( _iri |  'a'  |  ( '!'  path_negated_property_set )  |  ( '('  _path ')'  )  )
+
+path_negated_property_set ::=  ( path_one_in_property_set |  ( '('  ( ( path_one_in_property_set (  ( '|'  path_one_in_property_set )  )*  )  )?  ')'  )  )
+
+path_one_in_property_set ::=  ( _iri |  'a'  |  ( '^'  ( _iri |  'a'  )  )  )
+
+_triples_node ::=  ( collection |  blank_node_property_list )
+
+blank_node_property_list ::=  ( '['  property_list ']'  )
+
+_triples_node_path ::=  ( (  collection_path )  |  (  blank_node_property_list_path )  )
+
+blank_node_property_list_path ::=  ( '['  (  property_list_path )  ']'  )
+
+collection ::=  ( '('  ( _graph_node )+  ')'  )
+
+collection_path ::=  ( '('  ( _graph_node_path )+  ')'  )
+
+_graph_node ::=  ( _var_or_term |  _triples_node )
+
+_graph_node_path ::=  ( _var_or_term |  _triples_node_path )
+
+_var_or_term ::=  ( var |  _graph_term )
+
+_var_or_iri ::=  ( var |  _iri )
+
+var ::=  (  ( ( '?'  |  '$'  )  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  [0-9] )  (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] )  )*  )  )*
+
+_graph_term ::=  ( _iri |  rdf_literal |  _numeric_literal |  boolean_literal |  _blank_node |  nil )
+
+_expression ::=  ( _primary_expression |  unary_expression |  binary_expression )
+
+binary_expression ::=  (  (  ( _expression '||'  _expression )  )  |   (  ( _expression '&&'  _expression )  )  |   (  ( _expression '='  _expression )  )  |   (  ( _expression '<'  _expression )  )  |   (  ( _expression '>'  _expression )  )  |   (  ( _expression '<='  _expression )  )  |   (  ( _expression '>='  _expression )  )  |   (  ( _expression (  (  [Ii][Nn] )*  )  expression_list )  )  |   (  ( _expression (  (  [Nn][Oo][Tt] )*  )  (  (  [Ii][Nn] )*  )  expression_list )  )  |   (  ( _expression '+'  _expression )  )  |   (  ( _expression '-'  _expression )  )  |   (  ( _expression '*'  _expression )  )  |   (  ( _expression '/'  _expression )  )  )
+
+unary_expression ::=  ( ( '!'  _primary_expression )  |  ( '+'  _primary_expression )  |  ( '-'  _primary_expression )  )
+
+_primary_expression ::=  ( bracketted_expression |  _build_in_call |  _iri_or_function |  rdf_literal |  _numeric_literal |  boolean_literal |  var )
+
+bracketted_expression ::=  ( '('  _expression ')'  )
+
+_build_in_call ::=  ( build_in_function |  aggregate |  exists_func |  not_exists_func |  substring_expression |  string_replace_expression |  regex_expression )
+
+build_in_function ::=  ( _nullary_build_in_function |  _unary_build_in_function |  _binary_build_in_function |  _variadic_build_in_function |  ( (  (  [Bb][Oo][Uu][Nn][Dd] )*  )  (  ( '('  var ')'  )  )  )  |  ( (  (  [Bb][Nn][Oo][Dd][Ee] )*  )  (  ( bracketted_expression |  nil )  )  )  |  ( (  (  [Ii][Ff] )*  )  (  ( '('  _expression ','  _expression ','  _expression ')'  )  )  )  )
+
+_nullary_build_in_function ::=  ( ( (  (  [Nn][Oo][Ww] )*  )  |  (  (  [Rr][Aa][Nn][Dd] )*  )  |  (  (  [Ss][Tt][Rr][Uu][Uu][Ii][Dd] )*  )  |  (  (  [Uu][Uu][Ii][Dd] )*  )  )  (  nil )  )
+
+_unary_build_in_function ::=  ( ( (  (  [Aa][Bb][Ss] )*  )  |  (  (  [Cc][Ee][Ii][Ll] )*  )  |  (  (  [Dd][Aa][Tt][Aa][Tt][Yy][Pp][Ee] )*  )  |  (  (  [Dd][Aa][Yy] )*  )  |  (  (  [Ee][Nn][Cc][Oo][Dd][Ee][__][Ff][Oo][Rr][__][Uu][Rr][Ii] )*  )  |  (  (  [Ff][Ll][Oo][Oo][Rr] )*  )  |  (  (  [Hh][Oo][Uu][Rr][Ss] )*  )  |  (  (  [Ii][Rr][Ii] )*  )  |  (  (  [Ll][Aa][Nn][Gg] )*  )  |  (  (  [Ll][Cc][Aa][Ss][Ee] )*  )  |  (  (  [Mm][Dd][55] )*  )  |  (  (  [Mm][Ii][Nn][Uu][Tt][Ee][Ss] )*  )  |  (  (  [Mm][Oo][Nn][Tt][Hh] )*  )  |  (  (  [Rr][Oo][Uu][Nn][Dd] )*  )  |  (  (  [Ss][Ee][Cc][Oo][Nn][Dd][Ss] )*  )  |  (  (  [Ss][Hh][Aa][11] )*  )  |  (  (  [Ss][Hh][Aa][22][55][66] )*  )  |  (  (  [Ss][Hh][Aa][33][88][44] )*  )  |  (  (  [Ss][Hh][Aa][55][11][22] )*  )  |  (  (  [Ss][Tt][Rr] )*  )  |  (  (  [Ss][Tt][Rr][Ll][Ee][Nn] )*  )  |  (  (  [Tt][Ii][Mm][Ee][Zz][Oo][Nn][Ee] )*  )  |  (  (  [Tt][Zz] )*  )  |  (  (  [Uu][Cc][Aa][Ss][Ee] )*  )  |  (  (  [Uu][Rr][Ii] )*  )  |  (  (  [Yy][Ee][Aa][Rr] )*  )  |  (  (  [ii][ss][Bb][Ll][Aa][Nn][Kk] )*  )  |  (  (  [ii][ss][Ii][Rr][Ii] )*  )  |  (  (  [ii][ss][Ll][Ii][Tt][Ee][Rr][Aa][Ll] )*  )  |  (  (  [ii][ss][Nn][Uu][Mm][Ee][Rr][Ii][Cc] )*  )  |  (  (  [ii][ss][Uu][Rr][Ii] )*  )  )  (  bracketted_expression )  )
+
+_binary_build_in_function ::=  ( ( (  (  [Cc][Oo][Nn][Tt][Aa][Ii][Nn][Ss] )*  )  |  (  (  [Ll][Aa][Nn][Gg][Mm][Aa][Tt][Cc][Hh][Ee][Ss] )*  )  |  (  (  [Ss][Tt][Rr][Aa][Ff][Tt][Ee][Rr] )*  )  |  (  (  [Ss][Tt][Rr][Bb][Ee][Ff][Oo][Rr][Ee] )*  )  |  (  (  [Ss][Tt][Rr][Dd][Tt] )*  )  |  (  (  [Ss][Tt][Rr][Ee][Nn][Dd][Ss] )*  )  |  (  (  [Ss][Tt][Rr][Ll][Aa][Nn][Gg] )*  )  |  (  (  [Ss][Tt][Rr][Ss][Tt][Aa][Rr][Tt][Ss] )*  )  |  (  (  [ss][aa][mm][ee][Tt][ee][rr][mm] )*  )  )  (  ( '('  _expression ','  _expression ')'  )  )  )
+
+_variadic_build_in_function ::=  ( ( (  (  [Cc][Oo][Nn][Cc][Aa][Tt] )*  )  |  (  (  [Cc][Oo][Aa][Ll][Ee][Ss][Cc][Ee] )*  )  )  (  expression_list )  )
+
+regex_expression ::=  ( (  (  [Rr][Ee][Gg][Ee][Xx] )*  )  ( '('  (  _expression )  ','  (  _expression )  ( ( ','  (  _expression )  )  )?  ')'  )  )
+
+substring_expression ::=  ( (  (  [Ss][Uu][Bb][Ss][Tt][Rr] )*  )  '('  _expression ','  _expression ( ( ','  _expression )  )?  ')'  )
+
+string_replace_expression ::=  ( (  (  [Rr][Ee][Pp][Ll][Aa][Cc][Ee] )*  )  '('  _expression ','  _expression ','  _expression ( ( ','  _expression )  )?  ')'  )
+
+exists_func ::=  ( (  (  [Ee][Xx][Ii][Ss][Tt][Ss] )*  )  group_graph_pattern )
+
+not_exists_func ::=  ( (  (  [Nn][Oo][Tt] )*  )  (  (  [Ee][Xx][Ii][Ss][Tt][Ss] )*  )  group_graph_pattern )
+
+aggregate ::=  ( ( (  (  [Cc][Oo][Uu][Nn][Tt] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  ( '*'  |  _expression )  ')'  )  |  ( (  (  [Ss][Uu][Mm] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ')'  )  |  ( (  (  [Mm][Ii][Nn] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ')'  )  |  ( (  (  [Mm][Aa][Xx] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ')'  )  |  ( (  (  [Aa][Vv][Gg] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ')'  )  |  ( (  (  [Ss][Aa][Mm][Pp][Ll][Ee] )*  )  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ')'  )  |  ( 'GROUP_CONCAT'  '('  ( (  (  [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt] )*  )  )?  _expression ( ( ';'  (  (  [Ss][Ee][Pp][Aa][Rr][Aa][Tt][Oo][Rr] )*  )  '='  string )  )?  ')'  )  )
+
+_iri_or_function ::=  ( ( _iri |  function_call )  )
+
+rdf_literal ::=  ( (  string )  ( ( lang_tag |  (  ( '^^'  _iri )  )  )  )?  )
+
+_numeric_literal ::=  ( integer |  decimal |  double )
+
+boolean_literal ::=  ( 'true'  |  'false'  )
+
+string ::=  ( _string_literal1 |  _string_literal2 |  _string_literal_long1 |  _string_literal_long2 )
+
+_iri ::=  ( iri_reference |  prefixed_name )
+
+prefixed_name ::=  ( namespace ( pn_local )?  )
+
+_blank_node ::=  ( blank_node_label |  anon )
+
+iri_reference ::=  ( '<'  (  ([^<>"{}|^`\\\x00-\x20])* )  (  '>'  )  )
+
+namespace ::=  ( ( pn_prefix )?  ':'  )
+
+blank_node_label ::=  ( '_:'  (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  [0-9] )  )  )
+
+lang_tag ::=  (  ( '@'  [a-zA-Z]+ (  ( '-'  [a-zA-Z0-9]+ )  )*  )  )*
+
+integer ::=  (  [+-]?[0-9]+ )*
+
+decimal ::=  (  ( [+-]? [0-9]* '.'  [0-9]+ )  )*
+
+double ::=  (  ( [+-]? ( ( [0-9]+ '.'  [0-9]* ( [eE] [+-]? [0-9]+ )  )  |  ( '.'  [0-9]+ ( [eE] [+-]? [0-9]+ )  )  |  ( [0-9]+ ( [eE] [+-]? [0-9]+ )  )  )  )  )*
+
+_string_literal1 ::=  ( "'"  (  ( [^\x27\x5C\x0A\x0D] |  echar )  )*  "'"  )
+
+_string_literal2 ::=  ( '"'  (  ( [^\x22\x5C\x0A\x0D] |  echar )  )*  '"'  )
+
+_string_literal_long1 ::=  ( "'''"  (  ( ( ( "'"  |  "''"  )  )?  ( [^'\\] |  echar )  )  )*  "'''"  )
+
+_string_literal_long2 ::=  ( '"""'  (  ( ( ( '"'  |  '""'  )  )?  ( [^"\\] |  echar )  )  )*  '"""'  )
+
+echar ::=  '\'[tbnrf\\"']
+
+nil ::=  (  ( '('  (  ( #x20 |  #x09 |  #x0D |  #x0A )  )*  ')'  )  )*
+
+anon ::=  (  ( '['  (  ( #x20 |  #x09 |  #x0D |  #x0A )  )*  ']'  )  )*
+
+pn_prefix ::=  (  ( ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] )  ( ( (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  '.'  )  )*  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] )  )  )?  )  )*
+
+pn_local ::=  (  ( ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  ':'  |  [0-9] |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  ( ( (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  '.'  |  ':'  |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  )*  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  ':'  |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  )  )?  )  )

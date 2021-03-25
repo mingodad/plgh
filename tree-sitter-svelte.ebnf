@@ -1,0 +1,88 @@
+/*
+Grammar originally from https://github.com/Himujjal/tree-sitter-svelte
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+document ::=  (  _node )*
+
+_node ::=  ( script_element |  style_element |  _statement )
+
+_statement ::=  ( comment |  _text |  element |  if_statement |  key_statement |  each_statement |  await_statement )
+
+element ::=  ( ( start_tag (  _node )*  ( end_tag |  _implicit_end_tag )  )  |  self_closing_tag )
+
+start_tag ::=  ( '<'  (  _start_tag_name )  (  attribute )*  '>'  )
+
+self_closing_tag ::=  ( '<'  (  _start_tag_name )  (  attribute )*  '/>'  )
+
+end_tag ::=  ( '</'  (  _end_tag_name )  '>'  )
+
+errorneous_end_tag ::=  ( '</'  errorneous_end_tag_name '>'  )
+
+script_element ::=  ( (  script_start_tag )  ( raw_text )?  end_tag )
+
+script_start_tag ::=  ( '<'  (  _script_start_tag_name )  (  attribute )*  '>'  )
+
+style_element ::=  ( (  style_start_tag )  ( raw_text )?  end_tag )
+
+style_start_tag ::=  ( '<'  (  _style_start_tag_name )  (  attribute )*  '>'  )
+
+attribute ::=  ( ( attribute_name ( ( '='  ( attribute_value |  quoted_attribute_value |  expr_attribute_value )  )  )?  )  |  (  expression )  )
+
+attribute_name ::=  [^<>{}"'/=\s]+
+
+attribute_value ::=  [^<>{}"'/=\s]+
+
+expr_attribute_value ::=  expression
+
+quoted_attribute_value ::=  ( ( "'"  ( (  [^']+ )  )?  "'"  )  |  ( '"'  ( (  [^"]+ )  )?  '"'  )  )
+
+_text ::=  ( (  [^<>{}]+ )  |  _expression )
+
+_expression ::=  ( expression |  html_expr |  (  '{}'  )  )
+
+expression ::=  ( '{'  raw_text_expr '}'  )
+
+html_expr ::=  ( '{'  '@'  (  'html'  )  ( raw_text_expr )?  '}'  )
+
+if_statement ::=  ( if_start_expr (  _node )*  ( else_if_statement |  else_statement |  if_end_expr )  )
+
+else_if_statement ::=  ( else_if_expr (  _node )*  ( if_end_expr |  else_statement |  else_if_statement )  )
+
+else_statement ::=  ( else_expr (  _node )*  if_end_expr )
+
+if_start_expr ::=  ( '{'  '#'  (  'if'  )  raw_text_expr '}'  )
+
+else_expr ::=  ( '{'  ':'  (  'else'  )  '}'  )
+
+else_if_expr ::=  ( '{'  ':'  (  'else'  )  (  'if'  )  ( raw_text_expr )?  '}'  )
+
+if_end_expr ::=  ( '{'  '/'  (  'if'  )  '}'  )
+
+each_statement ::=  ( each_start_expr (  _node )*  each_end_expr )
+
+each_start_expr ::=  ( '{'  '#'  (  'each'  )  ( raw_text_expr |  ( raw_text_each (  'as'  )  raw_text_expr )  )  '}'  )
+
+each_end_expr ::=  ( '{'  '/'  (  'each'  )  '}'  )
+
+await_statement ::=   (  ( await_start_expr (  _node )*  ( then_statement |  catch_statement |  await_end_expr )  )  )
+
+then_statement ::=  ( then_expr (  _node )*  ( await_end_expr |  catch_statement )  )
+
+catch_statement ::=  ( catch_expr (  _node )*  await_end_expr )
+
+await_start_expr ::=  ( '{'  '#'  (  'await'  )  ( raw_text_expr |  ( raw_text_await (  'then'  )  raw_text_expr )  )  '}'  )
+
+then_expr ::=  ( '{'  ':'  (  'then'  )  ( raw_text_expr )?  '}'  )
+
+catch_expr ::=  ( '{'  ':'  (  'catch'  )  ( raw_text_expr )?  '}'  )
+
+await_end_expr ::=  ( '{'  '/'  (  'await'  )  '}'  )
+
+key_statement ::=  ( key_start_expr (  _node )*  key_end_expr )
+
+key_start_expr ::=  ( '{'  '#'  (  'key'  )  ( raw_text_expr )  '}'  )
+
+key_end_expr ::=  ( '{'  '/'  (  'key'  )  '}'  )

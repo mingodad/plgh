@@ -1,0 +1,68 @@
+/*
+Grammar originally from https://github.com/eno-lang/tree-sitter-eno
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+document ::=  (  _instruction )*
+
+_commentOrEmpty ::=  ( comment |  _emptyLine )
+
+_elementOrFieldsetOrList ::=  ( _escapedOrUnescapedKey ( elementOperator |  ( copyOperator (  token )  )  )  _endOfLine )
+
+_emptyLine ::=  [ \t\uFEFF\u2060\u200B]*[\n]
+
+_escapedOrUnescapedKey ::=  ( key |  ( escapeOperator (  escapedKey )  escapeOperator )  )
+
+_escapedOrUnescapedSectionKey ::=  ( (  sectionKey )  |  ( escapeOperator (  escapedKey )  escapeOperator )  )
+
+_instruction ::=  ( _commentOrEmpty |  element |  empty |  field |  fieldset |  list |  (  multilineField )  |  section )
+
+comment ::=   (  ( ( commentOperator ( (  token )  )?  _endOfLine )  )+  )
+
+continuation ::=  ( ( directContinuationOperator |  spacedContinuationOperator )  (  token )  _endOfLine )
+
+element ::=  _elementOrFieldsetOrList
+
+empty ::=  ( _escapedOrUnescapedKey _endOfLine )
+
+entry ::=  ( _escapedOrUnescapedKey entryOperator ( (  token )  )?  _endOfLine (  ( (  _commentOrEmpty )*  continuation )  )*  )
+
+field ::=  ( ( _escapedOrUnescapedKey elementOperator (  token )  _endOfLine (  ( (  _commentOrEmpty )*  continuation )  )*  )  |  ( _escapedOrUnescapedKey elementOperator _endOfLine ( ( (  _commentOrEmpty )*  continuation )  )+  )  )
+
+fieldset ::=  ( _elementOrFieldsetOrList ( ( (  _commentOrEmpty )*  entry )  )+  )
+
+item ::=  ( itemOperator ( (  token )  )?  _endOfLine (  ( (  _commentOrEmpty )*  continuation )  )*  )
+
+key ::=  [^`>:=<\-#|\\\s]|[^`>:=<\-#|\\\s][^:=<\n]*[^:=<\s]
+
+list ::=  ( _elementOrFieldsetOrList ( ( (  _commentOrEmpty )*  item )  )+  )
+
+multilineField ::=  ( multilineFieldOperator (  multilineFieldKey )  _endOfLine ( (  multilineFieldValue )  )?  _multilineFieldEnd multilineFieldOperator (  multilineFieldKey )  _endOfLine )
+
+multilineFieldValue ::=  ( ( _multilineFieldLine _endOfLine )  )+
+
+section ::=  ( _sectionDescend sectionOperator _escapedOrUnescapedSectionKey ( ( ( copyOperator |  deepCopyOperator )  (  token )  )  )?  _endOfLine (  _instruction )*  _sectionAscend )
+
+sectionKey ::=  [^`<\s]|[^`<\s][^<\n]*[^<\s]
+
+token ::=  [\S]|[\S][^\n]*[\S]
+
+directContinuationOperator ::=  '|'
+
+spacedContinuationOperator ::=  '\\'
+
+commentOperator ::=  '>'
+
+copyOperator ::=  '<'
+
+deepCopyOperator ::=  '<<'
+
+entryOperator ::=  '='
+
+itemOperator ::=  '-'
+
+elementOperator ::=  ':'
+
+sectionOperator ::=  '#+'

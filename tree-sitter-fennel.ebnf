@@ -1,0 +1,110 @@
+/*
+Grammar originally from https://github.com/TravonteD/tree-sitter-fennel
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+program ::=  (  ( _statement )  )*
+
+_statement ::=  ( require |  function_call |  _function |  _expression |  _variable_declaration |  _iterator |  _conditional |  hash_function_definition |  do_statement |  comment )
+
+_function ::=  ( function_definition |  lambda_definition )
+
+_variable_declaration ::=  ( let_definition |  local_definition |  var_definition |  global_definition |  set |  tset )
+
+_iterator ::=  ( each |  for |  while )
+
+_conditional ::=  ( if_statement |  when_statement |  match_statement )
+
+require ::=  ( '('  'require'  (  ( field |  string )  )*  ')'  )
+
+do_statement ::=  ( '('  'do'  (  _statement )*  ')'  )
+
+when_statement ::=  ( '('  'when'  (  _statement )*  ')'  )
+
+if_statement ::=  ( '('  'if'  (  _statement )*  ')'  )
+
+match_statement ::=  ( '('  'match'  (  _statement )*  ')'  )
+
+each ::=  ( '('  'each'  each_clause (  _statement )*  ')'  )
+
+each_clause ::=  ( '['  identifier identifier function_call ']'  )
+
+for ::=  ( '('  'for'  for_clause (  _statement )*  ')'  )
+
+for_clause ::=  ( '['  identifier _statement _statement ( _statement )?  ']'  )
+
+while ::=  ( '('  'while'  (  _statement )  (  _statement )*  ')'  )
+
+let_definition ::=  ( '('  'let'  assignments (  _statement )*  ')'  )
+
+local_definition ::=  ( '('  'local'  ( assignment |  multi_value_assignment )  ')'  )
+
+var_definition ::=  ( '('  'var'  ( assignment |  multi_value_assignment )  ')'  )
+
+global_definition ::=  ( '('  'global'  ( assignment |  multi_value_assignment )  ')'  )
+
+set ::=  ( '('  'set'  ( assignment |  multi_value_assignment )  ')'  )
+
+tset ::=  ( '('  'tset'  ( ( table |  identifier )  )?  ( identifier |  field |  string )  ( _statement )  ')'  )
+
+assignments ::=  ( '['  (  ( multi_value_assignment |  assignment )  )*  ']'  )
+
+assignment ::=  ( ( identifier |  field_expression )  _statement )
+
+multi_value_assignment ::=  ( value_list _statement )
+
+value_list ::=  ( '('  (  ( identifier |  field_expression )  )*  ')'  )
+
+hash_function_definition ::=  ( ( '('  'hashfn'  (  _statement )*  ')'  )  |  ( '#'  ( function_call |  identifier |  sequential_table )  )  )
+
+function_definition ::=  ( '('  'fn'  _function_body ')'  )
+
+lambda_definition ::=  ( '('  ( 'lambda'  |  'λ'  )  _function_body ')'  )
+
+_function_body ::=  ( ( (  identifier )  )?  parameters (  (  _statement )*  )  )
+
+parameters ::=  ( '['  (  _expression )*  ']'  )
+
+function_call ::=  ( '('  (  ( field_expression |  identifier |  (  _operator )  |  (  _keyword )  )  )  ( (  _statement )*  )?  ')'  )
+
+sequential_table ::=  ( '['  (  _statement )*  ']'  )
+
+table ::=  ( '{'  (  ( ( string |  field |  identifier )  _statement )  )*  '}'  )
+
+_expression ::=  ( field_expression |  quoted_value |  unquoted_value |  number |  field |  identifier |  string |  table |  sequential_table |  boolean |  nil |  (  _keyword )  )
+
+escape_character ::=  ([\n]|'\"')
+
+string ::=  ( '"'  (  ('\"')|([.]) )*  '"'  )
+
+quoted_value ::=  ( ( "'"  |  '`'  )  _statement )
+
+unquoted_value ::=  ( ( ','  )  identifier )
+
+field_expression ::=   (  ( ( identifier |  (  _keyword )  )  ( ( ( '.'  identifier )  )+  )  )  )
+
+_operator ::=  ( _arithmetic_operator |  _comparison_operator |  _boolean_operator |  _threading_macro |  _misc_operator |  (  colon )  )
+
+_arithmetic_operator ::=  ( '+'  |  '-'  |  '*'  |  '%'  |  '/'  |  '//'  |  '^'  )
+
+_comparison_operator ::=  ( '>'  |  '<'  |  '>='  |  '<='  |  '='  |  'not='  )
+
+_threading_macro ::=  ( '->'  |  '->>'  |  '-?>'  |  '-?>>'  )
+
+_boolean_operator ::=  ( 'and'  |  'or'  |  'not'  )
+
+_misc_operator ::=  ( '..'  |  '.'  |  '...'  )
+
+boolean ::=  ( 'true'  |  'false'  )
+
+nil ::=  ( 'nil'  )
+
+_keyword ::=  ( '_ENV'  |  '_G'  |  '_VERSION'  |  'arg'  |  'assert'  |  'collectgarbage'  |  'coroutine'  |  'debug'  |  'dofile'  |  'doto'  |  'error'  |  'eval-compiler'  |  'gensym'  |  'getmetatable'  |  'import-macros'  |  'in-scope?'  |  'include'  |  'ipairs'  |  'list'  |  'list?'  |  'load'  |  'loadfile'  |  'loadstring'  |  'macro'  |  'macrodebug'  |  'macroexpand'  |  'macros'  |  'multi-sym?'  |  'next'  |  'pairs'  |  'package'  |  'pcall'  |  'print'  |  'rawequal'  |  'rawget'  |  'rawlen'  |  'rawset'  |  'require-macros'  |  'select'  |  'sequence?'  |  'setmetatable'  |  'sym'  |  'sym?'  |  'table?'  |  'tonumber'  |  'tostring'  |  'type'  |  'unpack'  |  'varg?'  |  'xpcall'  |  'string'  |  'table'  )
+
+identifier ::=  ([_\?A-Za-z][_\?\-A-Za-z0-9\!]*)|('$'([1-9])?)
+
+number ::=  ([-])?[0-9]+('.'[\d]+)?
+
+comment ::=  ';'[^\n]*

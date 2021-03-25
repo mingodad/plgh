@@ -1,0 +1,240 @@
+/*
+Grammar originally from https://github.com/elm-tooling/tree-sitter-elm
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+file ::=  ( ( ( (  module_declaration )  _virtual_end_decl )  )?  ( _import_list )?  ( _top_decl_list )?  )
+
+block_comment ::=   (  ( '{-'  _block_comment_content '-}'  )  )
+
+line_comment ::=  (   (  ( '--' (  [^\n] )*  )  )  )*
+
+module_declaration ::=   (  ( ( ( port )?  module (  upper_case_qid )  (  exposing_list )  )  |  ( effect module (  upper_case_qid )  where record_expr (  exposing_list )  )  )  )
+
+_import_list ::=  ( ( import_clause _virtual_end_decl )  )+
+
+_top_decl_list ::=  ( ( ( value_declaration |  type_alias_declaration |  type_declaration |  type_annotation |  port_annotation |  infix_declaration )  _virtual_end_decl )  )+
+
+exposing_list ::=  ( exposing '('  ( (  double_dot )  |  ( ( exposed_value |  exposed_type |  exposed_operator )  (  ( ','  ( exposed_value |  exposed_type |  exposed_operator )  )  )*  )  )  ')'  )
+
+exposed_value ::=  lower_case_identifier
+
+exposed_type ::=  ( upper_case_identifier ( exposed_union_constructors )?  )
+
+exposed_union_constructors ::=  ( '('  double_dot ')'  )
+
+exposed_union_constructor ::=  upper_case_identifier
+
+exposed_operator ::=  _operator_as_function_inner
+
+_upper_case_identifier_without_leading_whitespace ::=  (  [A-Z][a-zA-Z0-9_]* )
+
+_lower_case_identifier_without_leading_whitespace ::=  (  [a-z][a-zA-Z0-9_]* )
+
+_dot_without_leading_whitespace ::=  (  '.'  )
+
+upper_case_qid ::=   (  ( upper_case_identifier (  ( (  _dot_without_leading_whitespace )  (  _upper_case_identifier_without_leading_whitespace )  )  )*  )  )
+
+value_qid ::=  ( lower_case_identifier |  ( upper_case_identifier (  _dot_without_leading_whitespace )  (  ( (  _upper_case_identifier_without_leading_whitespace )  (  _dot_without_leading_whitespace )  )  )*  (  _lower_case_identifier_without_leading_whitespace )  )  )
+
+field_accessor_function_expr ::=  ( dot (  _lower_case_identifier_without_leading_whitespace )  )
+
+import_clause ::=  ( import (  upper_case_qid )  (  ( as_clause )?  )  (  ( exposing_list )?  )  )
+
+as_clause ::=  ( as (  upper_case_identifier )  )
+
+value_declaration ::=  ( ( (  function_declaration_left )  |  (  pattern )  )  eq (  _expression )  )
+
+function_declaration_left ::=   (  ( lower_case_identifier (  (  ( anything_pattern |  lower_pattern |  tuple_pattern |  unit_expr |  list_pattern |  record_pattern |  _literal_expr_group |  _parenthesized_pattern )  )*  )  )  )
+
+type_declaration ::=   (  ( type (  upper_case_identifier )  (  (  lower_type_name )*  )  eq (  union_variant )  (  _more_union_variants )*  )  )
+
+lower_type_name ::=  lower_case_identifier
+
+union_variant ::=   (  ( (  upper_case_identifier )  (  _single_type_expression )*  )  )
+
+_more_union_variants ::=  ( '|'  (  union_variant )  )
+
+type_alias_declaration ::=  ( type alias (  upper_case_identifier )  (  (  lower_type_name )*  )  eq (  type_expression )  )
+
+type_expression ::=  ( _type_expression_inner (  ( arrow _type_expression_inner )  )*  )
+
+_type_expression_inner ::=  ( type_ref |  _single_type_expression )
+
+type_ref ::=  ( upper_case_qid ( _single_type_expression )+  )
+
+_single_type_expression ::=  ( (  (  type_ref_without_args )  )  |  (  type_variable )  |  (  record_type )  |  (  tuple_type )  |  ( '('  (  type_expression )  ')'  )  )
+
+type_ref_without_args ::=  upper_case_qid
+
+type_variable ::=  lower_case_identifier
+
+record_type ::=  ( '{'  ( ( ( _record_base )?  ( (  field_type )  (  ( ','  (  field_type )  )  )*  )  )  )?  '}'  )
+
+field_type ::=  ( (  lower_case_identifier )  colon (  type_expression )  )
+
+tuple_type ::=  ( (  unit_expr )  |  ( '('  (  type_expression )  ( ( ','  (  type_expression )  )  )+  ')'  )  )
+
+type_annotation ::=  ( (  lower_case_identifier )  colon (  type_expression )  )
+
+port_annotation ::=  ( port (  lower_case_identifier )  colon (  type_expression )  )
+
+_expression ::=  ( bin_op_expr |  _call_or_atom )
+
+bin_op_expr ::=  (   (  ( _call_or_atom  (  ( ( operator _call_or_atom )  )+  )  )  )  )
+
+operator ::=  operator_identifier
+
+operator_as_function_expr ::=  _operator_as_function_inner
+
+_operator_as_function_inner ::=  ( '('  (  operator_identifier )  ')'  )
+
+_call_or_atom ::=  ( function_call_expr |  _atom )
+
+function_call_expr ::=   (  ( (  _function_call_target )  (  ( _atom )+  )  )  )
+
+_function_call_target ::=  ( field_access_expr |  value_expr |  field_accessor_function_expr |  operator_as_function_expr |  parenthesized_expr )
+
+_atom ::=  ( _literal_expr_group |  negate_expr |  field_access_expr |  value_expr |  field_accessor_function_expr |  operator_as_function_expr |  parenthesized_expr |  unit_expr |  tuple_expr |  list_expr |  record_expr |  if_else_expr |  case_of_expr |  let_in_expr |  anonymous_function_expr |  glsl_code_expr )
+
+field_access_expr ::=   (  ( (  _field_access_start )  ( _field_access_segment )+  )  )
+
+_field_access_start ::=   (  ( field_access_expr |  ( value_expr |  parenthesized_expr |  record_expr )  )  )
+
+_field_access_segment ::=   (  ( (  _dot_without_leading_whitespace )  (  _lower_case_identifier_without_leading_whitespace )  )  )
+
+negate_expr ::=  ( (  minus_without_trailing_whitespace )  _atom )
+
+parenthesized_expr ::=  ( '('  (  _expression )  ')'  )
+
+_literal_expr_group ::=  ( char_constant_expr |  number_constant_expr |  string_constant_expr )
+
+char_constant_expr ::=  ( (  "'"  )  ( (  (  [^\\\n'] )*  )  |  string_escape |  invalid_string_escape )  (  "'"  )  )
+
+number_constant_expr ::=  number_literal
+
+string_constant_expr ::=  ( ( (  '"""'  )  (  ( (  (   (  ( ( [^\\"] |  '"'[^"] |  '""'[^"] )  )+  )  )  )  |  string_escape |  invalid_string_escape )  )*  (  '"""'  )  )  |  ( (  '"'  )  (  ( (  (   (  ( [^\\"\n] )+  )  )  )  |  string_escape |  invalid_string_escape )  )*  (  '"'  )  )  )
+
+anonymous_function_expr ::=  ( backslash (  ( pattern )+  )  arrow (  _expression )  )
+
+value_expr ::=  (  ( value_qid |  upper_case_qid )  )
+
+tuple_expr ::=  ( '('  (  _expression )  ( ( ','  (  _expression )  )  )+  ')'  )
+
+unit_expr ::=  ( '('  ')'  )
+
+list_expr ::=  ( '['  ( ( (  _expression )  (  ( ','  (  _expression )  )  )*  )  )?  ']'  )
+
+record_expr ::=  ( '{'  ( _record_inner )?  '}'  )
+
+record_base_identifier ::=  lower_case_identifier
+
+_record_base ::=  ( (  record_base_identifier )  '|'  )
+
+_record_inner ::=  ( ( _record_base )?  ( (  field )  (  ( ','  (  field )  )  )*  )  )
+
+field ::=  ( (  lower_case_identifier )  eq (  _expression )  )
+
+if_else_expr ::=  ( _if _then (   (  ( 'else'  _if _then )  )  )*  _else )
+
+_if ::=  ( 'if'  (  _expression )  )
+
+_then ::=  ( 'then'  (  _expression )  )
+
+_else ::=  ( 'else'  (  _expression )  )
+
+case_of_expr ::=  ( ( '('  case (  _expression )  of _virtual_open_section (  case_of_branch )  ( _more_case_of_branches )?  ( _virtual_end_section )?  ')'  )  |  ( case (  _expression )  of _virtual_open_section (  case_of_branch )  ( _more_case_of_branches )?  _virtual_end_section )  )
+
+_more_case_of_branches ::=   (  ( ( _virtual_end_decl (  case_of_branch )  )  )+  )
+
+case_of_branch ::=  ( (  pattern )  arrow (  _expression )  )
+
+let_in_expr ::=  ( 'let'  _virtual_open_section _inner_declaration ( ( ( _virtual_end_decl _inner_declaration )  )+  )?  _virtual_end_section 'in'  (  _expression )  )
+
+_inner_declaration ::=  ( (  value_declaration )  |  type_annotation )
+
+pattern ::=  ( ( (  cons_pattern )  |  _single_pattern )  ( ( as (  lower_pattern )  )  )?  )
+
+cons_pattern ::=  ( (  _single_pattern_cons )  ( '::'  (  ( cons_pattern |  _single_pattern_cons )  )  )  )
+
+_single_pattern_cons ::=  ( _parenthesized_pattern |  anything_pattern |  lower_pattern |  union_pattern |  tuple_pattern |  unit_expr |  list_pattern |  record_pattern |  _literal_expr_group )
+
+_single_pattern ::=  ( ( '('  (  pattern )  ')'  )  |  (  anything_pattern )  |  (  lower_pattern )  |  (  union_pattern )  |  (  tuple_pattern )  |  (  unit_expr )  |  (  list_pattern )  |  (  record_pattern )  |  (  _literal_expr_group )  )
+
+lower_pattern ::=  lower_case_identifier
+
+anything_pattern ::=  underscore
+
+record_pattern ::=  ( '{'  ( (  lower_pattern )  (  ( ','  (  lower_pattern )  )  )*  )  '}'  )
+
+list_pattern ::=  ( '['  ( ( (  pattern )  (  ( ','  (  pattern )  )  )*  )  )?  ']'  )
+
+union_pattern ::=   (  ( (  upper_case_qid )  (  (  _union_argument_pattern )*  )  )  )
+
+nullary_constructor_argument_pattern ::=  upper_case_qid
+
+_union_argument_pattern ::=  ( anything_pattern |  lower_pattern |  tuple_pattern |  nullary_constructor_argument_pattern |  unit_expr |  list_pattern |  record_pattern |  _literal_expr_group |  _parenthesized_pattern )
+
+tuple_pattern ::=  ( '('  (  pattern )  ','  ( (  pattern )  (  ( ','  (  pattern )  )  )*  )  ')'  )
+
+_parenthesized_pattern ::=  ( '('  pattern ')'  )
+
+infix_declaration ::=  ( infix (  (  ( 'left'  |  'right'  |  'non'  )  )  )  (  number_literal )  _operator_as_function_inner eq value_expr )
+
+glsl_code_expr ::=  ( _glsl_begin (  glsl_content )  _glsl_end )
+
+_glsl_begin ::=  '[glsl|'
+
+_glsl_end ::=  '|]'
+
+upper_case_identifier ::=  'p{Lu}'[_0-9p{L}]*
+
+lower_case_identifier ::=  'p{Ll}'[_0-9p{L}]*
+
+number_literal ::=  (  ( '-'?[0-9]+('.'[0-9]+)?('e' '-'?[0-9]+)? |  '0x'[0-9A-Fa-f]+ )  )*
+
+string_escape ::=  '\'('u{'[0-9A-Fa-f]/*{4,6}*/'}'|[nrt\"'\\])
+
+invalid_string_escape ::=  '\'('u{'[^}]*'}'|[^nrt\"'\\])
+
+module ::=  'module'
+
+effect ::=  'effect'
+
+where ::=  'where'
+
+import ::=  'import'
+
+as ::=  'as'
+
+exposing ::=  'exposing'
+
+case ::=  'case'
+
+of ::=  'of'
+
+type ::=  'type'
+
+alias ::=  'alias'
+
+port ::=  'port'
+
+infix ::=  'infix'
+
+double_dot ::=  '..'
+
+eq ::=  '='
+
+arrow ::=  '->'
+
+colon ::=  ':'
+
+backslash ::=  '\\'
+
+underscore ::=  '_'
+
+dot ::=  '.'
+
+operator_identifier ::=  ( '+'  |  '-'  |  '*'  |  '/'  |  '//'  |  '^'  |  '=='  |  '/='  |  '<'  |  '>'  |  '<='  |  '>='  |  '&&'  |  '||'  |  '++'  |  '<|'  |  '|>'  |  '<<'  |  '>>'  |  '::'  |  '</>'  |  '<?>'  |  '|.'  |  '|='  )
