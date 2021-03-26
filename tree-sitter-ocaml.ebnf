@@ -1,0 +1,575 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-ocaml
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
+compilation_unit ::=  ( ( shebang )?  ( _structure )?  )
+
+shebang ::=  '#!' [^\n]*
+
+_structure ::=  ( ( ';;'  )+  |  ( (  ';;'  )*  ( _structure_item_ext |  toplevel_directive |  expression_item )  (  ( ( (  ';;'  )*  ( _structure_item_ext |  toplevel_directive )  )  |  ( ( ';;'  )+  expression_item )  )  )*  (  ';;'  )*  )  )
+
+expression_item ::=  ( _sequence_expression_ext (  item_attribute )*  )
+
+_signature ::=  ( ( ';;'  )+  |  ( ( ( (  ';;'  )*  _signature_item_ext )  )+  (  ';;'  )*  )  )
+
+toplevel_directive ::=  ( directive ( ( _constant |  value_path |  module_path )  )?  )
+
+_structure_item ::=  ( value_definition |  external |  type_definition |  exception_definition |  module_definition |  module_type_definition |  open_module |  include_module |  class_definition |  class_type_definition |  floating_attribute )
+
+_structure_item_ext ::=  ( _structure_item |  _item_extension )
+
+value_definition ::=  ( ( ( 'let'  ( _attribute )?  ( 'rec'  )?  )  |  let_operator )  ( let_binding (  ( ( 'and'  |  and_operator )  let_binding )  )*  )  )
+
+let_binding ::=   (  ( (  _binding_pattern_ext )  ( ( (  _parameter )*  ( _polymorphic_typed )?  ( ( ':>'  _type_ext )  )?  '='  (  _sequence_expression_ext )  )  )?  (  item_attribute )*  )  )
+
+_parameter ::=  ( parameter |  (  _parenthesized_abstract_type )  )
+
+parameter ::=  ( (  _simple_pattern_ext )  |  ( ( '~'  |  '?'  )  (  (  _identifier )  )  )  |  ( _label (  ':'  )  (  _simple_pattern_ext )  )  |  ( ( '~'  |  '?'  )  '('  (  (  _identifier )  )  ( _typed )?  ( ( '='  _sequence_expression_ext )  )?  ')'  )  |  ( _label (  ':'  )  '('  (  _pattern_ext )  ( _typed )?  ( '='  _sequence_expression_ext )  ')'  )  )
+
+external ::=  ( 'external'  ( _attribute )?  _value_name _typed '='  ( string )+  (  item_attribute )*  )
+
+type_definition ::=  ( 'type'  ( _attribute )?  ( 'nonrec'  )?  ( type_binding (  ( 'and'  type_binding )  )*  )  )
+
+type_binding ::=  ( ( _type_params )?  ( ( (  _type_constructor )  ( _type_equation )?  ( ( '='  ( 'private'  )?  (  ( variant_declaration |  record_declaration |  '..'  )  )  )  )?  (  type_constraint )*  )  |  ( (  type_constructor_path )  ( '+='  ( 'private'  )?  (  variant_declaration )  )  )  )  (  item_attribute )*  )
+
+_type_params ::=  ( _type_param |  ( '('  ( _type_param (  ( ','  _type_param )  )*  )  ')'  )  )
+
+_type_param ::=  ( ( ( ( '+'  ( '!'  )?  )  |  ( '-'  ( '!'  )?  )  |  ( '!'  ( ( '+'  |  '-'  )  )?  )  )  )?  ( type_variable |  (  '_'  )  )  )
+
+_type_equation ::=  ( ( '='  |  ':='  )  ( 'private'  )?  _type_ext )
+
+variant_declaration ::=  ( ( '|'  ( ( constructor_declaration (  ( '|'  constructor_declaration )  )*  )  )?  )  |  ( constructor_declaration (  ( '|'  constructor_declaration )  )*  )  )
+
+constructor_declaration ::=  ( ( _constructor_name |  (  ( ( '['  ']'  )  |  ( '('  ')'  )  |  'true'  |  'false'  )  )  )  ( ( ( 'of'  _constructor_argument )  |  _simple_typed |  ( ':'  _constructor_argument '->'  (  _simple_type_ext )  )  |  ( '='  constructor_path )  )  )?  )
+
+_constructor_argument ::=  ( ( _simple_type_ext (  ( '*'  _simple_type_ext )  )*  )  |  record_declaration )
+
+record_declaration ::=  ( '{'  ( field_declaration (  ( ';'  field_declaration )  )*  )  ( ';'  )?  '}'  )
+
+field_declaration ::=  ( ( 'mutable'  )?  _field_name _polymorphic_typed )
+
+type_constraint ::=  ( 'constraint'  _type_ext '='  _type_ext )
+
+exception_definition ::=  ( 'exception'  ( _attribute )?  constructor_declaration (  item_attribute )*  )
+
+module_definition ::=  ( 'module'  ( _attribute )?  ( 'rec'  )?  ( module_binding (  ( 'and'  module_binding )  )*  )  )
+
+module_binding ::=  ( (  ( _module_name |  (  '_'  )  )  )  (  module_parameter )*  ( _module_typed )?  ( ( '='  (  _module_expression_ext )  )  )?  (  item_attribute )*  )
+
+module_parameter ::=  ( '('  ( ( (  ( _module_name |  (  '_'  )  )  )  _module_typed )  )?  ')'  )
+
+module_type_definition ::=  ( 'module'  'type'  ( _attribute )?  (  _module_type_name )  ( ( ( '='  |  ':='  )  (  _module_type_ext )  )  )?  (  item_attribute )*  )
+
+open_module ::=  ( 'open'  ( '!'  )?  ( _attribute )?  _module_expression_ext (  item_attribute )*  )
+
+include_module ::=  ( 'include'  ( _attribute )?  _module_expression_ext (  item_attribute )*  )
+
+class_definition ::=  ( 'class'  ( _attribute )?  ( class_binding (  ( 'and'  class_binding )  )*  )  )
+
+class_binding ::=   (  ( ( 'virtual'  )?  ( ( '['  ( _type_param (  ( ','  _type_param )  )*  )  ']'  )  )?  (  _class_name )  (  _parameter )*  ( _class_typed )?  ( ( '='  (  _class_expression_ext )  )  )?  (  item_attribute )*  )  )
+
+class_type_definition ::=  ( 'class'  'type'  ( _attribute )?  ( class_type_binding (  ( 'and'  class_type_binding )  )*  )  )
+
+class_type_binding ::=  ( ( 'virtual'  )?  ( ( '['  ( _type_param (  ( ','  _type_param )  )*  )  ']'  )  )?  (  _class_type_name )  '='  (  _simple_class_type_ext )  (  item_attribute )*  )
+
+_signature_item ::=  ( value_specification |  external |  type_definition |  exception_definition |  module_definition |  module_type_definition |  open_module |  include_module_type |  class_definition |  class_type_definition |  floating_attribute )
+
+_signature_item_ext ::=  ( _signature_item |  _item_extension )
+
+value_specification ::=  ( 'val'  ( _attribute )?  _value_name _typed (  item_attribute )*  )
+
+include_module_type ::=  ( 'include'  ( _attribute )?  _module_type_ext (  item_attribute )*  )
+
+_module_typed ::=  ( ':'  _module_type_ext )
+
+_module_type ::=  ( module_type_path |  signature |  module_type_constraint |  module_type_of |  functor_type |  parenthesized_module_type )
+
+_module_type_ext ::=  ( _module_type |  _extension )
+
+signature ::=  ( 'sig'  ( _signature )?  'end'  )
+
+module_type_constraint ::=   (  ( _module_type_ext 'with'  ( ( constrain_type |  constrain_module |  constrain_module_type )  (  ( 'and'  ( constrain_type |  constrain_module |  constrain_module_type )  )  )*  )  )  )
+
+constrain_type ::=  ( 'type'  ( _type_params )?  type_constructor_path _type_equation (  type_constraint )*  )
+
+constrain_module ::=  ( 'module'  module_path ( '='  |  ':='  )  extended_module_path )
+
+constrain_module_type ::=   (  ( 'module'  'type'  module_type_path ( '='  |  ':='  )  _module_type_ext )  )
+
+module_type_of ::=  ( 'module'  'type'  'of'  _module_expression_ext )
+
+functor_type ::=   (  ( ( ( 'functor'  (  module_parameter )*  )  |  _module_type_ext )  '->'  _module_type_ext )  )
+
+parenthesized_module_type ::=  ( ( '('  _module_type_ext ')'  )  )
+
+_simple_module_expression ::=  ( typed_module_expression |  parenthesized_module_expression |  packed_module )
+
+_simple_module_expression_ext ::=  ( _simple_module_expression |  _extension )
+
+_module_expression ::=  ( _simple_module_expression |  module_path |  structure |  functor |  module_application )
+
+_module_expression_ext ::=  ( _module_expression |  _extension )
+
+structure ::=  ( 'struct'  ( _structure )?  'end'  )
+
+functor ::=   (  ( 'functor'  ( module_parameter )+  '->'  (  _module_expression_ext )  )  )
+
+module_application ::=  ( (  _module_expression_ext )  ( (  _simple_module_expression_ext )  |  ( '('  ')'  )  )  )
+
+typed_module_expression ::=  ( '('  ( _module_expression_ext _module_typed )  ')'  )
+
+packed_module ::=  ( '('  ( 'val'  _expression_ext ( _module_typed )?  ( ( ':>'  _module_type_ext )  )?  )  ')'  )
+
+parenthesized_module_expression ::=  ( '('  _module_expression_ext ')'  )
+
+_class_typed ::=  ( ':'  _class_type_ext )
+
+_simple_class_type ::=  ( class_type_path |  instantiated_class_type |  class_body_type |  let_open_class_type )
+
+_simple_class_type_ext ::=  ( _simple_class_type |  _extension )
+
+_class_type ::=  ( _simple_class_type |  class_function_type )
+
+_class_type_ext ::=  ( _class_type |  _extension )
+
+instantiated_class_type ::=  ( '['  ( _type_ext (  ( ','  _type_ext )  )*  )  ']'  class_type_path )
+
+class_body_type ::=  ( 'object'  ( ( '('  _type_ext ')'  )  )?  (  ( _class_field_specification_ext |  floating_attribute )  )*  'end'  )
+
+_class_field_specification ::=  ( inheritance_specification |  instance_variable_specification |  method_specification |  type_parameter_constraint )
+
+_class_field_specification_ext ::=  ( _class_field_specification |  _item_extension )
+
+inheritance_specification ::=  ( 'inherit'  _simple_class_type_ext (  item_attribute )*  )
+
+instance_variable_specification ::=  ( 'val'  (  ( 'mutable'  |  'virtual'  )  )*  _instance_variable_name _typed (  item_attribute )*  )
+
+method_specification ::=  ( 'method'  (  ( 'private'  |  'virtual'  )  )*  _method_name _polymorphic_typed (  item_attribute )*  )
+
+type_parameter_constraint ::=  ( 'constraint'  _type_ext '='  _type_ext (  item_attribute )*  )
+
+let_open_class_type ::=   (  ( 'let'  open_module 'in'  (  _simple_class_type_ext )  )  )
+
+class_function_type ::=   (  ( ( ( ( '?'  )?  _label_name ':'  )  )?  _tuple_type_ext '->'  _class_type_ext )  )
+
+_simple_class_expression ::=  ( class_path |  instantiated_class |  object_expression |  typed_class_expression |  parenthesized_class_expression )
+
+_class_expression ::=  ( _simple_class_expression |  class_function |  class_application |  let_class_expression |  let_open_class_expression )
+
+_class_expression_ext ::=  ( _class_expression |  _extension )
+
+instantiated_class ::=  ( '['  ( _type_ext (  ( ','  _type_ext )  )*  )  ']'  class_path )
+
+typed_class_expression ::=  ( ( '('  ( _class_expression_ext _class_typed )  ')'  )  )
+
+class_function ::=   (  ( 'fun'  ( _parameter )+  '->'  (  _class_expression_ext )  )  )
+
+class_application ::=   (  ( (  _simple_class_expression )  ( (  _argument )  )+  )  )
+
+let_class_expression ::=   (  ( value_definition 'in'  (  _class_expression_ext )  )  )
+
+_class_field ::=  ( inheritance_definition |  instance_variable_definition |  method_definition |  type_parameter_constraint |  class_initializer )
+
+_class_field_ext ::=  ( _class_field |  _item_extension )
+
+inheritance_definition ::=  ( 'inherit'  ( '!'  )?  _class_expression_ext ( ( 'as'  _value_pattern )  )?  (  item_attribute )*  )
+
+instance_variable_definition ::=  ( 'val'  ( '!'  )?  (  ( 'mutable'  |  'virtual'  )  )*  (  _instance_variable_name )  ( _typed )?  ( ( ':>'  _type_ext )  )?  ( ( '='  (  _sequence_expression_ext )  )  )?  (  item_attribute )*  )
+
+method_definition ::=  ( 'method'  ( '!'  )?  (  ( 'private'  |  'virtual'  )  )*  (  _method_name )  (  _parameter )*  ( _polymorphic_typed )?  ( ( '='  (  _sequence_expression_ext )  )  )?  (  item_attribute )*  )
+
+class_initializer ::=  ( 'initializer'  _sequence_expression_ext (  item_attribute )*  )
+
+let_open_class_expression ::=   (  ( 'let'  open_module 'in'  (  _class_expression_ext )  )  )
+
+parenthesized_class_expression ::=  ( ( '('  _class_expression_ext ')'  )  )
+
+_typed ::=  ( ':'  _type_ext )
+
+_simple_typed ::=  ( ':'  _simple_type_ext )
+
+_polymorphic_typed ::=  ( ':'  _polymorphic_type )
+
+_polymorphic_type ::=  ( polymorphic_type |  _type_ext )
+
+polymorphic_type ::=  ( ( ( type_variable )+  |  (  _abstract_type )  )  '.'  _type_ext )
+
+_abstract_type ::=  ( 'type'  ( _type_constructor )+  )
+
+_parenthesized_abstract_type ::=  ( '('  _abstract_type ')'  )
+
+_simple_type ::=  ( type_variable |  type_constructor_path |  constructed_type |  polymorphic_variant_type |  package_type |  hash_type |  object_type |  parenthesized_type )
+
+_simple_type_ext ::=  ( _simple_type |  _extension )
+
+_tuple_type ::=  ( _simple_type |  tuple_type )
+
+_tuple_type_ext ::=  ( _tuple_type |  _extension )
+
+_type ::=  ( _tuple_type |  function_type |  aliased_type )
+
+_type_ext ::=  ( _type |  _extension )
+
+function_type ::=   (  ( ( typed_label |  _type_ext )  '->'  _type_ext )  )
+
+typed_label ::=   (  ( ( '?'  )?  _label_name ':'  _type_ext )  )
+
+tuple_type ::=   (  ( _tuple_type_ext '*'  _simple_type_ext )  )
+
+constructed_type ::=   (  ( ( _simple_type_ext |  ( '('  ( _type_ext (  ( ','  _type_ext )  )*  )  ')'  )  )  type_constructor_path )  )
+
+aliased_type ::=   (  ( _type_ext 'as'  type_variable )  )
+
+polymorphic_variant_type ::=  ( ( ( '['  tag_specification ']'  )  |  ( '['  ( _tag_spec )?  '|'  ( _tag_spec (  ( '|'  _tag_spec )  )*  )  ']'  )  |  ( '[>'  ( '|'  )?  ( ( _tag_spec (  ( '|'  _tag_spec )  )*  )  )?  ']'  )  |  ( '[<'  ( '|'  )?  ( _tag_spec (  ( '|'  _tag_spec )  )*  )  ( ( '>'  ( tag )+  )  )?  ']'  )  )  )
+
+_tag_spec ::=  ( _type_ext |  tag_specification )
+
+tag_specification ::=  ( tag ( ( 'of'  ( '&'  )?  ( _type_ext (  ( '&'  _type_ext )  )*  )  )  )?  )
+
+package_type ::=  ( '('  ( 'module'  ( _attribute )?  _module_type_ext )  ')'  )
+
+object_type ::=  ( '<'  ( ( ( ( ( method_type |  _simple_type_ext )  (  ( ';'  ( method_type |  _simple_type_ext )  )  )*  )  ( ( ';'  ( '..'  )?  )  )?  )  |  '..'  )  )?  '>'  )
+
+method_type ::=  ( _method_name _polymorphic_typed )
+
+hash_type ::=   (  ( ( ( _simple_type_ext |  ( '('  ( _type_ext (  ( ','  _type_ext )  )*  )  ')'  )  )  )?  '#'  class_type_path )  )
+
+parenthesized_type ::=  ( '('  _type_ext ')'  )
+
+_simple_expression ::=  ( value_path |  _constant |  typed_expression |  constructor_path |  tag |  list_expression |  array_expression |  record_expression |  prefix_expression |  (  hash_expression )  |  field_get_expression |  array_get_expression |  string_get_expression |  bigarray_get_expression |  coercion_expression |  local_open_expression |  package_expression |  new_expression |  object_copy_expression |  method_invocation |  parenthesized_expression |  ocamlyacc_value )
+
+_simple_expression_ext ::=  ( _simple_expression |  _extension )
+
+_expression ::=  ( _simple_expression |  product_expression |  cons_expression |  application_expression |  infix_expression |  (  sign_expression )  |  set_expression |  if_expression |  while_expression |  for_expression |  match_expression |  function_expression |  fun_expression |  try_expression |  let_expression |  assert_expression |  lazy_expression |  let_module_expression |  let_open_expression |  let_exception_expression |  object_expression )
+
+_expression_ext ::=  ( _expression |  _extension )
+
+_sequence_expression ::=  ( _expression |  sequence_expression )
+
+_sequence_expression_ext ::=  ( _sequence_expression |  _extension )
+
+typed_expression ::=  ( '('  ( _sequence_expression_ext _typed )  ')'  )
+
+product_expression ::=   (  ( (  _expression_ext )  ','  (  _expression_ext )  )  )
+
+cons_expression ::=   (  ( (  _expression_ext )  '::'  (  _expression_ext )  )  )
+
+list_expression ::=  ( '['  ( ( ( _expression_ext (  ( ';'  _expression_ext )  )*  )  ( ';'  )?  )  )?  ']'  )
+
+array_expression ::=  ( '[|'  ( ( ( _expression_ext (  ( ';'  _expression_ext )  )*  )  ( ';'  )?  )  )?  '|]'  )
+
+record_expression ::=  ( '{'  ( ( _simple_expression_ext 'with'  )  )?  ( field_expression (  ( ';'  field_expression )  )*  )  ( ';'  )?  '}'  )
+
+field_expression ::=   (  ( (  field_path )  ( _typed )?  ( ( '='  (  _expression_ext )  )  )?  )  )
+
+application_expression ::=   (  ( (  _simple_expression_ext )  ( (  _argument )  )+  )  )
+
+_argument ::=  ( _simple_expression_ext |  labeled_argument )
+
+labeled_argument ::=  ( _label |  ( _label (  ':'  )  _simple_expression_ext )  )
+
+prefix_expression ::=   (  ( prefix_operator (  _simple_expression_ext )  )  )
+
+sign_expression ::=   (  ( (  _sign_operator )  (  _expression_ext )  )  )
+
+hash_expression ::=   (  ( (  _simple_expression_ext )  (  _hash_operator )  (  _simple_expression_ext )  )  )
+
+infix_expression ::=  (  (  ( (  _expression_ext )  (  _pow_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _mult_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _add_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _concat_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _rel_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _and_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _or_operator )  (  _expression_ext )  )  )  |   (  ( (  _expression_ext )  (  _assign_operator )  (  _expression_ext )  )  )  )
+
+field_get_expression ::=   (  ( _simple_expression_ext '.'  field_path )  )
+
+array_get_expression ::=   (  ( _simple_expression_ext '.'  ( indexing_operator_path )?  '('  _sequence_expression_ext ')'  )  )
+
+string_get_expression ::=   (  ( _simple_expression_ext '.'  ( indexing_operator_path )?  '['  _sequence_expression_ext ']'  )  )
+
+bigarray_get_expression ::=   (  ( _simple_expression_ext '.'  ( indexing_operator_path )?  '{'  _sequence_expression_ext '}'  )  )
+
+set_expression ::=   (  ( ( field_get_expression |  array_get_expression |  string_get_expression |  bigarray_get_expression |  _instance_variable_name )  '<-'  (  _expression_ext )  )  )
+
+if_expression ::=   (  ( 'if'  ( _attribute )?  (  _sequence_expression_ext )  then_clause ( else_clause )?  )  )
+
+then_clause ::=  ( 'then'  _expression_ext )
+
+else_clause ::=  ( 'else'  _expression_ext )
+
+while_expression ::=  ( 'while'  ( _attribute )?  (  _sequence_expression_ext )  do_clause )
+
+do_clause ::=  ( 'do'  ( _sequence_expression_ext )?  'done'  )
+
+for_expression ::=  ( 'for'  ( _attribute )?  (  _value_pattern )  '='  (  _sequence_expression_ext )  ( 'to'  |  'downto'  )  (  _sequence_expression_ext )  do_clause )
+
+sequence_expression ::=   (  ( (  _expression_ext )  ';'  ( ( ( _attribute )?  (  _sequence_expression_ext )  )  )?  )  )
+
+match_expression ::=   (  ( ( ( 'match'  ( _attribute )?  )  |  match_operator )  _sequence_expression_ext 'with'  _match_cases )  )
+
+_match_cases ::=   (  ( ( '|'  )?  ( match_case (  ( '|'  match_case )  )*  )  )  )
+
+match_case ::=  ( (  _pattern_ext )  ( guard )?  '->'  (  ( _sequence_expression_ext |  refutation_case )  )  )
+
+guard ::=  ( 'when'  _sequence_expression_ext )
+
+refutation_case ::=  '.'
+
+function_expression ::=   (  ( 'function'  ( _attribute )?  _match_cases )  )
+
+fun_expression ::=   (  ( 'fun'  ( _attribute )?  ( _parameter )+  ( _simple_typed )?  '->'  (  _sequence_expression_ext )  )  )
+
+try_expression ::=   (  ( 'try'  ( _attribute )?  _sequence_expression_ext 'with'  _match_cases )  )
+
+let_expression ::=   (  ( value_definition 'in'  _sequence_expression_ext )  )
+
+coercion_expression ::=  ( '('  ( _sequence_expression_ext ( _typed )?  ':>'  _type_ext )  ')'  )
+
+assert_expression ::=   (  ( 'assert'  ( _attribute )?  _simple_expression_ext )  )
+
+lazy_expression ::=   (  ( 'lazy'  ( _attribute )?  _simple_expression_ext )  )
+
+let_module_expression ::=   (  ( 'let'  module_definition 'in'  (  _sequence_expression_ext )  )  )
+
+let_open_expression ::=   (  ( 'let'  open_module 'in'  (  _sequence_expression_ext )  )  )
+
+local_open_expression ::=  ( module_path '.'  ( ( '('  ( _sequence_expression_ext )?  ')'  )  |  list_expression |  array_expression |  record_expression |  object_copy_expression |  package_expression )  )
+
+package_expression ::=  ( '('  ( 'module'  ( _attribute )?  _module_expression_ext ( _module_typed )?  )  ')'  )
+
+let_exception_expression ::=   (  ( 'let'  exception_definition 'in'  (  _sequence_expression_ext )  )  )
+
+new_expression ::=  ( 'new'  ( _attribute )?  class_path )
+
+object_copy_expression ::=  ( '{<'  ( ( instance_variable_expression (  ( ';'  instance_variable_expression )  )*  )  )?  ( ';'  )?  '>}'  )
+
+instance_variable_expression ::=  ( _instance_variable_name ( ( '='  _expression_ext )  )?  )
+
+method_invocation ::=   (  ( _simple_expression_ext '#'  _method_name )  )
+
+object_expression ::=  ( 'object'  ( _attribute )?  ( ( '('  ( _pattern_ext ( _typed )?  )  ')'  )  )?  (  ( _class_field_ext |  floating_attribute )  )*  'end'  )
+
+parenthesized_expression ::=  ( ( 'begin'  ( _attribute )?  _sequence_expression_ext 'end'  )  |  ( '('  _sequence_expression_ext ')'  )  )
+
+ocamlyacc_value ::=  '$'[0-9]+
+
+_simple_pattern ::=  ( _value_pattern |  _signed_constant |  typed_pattern |  constructor_path |  tag |  polymorphic_variant_pattern |  record_pattern |  list_pattern |  array_pattern |  local_open_pattern |  package_pattern |  parenthesized_pattern )
+
+_simple_pattern_ext ::=  ( _simple_pattern |  _extension )
+
+_pattern ::=  ( _simple_pattern |  alias_pattern |  or_pattern |  constructor_pattern |  tag_pattern |  tuple_pattern |  cons_pattern |  range_pattern |  lazy_pattern |  exception_pattern )
+
+_pattern_ext ::=  ( _pattern |  _extension )
+
+_binding_pattern ::=  ( _value_name |  _signed_constant |  (  typed_binding_pattern )  |  constructor_path |  tag |  polymorphic_variant_pattern |  (  record_binding_pattern )  |  (  list_binding_pattern )  |  (  array_binding_pattern )  |  (  local_open_binding_pattern )  |  package_pattern |  (  parenthesized_binding_pattern )  |  (  alias_binding_pattern )  |  (  or_binding_pattern )  |  (  constructor_binding_pattern )  |  (  tag_binding_pattern )  |  (  tuple_binding_pattern )  |  (  cons_binding_pattern )  |  range_pattern |  (  lazy_binding_pattern )  )
+
+_binding_pattern_ext ::=  ( _binding_pattern |  _extension )
+
+alias_pattern ::=   (  ( _pattern_ext 'as'  _value_pattern )  )
+
+alias_binding_pattern ::=   (  ( _binding_pattern_ext 'as'  _value_name )  )
+
+typed_pattern ::=  ( ( '('  ( _pattern_ext _typed )  ')'  )  )
+
+typed_binding_pattern ::=  ( ( '('  ( (  _binding_pattern_ext )  _typed )  ')'  )  )
+
+or_pattern ::=   (  ( _pattern_ext '|'  _pattern_ext )  )
+
+or_binding_pattern ::=   (  ( _binding_pattern_ext '|'  _binding_pattern_ext )  )
+
+constructor_pattern ::=   (  ( constructor_path ( (  _parenthesized_abstract_type )  )?  _pattern_ext )  )
+
+constructor_binding_pattern ::=   (  ( constructor_path (  _binding_pattern_ext )  )  )
+
+tag_pattern ::=   (  ( tag _pattern_ext )  )
+
+tag_binding_pattern ::=   (  ( tag (  _binding_pattern_ext )  )  )
+
+polymorphic_variant_pattern ::=  ( '#'  type_constructor_path )
+
+tuple_pattern ::=   (  ( _pattern_ext ','  _pattern_ext )  )
+
+tuple_binding_pattern ::=   (  ( _binding_pattern_ext ','  _binding_pattern_ext )  )
+
+record_pattern ::=   (  ( '{'  ( field_pattern (  ( ';'  field_pattern )  )*  )  ( ( ';'  '_'  )  )?  ( ';'  )?  '}'  )  )
+
+field_pattern ::=  ( field_path ( _typed )?  ( ( '='  _pattern_ext )  )?  )
+
+record_binding_pattern ::=   (  ( '{'  ( (  field_binding_pattern )  (  ( ';'  (  field_binding_pattern )  )  )*  )  ( ( ';'  '_'  )  )?  ( ';'  )?  '}'  )  )
+
+field_binding_pattern ::=  ( field_path ( _typed )?  ( ( '='  (  _binding_pattern_ext )  )  )?  )
+
+list_pattern ::=   (  ( '['  ( ( ( _pattern_ext (  ( ';'  _pattern_ext )  )*  )  ( ';'  )?  )  )?  ']'  )  )
+
+list_binding_pattern ::=   (  ( '['  ( ( ( _binding_pattern_ext (  ( ';'  _binding_pattern_ext )  )*  )  ( ';'  )?  )  )?  ']'  )  )
+
+cons_pattern ::=   (  ( _pattern_ext '::'  _pattern_ext )  )
+
+cons_binding_pattern ::=   (  ( _binding_pattern_ext '::'  _binding_pattern_ext )  )
+
+array_pattern ::=   (  ( '[|'  ( ( ( _pattern_ext (  ( ';'  _pattern_ext )  )*  )  ( ';'  )?  )  )?  '|]'  )  )
+
+array_binding_pattern ::=   (  ( '[|'  ( ( ( _binding_pattern_ext (  ( ';'  _binding_pattern_ext )  )*  )  ( ';'  )?  )  )?  '|]'  )  )
+
+range_pattern ::=   (  ( _signed_constant '..'  _signed_constant )  )
+
+lazy_pattern ::=   (  ( 'lazy'  ( _attribute )?  _pattern_ext )  )
+
+lazy_binding_pattern ::=   (  ( 'lazy'  ( _attribute )?  _binding_pattern_ext )  )
+
+local_open_pattern ::=  ( module_path '.'  ( ( '('  ( _pattern_ext )?  ')'  )  |  list_pattern |  array_pattern |  record_pattern )  )
+
+local_open_binding_pattern ::=  ( module_path '.'  ( ( '('  ( _binding_pattern_ext )?  ')'  )  |  list_binding_pattern |  array_binding_pattern |  record_binding_pattern )  )
+
+package_pattern ::=  ( '('  ( 'module'  ( _attribute )?  ( _module_name |  (  '_'  )  )  ( _module_typed )?  )  ')'  )
+
+parenthesized_pattern ::=  ( '('  _pattern_ext ')'  )
+
+parenthesized_binding_pattern ::=  ( '('  _binding_pattern_ext ')'  )
+
+exception_pattern ::=  ( 'exception'  ( _attribute )?  _pattern_ext )
+
+attribute ::=  ( '[@'  attribute_id ( attribute_payload )?  ']'  )
+
+item_attribute ::=  ( '[@@'  attribute_id ( attribute_payload )?  ']'  )
+
+floating_attribute ::=  ( '[@@@'  attribute_id ( attribute_payload )?  ']'  )
+
+attribute_payload ::=  ( _structure |  ( ':'  ( _type_ext |  _signature )  )  |  ( '?'  _pattern_ext ( guard )?  )  )
+
+_extension ::=  ( extension |  quoted_extension )
+
+extension ::=  ( '[%'  attribute_id ( attribute_payload )?  ']'  )
+
+quoted_extension ::=  ( '{%'  attribute_id ( [\s]+ )?  _quoted_string '}'  )
+
+_item_extension ::=  ( item_extension |  quoted_item_extension )
+
+item_extension ::=  ( '[%%'  attribute_id ( attribute_payload )?  ']'  (  item_attribute )*  )
+
+quoted_item_extension ::=  ( '{%%'  attribute_id ( [\s]+ )?  _quoted_string '}'  (  item_attribute )*  )
+
+_attribute ::=  ( '%'  attribute_id )
+
+_constant ::=  ( number |  character |  string |  quoted_string |  boolean |  unit )
+
+_signed_constant ::=  ( _constant |  signed_number )
+
+number ::=  (  ( [0-9][0-9_]*('.'[0-9_]*)?([eE][+\-]?[0-9][0-9_]*)?[g-zG-Z]? |  '0'[xX][0-9A-Fa-f][0-9A-Fa-f_]*('.'[0-9A-Fa-f_]*)?([pP][+\-]?[0-9][0-9_]*)?[g-zG-Z]? |  '0'[oO][0-7][0-7_]*[g-zG-Z]? |  '0'[bB][01][01_]*[g-zG-Z]? )  )
+
+signed_number ::=  ( ( '+'  |  '-'  )  (  ( [0-9][0-9_]*('.'[0-9_]*)?([eE][+\-]?[0-9][0-9_]*)?[g-zG-Z]? |  '0'[xX][0-9A-Fa-f][0-9A-Fa-f_]*('.'[0-9A-Fa-f_]*)?([pP][+\-]?[0-9][0-9_]*)?[g-zG-Z]? |  '0'[oO][0-7][0-7_]*[g-zG-Z]? |  '0'[bB][01][01_]*[g-zG-Z]? )  )  )
+
+character ::=  ( "'"  character_content "'"  )
+
+character_content ::=  ( [^\\'] |  _null |  escape_sequence )
+
+string ::=  ( '"'  ( string_content )?  '"'  )
+
+string_content ::=  ( ( (  ' '  )  |  (  '\n'  )  |  (  '\t'  )  |  (  '[@'  )  |  (  '[@@'  )  |  (  '[@@@'  )  |  [^\\"%@]+|'%'|'@' |  _null |  escape_sequence |  (  '\u{'[0-9A-Fa-f]+'}' )  |  (  '\\\n' [\t ]* )  |  conversion_specification |  pretty_printing_indication )  )+
+
+quoted_string ::=  ( '{'  _quoted_string '}'  )
+
+_quoted_string ::=  ( _left_quoted_string_delimiter ( quoted_string_content )?  _right_quoted_string_delimiter )
+
+quoted_string_content ::=  ( ( (  ' '  )  |  (  '\n'  )  |  (  '\t'  )  |  (  '[@'  )  |  (  '[@@'  )  |  (  '[@@@'  )  |  [^%@|]+|'%'|'@'|'\'| ' ' |  _null |  conversion_specification |  pretty_printing_indication )  )+
+
+escape_sequence ::=  ( '\'[\\"'ntbr ] |  '\'[0-9][0-9][0-9] |  '\x'[0-9A-Fa-f][0-9A-Fa-f] |  '\o'[0-3][0-7][0-7] )
+
+conversion_specification ::=  (  ( '%'  ( [\-0+ #] )?  ( [1-9][0-9]*|'*' )?  ( '.'([0-9]*|'*') )?  ( [diunlLNxXosScCfFeEgGhHbBat!%@,] |  [lnL][diuxXo] )  )  )
+
+pretty_printing_indication ::=  '@'([\[#x5d, ;.{}?]|'\n'|'<'[0-9]+'>')
+
+boolean ::=  ( 'true'  |  'false'  )
+
+unit ::=  ( ( '('  ')'  )  |  ( 'begin'  'end'  )  )
+
+prefix_operator ::=  (  ( ( '!'  ( ( [#!$%&*+\-./:<>?@^|~] )?  |  ( [#!$%&*+\-./:<=>?@^|~] ( [#!$%&*+\-./:<=>?@^|~] )+  )  )  )  |  ( [~?] ( [#!$%&*+\-./:<=>?@^|~] )+  )  )  )
+
+_sign_operator ::=  ( '+'  |  '-'  |  '+.'  |  '-.'  )
+
+infix_operator ::=  ( _hash_operator |  _pow_operator |  _mult_operator |  _add_operator |  _concat_operator |  _rel_operator |  _and_operator |  _or_operator |  _assign_operator )
+
+_hash_operator ::=  (  ( '#'  ( [#!$%&*+\-./:<=>?@^|~] )+  )  )
+
+_pow_operator ::=  ( (  ( '**'  (  [!$%&*+\-./:<=>?@^|~] )*  )  )  |  'lsl'  |  'lsr'  |  'asr'  )
+
+_mult_operator ::=  ( (  ( [*/%] (  [!$%&*+\-./:<=>?@^|~] )*  )  )  |  'mod'  |  'land'  |  'lor'  |  'lxor'  )
+
+_add_operator ::=  (  ( ( '+'  (  [!$%&*+\-./:<=>?@^|~] )*  )  |  ( '-'  ( ( [!$%&*+\-./:<=?@^|~] )?  |  ( [!$%&*+\-./:<=>?@^|~] ( [!$%&*+\-./:<=>?@^|~] )+  )  )  )  )  )
+
+_concat_operator ::=  (  ( [@^] (  [!$%&*+\-./:<=>?@^|~] )*  )  )
+
+_rel_operator ::=  (  ( ( [=>$] (  [!$%&*+\-./:<=>?@^|~] )*  )  |  ( '<'  ( ( [!$%&*+./:<=>?@^|~] )?  |  ( [!$%&*+\-./:<=>?@^|~] ( [!$%&*+\-./:<=>?@^|~] )+  )  )  )  |  ( '&'  ( [!$%*+\-./:<=>?@^|~] |  ( [!$%&*+\-./:<=>?@^|~] ( [!$%&*+\-./:<=>?@^|~] )+  )  )  )  |  ( '|'  ( [!$%&*+\-./:<=>?@^~] |  ( [!$%&*+\-./:<=>?@^|~] ( [!$%&*+\-./:<=>?@^|~] )+  )  )  )  |  '!='  )  )
+
+_and_operator ::=  ( '&'  |  '&&'  )
+
+_or_operator ::=  ( 'or'  |  '||'  )
+
+_assign_operator ::=  ( ':='  )
+
+indexing_operator ::=  (  ( [!$%&*+\-/:=>?@^|] (  [!$%&*+\-./:<=>?@^|~] )*  )  )
+
+indexing_operator_path ::=  ( indexing_operator |  ( module_path '.'  indexing_operator )  )
+
+let_operator ::=  (  ( 'let'  [$&*+\-/<=>@^|] (  [!$%&*+\-./:<=>?@^|~] )*  )  )
+
+and_operator ::=  (  ( 'and'  [$&*+\-/<=>@^|] (  [!$%&*+\-./:<=>?@^|~] )*  )  )
+
+match_operator ::=  (  ( 'match'  [$&*+\-/<=>@^|] (  [!$%&*+\-./:<=>?@^|~] )*  )  )
+
+_value_name ::=  ( (  _identifier )  |  parenthesized_operator )
+
+_value_pattern ::=  ( (  _identifier )  |  parenthesized_operator )
+
+parenthesized_operator ::=  ( '('  ( prefix_operator |  (  _sign_operator )  |  infix_operator |  ( '.'  indexing_operator ( ( '('  ( ( ';'  '..'  )  )?  ')'  )  |  ( '['  ( ( ';'  '..'  )  )?  ']'  )  |  ( '{'  ( ( ';'  '..'  )  )?  '}'  )  )  ( '<-'  )?  )  |  let_operator |  and_operator |  match_operator )  ')'  )
+
+value_path ::=  ( _value_name |  ( module_path '.'  _value_name )  )
+
+module_path ::=   (  ( _module_name |  ( module_path '.'  _module_name )  )  )
+
+extended_module_path ::=  ( ( _module_name |  ( extended_module_path '.'  _module_name )  )  |  ( extended_module_path ( '('  extended_module_path ')'  )  )  )
+
+module_type_path ::=  ( _module_type_name |  ( extended_module_path '.'  _module_type_name )  )
+
+field_path ::=  ( _field_name |  ( module_path '.'  _field_name )  )
+
+constructor_path ::=  ( _constructor_name |  ( module_path '.'  _constructor_name )  )
+
+type_constructor_path ::=   (  ( _type_constructor |  ( extended_module_path '.'  _type_constructor )  )  )
+
+class_path ::=  ( _class_name |  ( module_path '.'  _class_name )  )
+
+class_type_path ::=  ( _class_type_name |  ( extended_module_path '.'  _class_type_name )  )
+
+_label_name ::=  (  _identifier )
+
+_field_name ::=  (  _identifier )
+
+_class_name ::=  (  _identifier )
+
+_class_type_name ::=  (  _identifier )
+
+_method_name ::=  (  _identifier )
+
+_type_constructor ::=  (  _identifier )
+
+_instance_variable_name ::=  (  _identifier )
+
+_module_name ::=  (  _capitalized_identifier )
+
+_module_type_name ::=  (  ( _capitalized_identifier |  _identifier )  )
+
+_constructor_name ::=  ( (  _capitalized_identifier )  |  ( '('  (  '::'  )  ')'  )  )
+
+_identifier ::=  [a-z_][a-zA-Z0-9_']*
+
+_capitalized_identifier ::=  [A-Z][a-zA-Z0-9_']*
+
+_label ::=  ( ( '~'  |  '?'  )  _label_name )
+
+directive ::=  ( '#'  ( _identifier |  _capitalized_identifier )  )
+
+type_variable ::=  ( "'"  ( _identifier |  _capitalized_identifier )  )
+
+tag ::=  ( '`'  ( _identifier |  _capitalized_identifier )  )
+
+attribute_id ::=  ( ( _identifier |  _capitalized_identifier )  (  ( '.'  ( _identifier |  _capitalized_identifier )  )  )*  )
+
