@@ -157,7 +157,7 @@ generic_type_with_turbofish ::=  ( (  ( _type_identifier |  scoped_identifier ) 
 
 bounded_type ::=   (  ( ( lifetime '+'  _type )  |  ( _type '+'  _type )  |  ( _type '+'  lifetime )  )  )
 
-type_arguments ::=  ( (   (  '<'  )  )*  ( ( _type |  type_binding |  lifetime |  _literal |  block )  (  ( ','  ( _type |  type_binding |  lifetime |  _literal |  block )  )  )*  )  ( ','  )?  '>'  )
+type_arguments ::=  ( (   (  '<'  )  )  ( ( _type |  type_binding |  lifetime |  _literal |  block )  (  ( ','  ( _type |  type_binding |  lifetime |  _literal |  block )  )  )*  )  ( ','  )?  '>'  )
 
 type_binding ::=  ( (  _type_identifier )  '='  (  _type )  )
 
@@ -305,19 +305,19 @@ _literal_pattern ::=  ( string_literal |  raw_string_literal |  char_literal |  
 
 negative_literal ::=  ( '-'  ( integer_literal |  float_literal )  )
 
-integer_literal ::=  (  ( ( [0-9][0-9_]* |  '0x'[0-9a-fA-F_]+ |  '0b'[01_]+ |  '0o'[0-7_]+ )  ( ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  )  )?  )  )*
+integer_literal ::=  (  ( ( [0-9][0-9_]* |  '0x'[0-9a-fA-F_]+ |  '0b'[01_]+ |  '0o'[0-7_]+ )  ( ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  )  )?  )  )
 
 string_literal ::=  ( (  'b'?'"' )  (  ( escape_sequence |  _string_content )  )*  (  '"'  )  )
 
-char_literal ::=  (  ( ( 'b'  )?  "'"  ( ( ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]/*{2}*/ )  )  |  [^\\'] )  )?  "'"  )  )*
+char_literal ::=  (  ( ( 'b'  )?  "'"  ( ( ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]+/*{2}*/ )  )  |  [^\\'] )  )?  "'"  )  )
 
-escape_sequence ::=  (  ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]/*{2}*/ )  )  )
+escape_sequence ::=  (  ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]+/*{2}*/ )  )  )
 
 boolean_literal ::=  ( 'true'  |  'false'  )
 
 comment ::=  ( line_comment |  block_comment )
 
-line_comment ::=  (  ( '//'  [^\n]* )  )*
+line_comment ::=  (  ( '//'  [^\n]* )  )
 
 _path ::=  ( self |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  |  metavariable |  super |  crate |  identifier |  scoped_identifier )
 
@@ -336,3 +336,4 @@ super ::=  'super'
 crate ::=  'crate'
 
 metavariable ::=  '$'[a-zA-Z_][\w]*
+

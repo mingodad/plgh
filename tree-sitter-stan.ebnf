@@ -139,7 +139,7 @@ right_colon_expression ::=  ( _expression ':'  )
 
 integer_literal ::=  [0-9]+
 
-real_literal ::=  (  ( [0-9]*[.][0-9]+([eE][+-]?[0-9]+)? |  [0-9]+[.]([eE][+-]?[0-9]+)? |  [0-9]+[eE][+-]?[0-9]+ )  )*
+real_literal ::=  (  ( [0-9]*[.][0-9]+([eE][+-]?[0-9]+)? |  [0-9]+[.]([eE][+-]?[0-9]+)? |  [0-9]+[eE][+-]?[0-9]+ )  )
 
 _statement ::=  ( empty_statement |  assignment_statement |  sampling_statement |  function_expression |  log_prob_statement |  target_statement |  break_statement |  continue_statement |  print_statement |  reject_statement |  return_statement |  if_statement |  while_statement |  for_statement |  block_statement )
 
@@ -187,4 +187,5 @@ for_statement ::=   (  ( 'for'  '('  identifier 'in'  _expression ( ( ':'  _expr
 
 block_statement ::=  ( '{'  (  variable_declaration )*  (  _statement )*  '}'  )
 
-comment ::=  (  ( ( '//'  [^\n]* )  |  ( '#'  [^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+comment ::=  (  ( ( '//'  [^\n]* )  |  ( '#'  [^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+

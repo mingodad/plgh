@@ -9,7 +9,7 @@ source_file ::=  (  ( journal_item |  '\n'  )  )*
 
 journal_item ::=  ( comment |  directive |  xact )
 
-comment ::=  ( ( ';'  |  '*'  )  [.]*'\n' )
+comment ::=  ( ( ';'  |  '*'  )  [^\n]*'\n' )
 
 indented_line ::=  ( whitespace [^\n]+'\n' )
 
@@ -23,27 +23,27 @@ commodity_directive ::=  ( ( 'commodity'  whitespace commodity '\n'  )  (  commo
 
 commodity_subdirective ::=  ( alias_subdirective |  default_subdirective |  format_subdirective |  note_subdirective |  nomarket_subdirective )
 
-word_directive ::=  ( ( 'include'  [.]+ )  |  'end'  |  ( 'alias'  [^=]+ '='  [.]+ )  |  ( 'def'  [.]+ )  |  ( 'year'  [0-9]+/*{4}*/ )  |  ( 'bucket'  account )  )
+word_directive ::=  ( ( 'include'  [^\n]+ )  |  'end'  |  ( 'alias'  [^=]+ '='  [^\n]+ )  |  ( 'def'  [^\n]+ )  |  ( 'year'  [0-9]+/*{4}*/ )  |  ( 'bucket'  account )  )
 
 char_directive ::=  ( check_in |  check_out |  ( 'A'  account )  |  ( 'Y'  [0-9]+/*{4}*/ )  |  ( 'N'  commodity )  |  ( 'D'  amount )  |  ( 'C'  ( commodity '='  amount )  )  |  ( 'P'  ( date commodity amount )  )  )
 
-alias_subdirective ::=  ( whitespace 'alias'  whitespace [.]+'\n' )
+alias_subdirective ::=  ( whitespace 'alias'  whitespace [^\n]+'\n' )
 
-assert_subdirective ::=  ( whitespace 'assert'  whitespace [.]+'\n' )
+assert_subdirective ::=  ( whitespace 'assert'  whitespace [^\n]+'\n' )
 
-check_subdirective ::=  ( whitespace 'check'  whitespace [.]+'\n' )
+check_subdirective ::=  ( whitespace 'check'  whitespace [^\n]+'\n' )
 
 default_subdirective ::=  ( whitespace 'default'  '\n' )
 
-eval_subdirective ::=  ( whitespace 'eval'  whitespace [.]+'\n' )
+eval_subdirective ::=  ( whitespace 'eval'  whitespace [^\n]+'\n' )
 
 format_subdirective ::=  ( whitespace 'format'  whitespace amount )
 
 nomarket_subdirective ::=  ( whitespace 'nomarket'  '\n' )
 
-note_subdirective ::=  ( whitespace 'note'  whitespace [.]+'\n' )
+note_subdirective ::=  ( whitespace 'note'  whitespace [^\n]+'\n' )
 
-payee_subdirective ::=  ( whitespace 'payee'  whitespace [.]+'\n' )
+payee_subdirective ::=  ( whitespace 'payee'  whitespace [^\n]+'\n' )
 
 check_in ::=  ( ( 'i'  |  'I'  )  date time account ( ( spacer payee )  )?  )
 
@@ -86,3 +86,4 @@ balance_assertion ::=  ( '='  ( amount )  )
 whitespace ::=  ( ( ' '  |  '\t'  )  )+
 
 spacer ::=  ( '  '  |  '\t'  |  ' \t'  )
+

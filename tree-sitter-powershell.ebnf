@@ -83,24 +83,25 @@ switch_clause_condition ::=  identifier
 
 type_literal ::=  ( '['  identifier ( ( array_declaration |  type_literal )  )?  ']'  )
 
-boolean_value ::=   (  (  ( '$'  ( [tT][rR][uU][eE] |  [fF][aA][lL][sS][eE] )  )  )*  )
+boolean_value ::=   (  (  ( '$'  ( [tT][rR][uU][eE] |  [fF][aA][lL][sS][eE] )  )  )  )
 
 user_variable ::=   (  '$'[a-zA-Z][\w]* )
 
 identifier ::=  [a-zA-Z][\w]*
 
-string ::=  (  ( ( '"'  (  ( [^\\"\n] |  '\'([.]|[\n]) )  )*  '"'  )  |  ( "'"  (  ( [^\\'\n] |  '\'([.]|[\n]) )  )*  "'"  )  |  ( "@'"  (  [^(\'@)] )*  [\r|\r\n|\n]"'@" )  )  )*
+string ::=  (  ( ( '"'  (  ( [^\\"\n] |  '\'([.]|[\n]) )  )*  '"'  )  |  ( "'"  (  ( [^\\'\n] |  '\'([.]|[\n]) )  )*  "'"  )  |  ( "@'"  (  [^(\'@)] )*  [\r|\r\n|\n]"'@" )  )  )
 
 expandable_here_string ::=  ( '@"'  (  ( expandable_string_chars |  expandable_string_part )  )*  '"@'  )
 
-expandable_string_chars ::=  (  ( ( [^"@$] |  '$'[^(] |  '"'[^@] )  )+  )*
+expandable_string_chars ::=  (  ( ( [^"@$] |  '$'[^(] |  '"'[^@] )  )+  )
 
 expandable_string_part ::=  ( '$'  '('  statement ')'  )
 
-number ::=  ( (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]+ )  |  ( ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  '.'  ( [0-9]+ )?  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( '.'  [0-9]+ ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  )  )  )*  (  suffix )*  )
+number ::=  ( (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]+ )  |  ( ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  '.'  ( [0-9]+ )?  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( '.'  [0-9]+ ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  )  )  )  (  suffix )*  )
 
 suffix ::=  ( [lL] |  [dD] |  [kK][bB] |  [mM][bB] |  [gG][bB] |  [tT][bB] |  [pP][bB] )
 
-comment ::=  (  ( '#'[^\n]* |  ( '<#'  [^#]*'#'+('?:'[^<#][^#]*'#'+)* '>'  )  )  )*
+comment ::=  (  ( '#'[^\n]* |  ( '<#'  [^#]*'#'+('?:'[^<#][^#]*'#'+)* '>'  )  )  )
 
 signature_block ::=  '# SIG'
+

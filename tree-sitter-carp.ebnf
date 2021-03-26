@@ -7,7 +7,7 @@ Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in 
 
 source_file ::=  (  _expr )*
 
-line_comment ::=  (  ( ';'  .* )  )*
+line_comment ::=  (  ( ';'  .* )  )
 
 _expr ::=  ( _special_forms |  _literals |  _shorthand |  _identifier |  _defs |  _specials |  call |  array |  map |  register |  hidden |  doc |  signature |  private )
 
@@ -131,9 +131,9 @@ type_parameters ::=  ( '['  (  ( type |  _shorthand )  )*  ']'  )
 
 _literals ::=  ( unit |  str_literal |  char_literal |  pattern_literal |  bool_literal |  integer_literal |  float_literal )
 
-integer_literal ::=  (  ( ( '-'  )?  ( '0x'[0-9a-fA-F]+ |  '0x'[0-9a-fA-F]+l |  '0b'[01]+ |  '0b'[01]+'l' |  '0b'[01]+'b' |  [0-9][0-9]* |  [0-9][0-9]*'l' |  [0-9][0-9]*'b' )  )  )*
+integer_literal ::=  (  ( ( '-'  )?  ( '0x'[0-9a-fA-F]+ |  '0x'[0-9a-fA-F]+'l' |  '0b'[01]+ |  '0b'[01]+'l' |  '0b'[01]+'b' |  [0-9][0-9]* |  [0-9][0-9]*'l' |  [0-9][0-9]*'b' )  )  )
 
-float_literal ::=  (  ( ( '-'  )?  ( [0-9][0-9]*'f' |  [0-9][0-9]*'.'[0-9][0-9]*'f'? )  )  )*
+float_literal ::=  (  ( ( '-'  )?  ( [0-9][0-9]*'f' |  [0-9][0-9]*'.'[0-9][0-9]*'f'? )  )  )
 
 bool_literal ::=  ( 'true'  |  'false'  )
 
@@ -156,3 +156,4 @@ scoped_identifier ::=   (  ( (  ( scoped_identifier |  (  symbol )  |  (  keywor
 keyword ::=  ':'[^({\[#x5d})"'@&|`;.,~#\s\\]
 
 symbol ::=  [^({\[#x5d})"'@&|`;.,~#\s\\:][^({\[#x5d})"'@&|`;.,~#\s\\]*
+

@@ -1,3 +1,10 @@
+/*
+Grammar originally from https://github.com/MortenSchou/tree-sitter-lbnf
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
 grammar ::=  (  ( def ';'  )  )*
 
 def ::=  ( ( label '.'  cat '::='  (  item )*  )  |  ( 'comment'  string )  |  ( 'comment'  string string )  |  ( 'internal'  label '.'  cat '::='  (  item )*  )  |  ( 'token'  ident reg )  |  ( 'position'  'token'  ident reg )  |  ( 'entrypoints'  ( ident (  ( ','  ident )  )*  )  )  |  ( 'separator'  ( 'nonempty'  )?  cat string )  |  ( 'terminator'  ( 'nonempty'  )?  cat string )  |  ( 'coercions'  ident integer )  |  ( 'rules'  ident '::='  ( (  item )*  (  ( '|'  (  item )*  )  )*  )  )  |  ( 'layout'  ( string (  ( ','  string )  )*  )  )  |  ( 'layout'  'stop'  ( string (  ( ','  string )  )*  )  )  |  ( 'layout'  'toplevel'  )  )
@@ -28,8 +35,9 @@ char ::=  ( "'"  ( escape_sequence |  (  [^\n'] )  )  "'"  )
 
 string ::=  ( '"'  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
 
-escape_sequence ::=  (  ( '\\'  ( [^xuU] |  [0-9]/*{2,3}*/ |  x[0-9a-fA-F]/*{2,}*/ |  u[0-9a-fA-F]/*{4}*/ |  U[0-9a-fA-F]/*{8}*/ )  )  )
+escape_sequence ::=  (  ( '\\'  ( [^xuU] |  [0-9]+/*{2,3}*/ |  'x'[0-9a-fA-F]+/*{2,}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'U'[0-9a-fA-F]+/*{8}*/ )  )  )
 
 ident ::=  [a-zA-Z][\w]*
 
-comment ::=  (  ( ( '--'  .* )  |  ( '{-'  (  ( [^-] |  '-'[^}] )  )*  '-}'  )  )  )*
+comment ::=  (  ( ( '--'  .* )  |  ( '{-'  (  ( [^-] |  '-'[^}] )  )*  '-}'  )  )  )
+

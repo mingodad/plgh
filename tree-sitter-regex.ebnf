@@ -63,8 +63,9 @@ control_escape ::=  '\'[bfnrtv0]
 
 control_letter_escape ::=  '\c'[a-zA-Z]
 
-identity_escape ::=  (  ( '\'  [^kdDsSpPwWbfnrtv0-9] )  )*
+identity_escape ::=  (  ( '\'  [^kdDsSpPwWbfnrtv0-9] )  )
 
 group_name ::=  [A-Za-z0-9]+
 
 decimal_digits ::=  [0-9]+
+

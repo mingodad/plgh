@@ -45,9 +45,9 @@ interpolation ::=  ( '{{'  ( (  _interpolation_text )  )?  '}}'  )
 
 directive_attribute ::=  ( ( ( directive_name ( ( (   (  ':'  )  )  ( directive_argument |  directive_dynamic_argument )  )  )?  )  |  ( (  directive_shorthand )  ( directive_argument |  directive_dynamic_argument )  )  )  ( directive_modifiers )?  ( ( '='  ( attribute_value |  quoted_attribute_value )  )  )?  )
 
-directive_name ::=  (   (  v-[^<>'"=/\s:.]+ )  )*
+directive_name ::=  (   (  v-[^<>'"=/\s:.]+ )  )
 
-directive_shorthand ::=  (   (  ( ':'  |  '@'  |  '#'  )  )  )*
+directive_shorthand ::=  (   (  ( ':'  |  '@'  |  '#'  )  )  )
 
 directive_argument ::=  (  [^<>"'/=\s.]+ )
 
@@ -58,3 +58,4 @@ directive_dynamic_argument_value ::=  (  [^<>"'/=\s#x5d]+ )
 directive_modifiers ::=  ( ( (   (  '.'  )  )  directive_modifier )  )+
 
 directive_modifier ::=  (  [^<>"'/=\s.]+ )
+

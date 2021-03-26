@@ -215,19 +215,19 @@ string ::=  ( (  _string_start )  (  ( interpolation |  escape_sequence |  _not_
 
 interpolation ::=  ( '{'  expression ( type_conversion )?  ( format_specifier )?  '}'  )
 
-escape_sequence ::=  (   (  ( '\\'  ( 'u'[a-fA-F0-9]/*{4}*/ |  'U'[a-fA-F0-9]/*{8}*/ |  'x'[a-fA-F0-9]/*{2}*/ |  [0-9]/*{3}*/ |  '\r'?'\n' |  ['"abfrntv\\] )  )  )  )*
+escape_sequence ::=  (   (  ( '\\'  ( 'u'[a-fA-F0-9]+/*{4}*/ |  'U'[a-fA-F0-9]+/*{8}*/ |  'x'[a-fA-F0-9]+/*{2}*/ |  [0-9]+/*{3}*/ |  '\r'?'\n' |  ['"abfrntv\\] )  )  )  )
 
 _not_escape_sequence ::=  '\\'
 
-format_specifier ::=  ( ':'  (  ( (   (  [^{}\n]+ )  )*  |  format_expression )  )*  )
+format_specifier ::=  ( ':'  (  ( (   (  [^{}\n]+ )  )  |  format_expression )  )*  )
 
 format_expression ::=  ( '{'  expression '}'  )
 
 type_conversion ::=  '!'[a-z]
 
-integer ::=  (  ( ( ( '0x'  |  '0X'  )  ( '_'?[a-fA-F0-9]+ )+  ( [Ll] )?  )  |  ( ( '0o'  |  '0O'  )  ( '_'?[0-7]+ )+  ( [Ll] )?  )  |  ( ( '0b'  |  '0B'  )  ( '_'?[0-1]+ )+  ( [Ll] )?  )  |  ( ( [0-9]+'_'? )+  ( ( [Ll] )?  |  ( [jJ] )?  )  )  )  )*
+integer ::=  (  ( ( ( '0x'  |  '0X'  )  ( '_'?[a-fA-F0-9]+ )+  ( [Ll] )?  )  |  ( ( '0o'  |  '0O'  )  ( '_'?[0-7]+ )+  ( [Ll] )?  )  |  ( ( '0b'  |  '0B'  )  ( '_'?[0-1]+ )+  ( [Ll] )?  )  |  ( ( [0-9]+'_'? )+  ( ( [Ll] )?  |  ( [jJ] )?  )  )  )  )
 
-float ::=  (  ( ( ( ( [0-9]+'_'? )+  '.'  ( ( [0-9]+'_'? )+  )?  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( ( [0-9]+'_'? )+  )?  '.'  ( [0-9]+'_'? )+  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( [0-9]+'_'? )+  ( [eE][+-]? ( [0-9]+'_'? )+  )  )  )  ( ( [Ll] |  [jJ] )  )?  )  )*
+float ::=  (  ( ( ( ( [0-9]+'_'? )+  '.'  ( ( [0-9]+'_'? )+  )?  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( ( [0-9]+'_'? )+  )?  '.'  ( [0-9]+'_'? )+  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( [0-9]+'_'? )+  ( [eE][+-]? ( [0-9]+'_'? )+  )  )  )  ( ( [Ll] |  [jJ] )  )?  )  )
 
 identifier ::=  [_\p{XID_Start}][_\p{XID_Continue}]*
 
@@ -241,6 +241,7 @@ none ::=  'None'
 
 await ::=   (  ( 'await'  expression )  )
 
-comment ::=  (  ( '#'  .* )  )*
+comment ::=  (  ( '#'  .* )  )
 
 _semicolon ::=  ';'
+

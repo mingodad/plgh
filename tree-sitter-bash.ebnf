@@ -82,36 +82,37 @@ _primary_expression ::=  ( word |  string |  raw_string |  ansii_c_string |  exp
 
 concatenation ::=   (  ( ( _primary_expression |  _special_character )  (  (  ( _concat ( _primary_expression |  _special_character )  )  )  )+  ( ( _concat '$'  )  )?  )  )
 
-_special_character ::=  (   (  ( '{'  |  '}'  |  '['  |  ']'  )  )  )*
+_special_character ::=  (   (  ( '{'  |  '}'  |  '['  |  ']'  )  )  )
 
 string ::=  ( '"'  (  ( ( ( ( '$'  )?  _string_content )  |  expansion |  simple_expansion |  command_substitution )  ( _concat )?  )  )*  ( '$'  )?  '"'  )
 
-_string_content ::=  (   (  ([^"`$\\]|'\\'('.'|'\n'))+ )  )*
+_string_content ::=  (   (  ([^"`$\\]|'\'('.'|'\n'))+ )  )
 
 array ::=  ( '('  (  _literal )*  ')'  )
 
 raw_string ::=  "'" [^']* "'"
 
-ansii_c_string ::=  '$' "'" ([^']|"\\'")* "'"
+ansii_c_string ::=  '$' "'" ([^']|"\'")* "'"
 
 simple_expansion ::=  ( '$'  ( _simple_variable_name |  _special_variable_name |  (  '!'  )  |  (  '#'  )  )  )
 
 string_expansion ::=  ( '$'  ( string |  raw_string )  )
 
-expansion ::=  ( '${'  ( ( '#'  |  '!'  )  )?  ( ( ( variable_name '='  ( _literal )?  )  |  ( ( subscript |  _simple_variable_name |  _special_variable_name )  ( ( (   (  '/'  )  )*  ( regex )?  )  )?  (  ( _literal |  ':'  |  ':?'  |  '='  |  ':-'  |  '%'  |  '-'  |  '#'  )  )*  )  )  )?  '}'  )
+expansion ::=  ( '${'  ( ( '#'  |  '!'  )  )?  ( ( ( variable_name '='  ( _literal )?  )  |  ( ( subscript |  _simple_variable_name |  _special_variable_name )  ( ( (   (  '/'  )  )  ( regex )?  )  )?  (  ( _literal |  ':'  |  ':?'  |  '='  |  ':-'  |  '%'  |  '-'  |  '#'  )  )*  )  )  )?  '}'  )
 
 command_substitution ::=  ( ( '$('  _statements ')'  )  |  ( '$('  file_redirect ')'  )  |   (  ( '`'  _statements '`'  )  )  )
 
 process_substitution ::=  ( ( '<('  |  '>('  )  _statements ')'  )
 
-comment ::=  (   (  '#'[^\n]* )  )*
+comment ::=  (   (  '#'[^\n]* )  )
 
-_simple_variable_name ::=  (  [_a-zA-Z][_a-zA-Z0-9]+ )
+_simple_variable_name ::=  (  [\w]+ )
 
 _special_variable_name ::=  (  ( '*'  |  '@'  |  '?'  |  '-'  |  '$'  |  '0'  |  '_'  )  )
 
-word ::=  (  ( ( [^'"<>{}#x5b#x5d()`$|&;\\ #x9#xA#xD#x23] |  ( '\\'  [^ #x9#xA#xD] )  )  )+  )*
+word ::=  (  ( ( [^'"<>{}#x5b#x5d()`$|&;\\\s#] |  ( '\\'  [^\s] )  )  )+  )
 
-test_operator ::=  (   (  ( '-'  [a-zA-Z]+ )  )  )*
+test_operator ::=  (   (  ( '-'  [a-zA-Z]+ )  )  )
 
 _terminator ::=  ( ';'  |  ';;'  |  '\n'  |  '&'  )
+

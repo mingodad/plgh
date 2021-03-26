@@ -191,4 +191,5 @@ string ::=  ( _simple_string |  _simple_multiline_string )
 
 _semicolon ::=  ( ';'  |  _automatic_semicolon )
 
-comment ::=  (  ( ( '//'  .* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+comment ::=  (  ( ( '//'  .* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+

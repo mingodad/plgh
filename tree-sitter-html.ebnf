@@ -1,3 +1,10 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-html
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
 fragment ::=  (  _node )*
 
 doctype ::=  ( '<!'  (  _doctype )  [^>]+ '>'  )
@@ -33,3 +40,4 @@ attribute_value ::=  [^<>"'=\s]+
 quoted_attribute_value ::=  ( ( "'"  ( (  [^']+ )  )?  "'"  )  |  ( '"'  ( (  [^"]+ )  )?  '"'  )  )
 
 text ::=  [^<>]+
+

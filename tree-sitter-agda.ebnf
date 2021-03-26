@@ -7,13 +7,13 @@ Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in 
 
 source_file ::=  (  ( _declaration _newline )  )*
 
-_FORALL ::=  (  ( 'forall'  |  '∀'  )  )*
+_FORALL ::=  (  ( 'forall'  |  '∀'  )  )
 
-_ARROW ::=  (  ( '->'  |  '→'  )  )*
+_ARROW ::=  (  ( '->'  |  '→'  )  )
 
-_LAMBDA ::=  (  ( '\\'  |  'λ'  )  )*
+_LAMBDA ::=  (  ( '\\'  |  'λ'  )  )
 
-_ELLIPSIS ::=  (  ( '...'  |  '…'  )  )*
+_ELLIPSIS ::=  (  ( '...'  |  '…'  )  )
 
 _declaration_block ::=  ( _indent ( ( _declaration _newline )  )+  _dedent )
 
@@ -107,7 +107,7 @@ module_application ::=  ( module_name (  (  ( ( '{{'  ( _ELLIPSIS )  '}}'  )  | 
 
 module ::=  ( 'module'  (  ( qid |  '_'  )  )  ( _typed_untyped_bindings )?  'where'  ( _declaration_block )?  )
 
-pragma ::=  (  ( '{-#'  (  ( [^#] |  '#'[^-] |  '#-'[^}] )  )*  '#-}'  )  )*
+pragma ::=  (  ( '{-#'  (  ( [^#] |  '#'[^-] |  '#-'[^}] )  )*  '#-}'  )  )
 
 catchall_pragma ::=  ( '{-#'  'CATCHALL'  '#-}'  )
 
@@ -125,7 +125,7 @@ pattern ::=  ( 'pattern'  id ( _lambda_bindings )?  '='  expr )
 
 unquote_decl ::=  ( ( 'unquoteDecl'  '='  expr )  |  ( 'unquoteDecl'  _ids '='  expr )  |  ( 'unquoteDef'  _ids '='  expr )  )
 
-id ::=  (  ([^\s\\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]* )*
+id ::=  (  ([^\s\\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]* )
 
 qid ::=   (  (  ( (([^\s;\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]*'.')*([^\s;\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]* |  id )  )  )
 
@@ -233,12 +233,13 @@ untyped_binding ::=  ( ( ( bid |  ( ( '{'  ( _binding_ids_and_absurds )  '}'  ) 
 
 integer ::=  '-'?('0x'[0-9a-fA-F]+|[0-9]+)
 
-string ::=  '"'[.]*'"'
+string ::=  '"'[^"]*'"'
 
 literal ::=  ( '-'?('0x'[0-9a-fA-F]+|[0-9]+) |  '"'[.]*'"' )
 
-comment ::=  (  (  (  ( '--'  [.]* )  )  |  ( '{--}'  )  |  ( '{-'  [^#] (  ( [^-] |  '-'[^}] )  )*  '-}' )  )  )*
+comment ::=  (  (  (  ( '--'  [^\n]* )  )  |  ( '{--}'  )  |  ( '{-'  [^#] (  ( [^-] |  '-'[^}] )  )*  '-}' )  )  )
 
 SetN ::=  'setN'
 
 PropN ::=  'propN'
+

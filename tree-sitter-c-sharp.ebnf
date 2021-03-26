@@ -173,7 +173,7 @@ function_pointer_unmanaged_calling_convention ::=  ( 'Cdecl'  |  'Stdcall'  |  '
 
 function_pointer_parameter ::=  ( ( ( 'ref'  |  'out'  |  'in'  |  ( 'ref'  'readonly'  )  )  )?  ( _type |  void_keyword )  )
 
-predefined_type ::=  (  ( 'bool'  |  'byte'  |  'char'  |  'decimal'  |  'double'  |  'float'  |  'int'  |  'long'  |  'object'  |  'sbyte'  |  'short'  |  'string'  |  'uint'  |  'ulong'  |  'ushort'  |  'nint'  |  'nuint'  )  )*
+predefined_type ::=  (  ( 'bool'  |  'byte'  |  'char'  |  'decimal'  |  'double'  |  'float'  |  'int'  |  'long'  |  'object'  |  'sbyte'  |  'short'  |  'string'  |  'uint'  |  'ulong'  |  'ushort'  |  'nint'  |  'nuint'  )  )
 
 ref_type ::=  ( 'ref'  ( 'readonly'  )?  _type )
 
@@ -423,7 +423,7 @@ as_expression ::=   (  ( (  _expression )  (  'as'  )  (  _type )  )  )
 
 is_expression ::=   (  ( (  _expression )  (  'is'  )  (  _type )  )  )
 
-_identifier_token ::=  (  ( ( '@'  )?  [a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ_0-9]* )  )*
+_identifier_token ::=  (  ( ( '@'  )?  [a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ_0-9]* )  )
 
 identifier ::=  ( _identifier_token |  _contextual_keywords )
 
@@ -437,19 +437,19 @@ boolean_literal ::=  ( 'true'  |  'false'  )
 
 character_literal ::=  ( "'"  ( (  [^'\\] )  |  escape_sequence )  "'"  )
 
-escape_sequence ::=  (  ( '\x'[0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?[0-9a-fA-F]? |  '\u'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] |  '\U'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] |  '\'[^xuU] )  )*
+escape_sequence ::=  (  ( '\x'[0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?[0-9a-fA-F]? |  '\u'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] |  '\U'[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] |  '\'[^xuU] )  )
 
-integer_literal ::=  (  ( ( ([0-9][0-9_]*[0-9]|[0-9]) |  '0'[xX][0-9a-fA-F_]*[0-9a-fA-F]+ |  '0'[bB][01_]*[01]+ )  ( 'u'|'U'|'l'|'L'|'ul'|'UL'|'uL'|'Ul'|'lu'|'LU'|'Lu'|'lU' )?  )  )*
+integer_literal ::=  (  ( ( ([0-9][0-9_]*[0-9]|[0-9]) |  '0'[xX][0-9a-fA-F_]*[0-9a-fA-F]+ |  '0'[bB][01_]*[01]+ )  ( 'u'|'U'|'l'|'L'|'ul'|'UL'|'uL'|'Ul'|'lu'|'LU'|'Lu'|'lU' )?  )  )
 
 null_literal ::=  'null'
 
-real_literal ::=  (  ( ( ([0-9][0-9_]*[0-9]|[0-9]) '.'  ([0-9][0-9_]*[0-9]|[0-9]) ( [eE][+-]?[0-9][0-9_]* )?  ( [fFdDmM] )?  )  |  ( '.'  ([0-9][0-9_]*[0-9]|[0-9]) ( [eE][+-]?[0-9][0-9_]* )?  ( [fFdDmM] )?  )  |  ( ([0-9][0-9_]*[0-9]|[0-9]) [eE][+-]?[0-9][0-9_]* ( [fFdDmM] )?  )  |  ( ([0-9][0-9_]*[0-9]|[0-9]) [fFdDmM] )  )  )*
+real_literal ::=  (  ( ( ([0-9][0-9_]*[0-9]|[0-9]) '.'  ([0-9][0-9_]*[0-9]|[0-9]) ( [eE][+-]?[0-9][0-9_]* )?  ( [fFdDmM] )?  )  |  ( '.'  ([0-9][0-9_]*[0-9]|[0-9]) ( [eE][+-]?[0-9][0-9_]* )?  ( [fFdDmM] )?  )  |  ( ([0-9][0-9_]*[0-9]|[0-9]) [eE][+-]?[0-9][0-9_]* ( [fFdDmM] )?  )  |  ( ([0-9][0-9_]*[0-9]|[0-9]) [fFdDmM] )  )  )
 
 string_literal ::=  ( '"'  (  ( (   (  [^"\\\n]+ )  )  |  escape_sequence )  )*  '"'  )
 
-verbatim_string_literal ::=  (  ( '@"'  (  ( [^"] |  '""'  )  )*  '"'  )  )*
+verbatim_string_literal ::=  (  ( '@"'  (  ( [^"] |  '""'  )  )*  '"'  )  )
 
-comment ::=  (  ( ( '//'  .* )  |  ( '/*'  (  ( [^*] |  '*'[^/] )  )*  '*/'  )  )  )*
+comment ::=  (  ( ( '//'  .* )  |  ( '/*'  (  ( [^*] |  '*'[^/] )  )*  '*/'  )  )  )
 
 _contextual_keywords ::=  ( 'ascending'  |  'by'  |  'descending'  |  'equals'  |  'from'  |  'group'  |  'into'  |  'join'  |  'let'  |  'on'  |  'orderby'  |  'select'  |  'where'  |  'add'  |  'get'  |  'remove'  |  'set'  |  'global'  |  'alias'  |  'dynamic'  |  'nameof'  |  'notnull'  |  'unmanaged'  |  'when'  |  'yield'  )
 
@@ -457,6 +457,6 @@ return_type ::=  ( _type |  void_keyword )
 
 void_keyword ::=  'void'
 
-preprocessor_call ::=  ( preprocessor_directive (  ( identifier |  _literal |  (   (  [^\s]+ )  )*  )  )*  _preproc_directive_end )
+preprocessor_call ::=  ( preprocessor_directive (  ( identifier |  _literal |  (   (  [^\s]+ )  )  )  )*  _preproc_directive_end )
 
 preprocessor_directive ::=  '#'[ \t]*[a-z][\w]*

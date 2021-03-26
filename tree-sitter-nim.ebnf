@@ -272,3 +272,4 @@ FLOAT32_LIT ::=  ( ( HEX_LIT "'"  FLOAT32_SUFFIX )  |  ( ( FLOAT_LIT |  DEC_LIT 
 FLOAT64_SUFFIX ::=  ([fF]'64'|[dD])
 
 FLOAT64_LIT ::=  ( ( HEX_LIT "'"  FLOAT64_SUFFIX )  |  ( ( FLOAT_LIT |  DEC_LIT |  OCT_LIT |  BIN_LIT )  "'"  FLOAT64_SUFFIX )  )
+

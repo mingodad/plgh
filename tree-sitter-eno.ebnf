@@ -11,7 +11,7 @@ _commentOrEmpty ::=  ( comment |  _emptyLine )
 
 _elementOrFieldsetOrList ::=  ( _escapedOrUnescapedKey ( elementOperator |  ( copyOperator (  token )  )  )  _endOfLine )
 
-_emptyLine ::=  [ \t\uFEFF\u2060\u200B]*[\n]
+_emptyLine ::=  [ \t\uFEFF\u2060\u200B]*'\n'
 
 _escapedOrUnescapedKey ::=  ( key |  ( escapeOperator (  escapedKey )  escapeOperator )  )
 
@@ -66,3 +66,4 @@ itemOperator ::=  '-'
 elementOperator ::=  ':'
 
 sectionOperator ::=  '#+'
+

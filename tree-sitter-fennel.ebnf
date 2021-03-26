@@ -75,7 +75,7 @@ table ::=  ( '{'  (  ( ( string |  field |  identifier )  _statement )  )*  '}' 
 
 _expression ::=  ( field_expression |  quoted_value |  unquoted_value |  number |  field |  identifier |  string |  table |  sequential_table |  boolean |  nil |  (  _keyword )  )
 
-escape_character ::=  ([\n]|'\"')
+escape_character ::=  ('\n'|'\"')
 
 string ::=  ( '"'  (  ('\"')|([.]) )*  '"'  )
 
@@ -108,3 +108,4 @@ identifier ::=  ([_\?A-Za-z][_\?\-A-Za-z0-9\!]*)|('$'([1-9])?)
 number ::=  ([-])?[0-9]+('.'[\d]+)?
 
 comment ::=  ';'[^\n]*
+

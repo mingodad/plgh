@@ -271,11 +271,11 @@ local_dec_let ::=  ( 'local'  (  ( _ldec |  ';'  |  local_dec_let )  )*  'in'  (
 
 _constant ::=  ( int_constant |  word_constant |  float_constant |  char_constant |  string_constant )
 
-int_constant ::=  (  '~'?[0-9]+|'~'?'0x'[0-9A-Fa-f]+ )*
+int_constant ::=  (  '~'?[0-9]+|'~'?'0x'[0-9A-Fa-f]+ )
 
-word_constant ::=  (  '0w'[0-9]+|'0wx'[0-9A-Fa-f]+ )*
+word_constant ::=  (  '0w'[0-9]+|'0wx'[0-9A-Fa-f]+ )
 
-float_constant ::=  (  '~'?[0-9]+'.'[\d]+([Ee]'~'?[\d]+)? )*
+float_constant ::=  (  '~'?[0-9]+'.'[\d]+([Ee]'~'?[\d]+)? )
 
 char_constant ::=  character
 
@@ -314,3 +314,4 @@ symbolic ::=  ( [!%&$#+\-/:<=>?@\\~`^|*][!%&$#+\-/:<=>?@\\~`^|*][!%&$#+\-/:<=>?@
 _full_ident ::=  ( ident |  symbolic )
 
 qident ::=  ( (  ( ident '.'  )  )*  _full_ident )
+

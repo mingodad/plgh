@@ -21,7 +21,7 @@ _condition ::=  ( availability_condition |  case_condition |  optional_binding_c
 
 _availability_platforms ::=  ( 'iOS'  |  'iOSApplicationExtension'  |  'macOS'  |  'macOSApplicationExtension'  |  'watchOS'  |  'tvOS'  )
 
-availability_condition ::=  ( '#available'  '('  ( ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )*  )  )  (  ( ','  ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )*  )  )  )  )*  )  ')'  )
+availability_condition ::=  ( '#available'  '('  ( ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )  )  )  (  ( ','  ( '*'  |  ( _availability_platforms (  ( [0-9]+ ( ( '.'  [0-9]+ ( ( '.'  [0-9]+ )  )?  )  )?  )  )  )  )  )  )*  )  ')'  )
 
 case_condition ::=  ( 'case'  _pattern '='  _expression )
 
@@ -175,9 +175,9 @@ _expression ::=  ( identifier |  number |  (  boolean_literal )  |  nil |  (  st
 
 boolean_literal ::=  ( 'true'  |  'false'  )
 
-static_string_literal ::=  '"'(('\'([\\0tnr'"]|'u{'[a-fA-F0-9]/*{1,8}*/'}'))|[^"\\\u000a\u000d])*'"'
+static_string_literal ::=  '"'(('\'([\\0tnr'"]|'u{'[a-fA-F0-9]+/*{1,8}*/'}'))|[^"\\\u000a\u000d])*'"'
 
-number ::=  (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  '.'  ( [0-9]('_'?[\d])* )?  ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  '.'  [0-9]('_'?[\d])* ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )  |  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  ( ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  [0-9]('_'?[\d])* )  'n'  )  )  )*
+number ::=  (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  '.'  ( [0-9]('_'?[\d])* )?  ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  '.'  [0-9]('_'?[\d])* ( ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )?  )  |  ( ( [-\+] )?  ( ( '0'  |  ( ( '0'  )?  [1-9] ( ( ( '_'  )?  [0-9]('_'?[\d])* )  )?  )  )  )  ( ( 'e'  |  'E'  )  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  )  |  ( ( [-\+] )?  [0-9]('_'?[\d])* )  )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  ( ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]('_'?[\da-fA-F])* )  |  ( ( '0b'  |  '0B'  )  [0-1]('_'?[0-1])* )  |  ( ( '0o'  |  '0O'  )  [0-7]('_'?[0-7])* )  |  [0-9]('_'?[\d])* )  'n'  )  )  )
 
 nil ::=  'nil'
 
@@ -185,7 +185,7 @@ type ::=  ( (  tuple_type )  |  standard_type |  _type_identifier )
 
 _type_declarator ::=  ( standard_type |  tuple_type |  array_type |  dictionary_type |  (  identifier )  )
 
-standard_type ::=  (  ( 'Bool'  |  'Character'  |  'StaticString'  |  'String'  |  'Void'  |  'Double'  |  'Float'  |  'Int'  |  'UInt'  |  'UInt8'  |  'UInt16'  |  'UInt32'  |  'UInt64'  |  'Int8'  |  'Int16'  |  'Int32'  |  'Int64'  |  'Float32'  |  'Float64'  |  'Float80'  )  )*
+standard_type ::=  (  ( 'Bool'  |  'Character'  |  'StaticString'  |  'String'  |  'Void'  |  'Double'  |  'Float'  |  'Int'  |  'UInt'  |  'UInt8'  |  'UInt16'  |  'UInt32'  |  'UInt64'  |  'Int8'  |  'Int16'  |  'Int32'  |  'Int64'  |  'Float32'  |  'Float64'  |  'Float80'  )  )
 
 tuple_type ::=  ( '('  ( ( ( ( _variable_name _type_annotation )  |  _type_declarator )  (  ( ','  ( ( _variable_name _type_annotation )  |  _type_declarator )  )  )*  )  )?  ')'  )
 
@@ -213,10 +213,11 @@ _type_identifier ::=   (  ( _type_name ( ( '.'  _type_identifier )  )?  )  )
 
 _type_name ::=  identifier
 
-identifier ::=  (  ( ( [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  )  |  ( '`'  [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  '`'  )  )  )*
+identifier ::=  (  ( ( [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  )  |  ( '`'  [A-Za-z_] ( (  ( [A-Za-z_] |  [0-9] )  )*  )?  '`'  )  )  )
 
-operator ::=  (  ( ( '/'  |  '='  |  '-'  |  '+'  |  '!'  |  '*'  |  '%'  |  '<'  |  '>'  |  '&'  |  '|'  |  '^'  |  '~'  |  '?'  )  )+  )*
+operator ::=  (  ( ( '/'  |  '='  |  '-'  |  '+'  |  '!'  |  '*'  |  '%'  |  '<'  |  '>'  |  '&'  |  '|'  |  '^'  |  '~'  |  '?'  )  )+  )
 
 semantic_version ::=  ([0-9]+'.')?([\d]+'.')?('*'|[\d]+)
 
-comment ::=  (  ( ( '//'/*{2,3}*/[^/][^\n]* )  |  ( '/*'/*{1,}*/[^*]*'*'+([^/*][^*]*'*'+)*'/' )  )  )*
+comment ::=  (  ( ( '//'+/*{2,3}*/[^/][^\n]* )  |  ( '/' '*'+/*{1,}*/[^*]*'*'+([^/*][^*]*'*'+)*'/' )  )  )
+

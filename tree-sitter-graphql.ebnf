@@ -50,7 +50,7 @@ ObjectField ::=  ( Name ':'  Value )
 
 IntValue ::=  '-'?('0'|[1-9][0-9]*)
 
-FloatValue ::=  (  ( '-'?('0'|[1-9][0-9]*) ( '.'[0-9]+ |  ('e'|'E')('+'|'-')?[0-9]+ |  ( '.'[0-9]+ ('e'|'E')('+'|'-')?[0-9]+ )  )  )  )*
+FloatValue ::=  (  ( '-'?('0'|[1-9][0-9]*) ( '.'[0-9]+ |  ('e'|'E')('+'|'-')?[0-9]+ |  ( '.'[0-9]+ ('e'|'E')('+'|'-')?[0-9]+ )  )  )  )
 
 StringValue ::=  ( ( '"""'  ([^"]|'\n'|""?[^"])* '"""'  )  |  ( '"'  [^"\\\n]* '"'  )  )
 
@@ -142,6 +142,7 @@ ExecutableDirectiveLocation ::=  ( 'QUERY'  |  'MUTATION'  |  'SUBSCRIPTION'  | 
 
 TypeSystemDirectiveLocation ::=  ( 'SCHEMA'  |  'SCALAR'  |  'OBJECT'  |  'FIELD_DEFINITION'  |  'ARGUMENT_DEFINITION'  |  'INTERFACE'  |  'UNION'  |  'ENUM'  |  'ENUM_VALUE'  |  'INPUT_OBJECT'  |  'INPUT_FIELD_DEFINITION'  )
 
-comment ::=  (  ( '# '  .* )  )*
+comment ::=  (  ( '# '  .* )  )
 
 Name ::=  [_A-Za-z][_0-9A-Za-z]*
+

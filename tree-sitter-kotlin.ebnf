@@ -1,3 +1,10 @@
+/*
+Grammar originally from https://github.com/fwcd/tree-sitter-kotlin
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
 source_file ::=  ( ( shebang_line )?  ( ( ( file_annotation )+  _semi )  )?  ( package_header )?  (  import_header )*  (  ( _statement _semi )  )*  )
 
 shebang_line ::=  ( '#!'  [^\r\n]* )
@@ -118,7 +125,7 @@ statements ::=  ( _statement (  ( _semis _statement )  )*  ( _semis )?  )
 
 _statement ::=  ( _declaration |  ( (  ( label |  annotation )  )*  ( assignment |  _loop_statement |  _expression )  )  )
 
-label ::=  (  ( [a-zA-Z_][a-zA-Z_0-9]* '@'  )  )*
+label ::=  (  ( [a-zA-Z_][a-zA-Z_0-9]* '@'  )  )
 
 control_structure_body ::=  ( _block |  _statement )
 
@@ -322,7 +329,7 @@ simple_identifier ::=  _lexical_identifier
 
 identifier ::=  ( simple_identifier (  ( '.'  simple_identifier )  )*  )
 
-comment ::=  ( '//'  [^\n]* )
+comment ::=  (   (  ( ( '//'  [^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )  )
 
 _return_at ::=  ( 'return@'  _lexical_identifier )
 
@@ -338,13 +345,13 @@ _not_is ::=  '!is'
 
 _not_in ::=  '!in'
 
-real_literal ::=  (  ( ( ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  (  ( [eE] ( [+-] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )*  )  |  ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )?  '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  ( (  ( [eE] ( [+-] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )*  )?  )  )  ( [fF] )?  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  [fF] )  )  )*
+real_literal ::=  (  ( ( ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  (  ( [eE] ( [+-] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )  )  |  ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )?  '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( (  ( [eE] ( [+-] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )  )?  )  )  ( [fF] )?  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  [fF] )  )  )
 
-integer_literal ::=  (  ( ( [1-9] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )*
+integer_literal ::=  (  ( ( [1-9] )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )
 
-hex_literal ::=  (  ( '0'  [xX] (  ( [0-9a-fA-F]+ (  ( _+ [0-9a-fA-F]+ )  )*  )  )*  )  )*
+hex_literal ::=  (  ( '0'  [xX] (  ( [0-9a-fA-F]+ (  ( _+ [0-9a-fA-F]+ )  )*  )  )  )  )
 
-bin_literal ::=  (  ( '0'  [bB] (  ( [01] (  ( _+ [01] )  )*  )  )*  )  )*
+bin_literal ::=  (  ( '0'  [bB] (  ( [01] (  ( _+ [01] )  )*  )  )  )  )
 
 unsigned_literal ::=  ( ( integer_literal |  hex_literal |  bin_literal )  [uU] ( 'L'  )?  )
 
@@ -367,3 +374,4 @@ _line_str_text ::=  [^\\"$]+
 _line_str_escaped_char ::=  ( _escaped_identifier |  _uni_character_literal )
 
 _multi_line_str_text ::=  [^"$]+
+

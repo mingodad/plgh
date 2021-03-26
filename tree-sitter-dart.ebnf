@@ -13,11 +13,11 @@ _literal ::=  ( decimal_integer_literal |  hex_integer_literal |  decimal_floati
 
 symbol_literal ::=  ( '#'  identifier )
 
-decimal_integer_literal ::=  (  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )*
+decimal_integer_literal ::=  (  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )
 
-hex_integer_literal ::=  (  ( ( '0x'  |  '0X'  )  (  ( [A-Fa-f0-9]+ (  ( '_'  [A-Fa-f0-9]+ )  )*  )  )*  )  )*
+hex_integer_literal ::=  (  ( ( '0x'  |  '0X'  )  (  ( [A-Fa-f0-9]+ (  ( '_'  [A-Fa-f0-9]+ )  )*  )  )  )  )
 
-decimal_floating_point_literal ::=  (  ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )?  )  |  ( '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )?  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )*  )  )?  )  )  )*
+decimal_floating_point_literal ::=  (  ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  |  ( '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  )  )
 
 true ::=   (  'true'  )
 
@@ -41,9 +41,9 @@ _raw_string_literal_double_quotes_multiple ::=   (  ( 'r"""'  (  ( _template_cha
 
 _raw_string_literal_single_quotes_multiple ::=   (  ( "r'''"  (  ( _template_chars_single |  '"'  |  "'"  |  _template_chars_raw_slash |  _unused_escape_sequence |  _sub_string_test |  '$'  )  )*  "'''"  )  )
 
-_triple_quote_end ::=  (  "'''"  )*
+_triple_quote_end ::=  (  "'''"  )
 
-_triple_double_quote_end ::=  (  '"""'  )*
+_triple_double_quote_end ::=  (  '"""'  )
 
 template_substitution ::=  ( '$'  ( ( '{'  _expression '}'  )  |  identifier_dollar_escaped )  )
 
@@ -51,7 +51,7 @@ _sub_string_test ::=  ( '$'  [^a-zA-Z_{] )
 
 _string_interp ::=  '$'(([\w]+)|'{'([^{}]+)'}')
 
-_unused_escape_sequence ::=  (  ( '\\'  ( [^xu0-7] |  [0-7]+/*{1,3}*/ |  'x'[0-9a-fA-F]/*{2}*/ |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' )  )  )
+_unused_escape_sequence ::=  (  ( '\\'  ( [^xu0-7] |  [0-7]+/*{1,3}*/ |  'x'[0-9a-fA-F]+/*{2}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' )  )  )
 
 escape_sequence ::=  _unused_escape_sequence
 
@@ -103,7 +103,7 @@ logical_and_expression ::=   (  ( _real_expression ( ( '&&'  _real_expression ) 
 
 equality_expression ::=   (  ( ( _real_expression equality_operator _real_expression )  |  ( super equality_operator _real_expression )  )  )
 
-equality_operator ::=  (  ( '=='  |  '!='  )  )*
+equality_operator ::=  (  ( '=='  |  '!='  )  )
 
 type_cast_expression ::=   (  ( _real_expression type_cast )  )
 
@@ -135,7 +135,7 @@ _shift_operator ::=  ( '<<'  |  '>>'  |  '>>>'  )
 
 additive_operator ::=  _additive_operator
 
-_additive_operator ::=  (  ( '+'  |  '-'  )  )*
+_additive_operator ::=  (  ( '+'  |  '-'  )  )
 
 multiplicative_operator ::=  _multiplicative_operator
 
@@ -151,7 +151,7 @@ postfix_expression ::=  ( ( assignable_expression postfix_operator )  |  ( const
 
 postfix_operator ::=  increment_operator
 
-increment_operator ::=  (  ( '++'  |  '--'  )  )*
+increment_operator ::=  (  ( '++'  |  '--'  )  )
 
 spread_element ::=  ( '...'  ( '?'  )?  _expression )
 
@@ -171,11 +171,11 @@ await_expression ::=  ( 'await'  _unary_expression )
 
 type_test ::=  ( is_operator _type_not_void )
 
-is_operator ::=  ( (  'is'  )*  ( _exclamation_operator )?  )
+is_operator ::=  ( (  'is'  )  ( _exclamation_operator )?  )
 
 type_cast ::=  ( as_operator _type_not_void )
 
-as_operator ::=  (  'as'  )*
+as_operator ::=  (  'as'  )
 
 new_expression ::=  ( _new_builtin _type_not_void ( _dot_identifier )?  arguments )
 
@@ -447,11 +447,11 @@ typed_identifier ::=  ( ( _metadata )?  _type identifier )
 
 _nullable_type ::=   (  '?'  )
 
-floating_point_type ::=  (  'double'  )*
+floating_point_type ::=  (  'double'  )
 
 boolean_type ::=   (  'bool'  )
 
-void_type ::=  (  'void'  )*
+void_type ::=  (  'void'  )
 
 inferred_type ::=   (  'var'  )
 
@@ -503,7 +503,7 @@ throws ::=  ( 'throws'  ( _type (  ( ','  _type )  )*  )  )
 
 local_variable_declaration ::=  ( initialized_variable_definition _semicolon )
 
-script_tag ::=  ( '#!'  .+ '\n'  )
+script_tag ::=  ( '#!'  [^\n]+ '\n'  )
 
 library_name ::=  ( ( _metadata )?  'library'  dotted_identifier_list _semicolon )
 
@@ -513,11 +513,11 @@ qualified ::=  ( identifier ( ( '.'  identifier )  )?  )
 
 _as ::=   (  'as'  )
 
-_break_builtin ::=  (  'break'  )*
+_break_builtin ::=  (  'break'  )
 
-_assert_builtin ::=  (  'assert'  )*
+_assert_builtin ::=  (  'assert'  )
 
-case_builtin ::=  (  'case'  )*
+case_builtin ::=  (  'case'  )
 
 _covariant ::=   (  'covariant'  )
 
@@ -559,9 +559,9 @@ _typedef ::=   (  'typedef'  )
 
 _new_builtin ::=   (  'new'  )
 
-const_builtin ::=  (  'const'  )*
+const_builtin ::=  (  'const'  )
 
-final_builtin ::=  (  'final'  )*
+final_builtin ::=  (  'final'  )
 
 _late_builtin ::=   (  'late'  )
 
@@ -579,6 +579,7 @@ identifier ::=  [a-zA-Z_$][\w$]*
 
 identifier_dollar_escaped ::=  ([a-zA-Z_]|('\\\$'))([\w]|('\\\$'))*
 
-comment ::=  (  ( ( '//'  [^/][^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+comment ::=  (  ( ( '//'  [^/][^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
 
-documentation_comment ::=  (  ( ( '///'  [^\n]* )  )  )*
+documentation_comment ::=  (  ( ( '///'  [^\n]* )  )  )
+

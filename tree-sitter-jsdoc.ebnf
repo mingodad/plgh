@@ -13,9 +13,9 @@ tag ::=  ( ( (  tag_name_with_argument )  ( ( '{'  type '}'  )  )?  ( _expressio
 
 inline_tag ::=  ( '{'  tag_name description '}'  )
 
-tag_name_with_argument ::=  (  ( '@access'  |  '@alias'  |  '@api'  |  '@augments'  |  '@borrows'  |  '@callback'  |  '@constructor'  |  '@event'  |  '@exports'  |  '@external'  |  '@fires'  |  '@function'  |  '@mixes'  |  '@name'  |  '@namespace'  |  '@param'  |  '@property'  )  )*
+tag_name_with_argument ::=  (  ( '@access'  |  '@alias'  |  '@api'  |  '@augments'  |  '@borrows'  |  '@callback'  |  '@constructor'  |  '@event'  |  '@exports'  |  '@external'  |  '@fires'  |  '@function'  |  '@mixes'  |  '@name'  |  '@namespace'  |  '@param'  |  '@property'  )  )
 
-tag_name_with_type ::=  (  ( '@return'  |  '@returns'  |  '@throw'  |  '@throws'  )  )*
+tag_name_with_type ::=  (  ( '@return'  |  '@returns'  |  '@throw'  |  '@throws'  )  )
 
 tag_name ::=  '@'[a-zA-Z_]+
 
@@ -31,8 +31,9 @@ identifier ::=  [a-zA-Z_$][a-zA-Z_$0-9]*
 
 type ::=  [^}\n]+
 
-_text ::=  (   (  [^*{}@\s][^*{}\n]*([^*/{}\n][^*{}\n]*'*'+)* )  )*
+_text ::=  (   (  [^*{}@\s][^*{}\n]*([^*/{}\n][^*{}\n]*'*'+)* )  )
 
-_begin ::=  (  ( '/'  (  '*'  )*  )  )*
+_begin ::=  (  ( '/'  (  '*'  )*  )  )
 
 _end ::=  '/'
+

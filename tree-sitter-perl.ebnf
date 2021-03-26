@@ -175,9 +175,9 @@ package_name ::=  [A-Z_a-z][0-9A-Z_a-z]*('?:::'[0-9A-Z_a-z]+)*
 
 semi_colon ::=  ';'
 
-string_single_quoted ::=   (  "'"[.]*"'" )
+string_single_quoted ::=   (  "'"[^']*"'" )
 
-string_double_quoted ::=   (  '"'[.]*'"' )
+string_double_quoted ::=   (  '"'[^"]*'"' )
 
 _boolean ::=  ( true |  false )
 
@@ -203,4 +203,5 @@ hash_ref ::=  ( '{'  ( ( _key_value_pair (  ( ','  _key_value_pair )  )*  ( ',' 
 
 _key_value_pair ::=  ( ( identifier |  ( "'"  identifier "'"  )  |  ( '"'  identifier '"'  )  )  '=>'  _primitive_expression )
 
-comments ::=  (   (  ( '#'[^\n]* )  )  )*
+comments ::=  (   (  ( '#'[^\n]* )  )  )
+

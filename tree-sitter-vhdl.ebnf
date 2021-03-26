@@ -7,15 +7,15 @@ Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in 
 
 design_file ::=  (  ( _declaration |  _sequential_statement |  _concurrent_statement |  design_unit )  )*
 
-entity_declaration ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  ( header )?  ( declarative_part )?  ( ( 'begin'  ( sequence_of_statements )?  )  )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )*  )  )?  ( _end_simple_name )?  ';'  )
+entity_declaration ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  ( header )?  ( declarative_part )?  ( ( 'begin'  ( sequence_of_statements )?  )  )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )  )  )?  ( _end_simple_name )?  ';'  )
 
 _entity_name ::=  (  ( _simple_name |  expanded_name )  )
 
-architecture_body ::=  ( (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )*  )  (  _identifier )  (  (   (  [oO][fF] )  )*  )  _entity_name (  (   (  [iI][sS] )  )*  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  ( concurrent_statement_part )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )*  )  )?  ( _end_simple_name )?  ';'  )
+architecture_body ::=  ( (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )  )  (  _identifier )  (  (   (  [oO][fF] )  )  )  _entity_name (  (   (  [iI][sS] )  )  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  ( concurrent_statement_part )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )  )  )?  ( _end_simple_name )?  ';'  )
 
-configuration_declaration ::=  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )*  )  (  _identifier )  (  (   (  [oO][fF] )  )*  )  _entity_name (  (   (  [iI][sS] )  )*  )  ( declarative_part )?  (  ( verification_unit_binding_indication ';'  )  )*  ( block_configuration )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )*  )  )?  ( _end_simple_name )?  ';'  )
+configuration_declaration ::=  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )  )  (  _identifier )  (  (   (  [oO][fF] )  )  )  _entity_name (  (   (  [iI][sS] )  )  )  ( declarative_part )?  (  ( verification_unit_binding_indication ';'  )  )*  ( block_configuration )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )  )  )?  ( _end_simple_name )?  ';'  )
 
-block_configuration ::=  ( (  (   (  [fF][oO][rR] )  )*  )  _block_specification (  use_clause )*  (  _configuration_item )*  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [fF][oO][rR] )  )*  )  ';'  )
+block_configuration ::=  ( (  (   (  [fF][oO][rR] )  )  )  _block_specification (  use_clause )*  (  _configuration_item )*  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [fF][oO][rR] )  )  )  ';'  )
 
 _block_specification ::=  (  pathname_element )
 
@@ -25,7 +25,7 @@ _generate_specification ::=  (  ( _expression |  _range |  _name_or_label )  )
 
 _configuration_item ::=  ( block_configuration |  component_configuration )
 
-component_configuration ::=  ( (  (   (  [fF][oO][rR] )  )*  )  _component_specification ( ( binding_indication _semicolon )  )?  (  ( verification_unit_binding_indication _semicolon )  )*  ( block_configuration )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [fF][oO][rR] )  )*  )  ';'  )
+component_configuration ::=  ( (  (   (  [fF][oO][rR] )  )  )  _component_specification ( ( binding_indication _semicolon )  )?  (  ( verification_unit_binding_indication _semicolon )  )*  ( block_configuration )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [fF][oO][rR] )  )  )  ';'  )
 
 _subprogram_declaration ::=  ( procedure_declaration |  function_declaration )
 
@@ -33,51 +33,51 @@ procedure_declaration ::=  ( _procedure_specification ';'  )
 
 function_declaration ::=  ( _function_specification ';'  )
 
-_procedure_specification ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )*  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )*  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )*  )  _designator ( (  header )  )?  ( procedure_parameter_clause )?  ( return )?  )
+_procedure_specification ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )  )  _designator ( (  header )  )?  ( procedure_parameter_clause )?  ( return )?  )
 
-_function_specification ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )*  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )*  )  )  )?  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )*  )  _designator ( (  header )  )?  ( function_parameter_clause )?  ( return )?  )
+_function_specification ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )  )  )  )?  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )  )  _designator ( (  header )  )?  ( function_parameter_clause )?  ( return )?  )
 
-return ::=  ( ( ','  )?  (  (   (  [rR][eE][tT][uU][rR][nN] )  )*  )  type_mark )
+return ::=  ( ( ','  )?  (  (   (  [rR][eE][tT][uU][rR][nN] )  )  )  type_mark )
 
 _end_designator ::=  (  ( _end_simple_name |  _operator_symbol )  )
 
 _designator ::=  (  ( _identifier |  _operator_symbol )  )
 
-procedure_parameter_clause ::=  ( ( (  (   (  [pP][aA][rR][aA][mM][eE][tT][eE][rR] )  )*  )  )?  '('  ( _procedure_parameter_list )?  ')'  )
+procedure_parameter_clause ::=  ( ( (  (   (  [pP][aA][rR][aA][mM][eE][tT][eE][rR] )  )  )  )?  '('  ( _procedure_parameter_list )?  ')'  )
 
-function_parameter_clause ::=  ( ( (  (   (  [pP][aA][rR][aA][mM][eE][tT][eE][rR] )  )*  )  )?  '('  ( _function_parameter_list )?  ')'  )
+function_parameter_clause ::=  ( ( (  (   (  [pP][aA][rR][aA][mM][eE][tT][eE][rR] )  )  )  )?  '('  ( _function_parameter_list )?  ')'  )
 
 _subprogram_body ::=  ( procedure_body |  function_body )
 
-procedure_body ::=  ( _procedure_specification (  (   (  [iI][sS] )  )*  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )*  )  ( _subprogram_kind )?  ( _end_designator )?  ';'  )
+procedure_body ::=  ( _procedure_specification (  (   (  [iI][sS] )  )  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )  )  ( _subprogram_kind )?  ( _end_designator )?  ';'  )
 
-function_body ::=  ( _function_specification (  (   (  [iI][sS] )  )*  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )*  )  ( _subprogram_kind )?  ( _end_designator )?  ';'  )
+function_body ::=  ( _function_specification (  (   (  [iI][sS] )  )  )  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )  )  ( _subprogram_kind )?  ( _end_designator )?  ';'  )
 
-_subprogram_kind ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )*  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )*  )  )  )?  ( (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )*  )  |  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )*  )  )  )
+_subprogram_kind ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )  )  )  )?  ( (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )  )  |  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )  )  )  )
 
 _subprogram_instantiation_declaration ::=  ( procedure_instantiation_declaration |  function_instantiation_declaration )
 
-procedure_instantiation_declaration ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )*  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )*  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )*  )  _designator (  (   (  [iI][sS] )  )*  )  (  (   (  [nN][eE][wW] )  )*  )  _uninstantiated_name ( signature )?  ( _map_aspect )?  ';'  )
+procedure_instantiation_declaration ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )  )  _designator (  (   (  [iI][sS] )  )  )  (  (   (  [nN][eE][wW] )  )  )  _uninstantiated_name ( signature )?  ( _map_aspect )?  ';'  )
 
-function_instantiation_declaration ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )*  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )*  )  )  )?  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )*  )  _designator (  (   (  [iI][sS] )  )*  )  (  (   (  [nN][eE][wW] )  )*  )  _uninstantiated_name ( signature )?  ( _map_aspect )?  ';'  )
+function_instantiation_declaration ::=  ( ( ( (  (   (  [pP][uU][rR][eE] )  )  )  |  (  (   (  [iI][mM][pP][uU][rR][eE] )  )  )  )  )?  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )  )  _designator (  (   (  [iI][sS] )  )  )  (  (   (  [nN][eE][wW] )  )  )  _uninstantiated_name ( signature )?  ( _map_aspect )?  ';'  )
 
 _uninstantiated_name ::=  (  ( expanded_name |  _simple_name )  )
 
 signature ::=  ( '['  ( ( type_mark (  ( ','  type_mark )  )*  )  )?  ( return )?  ']'  )
 
-package_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  ( header )?  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  )?  ( _end_simple_name )?  ';'  )
+package_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  ( header )?  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  )?  ( _end_simple_name )?  ';'  )
 
-package_body ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  (  (   (  [bB][oO][dD][yY] )  )*  )  _package_name (  (   (  [iI][sS] )  )*  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )*  )  ( ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  (  (   (  [bB][oO][dD][yY] )  )*  )  )  )?  ( _end_simple_name )?  ';'  )
+package_body ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  (  (   (  [bB][oO][dD][yY] )  )  )  _package_name (  (   (  [iI][sS] )  )  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )  )  ( ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  (  (   (  [bB][oO][dD][yY] )  )  )  )  )?  ( _end_simple_name )?  ';'  )
 
 _package_name ::=  (  _simple_name )
 
-package_instantiation_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  (  (   (  [nN][eE][wW] )  )*  )  _uninstantiated_name ( _map_aspect )?  ';'  )
+package_instantiation_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  (  (   (  [nN][eE][wW] )  )  )  _uninstantiated_name ( _map_aspect )?  ';'  )
 
 _scalar_type_definition ::=  ( enumeration_type_definition |  _numeric_type_definition |  physical_type_definition )
 
 _numeric_type_definition ::=  (  range_constraint )
 
-range_constraint ::=  ( (  (   (  [rR][aA][nN][gG][eE] )  )*  )  _range )
+range_constraint ::=  ( (  (   (  [rR][aA][nN][gG][eE] )  )  )  _range )
 
 _range ::=  ( ascending_range |  descending_range |  _range_attribute_name )
 
@@ -85,15 +85,15 @@ _range_attribute_name ::=  (  range_attribute_name )
 
 range_attribute_name ::=  ( (  ( _simple_name |  selected_name |  ambiguous_name |  attribute_name |  _external_object_name )  )  _range_attribute_designator )
 
-ascending_range ::=   (  ( (  _simple_expression )  (  (   (  [tT][oO] )  )*  )  (  _simple_expression )  )  )
+ascending_range ::=   (  ( (  _simple_expression )  (  (   (  [tT][oO] )  )  )  (  _simple_expression )  )  )
 
-descending_range ::=   (  ( (  _simple_expression )  (  (   (  [dD][oO][wW][nN][tT][oO] )  )*  )  (  _simple_expression )  )  )
+descending_range ::=   (  ( (  _simple_expression )  (  (   (  [dD][oO][wW][nN][tT][oO] )  )  )  (  _simple_expression )  )  )
 
 enumeration_type_definition ::=  ( '('  ( _enumeration_literal (  ( ','  _enumeration_literal )  )*  )  ')'  )
 
 _enumeration_literal ::=  ( character_literal |  _identifier )
 
-physical_type_definition ::=  ( range_constraint (  (   (  [uU][nN][iI][tT][sS] )  )*  )  primary_unit_declaration (  secondary_unit_declaration )*  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [uU][nN][iI][tT][sS] )  )*  )  ( _end_simple_name )?  )
+physical_type_definition ::=  ( range_constraint (  (   (  [uU][nN][iI][tT][sS] )  )  )  primary_unit_declaration (  secondary_unit_declaration )*  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [uU][nN][iI][tT][sS] )  )  )  ( _end_simple_name )?  )
 
 primary_unit_declaration ::=  ( _identifier ';'  )
 
@@ -109,11 +109,11 @@ _composite_type_definition ::=  ( _array_type_definition |  record_type_definiti
 
 _array_type_definition ::=  ( unbounded_array_definition |  constrained_array_definition )
 
-unbounded_array_definition ::=  ( (  (   (  [aA][rR][rR][aA][yY] )  )*  )  '('  ( index_subtype_definition (  ( ','  index_subtype_definition )  )*  )  ')'  (  (   (  [oO][fF] )  )*  )  subtype_indication )
+unbounded_array_definition ::=  ( (  (   (  [aA][rR][rR][aA][yY] )  )  )  '('  ( index_subtype_definition (  ( ','  index_subtype_definition )  )*  )  ')'  (  (   (  [oO][fF] )  )  )  subtype_indication )
 
-constrained_array_definition ::=  ( (  (   (  [aA][rR][rR][aA][yY] )  )*  )  index_constraint (  (   (  [oO][fF] )  )*  )  subtype_indication )
+constrained_array_definition ::=  ( (  (   (  [aA][rR][rR][aA][yY] )  )  )  index_constraint (  (   (  [oO][fF] )  )  )  subtype_indication )
 
-index_subtype_definition ::=  ( type_mark (  (   (  [rR][aA][nN][gG][eE] )  )*  )  _any )
+index_subtype_definition ::=  ( type_mark (  (   (  [rR][aA][nN][gG][eE] )  )  )  _any )
 
 array_constraint ::=  ( index_constraint ( _array_element_constraint )?  )
 
@@ -123,9 +123,9 @@ index_constraint ::=  ( '('  ( ( _discrete_range (  ( ','  _discrete_range )  )*
 
 _discrete_range ::=  ( subtype_indication |  _range )
 
-open ::=  (  (   (  [oO][pP][eE][nN] )  )*  )
+open ::=  (  (   (  [oO][pP][eE][nN] )  )  )
 
-record_type_definition ::=  ( (  (   (  [rR][eE][cC][oO][rR][dD] )  )*  )  (  element_declaration )*  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [rR][eE][cC][oO][rR][dD] )  )*  )  ( _end_simple_name )?  )
+record_type_definition ::=  ( (  (   (  [rR][eE][cC][oO][rR][dD] )  )  )  (  element_declaration )*  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [rR][eE][cC][oO][rR][dD] )  )  )  ( _end_simple_name )?  )
 
 element_declaration ::=  ( identifier_list ':'  subtype_indication ';'  )
 
@@ -135,15 +135,15 @@ record_element_constraint ::=   (  ( (  _simple_name )  _element_constraint )  )
 
 identifier_list ::=  ( _identifier (  ( ','  _identifier )  )*  )
 
-access_type_definition ::=  ( (  (   (  [aA][cC][cC][eE][sS][sS] )  )*  )  subtype_indication )
+access_type_definition ::=  ( (  (   (  [aA][cC][cC][eE][sS][sS] )  )  )  subtype_indication )
 
-incomplete_type_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )*  )  (  _identifier )  ';'  )
+incomplete_type_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )  )  (  _identifier )  ';'  )
 
-file_type_definition ::=  ( (  (   (  [fF][iI][lL][eE] )  )*  )  (  (   (  [oO][fF] )  )*  )  type_mark )
+file_type_definition ::=  ( (  (   (  [fF][iI][lL][eE] )  )  )  (  (   (  [oO][fF] )  )  )  type_mark )
 
-protected_type_declaration ::=  ( (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )*  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )*  )  ( _end_simple_name )?  )
+protected_type_declaration ::=  ( (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )  )  ( _end_simple_name )?  )
 
-protected_type_body ::=  ( (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )*  )  (  (   (  [bB][oO][dD][yY] )  )*  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )*  )  (  (   (  [bB][oO][dD][yY] )  )*  )  ( _end_simple_name )?  )
+protected_type_body ::=  ( (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )  )  (  (   (  [bB][oO][dD][yY] )  )  )  ( declarative_part )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [pP][rR][oO][tT][eE][cC][tT][eE][dD] )  )  )  (  (   (  [bB][oO][dD][yY] )  )  )  ( _end_simple_name )?  )
 
 declarative_part ::=   (  ( _declaration )+  )
 
@@ -151,11 +151,11 @@ _declaration ::=   (  ( _subprogram_declaration |  _subprogram_body |  _subprogr
 
 _type_declaration ::=  ( full_type_declaration |  incomplete_type_declaration )
 
-full_type_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  _type_definition ';'  )
+full_type_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  _type_definition ';'  )
 
 _type_definition ::=  ( _scalar_type_definition |  _composite_type_definition |  access_type_definition |  file_type_definition |  protected_type_declaration |  protected_type_body )
 
-subtype_declaration ::=  ( (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  subtype_indication ';'  )
+subtype_declaration ::=  ( (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  subtype_indication ';'  )
 
 subtype_indication ::=  ( ( _resolution_indication )?  type_mark ( _constraint )?  )
 
@@ -177,19 +177,19 @@ _element_constraint ::=  ( array_constraint |  record_constraint )
 
 _object_declaration ::=  ( constant_declaration |  signal_declaration |  variable_declaration |  shared_variable_declaration |  file_declaration )
 
-constant_declaration ::=  ( (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )*  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
+constant_declaration ::=  ( (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
 
-signal_declaration ::=  ( (  (   (  [sS][iI][gG][nN][aA][lL] )  )*  )  identifier_list ':'  subtype_indication ( signal_kind )?  ( default_expression )?  ';'  )
+signal_declaration ::=  ( (  (   (  [sS][iI][gG][nN][aA][lL] )  )  )  identifier_list ':'  subtype_indication ( signal_kind )?  ( default_expression )?  ';'  )
 
-signal_kind ::=  ( (  (   (  [rR][eE][gG][iI][sS][tT][eE][rR] )  )*  )  |  (  (   (  [bB][uU][sS] )  )*  )  )
+signal_kind ::=  ( (  (   (  [rR][eE][gG][iI][sS][tT][eE][rR] )  )  )  |  (  (   (  [bB][uU][sS] )  )  )  )
 
-variable_declaration ::=  ( (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )*  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
+variable_declaration ::=  ( (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
 
-shared_variable_declaration ::=  ( (  (   (  [sS][hH][aA][rR][eE][dD] )  )*  )  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )*  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
+shared_variable_declaration ::=  ( (  (   (  [sS][hH][aA][rR][eE][dD] )  )  )  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )  )  identifier_list ':'  subtype_indication ( default_expression )?  ';'  )
 
-file_declaration ::=  ( (  (   (  [fF][iI][lL][eE] )  )*  )  identifier_list ':'  subtype_indication ( file_open_information )?  ';'  )
+file_declaration ::=  ( (  (   (  [fF][iI][lL][eE] )  )  )  identifier_list ':'  subtype_indication ( file_open_information )?  ';'  )
 
-file_open_information ::=  ( ( ( (  (   (  [oO][pP][eE][nN] )  )*  )  _file_open_kind )  )?  (  (   (  [iI][sS] )  )*  )  _file_logical_name )
+file_open_information ::=  ( ( ( (  (   (  [oO][pP][eE][nN] )  )  )  _file_open_kind )  )?  (  (   (  [iI][sS] )  )  )  _file_logical_name )
 
 _file_logical_name ::=  _string_expression
 
@@ -201,23 +201,23 @@ _procedure_interface_declaration ::=  ( constant_interface_declaration |  signal
 
 _function_interface_declaration ::=  ( constant_interface_declaration |  signal_interface_declaration |  file_interface_declaration |  _illegal_interface_declaration )
 
-constant_interface_declaration ::=   (  ( ( (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )*  )  )?  identifier_list ':'  ( (  _constant_mode )  )?  subtype_indication ( default_expression )?  )  )
+constant_interface_declaration ::=   (  ( ( (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )  )  )?  identifier_list ':'  ( (  _constant_mode )  )?  subtype_indication ( default_expression )?  )  )
 
-signal_interface_declaration ::=   (  ( ( (  (   (  [sS][iI][gG][nN][aA][lL] )  )*  )  )?  identifier_list ':'  ( (  _signal_mode )  )?  subtype_indication ( signal_kind )?  ( default_expression )?  )  )
+signal_interface_declaration ::=   (  ( ( (  (   (  [sS][iI][gG][nN][aA][lL] )  )  )  )?  identifier_list ':'  ( (  _signal_mode )  )?  subtype_indication ( signal_kind )?  ( default_expression )?  )  )
 
-variable_interface_declaration ::=   (  ( ( (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )*  )  )?  identifier_list ':'  ( (  _variable_mode )  )?  subtype_indication ( default_expression )?  )  )
+variable_interface_declaration ::=   (  ( ( (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )  )  )?  identifier_list ':'  ( (  _variable_mode )  )?  subtype_indication ( default_expression )?  )  )
 
-file_interface_declaration ::=  ( (  (   (  [fF][iI][lL][eE] )  )*  )  identifier_list ':'  ( (  _signal_mode )  )?  subtype_indication )
+file_interface_declaration ::=  ( (  (   (  [fF][iI][lL][eE] )  )  )  identifier_list ':'  ( (  _signal_mode )  )?  subtype_indication )
 
-_in ::=  (  (   (  [iI][nN] )  )*  )
+_in ::=  (  (   (  [iI][nN] )  )  )
 
-_out ::=  (  (   (  [oO][uU][tT] )  )*  )
+_out ::=  (  (   (  [oO][uU][tT] )  )  )
 
-_inout ::=  (  (   (  [iI][nN][oO][uU][tT] )  )*  )
+_inout ::=  (  (   (  [iI][nN][oO][uU][tT] )  )  )
 
-_buffer ::=  (  (   (  [bB][uU][fF][fF][eE][rR] )  )*  )
+_buffer ::=  (  (   (  [bB][uU][fF][fF][eE][rR] )  )  )
 
-_linkage ::=  (  (   (  [lL][iI][nN][kK][aA][gG][eE] )  )*  )
+_linkage ::=  (  (   (  [lL][iI][nN][kK][aA][gG][eE] )  )  )
 
 _constant_mode ::=  (  (  _in )  |   (  _out )  |   (  _inout )  |   (  _buffer )  |   (  _linkage )  )
 
@@ -227,17 +227,17 @@ _signal_mode ::=  (  (  _in )  |   (  _out )  |   (  _inout )  |   (  _buffer ) 
 
 _illegal_interface_declaration ::=   (  ( constant_interface_declaration |  signal_interface_declaration |  variable_interface_declaration |  file_interface_declaration |  type_interface_declaration |  _subprogram_interface_declaration |  package_interface_declaration )  )
 
-type_interface_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )*  )  (  _identifier )  )
+type_interface_declaration ::=  ( (  (   (  [tT][yY][pP][eE] )  )  )  (  _identifier )  )
 
 _subprogram_interface_declaration ::=  ( procedure_interface_declaration |  function_interface_declaration )
 
-procedure_interface_declaration ::=  ( _procedure_specification ( ( (  (   (  [iI][sS] )  )*  )  interface_subprogram_default )  )?  )
+procedure_interface_declaration ::=  ( _procedure_specification ( ( (  (   (  [iI][sS] )  )  )  interface_subprogram_default )  )?  )
 
-function_interface_declaration ::=  ( _function_specification ( ( (  (   (  [iI][sS] )  )*  )  interface_subprogram_default )  )?  )
+function_interface_declaration ::=  ( _function_specification ( ( (  (   (  [iI][sS] )  )  )  interface_subprogram_default )  )?  )
 
 interface_subprogram_default ::=  ( _simple_name |  expanded_name |  _operator_symbol |  (  '<>'  )  )
 
-package_interface_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  (  (   (  [nN][eE][wW] )  )*  )  _uninstantiated_name ( _map_aspect )?  )
+package_interface_declaration ::=  ( (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  (  (   (  [nN][eE][wW] )  )  )  _uninstantiated_name ( _map_aspect )?  )
 
 _generic_interface_list ::=  ( _generic_interface_declaration (  ( ';'  _generic_interface_declaration )  )*  )
 
@@ -247,11 +247,11 @@ _procedure_parameter_list ::=  ( _procedure_interface_declaration (  ( ';'  _pro
 
 _function_parameter_list ::=  ( _function_interface_declaration (  ( ';'  _function_interface_declaration )  )*  )
 
-generic_clause ::=  ( (  (   (  [gG][eE][nN][eE][rR][iI][cC] )  )*  )  '('  ( _generic_interface_list )?  ')'  ( _semicolon )?  )
+generic_clause ::=  ( (  (   (  [gG][eE][nN][eE][rR][iI][cC] )  )  )  '('  ( _generic_interface_list )?  ')'  ( _semicolon )?  )
 
 _semicolon ::=  (  ';'  )
 
-port_clause ::=  ( (  (   (  [pP][oO][rR][tT] )  )*  )  '('  ( _port_interface_list )?  ')'  ( _semicolon )?  )
+port_clause ::=  ( (  (   (  [pP][oO][rR][tT] )  )  )  '('  ( _port_interface_list )?  ')'  ( _semicolon )?  )
 
 association_list ::=  ( _association_element (  ( ','  _association_element )  )*  )
 
@@ -259,19 +259,19 @@ _association_element ::=  ( positional_association_element |  named_association_
 
 positional_association_element ::=  ( _actual_part )
 
-named_association_element ::=  ( _formal_part (   (  '=>'  )  )*  _actual_part )
+named_association_element ::=  ( _formal_part (   (  '=>'  )  )  _actual_part )
 
 _formal_part ::=  (  ( _name |  others )  )
 
 _actual_part ::=  (  ( _expression |  inertial_expression |   (  subtype_indication )  |   (  open )  |   (  character_literal )  |   (  string_literal )  )  )
 
-generic_map_aspect ::=  ( (  (   (  [gG][eE][nN][eE][rR][iI][cC] )  )*  )  (  (   (  [mM][aA][pP] )  )*  )  '('  ( ( association_list |  default |  _any )  )?  ')'  ( _semicolon )?  )
+generic_map_aspect ::=  ( (  (   (  [gG][eE][nN][eE][rR][iI][cC] )  )  )  (  (   (  [mM][aA][pP] )  )  )  '('  ( ( association_list |  default |  _any )  )?  ')'  ( _semicolon )?  )
 
-default ::=  (  (   (  [dD][eE][fF][aA][uU][lL][tT] )  )*  )
+default ::=  (  (   (  [dD][eE][fF][aA][uU][lL][tT] )  )  )
 
 _any ::=  (  '<>'  )
 
-port_map_aspect ::=  ( (  (   (  [pP][oO][rR][tT] )  )*  )  (  (   (  [mM][aA][pP] )  )*  )  '('  ( association_list )?  ')'  ( _semicolon )?  )
+port_map_aspect ::=  ( (  (   (  [pP][oO][rR][tT] )  )  )  (  (   (  [mM][aA][pP] )  )  )  '('  ( association_list )?  ')'  ( _semicolon )?  )
 
 header ::=  ( _clause ( _clause )?  ( _clause )?  ( _clause )?  )
 
@@ -279,7 +279,7 @@ _map_aspect ::=  (  header )
 
 _clause ::=  ( generic_clause |  generic_map_aspect |  port_clause |  port_map_aspect )
 
-alias_declaration ::=  ( (  (   (  [aA][lL][iI][aA][sS] )  )*  )  _alias_designator ( ( ':'  subtype_indication )  )?  (  (   (  [iI][sS] )  )*  )  _alias_denotator ( signature )?  ';'  )
+alias_declaration ::=  ( (  (   (  [aA][lL][iI][aA][sS] )  )  )  _alias_designator ( ( ':'  subtype_indication )  )?  (  (   (  [iI][sS] )  )  )  _alias_denotator ( signature )?  ';'  )
 
 _alias_designator ::=  (  ( _identifier |  character_literal |  _operator_symbol )  )
 
@@ -287,17 +287,17 @@ _alias_denotator ::=  (  ( _simple_name |  character_literal |  selected_name | 
 
 _operator_symbol ::=  (  string_literal )
 
-attribute_declaration ::=  ( (  (   (  [aA][tT][tT][rR][iI][bB][uU][tT][eE] )  )*  )  (  _identifier )  ':'  type_mark ';'  )
+attribute_declaration ::=  ( (  (   (  [aA][tT][tT][rR][iI][bB][uU][tT][eE] )  )  )  (  _identifier )  ':'  type_mark ';'  )
 
-component_declaration ::=   (  ( (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )*  )  (  _identifier )  ( (  (   (  [iI][sS] )  )*  )  )?  ( header )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )*  )  ( _end_simple_name )?  ';'  )  )
+component_declaration ::=   (  ( (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )  )  (  _identifier )  ( (  (   (  [iI][sS] )  )  )  )?  ( header )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )  )  ( _end_simple_name )?  ';'  )  )
 
-group_template_declaration ::=  ( (  (   (  [gG][rR][oO][uU][pP] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  '('  entity_class_entry_list ')'  ';'  )
+group_template_declaration ::=  ( (  (   (  [gG][rR][oO][uU][pP] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  '('  entity_class_entry_list ')'  ';'  )
 
 entity_class_entry_list ::=  ( entity_class_entry (  ( ','  entity_class_entry )  )*  )
 
 entity_class_entry ::=  ( entity_class ( _any )?  )
 
-group_declaration ::=  ( (  (   (  [gG][rR][oO][uU][pP] )  )*  )  (  _identifier )  ':'  _group_template '('  group_constituent_list ')'  ';'  )
+group_declaration ::=  ( (  (   (  [gG][rR][oO][uU][pP] )  )  )  (  _identifier )  ':'  _group_template '('  group_constituent_list ')'  ';'  )
 
 group_constituent_list ::=   (  ( _group_constituent (  ( ','  _group_constituent )  )*  )  )
 
@@ -305,13 +305,13 @@ _group_constituent ::=  ( _simple_name |  expanded_name |  character_literal )
 
 _group_template ::=  (  ( _simple_name |  expanded_name )  )
 
-attribute_specification ::=  ( (  (   (  [aA][tT][tT][rR][iI][bB][uU][tT][eE] )  )*  )  (  _simple_name )  (  (   (  [oO][fF] )  )*  )  entity_specification (  (   (  [iI][sS] )  )*  )  _expression ';'  )
+attribute_specification ::=  ( (  (   (  [aA][tT][tT][rR][iI][bB][uU][tT][eE] )  )  )  (  _simple_name )  (  (   (  [oO][fF] )  )  )  entity_specification (  (   (  [iI][sS] )  )  )  _expression ';'  )
 
 entity_name_list ::=  ( ( entity_designator (  ( ','  entity_designator )  )*  )  |  others |  all )
 
 entity_specification ::=  ( entity_name_list ':'  entity_class )
 
-entity_class ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )*  )  |  (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )*  )  |  (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )*  )  |  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )*  )  |  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )*  )  |  (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )*  )  |  (  (   (  [tT][yY][pP][eE] )  )*  )  |  (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )*  )  |  (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )*  )  |  (  (   (  [sS][iI][gG][nN][aA][lL] )  )*  )  |  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )*  )  |  (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )*  )  |  (  (   (  [lL][aA][bB][eE][lL] )  )*  )  |  (  (   (  [lL][iI][tT][eE][rR][aA][lL] )  )*  )  |  (  (   (  [uU][nN][iI][tT][sS] )  )*  )  |  (  (   (  [gG][rR][oO][uU][pP] )  )*  )  |  (  (   (  [fF][iI][lL][eE] )  )*  )  |  (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )*  )  |  (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )*  )  )
+entity_class ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )  )  |  (  (   (  [aA][rR][cC][hH][iI][tT][eE][cC][tT][uU][rR][eE] )  )  )  |  (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )  )  |  (  (   (  [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  )  )  |  (  (   (  [fF][uU][nN][cC][tT][iI][oO][nN] )  )  )  |  (  (   (  [pP][aA][cC][kK][aA][gG][eE] )  )  )  |  (  (   (  [tT][yY][pP][eE] )  )  )  |  (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )  )  |  (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )  )  |  (  (   (  [sS][iI][gG][nN][aA][lL] )  )  )  |  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )  )  |  (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )  )  |  (  (   (  [lL][aA][bB][eE][lL] )  )  )  |  (  (   (  [lL][iI][tT][eE][rR][aA][lL] )  )  )  |  (  (   (  [uU][nN][iI][tT][sS] )  )  )  |  (  (   (  [gG][rR][oO][uU][pP] )  )  )  |  (  (   (  [fF][iI][lL][eE] )  )  )  |  (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )  )  |  (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )  )  )
 
 entity_designator ::=  ( _entity_tag ( signature )?  )
 
@@ -319,27 +319,27 @@ _entity_tag ::=  ( _simple_name |  character_literal |  _operator_symbol )
 
 _configuration_specification ::=  (  ( simple_configuration_specification |  compound_configuration_specification )  )
 
-simple_configuration_specification ::=   (  ( (  (   (  [fF][oO][rR] )  )*  )  _component_specification ( binding_indication )?  ';'  ( ( (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [fF][oO][rR] )  )*  )  ';'  )  )?  )  )
+simple_configuration_specification ::=   (  ( (  (   (  [fF][oO][rR] )  )  )  _component_specification ( binding_indication )?  ';'  ( ( (  (   (  [eE][nN][dD] )  )  )  (  (   (  [fF][oO][rR] )  )  )  ';'  )  )?  )  )
 
-compound_configuration_specification ::=  ( (  (   (  [fF][oO][rR] )  )*  )  _component_specification ( binding_indication )?  ';'  ( verification_unit_binding_indication (  ( ';'  verification_unit_binding_indication )  )*  )  ';'  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [fF][oO][rR] )  )*  )  ';'  )
+compound_configuration_specification ::=  ( (  (   (  [fF][oO][rR] )  )  )  _component_specification ( binding_indication )?  ';'  ( verification_unit_binding_indication (  ( ';'  verification_unit_binding_indication )  )*  )  ';'  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [fF][oO][rR] )  )  )  ';'  )
 
 _component_specification ::=  ( instantiation_list ':'  _component_name )
 
 instantiation_list ::=  ( ( _simple_name (  ( ','  _simple_name )  )*  )  |  others |  all )
 
-all ::=  (  (   (  [aA][lL][lL] )  )*  )
+all ::=  (  (   (  [aA][lL][lL] )  )  )
 
 _component_name ::=  (  _simple_name )
 
-binding_indication ::=  ( _map_aspect |  ( (  (   (  [uU][sS][eE] )  )*  )  _entity_aspect ( _map_aspect )?  )  )
+binding_indication ::=  ( _map_aspect |  ( (  (   (  [uU][sS][eE] )  )  )  _entity_aspect ( _map_aspect )?  )  )
 
 _entity_aspect ::=  ( entity_instantiation |  configuration_instantiation |  component_instantiation |  open )
 
-verification_unit_binding_indication ::=  ( (  (   (  [uU][sS][eE] )  )*  )  (  (   (  [vV][uU][nN][iI][tT] )  )*  )  verification_unit_list )
+verification_unit_binding_indication ::=  ( (  (   (  [uU][sS][eE] )  )  )  (  (   (  [vV][uU][nN][iI][tT] )  )  )  verification_unit_list )
 
 verification_unit_list ::=  ( ( _simple_name |  expanded_name )  (  ( ','  ( _simple_name |  expanded_name )  )  )*  )
 
-disconnection_specification ::=  ( (  (   (  [dD][iI][sS][cC][oO][nN][nN][eE][cC][tT] )  )*  )  guarded_signal_specification _after ';'  )
+disconnection_specification ::=  ( (  (   (  [dD][iI][sS][cC][oO][nN][nN][eE][cC][tT] )  )  )  guarded_signal_specification _after ';'  )
 
 guarded_signal_specification ::=  ( signal_list ':'  type_mark )
 
@@ -363,27 +363,27 @@ slice_name ::=  ( (  ( _simple_name |  ambiguous_name |  selected_name |  slice_
 
 attribute_name ::=   (  ( (  ( _simple_name |  selected_name |  ambiguous_name |  attribute_name |  function_call |  _external_object_name )  )  ( signature )?  ( _attribute_designator |  _predefined_attribute_designator |  _predefined_attribute_designator_with_expression )  )  )
 
-_attribute_designator ::=  ( (  "'"  )*  (  _simple_name )  )
+_attribute_designator ::=  ( (  "'"  )  (  _simple_name )  )
 
-_predefined_attribute_designator ::=   (  ( (  "'"  )*  (  (  _predefined_designator )  )  )  )
+_predefined_attribute_designator ::=   (  ( (  "'"  )  (  (  _predefined_designator )  )  )  )
 
-_predefined_attribute_designator_with_expression ::=   (   (  ( (  "'"  )*  (  (  _predefined_designator_with_expression )  )  '('  _expression ')'  )  )  )
+_predefined_attribute_designator_with_expression ::=   (   (  ( (  "'"  )  (  (  _predefined_designator_with_expression )  )  '('  _expression ')'  )  )  )
 
-_range_attribute_designator ::=  ( (  "'"  )*  (  (  _range_designator )  )  ( ( '('  _expression ')'  )  )?  )
+_range_attribute_designator ::=  ( (  "'"  )  (  (  _range_designator )  )  ( ( '('  _expression ')'  )  )?  )
 
-_predefined_designator ::=  ( (  (   (  [bB][aA][sS][eE] )  )*  )  |  (  (   (  [lL][eE][fF][tT] )  )*  )  |  (  (   (  [rR][iI][gG][hH][tT] )  )*  )  |  (  (   (  [hH][iI][gG][hH] )  )*  )  |  (  (   (  [lL][oO][wW] )  )*  )  |  (  (   (  [iI][mM][aA][gG][eE] )  )*  )  |  (  (   (  [pP][oO][sS] )  )*  )  |  (  (   (  [vV][aA][lL] )  )*  )  |  (  (   (  [sS][uU][cC][cC] )  )*  )  |  (  (   (  [pP][rR][eE][dD] )  )*  )  |  (  (   (  [lL][eE][fF][tT][oO][fF] )  )*  )  |  (  (   (  [rR][iI][gG][hH][tT][oO][fF] )  )*  )  |  (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )*  )  |  (  (   (  [lL][eE][nN][gG][tT][hH] )  )*  )  |  (  (   (  [aA][sS][cC][eE][nN][dD][iI][nN][gG] )  )*  )  |  (  (   (  [dD][eE][sS][cC][eE][nN][dD][iI][nN][gG] )  )*  )  |  (  (   (  [eE][lL][eE][mM][eE][nN][tT] )  )*  )  |  (  (   (  [dD][eE][lL][aA][yY][eE][dD] )  )*  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )*  )  |  (  (   (  [qQ][uU][iI][eE][tT] )  )*  )  |  (  (   (  [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN] )  )*  )  |  (  (   (  [eE][vV][eE][nN][tT] )  )*  )  |  (  (   (  [aA][cC][tT][iI][vV][eE] )  )*  )  |  (  (   (  [lL][aA][sS][tT][__][eE][vV][eE][nN][tT] )  )*  )  |  (  (   (  [lL][aA][sS][tT][__][aA][cC][tT][iI][vV][eE] )  )*  )  |  (  (   (  [lL][aA][sS][tT][__][vV][aA][lL][uU][eE] )  )*  )  |  (  (   (  [dD][rR][iI][vV][iI][nN][gG] )  )*  )  |  (  (   (  [dD][rR][iI][vV][iI][nN][gG][__][vV][aA][lL][uU][eE] )  )*  )  |  (  (   (  [sS][iI][mM][pP][lL][eE][__][nN][aA][mM][eE] )  )*  )  |  (  (   (  [iI][nN][sS][tT][aA][nN][cC][eE][__][nN][aA][mM][eE] )  )*  )  |  (  (   (  [pP][aA][tT][hH][__][nN][aA][mM][eE] )  )*  )  )
+_predefined_designator ::=  ( (  (   (  [bB][aA][sS][eE] )  )  )  |  (  (   (  [lL][eE][fF][tT] )  )  )  |  (  (   (  [rR][iI][gG][hH][tT] )  )  )  |  (  (   (  [hH][iI][gG][hH] )  )  )  |  (  (   (  [lL][oO][wW] )  )  )  |  (  (   (  [iI][mM][aA][gG][eE] )  )  )  |  (  (   (  [pP][oO][sS] )  )  )  |  (  (   (  [vV][aA][lL] )  )  )  |  (  (   (  [sS][uU][cC][cC] )  )  )  |  (  (   (  [pP][rR][eE][dD] )  )  )  |  (  (   (  [lL][eE][fF][tT][oO][fF] )  )  )  |  (  (   (  [rR][iI][gG][hH][tT][oO][fF] )  )  )  |  (  (   (  [sS][uU][bB][tT][yY][pP][eE] )  )  )  |  (  (   (  [lL][eE][nN][gG][tT][hH] )  )  )  |  (  (   (  [aA][sS][cC][eE][nN][dD][iI][nN][gG] )  )  )  |  (  (   (  [dD][eE][sS][cC][eE][nN][dD][iI][nN][gG] )  )  )  |  (  (   (  [eE][lL][eE][mM][eE][nN][tT] )  )  )  |  (  (   (  [dD][eE][lL][aA][yY][eE][dD] )  )  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )  )  |  (  (   (  [qQ][uU][iI][eE][tT] )  )  )  |  (  (   (  [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN] )  )  )  |  (  (   (  [eE][vV][eE][nN][tT] )  )  )  |  (  (   (  [aA][cC][tT][iI][vV][eE] )  )  )  |  (  (   (  [lL][aA][sS][tT][__][eE][vV][eE][nN][tT] )  )  )  |  (  (   (  [lL][aA][sS][tT][__][aA][cC][tT][iI][vV][eE] )  )  )  |  (  (   (  [lL][aA][sS][tT][__][vV][aA][lL][uU][eE] )  )  )  |  (  (   (  [dD][rR][iI][vV][iI][nN][gG] )  )  )  |  (  (   (  [dD][rR][iI][vV][iI][nN][gG][__][vV][aA][lL][uU][eE] )  )  )  |  (  (   (  [sS][iI][mM][pP][lL][eE][__][nN][aA][mM][eE] )  )  )  |  (  (   (  [iI][nN][sS][tT][aA][nN][cC][eE][__][nN][aA][mM][eE] )  )  )  |  (  (   (  [pP][aA][tT][hH][__][nN][aA][mM][eE] )  )  )  )
 
-_predefined_designator_with_expression ::=  ( (  (   (  [iI][mM][aA][gG][eE] )  )*  )  |  (  (   (  [vV][aA][lL][uU][eE] )  )*  )  |  (  (   (  [pP][oO][sS] )  )*  )  |  (  (   (  [vV][aA][lL] )  )*  )  |  (  (   (  [sS][uU][cC][cC] )  )*  )  |  (  (   (  [pP][rR][eE][dD] )  )*  )  |  (  (   (  [lL][eE][fF][tT][oO][fF] )  )*  )  |  (  (   (  [rR][iI][gG][hH][tT][oO][fF] )  )*  )  |  (  (   (  [lL][eE][fF][tT] )  )*  )  |  (  (   (  [rR][iI][gG][hH][tT] )  )*  )  |  (  (   (  [hH][iI][gG][hH] )  )*  )  |  (  (   (  [lL][oO][wW] )  )*  )  |  (  (   (  [lL][eE][nN][gG][tT][hH] )  )*  )  |  (  (   (  [aA][sS][cC][eE][nN][dD][iI][nN][gG] )  )*  )  |  (  (   (  [dD][eE][lL][aA][yY][eE][dD] )  )*  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )*  )  |  (  (   (  [qQ][uU][iI][eE][tT] )  )*  )  )
+_predefined_designator_with_expression ::=  ( (  (   (  [iI][mM][aA][gG][eE] )  )  )  |  (  (   (  [vV][aA][lL][uU][eE] )  )  )  |  (  (   (  [pP][oO][sS] )  )  )  |  (  (   (  [vV][aA][lL] )  )  )  |  (  (   (  [sS][uU][cC][cC] )  )  )  |  (  (   (  [pP][rR][eE][dD] )  )  )  |  (  (   (  [lL][eE][fF][tT][oO][fF] )  )  )  |  (  (   (  [rR][iI][gG][hH][tT][oO][fF] )  )  )  |  (  (   (  [lL][eE][fF][tT] )  )  )  |  (  (   (  [rR][iI][gG][hH][tT] )  )  )  |  (  (   (  [hH][iI][gG][hH] )  )  )  |  (  (   (  [lL][oO][wW] )  )  )  |  (  (   (  [lL][eE][nN][gG][tT][hH] )  )  )  |  (  (   (  [aA][sS][cC][eE][nN][dD][iI][nN][gG] )  )  )  |  (  (   (  [dD][eE][lL][aA][yY][eE][dD] )  )  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )  )  |  (  (   (  [qQ][uU][iI][eE][tT] )  )  )  )
 
-_range_designator ::=  ( (  (   (  [rR][aA][nN][gG][eE] )  )*  )  |  (  (   (  [rR][eE][vV][eE][rR][sS][eE][__][rR][aA][nN][gG][eE] )  )*  )  )
+_range_designator ::=  ( (  (   (  [rR][aA][nN][gG][eE] )  )  )  |  (  (   (  [rR][eE][vV][eE][rR][sS][eE][__][rR][aA][nN][gG][eE] )  )  )  )
 
 _external_object_name ::=  ( external_constant_name |  external_signal_name |  external_variable_name )
 
-external_constant_name ::=  ( (   (  '<<'  )  )*  (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )*  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )*  )
+external_constant_name ::=  ( (   (  '<<'  )  )  (  (   (  [cC][oO][nN][sS][tT][aA][nN][tT] )  )  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )  )
 
-external_signal_name ::=  ( (   (  '<<'  )  )*  (  (   (  [sS][iI][gG][nN][aA][lL] )  )*  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )*  )
+external_signal_name ::=  ( (   (  '<<'  )  )  (  (   (  [sS][iI][gG][nN][aA][lL] )  )  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )  )
 
-external_variable_name ::=  ( (   (  '<<'  )  )*  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )*  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )*  )
+external_variable_name ::=  ( (   (  '<<'  )  )  (  (   (  [vV][aA][rR][iI][aA][bB][lL][eE] )  )  )  _external_pathname ':'  subtype_indication (   (  '>>'  )  )  )
 
 _external_pathname ::=  ( package_pathname |  absolute_pathname |  relative_pathname )
 
@@ -423,35 +423,35 @@ _file_open_kind ::=  (  _primary )
 
 default_expression ::=  ( ':='  _expr )
 
-inertial_expression ::=  ( (  (   (  [iI][nN][eE][rR][tT][iI][aA][lL] )  )*  )  _expr )
+inertial_expression ::=  ( (  (   (  [iI][nN][eE][rR][tT][iI][aA][lL] )  )  )  _expr )
 
 parenthesized_expression ::=   (  ( '('  _expr ')'  )  )
 
-condition ::=   (  ( (  (   (  '??'  )  )*  )  _primary )  )
+condition ::=   (  ( (  (   (  '??'  )  )  )  _primary )  )
 
-reduction ::=   (  ( (  ( (  (   (  [aA][nN][dD] )  )*  )  |  (  (   (  [oO][rR] )  )*  )  |  (  (   (  [xX][oO][rR] )  )*  )  |  (  (   (  [nN][aA][nN][dD] )  )*  )  |  (  (   (  [nN][oO][rR] )  )*  )  |  (  (   (  [xX][nN][oO][rR] )  )*  )  )  )  _expr )  )
+reduction ::=   (  ( (  ( (  (   (  [aA][nN][dD] )  )  )  |  (  (   (  [oO][rR] )  )  )  |  (  (   (  [xX][oO][rR] )  )  )  |  (  (   (  [nN][aA][nN][dD] )  )  )  |  (  (   (  [nN][oO][rR] )  )  )  |  (  (   (  [xX][nN][oO][rR] )  )  )  )  )  _expr )  )
 
-factor ::=   (  ( (  ( (  (   (  [nN][oO][tT] )  )*  )  |  (  (   (  [aA][bB][sS] )  )*  )  )  )  _expr )  )
+factor ::=   (  ( (  ( (  (   (  [nN][oO][tT] )  )  )  |  (  (   (  [aA][bB][sS] )  )  )  )  )  _expr )  )
 
-sign ::=   (  ( (  ( (   (  '+'  )  )*  |  (   (  '-'  )  )*  )  )  _expr )  )
+sign ::=   (  ( (  ( (   (  '+'  )  )  |  (   (  '-'  )  )  )  )  _expr )  )
 
-logical_expression ::=   (  ( _expr ( (  (  ( (  (  (   (  [aA][nN][dD] )  )*  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [oO][rR] )  )*  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [xX][oO][rR] )  )*  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [xX][nN][oO][rR] )  )*  )  )  _expr )  )  )+  |  ( (  (  (   (  [nN][aA][nN][dD] )  )*  )  )  _expr )  |  ( (  (  (   (  [nN][oO][rR] )  )*  )  )  _expr )  )  )  )
+logical_expression ::=   (  ( _expr ( (  (  ( (  (  (   (  [aA][nN][dD] )  )  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [oO][rR] )  )  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [xX][oO][rR] )  )  )  )  _expr )  )  )+  |  (  (  ( (  (  (   (  [xX][nN][oO][rR] )  )  )  )  _expr )  )  )+  |  ( (  (  (   (  [nN][aA][nN][dD] )  )  )  )  _expr )  |  ( (  (  (   (  [nN][oO][rR] )  )  )  )  _expr )  )  )  )
 
-relation ::=   (  ( _expr (  ( (   (  '<'  )  )*  |  (   (  '>'  )  )*  |  (   (  '='  )  )*  |  (   (  '<='  )  )*  |  (   (  '>='  )  )*  |  (   (  '/='  )  )*  |  (   (  '?<'  )  )*  |  (   (  '?>'  )  )*  |  (   (  '?='  )  )*  |  (   (  '?<='  )  )*  |  (   (  '?>='  )  )*  |  (   (  '?/='  )  )*  |  (   (  '=='  )  )*  |  (   (  '!='  )  )*  )  )  _expr )  )
+relation ::=   (  ( _expr (  ( (   (  '<'  )  )  |  (   (  '>'  )  )  |  (   (  '='  )  )  |  (   (  '<='  )  )  |  (   (  '>='  )  )  |  (   (  '/='  )  )  |  (   (  '?<'  )  )  |  (   (  '?>'  )  )  |  (   (  '?='  )  )  |  (   (  '?<='  )  )  |  (   (  '?>='  )  )  |  (   (  '?/='  )  )  |  (   (  '=='  )  )  |  (   (  '!='  )  )  )  )  _expr )  )
 
-shift_expression ::=   (  ( _expr (  ( (  (   (  [sS][lL][lL] )  )*  )  |  (  (   (  [sS][rR][lL] )  )*  )  |  (  (   (  [sS][lL][aA] )  )*  )  |  (  (   (  [sS][rR][aA] )  )*  )  |  (  (   (  [rR][oO][lL] )  )*  )  |  (  (   (  [rR][oO][rR] )  )*  )  )  )  _expr )  )
+shift_expression ::=   (  ( _expr (  ( (  (   (  [sS][lL][lL] )  )  )  |  (  (   (  [sS][rR][lL] )  )  )  |  (  (   (  [sS][lL][aA] )  )  )  |  (  (   (  [sS][rR][aA] )  )  )  |  (  (   (  [rR][oO][lL] )  )  )  |  (  (   (  [rR][oO][rR] )  )  )  )  )  _expr )  )
 
-simple_expression ::=   (  ( _expr (  (  ( (  ( (   (  '+'  )  )*  |  (   (  '-'  )  )*  |  (   (  '&'  )  )*  )  )  _expr )  )  )+  )  )
+simple_expression ::=   (  ( _expr (  (  ( (  ( (   (  '+'  )  )  |  (   (  '-'  )  )  |  (   (  '&'  )  )  )  )  _expr )  )  )+  )  )
 
-term ::=   (  ( _expr (  (  ( ( (  ( (  (   (  [rR][eE][mM] )  )*  )  |  (  (   (  [mM][oO][dD] )  )*  )  )  )  |  (  ( (   (  '*'  )  )*  |  (   (  '/'  )  )*  )  )  )  _expr )  )  )+  )  )
+term ::=   (  ( _expr (  (  ( ( (  ( (  (   (  [rR][eE][mM] )  )  )  |  (  (   (  [mM][oO][dD] )  )  )  )  )  |  (  ( (   (  '*'  )  )  |  (   (  '/'  )  )  )  )  )  _expr )  )  )+  )  )
 
-exponentiation ::=   (  ( _expr (  ( (   (  '**'  )  )*  )  )  _expr )  )
+exponentiation ::=   (  ( _expr (  ( (   (  '**'  )  )  )  )  _expr )  )
 
 _literal ::=  ( _numeric_literal |  string_literal |  bit_string_literal |  null |  character_literal )
 
 _numeric_literal ::=  ( _abstract_literal |  physical_literal )
 
-null ::=  (  (   (  [nN][uU][lL][lL] )  )*  )
+null ::=  (  (   (  [nN][uU][lL][lL] )  )  )
 
 aggregate ::=   (  ( '('  _element_association_list ')'  )  )
 
@@ -461,7 +461,7 @@ _element_association ::=  ( positional_element_association |  named_element_asso
 
 positional_element_association ::=  ( _value )
 
-named_element_association ::=   (  ( choices (   (  '=>'  )  )*  _value )  )
+named_element_association ::=   (  ( choices (   (  '=>'  )  )  _value )  )
 
 _value ::=  _expression
 
@@ -469,101 +469,101 @@ choices ::=  ( _choice (  ( '|'  _choice )  )*  )
 
 _choice ::=  ( _simple_expression |  _range |  others )
 
-others ::=  (  (   (  [oO][tT][hH][eE][rR][sS] )  )*  )
+others ::=  (  (   (  [oO][tT][hH][eE][rR][sS] )  )  )
 
 function_call ::=  ( _function_name '('  association_list ')'  )
 
 _function_name ::=  (  ( _simple_name |  _operator_symbol |  expanded_name |  attribute_name )  )
 
-qualified_expression ::=  ( type_mark (  "'"  )*  ( aggregate |  (  parenthesized_expression )  )  )
+qualified_expression ::=  ( type_mark (  "'"  )  ( aggregate |  (  parenthesized_expression )  )  )
 
-allocator ::=  ( (  (   (  [nN][eE][wW] )  )*  )  ( subtype_indication |  qualified_expression )  )
+allocator ::=  ( (  (   (  [nN][eE][wW] )  )  )  ( subtype_indication |  qualified_expression )  )
 
 sequence_of_statements ::=  ( _sequential_statement )+
 
 _sequential_statement ::=   (  ( process_statement |  wait_statement |  assertion_statement |  report_statement |  _signal_assignment_statement |  _variable_assignment_statement |  procedure_call_statement |  if_statement |  case_statement |  loop_statement |  next_statement |  exit_statement |  return_statement |  null_statement |  _PSL_Directive |  _PSL_Declaration )  )
 
-wait_statement ::=  ( ( label )?  (  (   (  [wW][aA][iI][tT] )  )*  )  ( _sensitivity_clause )?  ( _condition_clause )?  ( _timeout_clause )?  ';'  )
+wait_statement ::=  ( ( label )?  (  (   (  [wW][aA][iI][tT] )  )  )  ( _sensitivity_clause )?  ( _condition_clause )?  ( _timeout_clause )?  ';'  )
 
-_sensitivity_clause ::=  ( (  (   (  [oO][nN] )  )*  )  sensitivity_list )
+_sensitivity_clause ::=  ( (  (   (  [oO][nN] )  )  )  sensitivity_list )
 
-_condition_clause ::=  ( (  (   (  [uU][nN][tT][iI][lL] )  )*  )  _condition )
+_condition_clause ::=  ( (  (   (  [uU][nN][tT][iI][lL] )  )  )  _condition )
 
-_timeout_clause ::=  ( (  (   (  [fF][oO][rR] )  )*  )  _time_expression )
+_timeout_clause ::=  ( (  (   (  [fF][oO][rR] )  )  )  _time_expression )
 
 sensitivity_list ::=  ( all |  ( _signal_name (  ( ','  _signal_name )  )*  )  )
 
 _signal_name ::=  _name
 
-assertion_statement ::=   (  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )*  )  )?  (  (   (  [aA][sS][sS][eE][rR][tT] )  )*  )  _condition ( _report )?  ( _severity )?  ';'  )  )
+assertion_statement ::=   (  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )  )  )?  (  (   (  [aA][sS][sS][eE][rR][tT] )  )  )  _condition ( _report )?  ( _severity )?  ';'  )  )
 
 report_statement ::=  ( ( label )?  _report ( _severity )?  ';'  )
 
-_report ::=  ( (  (   (  [rR][eE][pP][oO][rR][tT] )  )*  )  _string_expression )
+_report ::=  ( (  (   (  [rR][eE][pP][oO][rR][tT] )  )  )  _string_expression )
 
-_severity ::=  ( (  (   (  [sS][eE][vV][eE][rR][iI][tT][yY] )  )*  )  _severity_expression )
+_severity ::=  ( (  (   (  [sS][eE][vV][eE][rR][iI][tT][yY] )  )  )  _severity_expression )
 
 _signal_assignment_statement ::=  ( simple_signal_assignment |  conditional_signal_assignment |  selected_signal_assignment )
 
 simple_signal_assignment ::=  ( _simple_waveform_assignment |  _simple_force_assignment |  _simple_release_assignment )
 
-_simple_waveform_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )*  )  )?  ( delay_mechanism )?  waveforms ';'  )
+_simple_waveform_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )  )  )?  ( delay_mechanism )?  waveforms ';'  )
 
-_simple_force_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )*  )  )?  (  (   (  [fF][oO][rR][cC][eE] )  )*  )  ( force_mode )?  _value ';'  )
+_simple_force_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )  )  )?  (  (   (  [fF][oO][rR][cC][eE] )  )  )  ( force_mode )?  _value ';'  )
 
-_simple_release_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )*  )  )?  (  (   (  [rR][eE][lL][eE][aA][sS][eE] )  )*  )  ( force_mode )?  ';'  )
+_simple_release_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )  )  )?  (  (   (  [rR][eE][lL][eE][aA][sS][eE] )  )  )  ( force_mode )?  ';'  )
 
 force_mode ::=  ( _in |  _out )
 
 delay_mechanism ::=  ( transport |  inertial )
 
-transport ::=  (  (   (  [tT][rR][aA][nN][sS][pP][oO][rR][tT] )  )*  )
+transport ::=  (  (   (  [tT][rR][aA][nN][sS][pP][oO][rR][tT] )  )  )
 
-inertial ::=  ( ( _reject )?  (  (   (  [iI][nN][eE][rR][tT][iI][aA][lL] )  )*  )  )
+inertial ::=  ( ( _reject )?  (  (   (  [iI][nN][eE][rR][tT][iI][aA][lL] )  )  )  )
 
-_reject ::=  ( (  (   (  [rR][eE][jJ][eE][cC][tT] )  )*  )  (  _time_expression )  )
+_reject ::=  ( (  (   (  [rR][eE][jJ][eE][cC][tT] )  )  )  (  _time_expression )  )
 
 _target ::=  (  ( _name |  aggregate )  )
 
 waveforms ::=  ( unaffected |  ( waveform_element (  ( ','  waveform_element )  )*  )  )
 
-unaffected ::=  (  (   (  [uU][nN][aA][fF][fF][eE][cC][tT][eE][dD] )  )*  )
+unaffected ::=  (  (   (  [uU][nN][aA][fF][fF][eE][cC][tT][eE][dD] )  )  )
 
 waveform_element ::=  ( _value ( _after )?  )
 
-_after ::=  ( (  (   (  [aA][fF][tT][eE][rR] )  )*  )  _time_expression )
+_after ::=  ( (  (   (  [aA][fF][tT][eE][rR] )  )  )  _time_expression )
 
 conditional_signal_assignment ::=  ( _conditional_waveform_assignment |  _conditional_force_assignment )
 
-_conditional_waveform_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )*  )  )?  ( delay_mechanism )?  conditional_waveforms ';'  )
+_conditional_waveform_assignment ::=  ( ( label )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )  )  )?  ( delay_mechanism )?  conditional_waveforms ';'  )
 
-_when_clause ::=  ( (  (   (  [wW][hH][eE][nN] )  )*  )  _condition )
+_when_clause ::=  ( (  (   (  [wW][hH][eE][nN] )  )  )  _condition )
 
 conditional_waveforms ::=  ( waveforms _when_clause (  alternative_conditional_waveforms )*  )
 
-alternative_conditional_waveforms ::=  ( (  (   (  [eE][lL][sS][eE] )  )*  )  waveforms ( _when_clause )?  )
+alternative_conditional_waveforms ::=  ( (  (   (  [eE][lL][sS][eE] )  )  )  waveforms ( _when_clause )?  )
 
-_conditional_force_assignment ::=  ( _target '<='  (  (   (  [fF][oO][rR][cC][eE] )  )*  )  ( force_mode )?  conditional_expressions ';'  )
+_conditional_force_assignment ::=  ( _target '<='  (  (   (  [fF][oO][rR][cC][eE] )  )  )  ( force_mode )?  conditional_expressions ';'  )
 
 conditional_expressions ::=  ( _value _when_clause (  alternative_conditional_expressions )*  )
 
-alternative_conditional_expressions ::=  ( (  (   (  [eE][lL][sS][eE] )  )*  )  _value ( _when_clause )?  )
+alternative_conditional_expressions ::=  ( (  (   (  [eE][lL][sS][eE] )  )  )  _value ( _when_clause )?  )
 
 selected_signal_assignment ::=  ( _selected_waveform_assignment |  _selected_force_assignment )
 
 _with ::=  _expression
 
-_selected_waveform_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )*  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )*  )  ( (   (  '?'  )  )*  )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )*  )  )?  ( delay_mechanism )?  ( selected_waveforms )?  ';'  )
+_selected_waveform_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )  )  ( (   (  '?'  )  )  )?  _target '<='  ( (  (   (  [gG][uU][aA][rR][dD][eE][dD] )  )  )  )?  ( delay_mechanism )?  ( selected_waveforms )?  ';'  )
 
-_selected_force_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )*  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )*  )  ( (   (  '?'  )  )*  )?  _target '<='  (  (   (  [fF][oO][rR][cC][eE] )  )*  )  ( force_mode )?  ( selected_expressions )?  ';'  )
+_selected_force_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )  )  ( (   (  '?'  )  )  )?  _target '<='  (  (   (  [fF][oO][rR][cC][eE] )  )  )  ( force_mode )?  ( selected_expressions )?  ';'  )
 
-selected_waveforms ::=  ( waveforms (  (   (  [wW][hH][eE][nN] )  )*  )  choices (  alternative_selected_waveforms )*  )
+selected_waveforms ::=  ( waveforms (  (   (  [wW][hH][eE][nN] )  )  )  choices (  alternative_selected_waveforms )*  )
 
-alternative_selected_waveforms ::=  ( ','  waveforms (  (   (  [wW][hH][eE][nN] )  )*  )  choices )
+alternative_selected_waveforms ::=  ( ','  waveforms (  (   (  [wW][hH][eE][nN] )  )  )  choices )
 
-selected_expressions ::=  ( _value (  (   (  [wW][hH][eE][nN] )  )*  )  choices (  alternative_selected_expressions )*  )
+selected_expressions ::=  ( _value (  (   (  [wW][hH][eE][nN] )  )  )  choices (  alternative_selected_expressions )*  )
 
-alternative_selected_expressions ::=  ( ','  _value (  (   (  [wW][hH][eE][nN] )  )*  )  choices )
+alternative_selected_expressions ::=  ( ','  _value (  (   (  [wW][hH][eE][nN] )  )  )  choices )
 
 _variable_assignment_statement ::=  ( simple_variable_assignment |  conditional_variable_assignment |  selected_variable_assignment )
 
@@ -571,83 +571,83 @@ simple_variable_assignment ::=  ( ( label )?  _target ':='  _value ';'  )
 
 conditional_variable_assignment ::=  ( ( label )?  _target ':='  conditional_expressions ';'  )
 
-selected_variable_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )*  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )*  )  ( (   (  '?'  )  )*  )?  _target ':='  selected_expressions ';'  )
+selected_variable_assignment ::=  ( ( label )?  (  (   (  [wW][iI][tT][hH] )  )  )  _with (  (   (  [sS][eE][lL][eE][cC][tT] )  )  )  ( (   (  '?'  )  )  )?  _target ':='  selected_expressions ';'  )
 
-procedure_call_statement ::=   (  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )*  )  )?  (  ( _simple_name |  expanded_name )  )  ( ( '('  association_list ')'  )  )?  ';'  )  )
+procedure_call_statement ::=   (  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )  )  )?  (  ( _simple_name |  expanded_name )  )  ( ( '('  association_list ')'  )  )?  ';'  )  )
 
-if_statement ::=  ( ( label )?  if (  elsif )*  ( else )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [iI][fF] )  )*  )  ( _end_simple_name )?  ';'  )
+if_statement ::=  ( ( label )?  if (  elsif )*  ( else )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [iI][fF] )  )  )  ( _end_simple_name )?  ';'  )
 
-if ::=  ( (  (   (  [iI][fF] )  )*  )  _condition (  (   (  [tT][hH][eE][nN] )  )*  )  ( sequence_of_statements )?  )
+if ::=  ( (  (   (  [iI][fF] )  )  )  _condition (  (   (  [tT][hH][eE][nN] )  )  )  ( sequence_of_statements )?  )
 
-elsif ::=  ( (  (   (  [eE][lL][sS][iI][fF] )  )*  )  _condition (  (   (  [tT][hH][eE][nN] )  )*  )  ( sequence_of_statements )?  )
+elsif ::=  ( (  (   (  [eE][lL][sS][iI][fF] )  )  )  _condition (  (   (  [tT][hH][eE][nN] )  )  )  ( sequence_of_statements )?  )
 
-else ::=  ( (  (   (  [eE][lL][sS][eE] )  )*  )  ( sequence_of_statements )?  )
+else ::=  ( (  (   (  [eE][lL][sS][eE] )  )  )  ( sequence_of_statements )?  )
 
-case_statement ::=  ( ( label )?  (  (   (  [cC][aA][sS][eE] )  )*  )  ( (   (  '?'  )  )*  )?  _expression (  (   (  [iI][sS] )  )*  )  (  case_statement_alternative )*  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [cC][aA][sS][eE] )  )*  )  ( (   (  '?'  )  )*  )?  ( _end_simple_name )?  ';'  )
+case_statement ::=  ( ( label )?  (  (   (  [cC][aA][sS][eE] )  )  )  ( (   (  '?'  )  )  )?  _expression (  (   (  [iI][sS] )  )  )  (  case_statement_alternative )*  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [cC][aA][sS][eE] )  )  )  ( (   (  '?'  )  )  )?  ( _end_simple_name )?  ';'  )
 
-case_statement_alternative ::=  ( (  (   (  [wW][hH][eE][nN] )  )*  )  choices (   (  '=>'  )  )*  ( sequence_of_statements )?  )
+case_statement_alternative ::=  ( (  (   (  [wW][hH][eE][nN] )  )  )  choices (   (  '=>'  )  )  ( sequence_of_statements )?  )
 
-loop_statement ::=  ( ( label )?  ( _iteration_scheme )?  (  (   (  [lL][oO][oO][pP] )  )*  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [lL][oO][oO][pP] )  )*  )  ( _end_simple_name )?  ';'  )
+loop_statement ::=  ( ( label )?  ( _iteration_scheme )?  (  (   (  [lL][oO][oO][pP] )  )  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [lL][oO][oO][pP] )  )  )  ( _end_simple_name )?  ';'  )
 
 _iteration_scheme ::=  ( while_loop |  for_loop )
 
-while_loop ::=  ( (  (   (  [wW][hH][iI][lL][eE] )  )*  )  _condition )
+while_loop ::=  ( (  (   (  [wW][hH][iI][lL][eE] )  )  )  _condition )
 
-for_loop ::=  ( (  (   (  [fF][oO][rR] )  )*  )  parameter_specification )
+for_loop ::=  ( (  (   (  [fF][oO][rR] )  )  )  parameter_specification )
 
-parameter_specification ::=  ( (  _identifier )  (  (   (  [iI][nN] )  )*  )  _discrete_range )
+parameter_specification ::=  ( (  _identifier )  (  (   (  [iI][nN] )  )  )  _discrete_range )
 
-next_statement ::=  ( ( label )?  (  (   (  [nN][eE][xX][tT] )  )*  )  ( _loop_label )?  ( _when_clause )?  ';'  )
+next_statement ::=  ( ( label )?  (  (   (  [nN][eE][xX][tT] )  )  )  ( _loop_label )?  ( _when_clause )?  ';'  )
 
 _loop_label ::=  (  _simple_name )
 
-exit_statement ::=  ( ( label )?  (  (   (  [eE][xX][iI][tT] )  )*  )  ( _loop_label )?  ( _when_clause )?  ';'  )
+exit_statement ::=  ( ( label )?  (  (   (  [eE][xX][iI][tT] )  )  )  ( _loop_label )?  ( _when_clause )?  ';'  )
 
-return_statement ::=  ( ( label )?  (  (   (  [rR][eE][tT][uU][rR][nN] )  )*  )  ( _expression )?  ';'  )
+return_statement ::=  ( ( label )?  (  (   (  [rR][eE][tT][uU][rR][nN] )  )  )  ( _expression )?  ';'  )
 
-null_statement ::=  ( ( label )?  (  (   (  [nN][uU][lL][lL] )  )*  )  ';'  )
+null_statement ::=  ( ( label )?  (  (   (  [nN][uU][lL][lL] )  )  )  ';'  )
 
 concurrent_statement_part ::=  ( _concurrent_statement )+
 
 _concurrent_statement ::=   (  ( block_statement |  process_statement |  component_instantiation_statement |  procedure_call_statement |  assertion_statement |  _concurrent_signal_assignment |  _generate_statement |  _PSL_Directive |  _PSL_Declaration )  )
 
-block_statement ::=  ( ( label )?  (  (   (  [bB][lL][oO][cC][kK] )  )*  )  ( ( '('  _guard ')'  )  )?  ( (  (   (  [iI][sS] )  )*  )  )?  ( header )?  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  ( concurrent_statement_part )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [bB][lL][oO][cC][kK] )  )*  )  ( _end_simple_name )?  ';'  )
+block_statement ::=  ( ( label )?  (  (   (  [bB][lL][oO][cC][kK] )  )  )  ( ( '('  _guard ')'  )  )?  ( (  (   (  [iI][sS] )  )  )  )?  ( header )?  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  ( concurrent_statement_part )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [bB][lL][oO][cC][kK] )  )  )  ( _end_simple_name )?  ';'  )
 
 _guard ::=  (  _condition )
 
-process_statement ::=  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )*  )  )?  (  (   (  [pP][rR][oO][cC][eE][sS][sS] )  )*  )  ( ( '('  sensitivity_list ')'  )  )?  ( (  (   (  [iI][sS] )  )*  )  )?  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )*  )  )?  (  (   (  [pP][rR][oO][cC][eE][sS][sS] )  )*  )  ( _end_simple_name )?  ';'  )
+process_statement ::=  ( ( label )?  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][sS][sS] )  )  )  ( ( '('  sensitivity_list ')'  )  )?  ( (  (   (  [iI][sS] )  )  )  )?  ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  ( sequence_of_statements )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [pP][oO][sS][tT][pP][oO][nN][eE][dD] )  )  )  )?  (  (   (  [pP][rR][oO][cC][eE][sS][sS] )  )  )  ( _end_simple_name )?  ';'  )
 
 _concurrent_signal_assignment ::=   (  ( (  _simple_waveform_assignment )  |  (  _conditional_waveform_assignment )  |  (  _selected_waveform_assignment )  )  )
 
 component_instantiation_statement ::=  ( ( label )?  _entity_aspect ( _map_aspect )?  ';'  )
 
-entity_instantiation ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )*  )  ( _simple_name |  expanded_name )  ( ( '('  _simple_name ')'  )  )?  )
+entity_instantiation ::=  ( (  (   (  [eE][nN][tT][iI][tT][yY] )  )  )  ( _simple_name |  expanded_name )  ( ( '('  _simple_name ')'  )  )?  )
 
-configuration_instantiation ::=  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )*  )  ( _simple_name |  expanded_name )  )
+configuration_instantiation ::=  ( (  (   (  [cC][oO][nN][fF][iI][gG][uU][rR][aA][tT][iI][oO][nN] )  )  )  ( _simple_name |  expanded_name )  )
 
-component_instantiation ::=   (  ( ( (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )*  )  )?  ( _simple_name |  expanded_name )  )  )
+component_instantiation ::=   (  ( ( (  (   (  [cC][oO][mM][pP][oO][nN][eE][nN][tT] )  )  )  )?  ( _simple_name |  expanded_name )  )  )
 
 _generate_statement ::=  ( for_generate_statement |  if_generate_statement |  case_generate_statement )
 
-for_generate_statement ::=  ( ( label )?  (  (   (  [fF][oO][rR] )  )*  )  parameter_specification (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( generate_statement_body )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( _end_simple_name )?  ';'  )
+for_generate_statement ::=  ( ( label )?  (  (   (  [fF][oO][rR] )  )  )  parameter_specification (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( generate_statement_body )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( _end_simple_name )?  ';'  )
 
-if_generate_statement ::=  ( ( label )?  if_generate (  elsif_generate )*  ( else_generate )?  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( _end_simple_name )?  ';'  )
+if_generate_statement ::=  ( ( label )?  if_generate (  elsif_generate )*  ( else_generate )?  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( _end_simple_name )?  ';'  )
 
-if_generate ::=  ( (  (   (  [iI][fF] )  )*  )  ( label )?  _condition (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( generate_statement_body )?  )
+if_generate ::=  ( (  (   (  [iI][fF] )  )  )  ( label )?  _condition (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( generate_statement_body )?  )
 
-elsif_generate ::=  ( (  (   (  [eE][lL][sS][iI][fF] )  )*  )  ( label )?  _condition (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( generate_statement_body )?  )
+elsif_generate ::=  ( (  (   (  [eE][lL][sS][iI][fF] )  )  )  ( label )?  _condition (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( generate_statement_body )?  )
 
-else_generate ::=  ( (  (   (  [eE][lL][sS][eE] )  )*  )  ( label )?  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( generate_statement_body )?  )
+else_generate ::=  ( (  (   (  [eE][lL][sS][eE] )  )  )  ( label )?  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( generate_statement_body )?  )
 
-case_generate_statement ::=  ( ( label )?  (  (   (  [cC][aA][sS][eE] )  )*  )  _expression (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  (  case_generate_alternative )*  (  (   (  [eE][nN][dD] )  )*  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )*  )  ( _end_simple_name )?  ';'  )
+case_generate_statement ::=  ( ( label )?  (  (   (  [cC][aA][sS][eE] )  )  )  _expression (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  (  case_generate_alternative )*  (  (   (  [eE][nN][dD] )  )  )  (  (   (  [gG][eE][nN][eE][rR][aA][tT][eE] )  )  )  ( _end_simple_name )?  ';'  )
 
-case_generate_alternative ::=  ( (  (   (  [wW][hH][eE][nN] )  )*  )  ( label )?  choices (   (  '=>'  )  )*  ( generate_statement_body )?  )
+case_generate_alternative ::=  ( (  (   (  [wW][hH][eE][nN] )  )  )  ( label )?  choices (   (  '=>'  )  )  ( generate_statement_body )?  )
 
-generate_statement_body ::=  ( ( ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  (  _concurrent_statement )*  ( ( (  (   (  [eE][nN][dD] )  )*  )  ( _end_simple_name )?  ';'  )  )?  )  |  ( ( ( ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )*  )  )  )?  (  _concurrent_statement )*  (  (   (  [eE][nN][dD] )  )*  )  ( _end_simple_name )?  ';'  )  |  ( _concurrent_statement )+  )
+generate_statement_body ::=  ( ( ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  (  _concurrent_statement )*  ( ( (  (   (  [eE][nN][dD] )  )  )  ( _end_simple_name )?  ';'  )  )?  )  |  ( ( ( ( declarative_part )?  (  (   (  [bB][eE][gG][iI][nN] )  )  )  )  )?  (  _concurrent_statement )*  (  (   (  [eE][nN][dD] )  )  )  ( _end_simple_name )?  ';'  )  |  ( _concurrent_statement )+  )
 
 label ::=  ( _identifier ':'  )
 
-use_clause ::=  ( (  (   (  [uU][sS][eE] )  )*  )  ( expanded_name (  ( ','  expanded_name )  )*  )  ';'  )
+use_clause ::=  ( (  (   (  [uU][sS][eE] )  )  )  ( expanded_name (  ( ','  expanded_name )  )*  )  ';'  )
 
 design_unit ::=   (  ( context_clause |  ( ( context_clause )?  _library_unit )  )  )
 
@@ -657,27 +657,27 @@ _primary_unit ::=   (  ( entity_declaration |  configuration_declaration |  pack
 
 _secondary_unit ::=   (  ( architecture_body |  package_body )  )
 
-library_clause ::=  ( (  (   (  [lL][iI][bB][rR][aA][rR][yY] )  )*  )  logical_name_list ';'  )
+library_clause ::=  ( (  (   (  [lL][iI][bB][rR][aA][rR][yY] )  )  )  logical_name_list ';'  )
 
 logical_name_list ::=  ( _simple_name (  ( ','  _simple_name )  )*  )
 
-context_declaration ::=  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )*  )  (  _identifier )  (  (   (  [iI][sS] )  )*  )  ( context_clause )?  (  (   (  [eE][nN][dD] )  )*  )  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )*  )  )?  ( _end_simple_name )?  ';'  )
+context_declaration ::=  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )  )  (  _identifier )  (  (   (  [iI][sS] )  )  )  ( context_clause )?  (  (   (  [eE][nN][dD] )  )  )  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )  )  )?  ( _end_simple_name )?  ';'  )
 
 context_clause ::=   (  ( _context_item )+  )
 
 _context_item ::=   (  ( library_clause |  use_clause |  context_reference )  )
 
-context_reference ::=  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )*  )  context_list ';'  )
+context_reference ::=  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )  )  context_list ';'  )
 
 context_list ::=  ( expanded_name (  ( ','  expanded_name )  )*  )
 
-_separator ::=  (  ( '\t'  |  '\v'  |  '\n'  |  '\n'  |  '\f'  |  ' '  |  ' '  )  )*
+_separator ::=  (  ( '\t'  |  '\v'  |  '\n'  |  '\n'  |  '\f'  |  ' '  |  ' '  )  )
 
 _identifier ::=  ( (  basic_identifier )  |  extended_identifier )
 
-basic_identifier ::=  (  ( ( 'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  )  (  ( ( '_'  )?  ( 'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  )  )  )*  )  )*
+basic_identifier ::=  (  ( ( 'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  )  (  ( ( '_'  )?  ( 'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  )  )  )*  )  )
 
-extended_identifier ::=  (  ( '\\'  ( ( 'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  |  '"'  |  '#'  |  '&'  |  "'"  |  '('  |  ')'  |  '*'  |  '+'  |  ','  |  '-'  |  '.'  |  '/'  |  ':'  |  ';'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '['  |  ']'  |  '_'  |  '`'  |  '|'  |  ' '  |  ' '  |  'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  '!'  |  '$'  |  '%'  |  '^'  |  '{'  |  '}'  |  ''  |  '~'  |  '¡'  |  '¢'  |  '£'  |  '¤'  |  '¥'  |  '¦'  |  '§'  |  '¨'  |  '©'  |  'ª'  |  '«'  |  '¬'  |  '®'  |  '¯'  |  '°'  |  '±'  |  '²'  |  '³'  |  '´'  |  'µ'  |  '¶'  |  '·'  |  '¸'  |  '¹'  |  'º'  |  '»'  |  '¼'  |  '½'  |  '¾'  |  '¿'  |  '×'  |  '÷'  |  '-'  |  '\\\'  )  )+  '\\'  )  )*
+extended_identifier ::=  (  ( '\\'  ( ( 'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  'À'  |  'Á'  |  'Â'  |  'Ã'  |  'Ä'  |  'Å'  |  'Æ'  |  'Ç'  |  'È'  |  'É'  |  'Ê'  |  'Ë'  |  'Ì'  |  'Í'  |  'Î'  |  'Ï'  |  'Ð'  |  'Ñ'  |  'Ò'  |  'Ó'  |  'Ô'  |  'Õ'  |  'Ö'  |  'Ø'  |  'Ù'  |  'Ú'  |  'Û'  |  'Ü'  |  'Ý'  |  'Þ'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  |  '"'  |  '#'  |  '&'  |  "'"  |  '('  |  ')'  |  '*'  |  '+'  |  ','  |  '-'  |  '.'  |  '/'  |  ':'  |  ';'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '['  |  ']'  |  '_'  |  '`'  |  '|'  |  ' '  |  ' '  |  'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'ß'  |  'à'  |  'á'  |  'â'  |  'ã'  |  'ä'  |  'å'  |  'æ'  |  'ç'  |  'è'  |  'é'  |  'ê'  |  'ë'  |  'ì'  |  'í'  |  'î'  |  'ï'  |  'ð'  |  'ñ'  |  'ò'  |  'ó'  |  'ô'  |  'õ'  |  'ö'  |  'ø'  |  'ù'  |  'ú'  |  'û'  |  'ü'  |  'ý'  |  'þ'  |  'ÿ'  |  '!'  |  '$'  |  '%'  |  '^'  |  '{'  |  '}'  |  ''  |  '~'  |  '¡'  |  '¢'  |  '£'  |  '¤'  |  '¥'  |  '¦'  |  '§'  |  '¨'  |  '©'  |  'ª'  |  '«'  |  '¬'  |  '®'  |  '¯'  |  '°'  |  '±'  |  '²'  |  '³'  |  '´'  |  'µ'  |  '¶'  |  '·'  |  '¸'  |  '¹'  |  'º'  |  '»'  |  '¼'  |  '½'  |  '¾'  |  '¿'  |  '×'  |  '÷'  |  '-'  |  '\\\'  )  )+  '\\'  )  )
 
 _abstract_literal ::=  ( integer_decimal |  real_decimal |  based_integer |  based_real )
 
@@ -687,7 +687,7 @@ real_decimal ::=  ( integer (  '.'  )  (  _integer_immed )  ( exponent )?  )
 
 separator ::=  (  '_'  )
 
-_digit ::=  ( (  '0'  )*  |  (  '1'  )*  |  (  '2'  )*  |  (  '3'  )*  |  (  '4'  )*  |  (  '5'  )*  |  (  '6'  )*  |  (  '7'  )*  |  (  '8'  )*  |  (  '9'  )*  )
+_digit ::=  ( (  '0'  )  |  (  '1'  )  |  (  '2'  )  |  (  '3'  )  |  (  '4'  )  |  (  '5'  )  |  (  '6'  )  |  (  '7'  )  |  (  '8'  )  |  (  '9'  )  )
 
 _digit_immed ::=  ( (  '0'  )  |  (  '1'  )  |  (  '2'  )  |  (  '3'  )  |  (  '4'  )  |  (  '5'  )  |  (  '6'  )  |  (  '7'  )  |  (  '8'  )  |  (  '9'  )  )
 
@@ -767,7 +767,7 @@ string_literal ::=  ( '"'  (  ( (   (  [^"] )  )  |  escape_sequence )  )*  (  '
 
 escape_sequence ::=  (   (  '""'  )  )
 
-bit_string_literal ::=  ( ( ( (  (  [uUsS]?[bB]'"' )*  )  |  ( (  integer )  (  (  [uUsS]?[bB]'"' )  )  )  )  ( (  _binary_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [uUsS]?[oO]'"' )*  )  |  ( (  integer )  (  (  [uUsS]?[oO]'"' )  )  )  )  ( (  _octal_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [dD]'"' )*  )  |  ( (  integer )  (  (  [dD]'"' )  )  )  )  ( (  _decimal_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [uUsS]?[xX]'"' )*  )  |  ( (  integer )  (  (  [uUsS]?[xX]'"' )  )  )  )  ( (  _hexadecimal_bit_value )  )?  (  '"'  )  )  )
+bit_string_literal ::=  ( ( ( (  (  [uUsS]?[bB]'"' )  )  |  ( (  integer )  (  (  [uUsS]?[bB]'"' )  )  )  )  ( (  _binary_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [uUsS]?[oO]'"' )  )  |  ( (  integer )  (  (  [uUsS]?[oO]'"' )  )  )  )  ( (  _octal_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [dD]'"' )  )  |  ( (  integer )  (  (  [dD]'"' )  )  )  )  ( (  _decimal_bit_value )  )?  (  '"'  )  )  |  ( ( (  (  [uUsS]?[xX]'"' )  )  |  ( (  integer )  (  (  [uUsS]?[xX]'"' )  )  )  )  ( (  _hexadecimal_bit_value )  )?  (  '"'  )  )  )
 
 unresolved ::=  (   (  [^_ , \t,\v,\r,\n,\f"] )  )
 
@@ -781,9 +781,9 @@ _decimal_bit_value ::=  ( ( (  [0-9] )  |  unresolved |  dont_care |  (  separat
 
 _hexadecimal_bit_value ::=  ( ( (  [0-9a-fA-F] )  |  unresolved |  dont_care |  (  separator )  )  (  ( ( ( separator ( (  separator )  )?  )  )?  ( (  [0-9a-fA-F] )  |  unresolved |  dont_care )  )  )*  )
 
-comment ::=  ( ( (   (  '--'  )  )*  (   (  [^\v\r\n\f]* )  )*  )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )
+comment ::=  ( ( (   (  '--'  )  )  (   (  [^\v\r\n\f]* )  )  )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )
 
-tool_directive ::=  ( (   (  '`'  )  )*  [^\v\r\n\f]* )
+tool_directive ::=  ( (   (  '`'  )  )  [^\v\r\n\f]* )
 
 _PSL_Identifier ::=  (  _identifier )
 
@@ -797,39 +797,39 @@ _PSL_Number ::=  ( (  _expr )  |  PSL_Built_In_Function_Call )
 
 _PSL_Value ::=  _PSL_Any_Type
 
-PSL_Expression ::=   (  ( _PSL_Boolean (  ( (   (  '->'  )  )*  |  (   (  '<->'  )  )*  )  )  _PSL_Boolean )  )
+PSL_Expression ::=   (  ( _PSL_Boolean (  ( (   (  '->'  )  )  |  (   (  '<->'  )  )  )  )  _PSL_Boolean )  )
 
-PSL_Built_In_Function_Call ::=   (  ( ( ( (  (   (  [pP][rR][eE][vV] )  )*  )  |  (  (   (  [nN][eE][xX][tT] )  )*  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )*  )  |  (  (   (  [rR][oO][sS][eE] )  )*  )  |  (  (   (  [fF][eE][lL][lL] )  )*  )  |  (  (   (  [iI][sS][uU][nN][kK][nN][oO][wW][nN] )  )*  )  |  (  (   (  [cC][oO][uU][nN][tT][oO][nN][eE][sS] )  )*  )  |  (  (   (  [oO][nN][eE][hH][oO][tT] )  )*  )  |  (  (   (  [oO][nN][eE][hH][oO][tT][00] )  )*  )  |  (  (   (  [nN][oO][nN][dD][eE][tT] )  )*  )  |  (  (   (  [nN][oO][nN][dD][eE][tT][__][vV][eE][cC][tT][oO][rR] )  )*  )  )  '('  ( ( _PSL_Any_Type |  PSL_Value_Set )  (  ( ','  ( _PSL_Any_Type |  PSL_Value_Set )  )  )*  )  ')'  )  |  ( (  (   (  [eE][nN][dD][eE][dD] )  )*  )  '('  _PSL_Sequence ')'  )  )  )
+PSL_Built_In_Function_Call ::=   (  ( ( ( (  (   (  [pP][rR][eE][vV] )  )  )  |  (  (   (  [nN][eE][xX][tT] )  )  )  |  (  (   (  [sS][tT][aA][bB][lL][eE] )  )  )  |  (  (   (  [rR][oO][sS][eE] )  )  )  |  (  (   (  [fF][eE][lL][lL] )  )  )  |  (  (   (  [iI][sS][uU][nN][kK][nN][oO][wW][nN] )  )  )  |  (  (   (  [cC][oO][uU][nN][tT][oO][nN][eE][sS] )  )  )  |  (  (   (  [oO][nN][eE][hH][oO][tT] )  )  )  |  (  (   (  [oO][nN][eE][hH][oO][tT][00] )  )  )  |  (  (   (  [nN][oO][nN][dD][eE][tT] )  )  )  |  (  (   (  [nN][oO][nN][dD][eE][tT][__][vV][eE][cC][tT][oO][rR] )  )  )  )  '('  ( ( _PSL_Any_Type |  PSL_Value_Set )  (  ( ','  ( _PSL_Any_Type |  PSL_Value_Set )  )  )*  )  ')'  )  |  ( (  (   (  [eE][nN][dD][eE][dD] )  )  )  '('  _PSL_Sequence ')'  )  )  )
 
 _PSL_Clock_Expression ::=  ( _condition |  PSL_Built_In_Function_Call )
 
-PSL_Union_Expression ::=   (  ( _PSL_Any_Type (  (  (   (  [uU][nN][iI][oO][nN] )  )*  )  )  _PSL_Any_Type )  )
+PSL_Union_Expression ::=   (  ( _PSL_Any_Type (  (  (   (  [uU][nN][iI][oO][nN] )  )  )  )  _PSL_Any_Type )  )
 
 _PSL_Declaration ::=  ( PSL_Property_Declaration |  PSL_Sequence_Declaration |  PSL_Clock_Declaration )
 
-PSL_Clock_Declaration ::=  ( (  (   (  [dD][eE][fF][aA][uU][lL][tT] )  )*  )  (  (   (  [cC][lL][oO][cC][kK] )  )*  )  (  (   (  [iI][sS] )  )*  )  _PSL_Clock_Expression ';'  )
+PSL_Clock_Declaration ::=  ( (  (   (  [dD][eE][fF][aA][uU][lL][tT] )  )  )  (  (   (  [cC][lL][oO][cC][kK] )  )  )  (  (   (  [iI][sS] )  )  )  _PSL_Clock_Expression ';'  )
 
 _PSL_SERE ::=  ( _PSL_Boolean |  _PSL_Sequence |  PSL_Simple_SERE |  _PSL_Compound_SERE )
 
 PSL_Simple_SERE ::=  ( _PSL_Fusion_SERE |  _PSL_Concat_SERE )
 
-_PSL_Fusion_SERE ::=   (  ( _PSL_SERE (  (  ( (  (   (  ':'  )  )*  )  _PSL_SERE )  )  )+  )  )
+_PSL_Fusion_SERE ::=   (  ( _PSL_SERE (  (  ( (  (   (  ':'  )  )  )  _PSL_SERE )  )  )+  )  )
 
-_PSL_Concat_SERE ::=   (  ( _PSL_SERE (  (  ( (  (   (  ';'  )  )*  )  _PSL_SERE )  )  )+  )  )
+_PSL_Concat_SERE ::=   (  ( _PSL_SERE (  (  ( (  (   (  ';'  )  )  )  _PSL_SERE )  )  )+  )  )
 
 _PSL_Compound_SERE ::=   (  ( PSL_Repeated_SERE |  PSL_Braced_SERE |  PSL_Clocked_SERE |  (  ( PSL_Compound_SERE_Or |  PSL_Compound_SERE_And |  PSL_Compound_SERE_Within )  )  |  PSL_Parameterized_SERE )  )
 
-PSL_Compound_SERE_Or ::=   (  ( _PSL_Compound_SERE (  (  ( (  (   (  '|'  )  )*  )  _PSL_Compound_SERE )  )  )+  )  )
+PSL_Compound_SERE_Or ::=   (  ( _PSL_Compound_SERE (  (  ( (  (   (  '|'  )  )  )  _PSL_Compound_SERE )  )  )+  )  )
 
-PSL_Compound_SERE_And ::=   (  ( _PSL_Compound_SERE (  (  ( (  ( (   (  '&'  )  )*  |  (   (  '&&'  )  )*  )  )  _PSL_Compound_SERE )  )  )+  )  )
+PSL_Compound_SERE_And ::=   (  ( _PSL_Compound_SERE (  (  ( (  ( (   (  '&'  )  )  |  (   (  '&&'  )  )  )  )  _PSL_Compound_SERE )  )  )+  )  )
 
-PSL_Compound_SERE_Within ::=   (  ( _PSL_Compound_SERE (  (  ( (  (  (   (  [wW][iI][tT][hH][iI][nN] )  )*  )  )  _PSL_Compound_SERE )  )  )+  )  )
+PSL_Compound_SERE_Within ::=   (  ( _PSL_Compound_SERE (  (  ( (  (  (   (  [wW][iI][tT][hH][iI][nN] )  )  )  )  _PSL_Compound_SERE )  )  )+  )  )
 
-PSL_Parameterized_SERE ::=  ( (  (   (  [fF][oO][rR] )  )*  )  PSL_Parameters_Definition ':'  (  ( (   (  '|'  )  )*  |  (   (  '&'  )  )*  |  (   (  '&&'  )  )*  )  )  '{'  (  _PSL_SERE )  '}'  )
+PSL_Parameterized_SERE ::=  ( (  (   (  [fF][oO][rR] )  )  )  PSL_Parameters_Definition ':'  (  ( (   (  '|'  )  )  |  (   (  '&'  )  )  |  (   (  '&&'  )  )  )  )  '{'  (  _PSL_SERE )  '}'  )
 
 PSL_Parameters_Definition ::=  ( PSL_Parameter_Specification (  ( ','  PSL_Parameter_Specification )  )*  )
 
-PSL_Parameter_Specification ::=  ( _PSL_Identifier ( PSL_Index_Range )?  (  (   (  [iI][nN] )  )*  )  PSL_Value_Set )
+PSL_Parameter_Specification ::=  ( _PSL_Identifier ( PSL_Index_Range )?  (  (   (  [iI][nN] )  )  )  PSL_Value_Set )
 
 _PSL_Sequence ::=  ( _PSL_Sequence_Instance |  PSL_Repeated_SERE |  PSL_Braced_SERE |  PSL_Clocked_SERE )
 
@@ -851,19 +851,19 @@ PSL_Parenthesized_FL_Property ::=   (  ( '('  _PSL_FL_Property ')'  )  )
 
 PSL_Sequential_FL_Property ::=   (  ( _PSL_Sequence ( '!'  )?  )  )
 
-PSL_Clocked_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  (   (  '@'  )  )*  )  _PSL_Clock_Expression )  )  )+  )  )
+PSL_Clocked_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  (   (  '@'  )  )  )  _PSL_Clock_Expression )  )  )+  )  )
 
-PSL_Invariant_FL_Property ::=   (  ( (  ( (  (   (  [aA][lL][wW][aA][yY][sS] )  )*  )  |  (  (   (  [nN][eE][vV][eE][rR] )  )*  )  )  )  _PSL_FL_Property )  )
+PSL_Invariant_FL_Property ::=   (  ( (  ( (  (   (  [aA][lL][wW][aA][yY][sS] )  )  )  |  (  (   (  [nN][eE][vV][eE][rR] )  )  )  )  )  _PSL_FL_Property )  )
 
-PSL_Ocurrence_FL_Property ::=   (  ( (  ( ( (  (   (  [nN][eE][xX][tT] )  )*  )  |  (  (   (  [eE][vV][eE][nN][tT][uU][aA][lL][lL][yY] )  )*  )  )  ( (  '!'  )  )?  )  )  _PSL_FL_Property )  )
+PSL_Ocurrence_FL_Property ::=   (  ( (  ( ( (  (   (  [nN][eE][xX][tT] )  )  )  |  (  (   (  [eE][vV][eE][nN][tT][uU][aA][lL][lL][yY] )  )  )  )  ( (  '!'  )  )?  )  )  _PSL_FL_Property )  )
 
-PSL_Implication_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  ( (   (  '->'  )  )*  |  (   (  '<->'  )  )*  )  )  _PSL_FL_Property )  )  )+  )  )
+PSL_Implication_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  ( (   (  '->'  )  )  |  (   (  '<->'  )  )  )  )  _PSL_FL_Property )  )  )+  )  )
 
-PSL_Logical_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  ( (  (   (  [aA][nN][dD] )  )*  )  |  (  (   (  [oO][rR] )  )*  )  )  )  _PSL_FL_Property )  )  )+  )  )
+PSL_Logical_FL_Property ::=   (  ( _PSL_FL_Property (  (  ( (  ( (  (   (  [aA][nN][dD] )  )  )  |  (  (   (  [oO][rR] )  )  )  )  )  _PSL_FL_Property )  )  )+  )  )
 
-PSL_Factor_FL_Property ::=   (  ( (  (  (   (  [nN][oO][tT] )  )*  )  )  _PSL_FL_Property )  )
+PSL_Factor_FL_Property ::=   (  ( (  (  (   (  [nN][oO][tT] )  )  )  )  _PSL_FL_Property )  )
 
-PSL_Extended_Ocurrence_FL_Property ::=   (  ( (  ( ( (  (   (  [eE][vV][eE][nN][tT][uU][aA][lL][lL][yY] )  )*  )  |  (  (   (  [nN][eE][xX][tT] )  )*  )  |  (  (   (  [nN][eE][xX][tT][__][aA] )  )*  )  |  (  (   (  [nN][eE][xX][tT][__][eE] )  )*  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT] )  )*  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT][__][aA] )  )*  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT][__][eE] )  )*  )  )  ( (  '!'  )  )?  )  )  _PSL_Extended_Ocurrence_argument )  )
+PSL_Extended_Ocurrence_FL_Property ::=   (  ( (  ( ( (  (   (  [eE][vV][eE][nN][tT][uU][aA][lL][lL][yY] )  )  )  |  (  (   (  [nN][eE][xX][tT] )  )  )  |  (  (   (  [nN][eE][xX][tT][__][aA] )  )  )  |  (  (   (  [nN][eE][xX][tT][__][eE] )  )  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT] )  )  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT][__][aA] )  )  )  |  (  (   (  [nN][eE][xX][tT][__][eE][vV][eE][nN][tT][__][eE] )  )  )  )  ( (  '!'  )  )?  )  )  _PSL_Extended_Ocurrence_argument )  )
 
 _PSL_Extended_Ocurrence_argument ::=  ( ( _PSL_Extended_Ocurrence_FL_Property_Count_Specification |  _PSL_Extended_Ocurrence_FL_Property_Until_Specification )  '('  (  _PSL_FL_Property )  ')'  )
 
@@ -871,27 +871,27 @@ _PSL_Extended_Ocurrence_FL_Property_Count_Specification ::=  ( PSL_Count )
 
 _PSL_Extended_Ocurrence_FL_Property_Until_Specification ::=   (  ( '('  (  _PSL_Boolean )  ')'  ( PSL_Count )?  )  )
 
-PSL_Termination_FL_Property ::=   (  ( _PSL_FL_Property (  ( (  (   (  [aA][sS][yY][nN][cC][__][aA][bB][oO][rR][tT] )  )*  )  |  (  (   (  [sS][yY][nN][cC][__][aA][bB][oO][rR][tT] )  )*  )  |  (  (   (  [aA][bB][oO][rR][tT] )  )*  )  )  )  _PSL_Boolean )  )
+PSL_Termination_FL_Property ::=   (  ( _PSL_FL_Property (  ( (  (   (  [aA][sS][yY][nN][cC][__][aA][bB][oO][rR][tT] )  )  )  |  (  (   (  [sS][yY][nN][cC][__][aA][bB][oO][rR][tT] )  )  )  |  (  (   (  [aA][bB][oO][rR][tT] )  )  )  )  )  _PSL_Boolean )  )
 
-PSL_Bounding_FL_Property ::=   (  ( _PSL_FL_Property (  ( ( (  (   (  [uU][nN][tT][iI][lL] )  )*  )  |  (  (   (  [bB][eE][fF][oO][rR][eE] )  )*  )  )  ( (  '!'  )  )?  ( (  '_'  )  )?  )  )  _PSL_FL_Property )  )
+PSL_Bounding_FL_Property ::=   (  ( _PSL_FL_Property (  ( ( (  (   (  [uU][nN][tT][iI][lL] )  )  )  |  (  (   (  [bB][eE][fF][oO][rR][eE] )  )  )  )  ( (  '!'  )  )?  ( (  '_'  )  )?  )  )  _PSL_FL_Property )  )
 
-PSL_Suffix_Implication_FL_Property ::=  (  (  ( '{'  (  _PSL_SERE )  '}'  '('  (  _PSL_FL_Property )  ')'  )  )  |   (  ( ( (  _PSL_Sequence )  (  (   (  '|=>'  )  )*  )  (  _PSL_FL_Property )  )  |  ( (  _PSL_Sequence )  (  (   (  '|->'  )  )*  )  (  _PSL_FL_Property )  )  )  )  )
+PSL_Suffix_Implication_FL_Property ::=  (  (  ( '{'  (  _PSL_SERE )  '}'  '('  (  _PSL_FL_Property )  ')'  )  )  |   (  ( ( (  _PSL_Sequence )  (  (   (  '|=>'  )  )  )  (  _PSL_FL_Property )  )  |  ( (  _PSL_Sequence )  (  (   (  '|->'  )  )  )  (  _PSL_FL_Property )  )  )  )  )
 
-PSL_Parameterized_Property ::=  ( (  (   (  [fF][oO][rR] )  )*  )  PSL_Parameters_Definition ':'  (  ( (  (   (  [aA][nN][dD] )  )*  )  |  (  (   (  [oO][rR] )  )*  )  )  )  '('  _PSL_FL_Property ')'  )
+PSL_Parameterized_Property ::=  ( (  (   (  [fF][oO][rR] )  )  )  PSL_Parameters_Definition ':'  (  ( (  (   (  [aA][nN][dD] )  )  )  |  (  (   (  [oO][rR] )  )  )  )  )  '('  _PSL_FL_Property ')'  )
 
-PSL_Property_Replicator ::=  ( (  (   (  [fF][oO][rR][aA][lL][lL] )  )*  )  PSL_Parameter_Specification ':'  (  (  (  _PSL_Property_Instance )  |  _PSL_Property )  )  )
+PSL_Property_Replicator ::=  ( (  (   (  [fF][oO][rR][aA][lL][lL] )  )  )  PSL_Parameter_Specification ':'  (  (  (  _PSL_Property_Instance )  |  _PSL_Property )  )  )
 
 PSL_Index_Range ::=  ( '('  _PSL_Range ')'  )
 
 PSL_Value_Set ::=  ( boolean |  ( '{'  _PSL_Value_Range (  ( ','  _PSL_Value_Range )  )*  '}'  )  )
 
-boolean ::=  (  (   (  [bB][oO][oO][lL][eE][aA][nN] )  )*  )
+boolean ::=  (  (   (  [bB][oO][oO][lL][eE][aA][nN] )  )  )
 
 _PSL_Value_Range ::=  ( _PSL_Value |  _PSL_Range )
 
-PSL_Property_Declaration ::=  ( (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )*  )  _PSL_Identifier ( ( '('  PSL_Formal_Parameter_List ')'  )  )?  (  (   (  [iI][sS] )  )*  )  (  (  _PSL_Property_Instance )  |  _PSL_Property )  ';'  )
+PSL_Property_Declaration ::=  ( (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )  )  _PSL_Identifier ( ( '('  PSL_Formal_Parameter_List ')'  )  )?  (  (   (  [iI][sS] )  )  )  (  (  _PSL_Property_Instance )  |  _PSL_Property )  ';'  )
 
-PSL_Sequence_Declaration ::=  ( (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )*  )  _PSL_Identifier ( ( '('  PSL_Formal_Parameter_List ')'  )  )?  (  (   (  [iI][sS] )  )*  )  _PSL_Sequence ';'  )
+PSL_Sequence_Declaration ::=  ( (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )  )  _PSL_Identifier ( ( '('  PSL_Formal_Parameter_List ')'  )  )?  (  (   (  [iI][sS] )  )  )  _PSL_Sequence ';'  )
 
 PSL_Formal_Parameter_List ::=  ( PSL_Formal_Parameter (  ( ';'  PSL_Formal_Parameter )  )*  )
 
@@ -899,13 +899,13 @@ PSL_Formal_Parameter ::=  ( _PSL_Parameter_Specification ( _PSL_Identifier (  ( 
 
 _PSL_Parameter_Specification ::=  ( PSL_Constant_Parameter_Specification |  PSL_Temporal_Parameter_Specification )
 
-PSL_Constant_Parameter_Specification ::=  ( (  (   (  [cC][oO][nN][sS][tT] )  )*  )  |  ( ( (  (   (  [cC][oO][nN][sS][tT] )  )*  )  )?  ( PSL_HDL_Type |  PSL_Type_Class )  )  )
+PSL_Constant_Parameter_Specification ::=  ( (  (   (  [cC][oO][nN][sS][tT] )  )  )  |  ( ( (  (   (  [cC][oO][nN][sS][tT] )  )  )  )?  ( PSL_HDL_Type |  PSL_Type_Class )  )  )
 
-PSL_Temporal_Parameter_Specification ::=  ( (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )*  )  |  (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )*  )  )
+PSL_Temporal_Parameter_Specification ::=  ( (  (   (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  )  )  |  (  (   (  [pP][rR][oO][pP][eE][rR][tT][yY] )  )  )  )
 
-PSL_HDL_Type ::=  ( (  (   (  [hH][dD][lL][tT][yY][pP][eE] )  )*  )  subtype_indication )
+PSL_HDL_Type ::=  ( (  (   (  [hH][dD][lL][tT][yY][pP][eE] )  )  )  subtype_indication )
 
-PSL_Type_Class ::=  ( (  (   (  [bB][oO][oO][lL][eE][aA][nN] )  )*  )  |  (  (   (  [bB][iI][tT] )  )*  )  |  (  (   (  [bB][iI][tT][__][vV][eE][cC][tT][oO][rR] )  )*  )  |  (  (   (  [nN][uU][mM][eE][rR][iI][cC] )  )*  )  |  (  (   (  [sS][tT][rR][iI][nN][gG] )  )*  )  )
+PSL_Type_Class ::=  ( (  (   (  [bB][oO][oO][lL][eE][aA][nN] )  )  )  |  (  (   (  [bB][iI][tT] )  )  )  |  (  (   (  [bB][iI][tT][__][vV][eE][cC][tT][oO][rR] )  )  )  |  (  (   (  [nN][uU][mM][eE][rR][iI][cC] )  )  )  |  (  (   (  [sS][tT][rR][iI][nN][gG] )  )  )  )
 
 PSL_Instance ::=  ( _PSL_Identifier ( ( '('  PSL_Actual_Parameter_List ')'  )  )?  )
 
@@ -921,29 +921,29 @@ PSL_Actual_Parameter ::=  ( _PSL_Any_Type |  _PSL_Sequence |  _PSL_Property )
 
 _PSL_Directive ::=  ( PSL_Assert_Directive |  PSL_Assume_Directive |  PSL_Assume_Guarantee_Directive |  PSL_Restrict_Directive |  PSL_Restrict_Guarantee_Directive |  PSL_Cover_Directive |  PSL_Fairness_Directive |  PSL_Strong_Fairness_Directive )
 
-PSL_Assert_Directive ::=   (  ( ( label )?  (  (   (  [aA][sS][sS][eE][rR][tT] )  )*  )  _PSL_Property ( _report )?  ';'  )  )
+PSL_Assert_Directive ::=   (  ( ( label )?  (  (   (  [aA][sS][sS][eE][rR][tT] )  )  )  _PSL_Property ( _report )?  ';'  )  )
 
-PSL_Assume_Directive ::=  ( ( label )?  (  (   (  [aA][sS][sS][uU][mM][eE] )  )*  )  _PSL_Property ';'  )
+PSL_Assume_Directive ::=  ( ( label )?  (  (   (  [aA][sS][sS][uU][mM][eE] )  )  )  _PSL_Property ';'  )
 
-PSL_Assume_Guarantee_Directive ::=  ( ( label )?  (  (   (  [aA][sS][sS][uU][mM][eE][__][gG][uU][aA][rR][aA][nN][tT][eE][eE] )  )*  )  _PSL_Property ( _report )?  ';'  )
+PSL_Assume_Guarantee_Directive ::=  ( ( label )?  (  (   (  [aA][sS][sS][uU][mM][eE][__][gG][uU][aA][rR][aA][nN][tT][eE][eE] )  )  )  _PSL_Property ( _report )?  ';'  )
 
-PSL_Restrict_Directive ::=  ( ( label )?  (  (   (  [rR][eE][sS][tT][rR][iI][cC][tT] )  )*  )  _PSL_Sequence ';'  )
+PSL_Restrict_Directive ::=  ( ( label )?  (  (   (  [rR][eE][sS][tT][rR][iI][cC][tT] )  )  )  _PSL_Sequence ';'  )
 
-PSL_Restrict_Guarantee_Directive ::=  ( ( label )?  (  (   (  [rR][eE][sS][tT][rR][iI][cC][tT][__][gG][uU][aA][rR][aA][nN][tT][eE][eE] )  )*  )  _PSL_Sequence ( _report )?  ';'  )
+PSL_Restrict_Guarantee_Directive ::=  ( ( label )?  (  (   (  [rR][eE][sS][tT][rR][iI][cC][tT][__][gG][uU][aA][rR][aA][nN][tT][eE][eE] )  )  )  _PSL_Sequence ( _report )?  ';'  )
 
-PSL_Cover_Directive ::=  ( ( label )?  (  (   (  [cC][oO][vV][eE][rR] )  )*  )  _PSL_Sequence ( _report )?  ';'  )
+PSL_Cover_Directive ::=  ( ( label )?  (  (   (  [cC][oO][vV][eE][rR] )  )  )  _PSL_Sequence ( _report )?  ';'  )
 
-PSL_Fairness_Directive ::=  ( ( label )?  (  (   (  [fF][aA][iI][rR][nN][eE][sS][sS] )  )*  )  _PSL_Boolean ';'  )
+PSL_Fairness_Directive ::=  ( ( label )?  (  (   (  [fF][aA][iI][rR][nN][eE][sS][sS] )  )  )  _PSL_Boolean ';'  )
 
-PSL_Strong_Fairness_Directive ::=  ( ( label )?  (  (   (  [sS][tT][rR][oO][nN][gG] )  )*  )  (  (   (  [fF][aA][iI][rR][nN][eE][sS][sS] )  )*  )  _PSL_Boolean ','  _PSL_Boolean ';'  )
+PSL_Strong_Fairness_Directive ::=  ( ( label )?  (  (   (  [sS][tT][rR][oO][nN][gG] )  )  )  (  (   (  [fF][aA][iI][rR][nN][eE][sS][sS] )  )  )  _PSL_Boolean ','  _PSL_Boolean ';'  )
 
 _PSL_Verification_Unit ::=  ( PSL_VUnit |  PSL_VProp |  PSL_VMode )
 
-PSL_VUnit ::=  ( (  (   (  [vV][uU][nN][iI][tT] )  )*  )  _PSL_Identifier PSL_Verification_Unit_Body )
+PSL_VUnit ::=  ( (  (   (  [vV][uU][nN][iI][tT] )  )  )  _PSL_Identifier PSL_Verification_Unit_Body )
 
-PSL_VProp ::=  ( (  (   (  [vV][pP][rR][oO][pP] )  )*  )  _PSL_Identifier PSL_Verification_Unit_Body )
+PSL_VProp ::=  ( (  (   (  [vV][pP][rR][oO][pP] )  )  )  _PSL_Identifier PSL_Verification_Unit_Body )
 
-PSL_VMode ::=  ( (  (   (  [vV][mM][oO][dD][eE] )  )*  )  _PSL_Identifier PSL_Verification_Unit_Body )
+PSL_VMode ::=  ( (  (   (  [vV][mM][oO][dD][eE] )  )  )  _PSL_Identifier PSL_Verification_Unit_Body )
 
 PSL_Verification_Unit_Body ::=  ( ( ( '('  PSL_Hierarchical_HDL_Name ')'  )  )?  '{'  (  PSL_Inherit_Spec )*  (  _PSL_VUnit_Item )*  '}'  )
 
@@ -951,6 +951,7 @@ PSL_Hierarchical_HDL_Name ::=  ( _PSL_HDL_Module_NAME (  ( ( (  '.'  )  |  (  '/
 
 _PSL_HDL_Module_NAME ::=  ( (  _simple_name )  ( ( '('  (  _simple_name )  ')'  )  )?  )
 
-PSL_Inherit_Spec ::=  ( (  (   (  [iI][nN][hH][eE][rR][iI][tT] )  )*  )  ( _name (  ( ','  _name )  )*  )  ';'  )
+PSL_Inherit_Spec ::=  ( (  (   (  [iI][nN][hH][eE][rR][iI][tT] )  )  )  ( _name (  ( ','  _name )  )*  )  ';'  )
 
 _PSL_VUnit_Item ::=  ( _declaration |  _concurrent_statement )
+

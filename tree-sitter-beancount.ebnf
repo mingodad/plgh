@@ -5,9 +5,9 @@ Converted by excuting:
 Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
 */
 
-beancount_file ::=  (  ( _dated_directives |  _undated_directives |  _skipped_lines )  )*
+beancount_file ::=  (  ( _dated_directives |  _undated_directives |  _skipped_lines )  )
 
-_skipped_lines ::=  ( ( [!&?%PSTCURM*#] [.]* [\n] )  |  ( ':'  [.]* [\n] )  |  [\n] |  ( ';'[.]* [\n] )  )
+_skipped_lines ::=  ( ( [!&?%PSTCURM*#] [^\n]* '\n' )  |  ( ':'  [^\n]* '\n' )  |  '\n' |  ( ';'[^\n]* '\n' )  )
 
 _key_value_value ::=  ( string |  account |  date |  currency |  tag |  bool |  _num_expr |  amount )
 
@@ -47,7 +47,7 @@ price_annotation ::=  ( ( '@@'  ( incomplete_amount )?  )  |  ( '@'  ( incomplet
 
 posting ::=  ( '\n'[ \r\t]+ (  ( flag )?  )  (  account )  (  ( incomplete_amount )?  )  (  ( cost_spec )?  )  (  ( price_annotation )?  )  ( ';'[.]* )?  (  ( metadata )?  )  )
 
-postings ::=  ( ( posting |  ( '\n'[ \r\t]+ ';'[.]* )  )  )+
+postings ::=  ( ( posting |  ( '\n'[ \r\t]+ ';'[^\n]* )  )  )+
 
 tags_and_links ::=  ( ( ( '\n'[ \r\t]+ )?  ( tag |  link )  )  )+
 
@@ -91,22 +91,23 @@ unary_num_expr ::=   (  ( ( '-'  _num_expr )  |  ( '+'  _num_expr )  )  )
 
 binary_num_expr ::=  (  (  ( _num_expr '*'  _num_expr )  )  |   (  ( _num_expr '/'  _num_expr )  )  |   (  ( _num_expr '+'  _num_expr )  )  |   (  ( _num_expr '-'  _num_expr )  )  )
 
-bool ::=  (  TRUE|FALSE )*
+bool ::=  (  TRUE|FALSE )
 
-date ::=  (  [0-9]+/*{4,}*/[\-/][0-9]+[\-/][0-9]+ )*
+date ::=  (  [0-9]+/*{4,}*/[\-/][0-9]+[\-/][0-9]+ )
 
-key ::=  (  [a-z][a-zA-Z0-9\-_]+':' )*
+key ::=  (  [a-z][a-zA-Z0-9\-_]+':' )
 
-tag ::=  (  '#'[A-Za-z0-9\-_/.]+ )*
+tag ::=  (  '#'[A-Za-z0-9\-_/.]+ )
 
-link ::=  (  '^'[A-Za-z0-9\-_/.]+ )*
+link ::=  (  '^'[A-Za-z0-9\-_/.]+ )
 
-string ::=  (  '"'[^"]*'"' )*
+string ::=  (  '"'[^"]*'"' )
 
-currency ::=  (  [A-Z][A-Z0-9\'\._\-]+/*{0,22}*/[A-Z0-9] )*
+currency ::=  (  [A-Z][A-Z0-9\'\._\-]+/*{0,22}*/[A-Z0-9] )
 
-number ::=  (  ([0-9]+|[0-9][0-9,]+[0-9])(.[0-9]*)? )*
+number ::=  (  ([0-9]+|[0-9][0-9,]+[0-9])(.[0-9]*)? )
 
-flag ::=  (  [!&?%PSTCURM*#] )*
+flag ::=  (  [!&?%PSTCURM*#] )
 
-account ::=  (  ( [A-Z]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  ( ( ':'  [A-Z0-9]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  )  )+  )  )*
+account ::=  (  ( [A-Z]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  ( ( ':'  [A-Z0-9]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  )  )+  )  )
+

@@ -9,7 +9,7 @@ file ::=  ( ( ( (  module_declaration )  _virtual_end_decl )  )?  ( _import_list
 
 block_comment ::=   (  ( '{-'  _block_comment_content '-}'  )  )
 
-line_comment ::=  (   (  ( '--' (  [^\n] )*  )  )  )*
+line_comment ::=  (   (  ( '--' (  [^\n] )*  )  )  )
 
 module_declaration ::=   (  ( ( ( port )?  module (  upper_case_qid )  (  exposing_list )  )  |  ( effect module (  upper_case_qid )  where record_expr (  exposing_list )  )  )  )
 
@@ -111,7 +111,7 @@ parenthesized_expr ::=  ( '('  (  _expression )  ')'  )
 
 _literal_expr_group ::=  ( char_constant_expr |  number_constant_expr |  string_constant_expr )
 
-char_constant_expr ::=  ( (  "'"  )  ( (  (  [^\\\n'] )*  )  |  string_escape |  invalid_string_escape )  (  "'"  )  )
+char_constant_expr ::=  ( (  "'"  )  ( (  (  [^\\\n'] )  )  |  string_escape |  invalid_string_escape )  (  "'"  )  )
 
 number_constant_expr ::=  number_literal
 
@@ -193,9 +193,9 @@ upper_case_identifier ::=  'p{Lu}'[_0-9p{L}]*
 
 lower_case_identifier ::=  'p{Ll}'[_0-9p{L}]*
 
-number_literal ::=  (  ( '-'?[0-9]+('.'[0-9]+)?('e' '-'?[0-9]+)? |  '0x'[0-9A-Fa-f]+ )  )*
+number_literal ::=  (  ( '-'?[0-9]+('.'[0-9]+)?('e' '-'?[0-9]+)? |  '0x'[0-9A-Fa-f]+ )  )
 
-string_escape ::=  '\'('u{'[0-9A-Fa-f]/*{4,6}*/'}'|[nrt\"'\\])
+string_escape ::=  '\'('u{'[0-9A-Fa-f]+/*{4,6}*/'}'|[nrt\"'\\])
 
 invalid_string_escape ::=  '\'('u{'[^}]*'}'|[^nrt\"'\\])
 
@@ -238,3 +238,4 @@ underscore ::=  '_'
 dot ::=  '.'
 
 operator_identifier ::=  ( '+'  |  '-'  |  '*'  |  '/'  |  '//'  |  '^'  |  '=='  |  '/='  |  '<'  |  '>'  |  '<='  |  '>='  |  '&&'  |  '||'  |  '++'  |  '<|'  |  '|>'  |  '<<'  |  '>>'  |  '::'  |  '</>'  |  '<?>'  |  '|.'  |  '|='  )
+

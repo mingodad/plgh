@@ -141,7 +141,7 @@ _old_type ::=  ( old_builtin_type |  ( symbol (  ':'  )  )  )
 
 builtin_type ::=  ( 'void'  |  'bool'  |  'int'  |  'float'  |  'char'  )
 
-old_builtin_type ::=  (  ( ( '_'  |  'Float'  |  'bool'  |  'String'  )  (  ':'  )  )  )*
+old_builtin_type ::=  (  ( ( '_'  |  'Float'  |  'bool'  |  'String'  )  (  ':'  )  )  )
 
 any_type ::=  'any'
 
@@ -217,9 +217,9 @@ vector ::=   (  ( '{'  ( ( vector |  _literal |  symbol )  (  ( ','  ( vector | 
 
 _literal ::=   (  ( int_literal |  float_literal |  char_literal |  string_literal |  concatenated_string |  bool_literal |  null )  )
 
-int_literal ::=  (  ( ( [-\+] )?  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  |  ( '0b'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  |  ( '0x'  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )  ( ( [eEpP] ( ( ( [-\+] )?  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )?  )  )?  )  )*
+int_literal ::=  (  ( ( [-\+] )?  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  |  ( '0b'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  |  ( '0x'  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )  ( ( [eEpP] ( ( ( [-\+] )?  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )?  )  )?  )  )
 
-float_literal ::=  (  ( ( [-\+] )?  ( ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  ( ( '.'  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )?  )  )?  )  |  ( '.'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  )  )  )*
+float_literal ::=  (  ( ( [-\+] )?  ( ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  ( ( '.'  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )?  )  )?  )  |  ( '.'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  )  )  )
 
 char_literal ::=  ( "'"  ( escape_sequence |  (  [^\n'] )  )  "'"  )
 
@@ -227,9 +227,9 @@ concatenated_string ::=   (  ( (  ( string_literal |  symbol )  )  '...'  (  ( s
 
 string_literal ::=  ( '"'  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
 
-escape_sequence ::=  (   (  ( '\'  ( [^xuU] |  [0-9]/*{2,3}*/ |  'x'[0-9a-fA-F]/*{2,}*/ |  'u'[0-9a-fA-F]/*{4}*/ |  'U'[0-9a-fA-F]/*{8}*/ )  )  )  )*
+escape_sequence ::=  (   (  ( '\'  ( [^xuU] |  [0-9]+/*{2,3}*/ |  'x'[0-9a-fA-F]+/*{2,}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'U'[0-9a-fA-F]+/*{8}*/ )  )  )  )
 
-bool_literal ::=  (  ( 'true'  |  'false'  )  )*
+bool_literal ::=  (  ( 'true'  |  'false'  )  )
 
 null ::=  'null'
 
@@ -237,9 +237,9 @@ this ::=  'this'
 
 rest_operator ::=  '...'
 
-system_lib_string ::=  (  ( '<'  (  ( [^>\n] |  '\\>'  )  )*  '>'  )  )*
+system_lib_string ::=  (  ( '<'  (  ( [^>\n] |  '\\>'  )  )*  '>'  )  )
 
 symbol ::=  [a-zA-Z_][\w]*
 
-comment ::=  (  ( ( '//'  ('\'('.'|[\r]?[\n])|[^\\\n])* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )*
+comment ::=  (  ( ( '//'  ('\'('.'|[\r]?[\n])|[^\\\n])* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
 

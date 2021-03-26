@@ -85,18 +85,19 @@ na ::=  ( 'NA'  |  'NA_character_'  |  'NA_complex_'  |  'NA_integer_'  |  'NA_r
 
 _expression ::=   (  ( identifier |  integer |  float |  complex |  string |  call |  function_definition |  _assignment |  brace_list |  paren_list |  binary |  unary |  subset |  subset2 |  dollar |  slot |  namespace_get |  namespace_get_internal |  if |  for |  while |  repeat |  switch |  break |  next |  true |  false |  null |  inf |  nan |  na |  dots |  ';'  )  )
 
-identifier ::=  ( [A-Za-z.][A-Za-z0-9_.]* |  ( '`'  (  ( [^`\\\n]+|'\\\r'?[\n] |  escape_sequence )  )*  '`'  )  )
+identifier ::=  ( [A-Za-z.][A-Za-z0-9_.]* |  ( '`'  (  ( [^`\\\n]+|'\\\r'?'\n' |  escape_sequence )  )*  '`'  )  )
 
-integer ::=  (   (  ( ( ( ( '0x'  |  '0X'  )  [A-Fa-f0-9]+ )  |  [0-9]+ )  'L'  )  )  )*
+integer ::=  (   (  ( ( ( ( '0x'  |  '0X'  )  [A-Fa-f0-9]+ )  |  [0-9]+ )  'L'  )  )  )
 
-float ::=  (   (  ( ( ( [0-9] )+  ( '.'  )?  ( ( [0-9] )+  )?  ( ( [eE][\+-]? ( [0-9] )+  )  )?  )  |  ( ( ( [0-9] )+  )?  '.'  ( [0-9] )+  ( ( [eE][\+-]? ( [0-9] )+  )  )?  )  |  ( ( [0-9] )+  ( [eE][\+-]? ( [0-9] )+  )  )  |  ( ( '0x'  |  '0X'  )  [A-Fa-f0-9]+ )  )  )  )*
+float ::=  (   (  ( ( ( [0-9] )+  ( '.'  )?  ( ( [0-9] )+  )?  ( ( [eE][\+-]? ( [0-9] )+  )  )?  )  |  ( ( ( [0-9] )+  )?  '.'  ( [0-9] )+  ( ( [eE][\+-]? ( [0-9] )+  )  )?  )  |  ( ( [0-9] )+  ( [eE][\+-]? ( [0-9] )+  )  )  |  ( ( '0x'  |  '0X'  )  [A-Fa-f0-9]+ )  )  )  )
 
 complex ::=  ( float 'i'  )
 
-comment ::=  (   (  ( '#'  .* )  )  )*
+comment ::=  (   (  ( '#'  .* )  )  )
 
 string ::=  ( ( '"'  (  ( [^"\\\n]+|'\\\r'?'\n' |  escape_sequence )  )*  '"'  )  |  ( "'"  (  ( [^'\\\n]+|'\\\r'?'\n' |  escape_sequence )  )*  "'"  )  )
 
 special ::=  ( '%'  (  ( [^%\\\n]+|'\\\r'?'\n' |  escape_sequence )  )*  '%'  )
 
-escape_sequence ::=  (  ( '\\'  ( [^xu0-7] |  [0-7]/*{1,3}*/ |  'x'[0-9a-fA-F]/*{2}*/ |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' )  )  )
+escape_sequence ::=  (  ( '\\'  ( [^xu0-7] |  [0-7]+/*{1,3}*/ |  'x'[0-9a-fA-F]+/*{2}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' )  )  )
+
