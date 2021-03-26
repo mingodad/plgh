@@ -17,7 +17,7 @@ _import_export_specifier ::=  ( ( ( 'type'  |  'typeof'  )  )?  ( (  identifier 
 
 declaration ::=  ( ( function_declaration |  generator_function_declaration |  class_declaration |  lexical_declaration |  variable_declaration )  |  function_signature |  abstract_class_declaration |  module |   (  internal_module )  |  type_alias_declaration |  enum_declaration |  interface_declaration |  import_alias |  ambient_declaration )
 
-import ::=  (  'import'  )*
+import ::=  (  'import'  )
 
 import_statement ::=  ( 'import'  ( ( 'type'  |  'typeof'  )  )?  ( ( import_clause _from_clause )  |  import_require_clause |  string )  _semicolon )
 

@@ -10,7 +10,7 @@ _import_export_specifier ::=  ( (  identifier )  ( ( 'as'  (  identifier )  )  )
 
 _declaration ::=  ( function_declaration |  generator_function_declaration |  class_declaration |  lexical_declaration |  variable_declaration )
 
-import ::=  (  'import'  )*
+import ::=  (  'import'  )
 
 import_statement ::=   (  ( 'import'  ( ( import_clause _from_clause )  |  (  string )  )  _semicolon )  )
 
