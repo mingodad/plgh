@@ -90,7 +90,7 @@ function parseJsonGrammar(fname)
 	json = JSON.parse(json);
 	print(json);
 
-	function manageRule(name, rule) {
+	let manageRule = function (name, rule) {
 		//print(name, rule.type); //, typeof rule);
 		switch(rule.type)
 		{
@@ -168,9 +168,23 @@ function parseJsonGrammar(fname)
 			case "STRING": {
 				let value = rule.value;
 				//print(rule.type, value);
-				value = value.replace("\\", "\\\\");
-				if(value.indexOf("'") >= 0) fd.printf(" \"%s\" ", value);
-				else fd.printf(" '%s' ", value);
+				switch(value) {
+					case "\0": fd.printf(" '\\0' "); break;
+					case "\b": fd.printf(" '\\b' "); break;
+					case "\f": fd.printf(" '\\f' "); break;
+					case "\n": fd.printf(" '\\n' "); break;
+					case "\r": fd.printf(" '\\r' "); break;
+					case "\t": fd.printf(" '\\t' "); break;
+					case "\v": fd.printf(" '\\v' "); break;
+					case "\\": fd.printf(" '\\\\' "); break;
+					case "'": fd.printf(" \"'\" "); break;
+					case "\"": fd.printf(" '\"' "); break;
+					default:
+						value = value.replace("\\", "\\\\");
+						value = value.replace("\t", "\\t"); //order matter
+						if(value.indexOf("'") >= 0) fd.printf(" \"%s\" ", value);
+						else fd.printf(" '%s' ", value);
+				}
 			}
 			break;
 
