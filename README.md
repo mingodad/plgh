@@ -19,3 +19,5 @@ choice(a,b,c) <=> a | b | c
 optional(a) <=> a?
 commaSep(a) <=> a (',' a)*
 ```
+
+There is a script (QuickJS) to convert "src/grammar.json" to **SQL** json2sql.js that was used to generated and manually fixed a SQL file with all "src/grammar.json" for the grammars on this repository.
