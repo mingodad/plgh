@@ -36,6 +36,7 @@ const fname_list = [
 	"tree-sitter-lbnf/src/grammar.json",
 	"tree-sitter-lean/src/grammar.json",
 	"tree-sitter-ledger/src/grammar.json",
+	"tree-sitter-lp/src/grammar.json",
 	"tree-sitter-lua/src/grammar.json",
 	"tree-sitter-markdown/src/grammar.json",
 	"tree-sitter-menhir/src/grammar.json",
@@ -133,7 +134,9 @@ function parseJsonGrammar(fname)
 				fd.printf(" ) ");
 			break;
 			case "PATTERN": {
-				let value = rule.value.replace("\\d", "[0-9]");
+				let value = rule.value.replace(/\\d/g, "[0-9]");
+				value = value.replace(/\[\[0\-9\]/g, "[0-9");
+				value = value.replace(/([^\\])\\]/g, "$1#x5D");
 				fd.printf(" %s", value);
 			}
 			break;
@@ -180,8 +183,8 @@ function parseJsonGrammar(fname)
 					case "'": fd.printf(" \"'\" "); break;
 					case "\"": fd.printf(" '\"' "); break;
 					default:
-						value = value.replace("\\", "\\\\");
-						value = value.replace("\t", "\\t"); //order matter
+						//value = value.replace(/\\/g, "\\\\");
+						value = value.replace(/\t/g, "\\t"); //order matter
 						if(value.indexOf("'") >= 0) fd.printf(" \"%s\" ", value);
 						else fd.printf(" '%s' ", value);
 				}
