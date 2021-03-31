@@ -1,3 +1,10 @@
+/*
+Grammar originally from https://github.com/jmitchell/tree-sitter-abnf
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
 source_file ::=  rulelist
 
 rulelist ::=  ( ( rule |   (  ( (  _c_wsp )*  _c_nl )  )  )  )+
