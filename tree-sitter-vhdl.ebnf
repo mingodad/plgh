@@ -671,7 +671,7 @@ context_reference ::=  ( (  (   (  [cC][oO][nN][tT][eE][xX][tT] )  )  )  context
 
 context_list ::=  ( expanded_name (  ( ','  expanded_name )  )*  )
 
-_separator ::=  (  ( '\t'  |  '\v'  |  '\n'  |  '\n'  |  '\f'  |  ' '  |  ' '  )  )
+_separator ::=  (  ( '\t'  |  '\v'  |  '\r'  |  '\n'  |  '\f'  |  ' '  |  ' '  )  )
 
 _identifier ::=  ( (  basic_identifier )  |  extended_identifier )
 
