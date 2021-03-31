@@ -1,3 +1,10 @@
+/*
+Grammar originally from https://github.com/tree-sitter/tree-sitter-haskell
+Converted by excuting:
+	qjs json2ebnf.js
+Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+*/
+
 haskell ::=  ( empty_file |  _module |  ( ( _topdecl (  (  (  ( ';'  |  _layout_semicolon )  )  _topdecl )  )*  )  ( ( ';'  |  _layout_semicolon )  )?  )  )
 
 _topdecl ::=  ( (  decl_type )  |  (  decl_tyfam )  |  (  decl_tyinst )  |  (  decl_role )  |  (  decl_adt )  |  (  decl_newtype )  |  (  decl_datafam )  |  (  decl_datainst )  |  (  decl_import )  |  (  decl_class )  |  (  decl_instance )  |  (  decl_default )  |  _decl_foreign |  (  decl_deriving )  |  _decl |  (  decl_pattern )  |  top_splice )
