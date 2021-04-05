@@ -1,0 +1,244 @@
+/*
+The begning of a HAXE grammar
+*/
+
+program ::= stmt*
+
+stmt ::=
+	var_decl
+	| 'using' access_field
+	| 'import' access_field ('.*')? (('in' | 'as') ID)?
+	| class_decl
+	| interface_decl
+	| enum_decl
+	| function_decl ';'
+	| structure_type
+	| abstract_decl
+	| '@' ':'? anotation_id ('(' expr ')')?
+	| '#' ('if' expr | 'else' | 'elseif' expr | 'end')
+
+class_decl ::= 'extern'? 'final'? 'class' ID type_paramter? extends* implements* '{' class_members '}'
+
+interface_decl ::= 'final'? 'interface' ID extends* '{' interface_members '}'
+
+enum_decl ::= 'enum' ID type_paramter? '{' enum_item_list '}'
+
+type_paramter ::= '<' one_type_param (',' one_type_param)* '>'
+
+one_type_param ::= ID (':' type)?
+
+type ::=
+	Void
+	| Bool
+	| Float
+	| Int
+	| Dynamic
+	| ID type_paramter?
+
+anotation_id ::=
+	'access'
+	| 'allow'
+	| 'arrayAccess'
+	| 'author'
+	| 'broken'
+	| 'coreType'
+	| 'enum'
+	| 'forward'
+	| 'from'
+	| 'generic'
+	| 'keep'
+	| 'native'
+	| 'notNull'
+	| 'noUsing'
+	| 'op'
+	| 'range'
+	| 'to'
+	| 'using'
+
+var_decl ::= ('var' | 'final') ID (':' type)? '=' expr
+
+extends ::= 'extends' ID
+implements ::= 'implements' ID
+
+class_members ::=
+	('var' | 'final') ID ('(' ID ',' ID ')')? (':' type)? '=' expr
+	| function_decl
+
+interface_members ::=
+	function_decl
+
+enum_item_list ::= enum_item+
+
+enum_item ::= ID ';'
+
+function_def ::= function_decl block_stmt
+
+function_decl ::= 'static'? 'inline'? ('public' | 'private')? ('override' | 'final')? 'dynamic'? 'extern'? function_id_decl
+
+function_id_decl ::= 'function' ID type_paramter? '(' param_decl_list? ')' (':' type)?
+
+lambda_decl ::= 'function' '(' param_decl_list? ')' (':' type)?
+
+param_decl_list ::= param_decl (',' param_decl)*
+
+param_decl ::= '?'? ID ':' type ('=' literal_expr)?
+
+structure_type ::= 'typedef' ID type_paramter? '=' struct_type_def
+
+struct_type_def ::=
+	'{'  ('>'  ID ',')? structure_type_member_list '}'
+	| ID '&' '{'  structure_type_member_list '}'
+	| ID type_paramter
+	| function_id_decl
+
+structure_type_member_list ::= structure_type_member (',' structure_type_member)*
+
+structure_type_member ::=  ('var' | 'final') '?'? ID ':' type
+
+abstract_decl ::= 'enum'? 'abstract' ID '(' type ')' ('from' type 'to' type)? '{' stmt '}'
+
+block_stmt ::=
+	var_decl
+	| if_stmt
+	| switch_stmt
+	| 'return' expr
+	| for_stmt
+	| while_stmt
+	| do_while_stmt
+	| debug_stmt
+	| throw_stmt
+	| try_catch_stmt
+	| 'break'
+	| 'continue'
+
+if_stmt ::= 'if' '(' expr ')' block_stmt ('else' block_stmt)?
+
+while_stmt ::= 'while' '(' expr ')' block_stmt
+
+do_while_stmt ::= 'do' block_stmt 'while' '(' expr ')'
+
+for_stmt ::= 'for' '(' ID ('=>' ID)? 'in' (range_def | ID) ')' block_stmt
+
+range_def ::= expr '...' expr
+
+throw_stmt ::= 'throw' expr
+
+try_catch_stmt ::= 'try' block_stmt catch_clause+
+
+catch_clause ::= 'catch' '(' ID (':' type)? ')' block_stmt
+
+switch_stmt ::= 'switch' '(' expr ')' switch_body switch_default?
+
+switch_body ::=
+	'case' (literal_expr ('|' literal_expr)* | ID | ('{' structure_type_member (',' structure_type_member)* '}') | ('[' (literal_expr | '_') (',' (literal_expr | '_'))* ']') | '_') ('if' expr)? ':' block_stmt*
+
+switch_default ::= 'default' block_stmt
+
+debug_stmt ::= '$' function_call
+
+literal_expr ::=
+	BOOLEAN
+	| INTEGER
+	| FLOAT
+	| STRING
+
+expr ::=
+	ID
+	| 'null'
+	| 'new' ID
+	| literal_expr
+	| function_call
+	| 'new' type
+	| anonymous_struct
+	| literal_array
+	| access_field
+	| expr op_binary expr
+	| lambda_decl
+	| 'cast' (expr | '(' expr ',' type ')')
+	| '(' expr ':' type ')' // compile time type check
+	| 'inline' expr
+	| '[' (for_stmt | while_stmt)  ']'
+	| switch_stmt
+
+op_binary ::=
+	'='
+	| '||'		//Logical or
+	| '&&' 	//Logical and
+	| '>=' 	//Comparison and equality
+	| '>'
+	| '<'
+	| '<='
+	| '=='
+	| '!='
+	| '&' | '|' | '^' //Bitwise and, or, xor
+	| '<<' | '>>'	//Bitwise shifts
+	| '+' | '-'	//Plus, minus
+	| '%' | '*' | '/'	//Modulo, multiply, divide
+
+function_call ::= ID '(' param_list? ')'
+
+param_list ::= param (',' param)*
+
+param ::= expr
+
+anonymous_struct ::= '{'  anonymous_struct_member_list '}'
+
+anonymous_struct_member_list ::= anonymous_struct_member (',' anonymous_struct_member)*
+
+anonymous_struct_member ::=
+	(ID | STRING) ':' expr
+	| '?'? ID ':' type
+
+literal_array ::= '[' expr_list? ']'
+
+expr_list ::= expr (',' expr)*
+
+access_field ::= ID ('.' ID)+
+
+keywords ::=
+	'abstract'
+	| 'break'
+	| 'case'
+	| 'cast'
+	| 'catch'
+	| 'class'
+	| 'continue'
+	| 'default'
+	| 'do'
+	| 'dynamic'
+	| 'else'
+	| 'enum'
+	| 'extends'
+	| 'extern'
+	| 'false'
+	| 'final'
+	| 'for'
+	| 'function'
+	| 'if'
+	| 'implements'
+	| 'import'
+	| 'in'
+	| 'inline'
+	| 'interface'
+	| 'macro'
+	| 'new'
+	| 'null'
+	| 'operator'
+	| 'overload'
+	| 'override'
+	| 'package'
+	| 'private'
+	| 'public'
+	| 'return'
+	| 'static'
+	| 'switch'
+	| 'this'
+	| 'throw'
+	| 'true'
+	| 'try'
+	| 'typedef'
+	| 'untyped'
+	| 'using'
+	| 'var'
+	| 'while'
+
