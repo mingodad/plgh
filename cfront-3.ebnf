@@ -1,0 +1,566 @@
+
+ext_def	::=  external_def
+	|  SM
+	|  EOFTOK
+	|  LINKAGE LC
+	|  RC
+	|  template
+
+template    ::=    TEMPLATE
+	LT  template_parm_list GT
+	template_def
+
+template_def    ::= data_dcl
+	| att_fct_def
+	| fct_def
+	| fct_dcl
+	| class_dcl SM
+
+identifier	::= ID
+	| qualified_tname
+
+external_def	::=  data_dcl
+	|  att_fct_def
+	|  fct_def
+	|  fct_dcl
+	|  ASM LP STRING RP SM
+
+fct_dcl	::= decl ASSIGN initializer SM
+	| decl SM
+
+att_fct_def	::=  type decl arg_dcl_list check_inline
+	//*SYM//*/
+	base_init block
+	|  type decl arg_dcl_list check_inline EMPTY
+	|  type decl arg_dcl_list check_inline NO_ID //*syntax error//*/
+
+fct_def	::=  decl arg_dcl_list check_inline
+	//*SYM//*/
+	base_init block
+	|  decl arg_dcl_list check_inline EMPTY
+	|  decl arg_dcl_list check_inline NO_ID //*syntax error//*/
+
+inline_fct_def	::=  FDEF base_init block
+
+check_inline	::=  //* empty //*/
+
+base_init	::=  COLON  init_list
+	//|  %prec EMPTY
+
+
+init_list	::=  binit
+	|  init_list CM binit
+
+binit		::=  LP elist RP
+	|  ttag LP elist RP
+
+
+//*************** declarations: returns Pname *******************//*/
+
+arg_dcl_list	::=  arg_dcl_list data_dcl
+	//|  %prec EMPTY
+
+
+dl		::=  decl
+	|  ID COLON e		//%prec CM
+	|  COLON e		//%prec CM
+	|  decl ASSIGN initializer
+
+decl_list	::=  dl
+	|  decl_list CM dl
+
+data_dcl	::=  type decl_list SM
+	|  type SM
+
+
+//* This is where parametrized types, and regular types come together. //*/
+
+lt 		::= LT
+gt 		::= GT
+
+tname	::= qualified_tname
+	| qualified_tname lt temp_inst_parms gt
+	| NAME lt temp_inst_parms gt
+
+
+tp	::=  TYPE
+	|  LINKAGE
+	|  tname //%prec NO_ID
+	|  tn_list DECL_MARKER
+	|  class_dcl
+	|  enum_dcl
+	|  DECL_MARKER
+
+
+type	 ::=  tp
+	|  type TYPE
+	|  type tname //%prec NO_ID
+	|  type class_dcl
+	|  type enum_dcl
+	|  type DECL_MARKER
+
+
+cm	::= CM
+
+temp_inst_parms ::= temp_inst_parms cm temp_inst_parm
+	| temp_inst_parm
+
+
+new_decl2	::= //%prec NO_ID
+	| arg_lp new_decl2 RP
+	| ptr new_decl2  //%prec MUL
+	| new_decl2 arg_list
+	| new_decl2 vec //%prec LB
+
+
+new_type2	::= type new_decl2
+
+temp_inst_parm  ::= new_type2
+	| e //%prec GT
+
+
+//***************** aggregate: returns Pname ****************//*/
+
+enumtag	::=  tag
+	|  DECL_MARKER
+	|  tn_list DECL_MARKER
+
+
+enum_dcl	::=  ENUM LC  moe_list RC
+	|  ENUM enumtag LC  moe_list RC
+	|  ENUM enumtag
+
+moe_list	::=  moe
+	|  moe_list CM moe
+
+
+template_parm_list ::= template_parm_list CM template_parm
+	| template_parm
+	| //* empty //*/
+
+
+template_parm   ::= AGGR identifier
+	//* Build the name for the parameter
+	//* Check that AGGR is indeed CLASS //*/
+	| type formal_decl
+
+
+formal_decl	::=  ID
+	|  ptr formal_decl		//%prec MUL
+	|  formal_decl vec		//%prec LB
+	|  formal_decl arg_list
+	|  arg_lp formal_decl RP
+
+
+moe		::=  ID //%prec NO_ID
+	|  ID ASSIGN e
+	|  //* empty: handle trailing CM: enum e ; //*/
+
+
+class_dcl	::=  class_head cl_mem_list RC
+		inline_mem_defs
+	|  AGGR tag
+	| AGGR qualified_tname lt temp_inst_parms gt
+	|  AGGR DECL_MARKER
+
+
+inline_mem_defs	::=  //* empty //*/
+	|  inline_mem_defs inline_fct_def
+
+base_list	::=  COLON base_unit_list
+	//|  %prec EMPTY
+
+base_unit_list	::=  base_unit
+	|  base_unit_list CM base_unit
+
+
+base_unit	::=  ttag
+	|  PR ttag
+	|  TYPE ttag
+	|  PR TYPE ttag
+	|  TYPE PR ttag
+
+class_head	::=  AGGR LC
+	|  AGGR tag base_list LC
+	|  AGGR qualified_tname lt temp_inst_parms gt base_list LC
+
+
+tag		::=  ID
+	|  qualified_tname
+
+ttag		::=  ID
+	|  tname
+
+cl_mem_list	::=  cl_mem_list cl_mem
+	//|  %prec EMPTY
+	|  cl_mem_list template
+
+
+cl_mem		::=  data_dcl
+	|  att_fct_def SM
+	|  fct_def SM
+	|  fct_def
+	|  att_fct_def
+	|  fct_dcl
+	|  PR COLON
+	|  scope_qualifiers fname SM
+
+
+//************* declarators:	returns Pname *********************//*/
+
+fname	::=  ID
+	|  COMPL TNAME  //* qualified_tname? //*/
+	|  OPERATOR oper
+	|  OPERATOR c_type
+
+
+oper ::=  PLUS
+	|  MINUS
+	|  MUL
+	|  AND
+	|  OR
+	|  ER
+	|  SHIFTOP
+	|  EQUOP
+	|  DIVOP
+	|  RELOP
+	|  LT
+	|  GT
+	|  ANDAND
+	|  OROR
+	|  LP RP
+	|  LB RB
+	|  NOT
+	|  COMPL
+	|  ICOP
+	|  ASOP
+	|  ASSIGN
+	|  NEW
+	|  DELETE
+	|  REF
+	|  CM
+	|  REFMUL
+
+scope_qualifiers::=  tn_list //*SYM//*/
+
+tn_list	::=  tscope
+	//*XXX//*/
+	|  tn_list tscope //*SYM//*/
+
+
+qualified_tname	::= tn_list TNAME
+	| TNAME
+
+
+fct_attributes	::= //* empty //*/
+	| fct_attributes TYPE
+	| fct_attributes THROW LP type_list RP
+
+
+type_list	::=  tag
+	|  type_list CM tag
+
+
+decl		::=  decl arg_list
+	|  decl LP RP fct_attributes
+	|  tname arg_list
+	|  decl arg_lp elist RP
+	|  tname LP MUL ID RP arg_list
+	|  tname LP AND ID RP arg_list
+	|  tname LP elist RP
+	|  tname LP RP fct_attributes
+	|  tname LP MEMPTR decl RP arg_list
+	|  fname
+	|  ID DOT fname
+	|  scope_qualifiers fname
+	//*XXX//*/	|  scope_qualifiers ID DOT fname
+	|  ptr decl	//%prec MUL
+	|  ptr tname	//%prec MUL
+	|  tname vec	//%prec LB
+	|  decl vec	//%prec LB
+	//*
+	|  LP decl RP arg_list
+	|  LP decl RP vec
+	//*/
+	|  arg_lp decl RP
+
+
+arg_decl	::=  ID
+	|  ptr qualified_tname	//%prec MUL
+	//|  %prec NO_ID
+	|  ptr arg_decl		//%prec MUL
+	|  arg_decl vec		//%prec LB
+	|  arg_decl arg_list
+	|  arg_lp arg_decl RP
+
+
+new_decl	::=  //%prec NO_ID
+	|  ptr new_decl		//%prec MUL
+	|  new_decl vec		//%prec LB
+
+
+cast_decl	::=  //%prec NO_ID
+	|  ptr cast_decl			//%prec MUL
+	|  cast_decl vec			//%prec LB
+	|  LP cast_decl RP arg_list
+	|  LP cast_decl RP vec
+
+
+c_decl		::=  //%prec NO_ID
+	|  ptr c_decl	//%prec MUL
+
+
+//***************** statements: returns Pstmt ****************//*/
+stmt_list	::=  //* empty //*/
+	|  stmt_list TEMPLATE
+	|  stmt_list caselab_stmt
+
+caselab_stmt	::=  caselablist statement
+
+caselablist	::= //* empty //*/
+
+condition	::=  LP e RP
+
+block	::=  LC stmt_list RC
+	|  LC RC
+	|  LC error RC
+
+
+simple	::=  ee
+	|  BREAK
+	|  CONTINUE
+	|  GOTO ID
+	|  DO  caselab_stmt WHILE condition
+	|  ASM LP STRING RP
+
+
+sm		::=  SM
+
+statement	::=  simple sm
+	|  SM
+	|  RETURN e SM
+	|  TYPE STRING block
+	|  data_dcl
+	|  att_fct_def
+	|  block
+	|  IF condition caselab_stmt
+	|  IF condition caselab_stmt ELSE caselab_stmt
+	|  WHILE condition caselab_stmt
+	|  FOR LP  caselab_stmt e SM e RP caselab_stmt
+	|  SWITCH   condition caselab_stmt
+	|  ID COLON  caselab_stmt
+	|  TNAME COLON  caselab_stmt
+	|  CASE  e COLON caselab_stmt
+	|  DEFAULT COLON  caselab_stmt
+	|  TRY block handler_list
+
+
+
+handler_list	::=  //* empty //*/
+	|  handler_list handler
+
+
+handler		::=  CATCH exception_type block
+
+
+//* enter arg scope and don't exit so block will absorb exception declaration //*/
+exception_type	::=  arg_lp type arg_decl RP
+	|  LP ELLIPSIS RP
+
+
+
+
+//********************* expressions: returns Pexpr *************//*/
+elist		::= ex_list
+
+
+ex_list	::=  initializer		//%prec CM
+	|  ex_list CM initializer
+
+
+initializer	::=  e				//%prec CM
+	|  LC elist RC
+
+
+ee	::=  ee ASSIGN ee
+	|  ee PLUS ee
+	|  ee MINUS ee
+	|  ee MUL ee
+	|  ee AND ee
+	|  ee OR ee
+	|  ee ER ee
+	|  ee SHIFTOP ee
+	|  ee EQUOP ee
+	|  ee DIVOP ee
+	|  ee RELOP ee
+	|  ee GT ee
+	|  ee LT ee
+	|  ee ANDAND ee
+	|  ee OROR ee
+	|  ee ASOP ee
+	|  ee CM ee
+	|  ee QUEST ee COLON ee
+	|  ee REFMUL ee
+	|  DELETE term
+	|  DELETE LB e RB term
+	|  MEM DELETE term
+	|  MEM DELETE LB e RB term
+	|  term
+	|  THROW term
+
+
+e	::=  e ASSIGN e
+	|  e PLUS e
+	|  e MINUS e
+	|  e MUL e
+	|  e AND e
+	|  e OR e
+	|  e ER e
+	|  e SHIFTOP e
+	|  e EQUOP e
+	|  e DIVOP e
+	|  e RELOP e
+	|  e LT e
+	|  e GT e
+	|  e ANDAND e
+	|  e OROR e
+	|  e ASOP e
+	|  e CM e
+	|  e QUEST e COLON e
+	|  e REFMUL e
+	|  DELETE term
+	|  DELETE LB e RB term
+	|  MEM DELETE term
+	|  MEM DELETE LB e RB term
+	|  term
+	|  THROW term
+	//|  %prec NO_EXPR
+
+term	::=  NEW cast_type
+	|  NEW new_type
+	|  MEM NEW cast_type
+	|  MEM NEW new_type
+	|  term ICOP
+	|  cast_type term //%prec ICOP
+	|  MUL term
+	|  AND term
+	|  MINUS term
+	|  PLUS term
+	|  NOT term
+	|  COMPL term
+	|  ICOP term
+	|  SIZEOF term
+	|  SIZEOF cast_type //%prec SIZEOF
+	|  term LB e RB
+	|  term REF prim
+	|  term REF MEMQ prim
+	|  term REF MEMQ TNAME
+	|  term REF dtorspec
+	|  term REF scope_qualifiers prim
+	|  term REF scope_qualifiers TNAME
+	|  term DOT prim
+	|  term DOT MEMQ prim
+	|  term DOT MEMQ TNAME
+	|  term DOT dtorspec
+	|  term DOT scope_qualifiers prim
+	|  term DOT scope_qualifiers TNAME
+	|  prim
+	|  scope_qualifiers prim
+	|  tn_list COMPL tag	//* allow explicit call of destructor //*/
+	|  tn_list COMPL TYPE	//* explicit call to basic type dtor //*/
+	|  term_elist
+	|  term_lp e RP
+	|  ZERO
+	|  ICON
+	|  FCON
+	|  STRING
+	|  CCON
+	|  THIS
+
+
+dtorspec	::=  COMPL tag //* explicit, unqualified dtor call //*/
+	|  MEMQ COMPL tag //* explicit dtor call //*/
+	|  TYPE MEM COMPL TYPE //* call of basic type dtor //*/
+	|  COMPL TYPE //* call of basic type dtor //*/
+	|  TYPE MEM COMPL tag	//* call to basic type dtor //*/
+	|  MEMQ COMPL TYPE
+	|  tn_list COMPL tag
+	|  tn_list COMPL TYPE	//* explicit call to basic type dtor //*/
+
+
+term_elist	::= TYPE LP elist RP
+	|  tname LP elist RP
+	|  NEW term_lp elist RP cast_type
+	|  NEW term_lp elist RP new_type     //* allow separate allocation //*/
+	|  MEM NEW term_lp elist RP cast_type
+	|  MEM NEW term_lp elist RP new_type	//* allow separate allocation //*/
+	|  term LP elist RP
+
+
+ptname   ::= PTNAME lt temp_inst_parms  gt
+
+
+tscope	::=  TSCOPE
+	|  MEM
+	|  ptname TSCOPE
+
+
+prim	::=  ID
+	|  OPERATOR oper
+	|  OPERATOR c_type
+
+
+
+
+//****************** abstract types (return type Pname) ************//*/
+cast_type	::=  term_lp type cast_decl RP
+
+
+term_lp		::=  LP
+
+c_tp	::=  TYPE
+	|  tname
+	|  c_tp TYPE
+	|  c_tp tname
+
+
+c_type	::=  c_tp c_decl
+
+new_type ::=  type new_decl
+
+arg_type	::=  type arg_decl
+	|  type arg_decl ASSIGN initializer
+
+
+arg_lp	::=  LP
+
+
+arg_list	::=  arg_lp arg_type_list ellipsis_opt RP fct_attributes
+
+
+arg_type_list	::=  arg_type_list CM at
+	|  at	//%prec CM
+
+
+at	::=  arg_type
+	//|  %prec EMPTY
+
+ellipsis_opt	::=  //* empty //*/
+	|  ELLIPSIS
+	|  CM ELLIPSIS
+
+
+ptr	::=  MUL //%prec NO_ID
+	|  AND //%prec NO_ID
+	|  MUL TYPE //%prec NO_ID
+	|  ptr TYPE //%prec NO_ID
+	|  AND TYPE //%prec NO_ID
+	|  ptname MEMPTR //%prec NO_ID
+	|  MEMPTR //%prec NO_ID
+	|  ptname MEMPTR TYPE //%prec NO_ID
+	|  MEMPTR TYPE //%prec NO_ID
+
+
+vec	::=  LB e RB
+	|  NOT //%prec LB
+
