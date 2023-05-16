@@ -1,0 +1,432 @@
+<html>
+<head>
+<title>Tree-sitter converter to EBNF for railroad diagram</title>
+<meta name="author" content="Domingo Alvarez Duarte">
+<meta name="contact" content="mingodad _at_ gmail _dot_ com">
+<script type="text/javascript">
+
+	function pattern2ebnf(pattern) {
+		let inClass = false;
+		let inQuote = false;
+		let hasDQ = false;
+		let hasSQ = false;
+		let imax = pattern.length;
+		let quote = "'";
+		let inString = "";
+		let ch = "";
+		var result = "";
+		var chAt = function(idx) {if(idx < imax) return pattern[idx]; return null;}
+		var addCh = function(ach) {if(inClass) result += ach; else inString += ach;}
+		var checkAddStr = function() {
+				if(inString.length > 0) {
+					if(hasSQ) quote = '"';
+					let new_str = quote + inString + quote; inString = "";
+					result += new_str
+					if(hasSQ) quote = "'";
+				}
+			}
+		var addClass = function(aclass) {if(inClass) result += aclass; else { checkAddStr(); result += '[' + aclass + ']';}}
+		for (let i = 0; i < imax; ++i) {
+			ch = pattern[i];
+			//print(ch);
+			switch(ch) {
+				case '[': {
+					checkAddStr();
+					result += ch; inClass = true;
+				}
+				break;
+				case ']': {
+					result += ch; inClass = false;
+				}
+				break;
+				case '|':
+				case '(': {
+					checkAddStr();
+					result += ch;
+				}
+				break;
+				case ')': {
+					checkAddStr();
+					result += ch;
+				}
+				break;
+				case '#': {
+					if(inClass) result += "#x23";
+					else addCh(ch);
+				}
+				break;
+				case '\t':
+					if(inClass) result += "#x09";
+					else addCh("\\t");
+				break;
+				case '\n':
+					if(inClass) result += "#x0A";
+					else addCh("\\n");
+				break;
+				case '\r':
+					if(inClass) result += "#x0D";
+					else addCh("\\r");
+				break;
+				case '\\': {
+					let i2 = i+1;
+					let ch2 = chAt(i2);
+					if(ch2 != null) {
+						//print(ch, ch2);
+						switch(ch2) {
+							case '[': addCh("#x5B"); i=i2; break;
+							case ']': addCh("#x5D"); i=i2; break;
+							case 'a': addCh("#x07"); i=i2; break;
+							case 'b': addCh("#x08"); i=i2; break;
+							case 't': addCh("#x09"); i=i2; break;
+							case 'n': addCh("#x0A"); i=i2; break;
+							case 'v': addCh("#x0B"); i=i2; break;
+							case 'f': addCh("#x0C"); i=i2; break;
+							case 'r': addCh("#x0D"); i=i2; break;
+							case '\\': addCh("\\"); i=i2; break;
+							case 's': addClass(" #x09#x0A#x0B#x0C#x0D");i=i2; break;
+							case 'd': addClass("0-9");i=i2; break;
+							case 'w': addClass("a-zA-Z_");i=i2; break;
+							case '-': addCh("#x2D"); ++i2; break;
+							case '.': ++i2; break;
+							case 'u': {
+								if( chAt(i2+2) == '{') {
+									i2 += 3;
+									addCh("#x");
+									for (; i2 < imax; ++i2) {
+										ch2 = chAt(i2);
+										if(ch2 == '}') break;
+										addCh(ch2);
+									}
+
+								}
+								else {addCh("\\u"); i=i2;}
+							}
+							break;
+							default:
+								addCh(ch);
+						}
+					}
+				}
+				break;
+				case '*':
+				case '+':
+				case '?': {
+					checkAddStr();
+					result += ch;
+				}
+				break;
+				case '"': hasDQ = true; addCh(ch); break;
+				case "'": hasSQ = true; addCh(ch); break;
+				default:
+					addCh(ch);
+				break;
+			}
+		}
+		checkAddStr();
+		return result;
+	}
+
+	function parseJsonGrammar(json, lang_raw_url, rule_sep, choice_sep, isEbnfRR)
+	{
+		json = JSON.parse(json);
+		//print(json);
+		var result = "";
+		result += "//\n// EBNF to generate railroad diagram at https://www.bottlecaps.de/rr/ui\n//\n";
+		result += "//\n// From " + lang_raw_url + "\n//\n";
+
+		let manageRule = function (name, rule, depth) {
+			//print(name, rule.type); //, typeof rule);
+			switch(rule.type)
+			{
+				case "ALIAS":
+					//result += " ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					//result += " ) ";
+				break;
+				case "BLANK":
+					//print(rule.type);
+				break;
+				case "CHOICE": {
+					let members = rule.members;
+					let mcount = members.length;
+					let isOptional = mcount == 2 && members[1].type == "BLANK";
+					if(isOptional) {
+						//result += " (";
+						manageRule(rule.type, members[0], depth+1);
+						//result += " )? ";
+						result += "? ";
+					}
+					else
+					{
+						if(mcount > 1 && depth) result += " (";
+						for(var idx in members) {
+							if(idx > 0) result += " " + choice_sep + " ";
+							manageRule(rule.type, members[idx], depth+1);
+						}
+						if(mcount > 1 && depth) result += " ) ";
+					}
+				}
+				break;
+				case "FIELD":
+					//print(rule.type, rule.name);
+					result += " ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					result += " ) ";
+				break;
+				case "IMMEDIATE_TOKEN":
+					result += " ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					result += " ) ";
+				break;
+				case "PATTERN": {
+					//result += " " + pattern2str(rule.value);
+					result += " " + pattern2ebnf(rule.value);
+
+					//let value = rule.value.replaceAll(/\\d/g, "[0-9]");
+					//value = value.replaceAll(/\[\[0\-9\]/g, "[0-9");
+					//if(isEbnfRR) {
+					//	value = value.replaceAll(/\\w/g, "[a-zA-Z]");
+					//	value = value.replaceAll(/\\([.*?+'])/g, "'$1'");
+					//	//value = value.replaceAll("\\$", "'$'");
+					//	value = value.replaceAll(/([^\\])\\]/g, "$1#x5D");
+					//	value = value.replaceAll("\t", "#x09");
+					//	value = value.replaceAll("\r", "#x0D");
+					//	value = value.replaceAll("\n", "#x0A");
+					//	value = value.replaceAll("_|", "'_'|");
+					//	value = value.replace(/^(0x|0b)/, "'$1'");
+					//	value = value.replaceAll(/({[^}]+?})/g, "+/*$1*/");
+					//}
+					//value = value.replaceAll("[0-9]]", "0-9]");
+					//value = value.replaceAll("![", "[^");
+					//result += " " + value;
+				}
+				break;
+				case "PREC":
+				case "PREC_DYNAMIC":
+				case "PREC_LEFT":
+				case "PREC_RIGHT":
+					result += "  ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					result += " ) ";
+				break;
+				case "REPEAT":
+					//result += " ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					//result += " )* ";
+					result += "* ";
+				break;
+				case "REPEAT1":
+					//result += " (";
+					manageRule(rule.type, rule.content, depth+1);
+					//result += " )+ ";
+					result += "+ ";
+				break;
+				case "SEQ": {
+					let members = rule.members;
+					let mcount = members.length;
+					if(mcount > 1 && depth) result += " (";
+					for(var idx in members) {
+						manageRule(rule.type, members[idx], depth+1);
+					}
+					if(mcount > 1 && depth) result += " ) ";
+				}
+				break;
+
+				case "STRING": {
+					let value = rule.value;
+					//print(rule.type, value);
+					switch(value) {
+						case "\0": result += " '\\0' "; break;
+						case "\b": result += " '\\b' "; break;
+						case "\f": result += " '\\f' "; break;
+						case "\n": result += " '\\n' "; break;
+						case "\r": result += " '\\r' "; break;
+						case "\t": result += " '\\t' "; break;
+						case "\v": result += " '\\v' "; break;
+						//case "\\": result += " '\\\\' "; break;
+						case "'": result += " \"'\" "; break;
+						case "\"": result += " '\"' "; break;
+						default:
+							//value = value.replaceAll(/\\/g, "\\\\");
+							value = value.replaceAll(/\t/g, "\\t"); //order matter
+							value = value.replaceAll(/\n/g, "\\n"); //order matter
+							value = value.replaceAll(/\r/g, "\\r"); //order matter
+							if(value.indexOf("'") >= 0) result += " \"" + value + "\" ";
+							else result += " '" + value + "' ";
+					}
+				}
+				break;
+
+				case "SYMBOL":
+					//print(rule.type, rule.name);
+					result += " " + rule.name;
+				break;
+
+				case "TOKEN":
+					result += " ( ";
+					manageRule(rule.type, rule.content, depth+1);
+					result += " ) ";
+				break;
+
+				//case "IMMEDIATE_TOKEN":
+
+				default:
+					throw("Unknown rule type: " + rule.type);
+			}
+		}
+
+		let rules = json.rules;
+		for(var idx in rules) {
+			let rule = rules[idx];
+			//print(rule);
+			result += idx + " " + rule_sep + " ";
+			manageRule(idx, rule, 0);
+			result += "\n";
+		}
+		return result;
+	}
+
+	//const  base_url = "https://github.com/";
+	const  base_url = "https://raw.githubusercontent.com/";
+	//https://raw.githubusercontent.com/tree-sitter/tree-sitter/master/docs/index.md
+	const tree_sitter_list_url = base_url + "tree-sitter/tree-sitter/master/docs/index.md";
+	//const base_url = window.location.origin + "/";
+	//const tree_sitter_list_url = base_url + "tree-sitter/docs/index.md";
+
+	const completed_state = 4;
+
+	function getGramarJson(element_id, lang_raw_url, first_request)
+	{
+		let req_json = new XMLHttpRequest();
+		req_json.onreadystatechange = function()
+		{
+			if ( this.readyState == completed_state )
+			{
+				if ( this.status == 404 )
+				{
+					if(first_request) {
+						lang_raw_url = lang_raw_url.replace("/master/", "/main/")
+						getGramarJson(element_id, lang_raw_url, false);
+					}
+					else {
+						alert("Could not find \"grammar.json\" on default path !");
+					}
+				}
+				else if(this.status == 200)
+				{
+					let myTextarea = document.getElementById( element_id );
+					let txt_json = this.responseText;
+					let ebnf = parseJsonGrammar(txt_json, lang_raw_url, "::=", "|", true);
+					myTextarea.value = ebnf;
+/*
+					var formData = new FormData();
+					formData.append("name", "compilation");
+					formData.append("text", ebnf);
+					formData.append("task", "VIEW");
+					formData.append("options", "factoring");
+					formData.append("options", "eliminaterecursion");
+					formData.append("options", "inline");
+					formData.append("options", "keep");
+					formData.append("uri", "");
+					var req_railroad = new XMLHttpRequest();
+					req_railroad.onreadystatechange = function()
+					{
+						if ( this.readyState == completed_state  && this.status == 200 )
+						{
+							let railroad = document.getElementById( "railroad" );
+							railroad.innerText = this.responseText;
+						}
+					}
+					req_railroad.open("POST", "https://bottlecaps.de/rr/ui", true);
+					//req_railroad.withCredentials = true;
+					//req_railroad.setRequestHeader('Cookie', "options=eliminaterecursion+factoring+inline+keep; width=992; spread=0; download-options=xhtml+svg+embedded; color=#FFDB4D");
+					req_railroad.send(formData);
+*/
+				}
+			}
+		}
+		req_json.open( "GET", lang_raw_url, true );
+		req_json.send( );
+	}
+
+	function ajax_submit( element_id, submit_url )
+	{
+		let request = new XMLHttpRequest();
+
+		request.onreadystatechange = function()
+		{
+			if ( this.readyState == completed_state  && this.status == 200 )
+			{
+				let mydiv = document.getElementById( element_id );
+				let txt = this.responseText;
+				let parser_list = txt.match(/### Parsers.+?### Talks on Tree-sitter/gms);
+				const lang_regexp = /\* \[([^\]]+)\]\(([^)]+)\)/g;
+
+				let match, lang_list = "<option>Select one</option>\n";
+				const https_github_len = "https://github".length;
+				const https_github_com_len = "https://github.com/".length;
+
+				//https://github.com/maxxnino/tree-sitter-zig
+				//https://raw.githubusercontent.com/maxxnino/tree-sitter-zig/main/src/grammar.json
+
+				while ((match = lang_regexp.exec(parser_list)) !== null) {
+					let lang_name = match[1];
+					let lang_url = match[2];
+					let author_lang = lang_url.slice(https_github_com_len).replace("/", "_");
+					//https://raw.githubusercontent.com/briot/tree-sitter-ada/master/src/grammar.json
+					//https://raw.githubusercontent.com/tree-sitter/tree-sitter-agda/main/src/grammar.json
+					let lang_raw_url = "https://raw.githubusercontent" + lang_url.slice(https_github_len) + "/master/src/grammar.json";
+					//lang_list += `${lang_name} -> ${lang_url} -> ${lang_raw_url} -> ${author_lang}\n`;
+					//lang_list += `<p><a href="${lang_url}">${lang_name} -> ${author_lang} -> ${lang_raw_url}</a></p>\n`;
+					lang_list += `<option value="${lang_raw_url}">${lang_name} -> ${author_lang}</option>\n`;
+					//getGramarJson("gramarList2", lang_raw_url, true);
+					//break;
+				}
+
+				mydiv.
+					innerHTML
+					//innerText
+					    = lang_list;
+			}
+		}
+
+		request.open( "GET", submit_url, true );
+		request.send( );
+	}
+
+	function loadParseGrammar(obj) {
+		let lang_raw_url = obj.options[obj.selectedIndex].value;
+		//console.log(lang_raw_url);
+		getGramarJson("gramarEBNF", lang_raw_url, true);
+	}
+
+	function loadParseGrammarUrl() {
+		let lang_raw_url = document.getElementById("raw_grammar_url");
+		if(lang_raw_url.value.length > 0) {
+			getGramarJson("gramarEBNF", lang_raw_url.value, true);
+		}
+	}
+
+	function showTreesitterGrammarList() {
+		let gramarListDiv = document.getElementById("gramarList");
+		ajax_submit("tsgrm", tree_sitter_list_url);
+		//gramarListDiv.innerHTML = "Hello World !";
+	}
+</script>
+<style type="text/css">
+#gramarEBNF {width: 100%;height:70%; margin-top: 1em; padding: 1em;}
+</style>
+</head>
+<body>
+<h2>Tree-sitter converter to <a href="https://www.bottlecaps.de/rr/ui">EBNF for railroad diagram</a></h2>
+<div id="gramarExamples">
+<p>Examples <select id="tsgrm" onchange="loadParseGrammar(this);"><option>Select one</option></select></p>
+<p>Or type the raw url to 'grammar.json' here <input id="raw_grammar_url" placeholder="https://raw.githubusercontent.com/tree-sitter/tree-sitter-javascript/master/src/grammar.json"></input> <button onclick="loadParseGrammarUrl();">Go</button></p>
+<p>
+Copy and paste the <b>EBNF</b>  shown bellow on <a href="https://www.bottlecaps.de/rr/ui">https://www.bottlecaps.de/rr/ui</a> on the tab <b>'Edit Grammar'</b> the click on the tab <b>'View Diagram'</b> to see/download a navigable railroad diagram.
+</p>
+</div>
+<textarea id="gramarEBNF"></textarea>
+<script type="text/javascript">showTreesitterGrammarList()</script>
+</body>
+</html>
