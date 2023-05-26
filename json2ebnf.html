@@ -414,11 +414,11 @@
 	}
 </script>
 <style type="text/css">
-#gramarEBNF {width: 100%;height:70%; margin-top: 1em; padding: 1em;}
+#gramarEBNF {width: 100%;height:65%; margin-top: 1em; padding: 1em;}
 </style>
 </head>
 <body>
-<h2>Tree-sitter converter to <a href="https://www.bottlecaps.de/rr/ui">EBNF for railroad diagram</a></h2>
+<h2><a href="https://tree-sitter.github.io/tree-sitter/" target="_blank">Tree-sitter</a> converter to <a href="https://www.bottlecaps.de/rr/ui" target="_blank">EBNF for railroad diagram</a></h2>
 <div id="gramarExamples">
 <p>Examples <select id="tsgrm" onchange="loadParseGrammar(this);"><option>Select one</option></select></p>
 <p>Or type the raw url to 'grammar.json' here <input id="raw_grammar_url" placeholder="https://raw.githubusercontent.com/tree-sitter/tree-sitter-javascript/master/src/grammar.json"></input> <button onclick="loadParseGrammarUrl();">Go</button></p>
@@ -436,10 +436,12 @@ Copy and paste the <b>EBNF</b>  shown bellow on <a href="https://www.bottlecaps.
 <input type="hidden" name="uri" value="">
 <p>
 Or press <input type="submit" value="Show Railroad Diagram"> to automatically send it to https://www.bottlecaps.de/rr/ui .
-
 </p>
 <textarea id="gramarEBNF" name="text"></textarea>
 </form>
+<p>Noticed that from the same author (<a href="https://github.com/GuntherRademacher" target="_blank">Gunther Rademacher</a>) of the railroad diagram generator there is:</p>
+<p><a href="https://www.bottlecaps.de/convert/" target="_blank">Convert2EBNF</a> that convert to EBNF from ABNF, ANTLR 3, ANTLR 4, Bison, GOLD, Instaparse, Invisible XML, JavaCC, Jison, PEG.js, Xtext .</p>
+<p><a href="https://bottlecaps.de/rex/" target="_blank">REx Parser Generator</a> that generates parsers from EBNF in the following languages: C++, C#, Haxe, Java, JavaScript, TypeScript, Scala, XQuery, XSLT, XML .</p>
 <script type="text/javascript">showTreesitterGrammarList()</script>
 </body>
 </html>
