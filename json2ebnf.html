@@ -426,7 +426,20 @@
 Copy and paste the <b>EBNF</b>  shown bellow on <a href="https://www.bottlecaps.de/rr/ui">https://www.bottlecaps.de/rr/ui</a> on the tab <b>'Edit Grammar'</b> the click on the tab <b>'View Diagram'</b> to see/download a navigable railroad diagram.
 </p>
 </div>
-<textarea id="gramarEBNF"></textarea>
+<form method="POST" action="https://bottlecaps.de/rr/ui" enctype="multipart/form-data">
+<input type="hidden" name="name" value="compilation">
+<input type="hidden" name="task" value="VIEW">
+<input type="hidden" name="options" value="factoring">
+<input type="hidden" name="options" value="eliminaterecursion">
+<input type="hidden" name="options" value="inline">
+<input type="hidden" name="options" value="keep">
+<input type="hidden" name="uri" value="">
+<p>
+Or press <input type="submit" value="Show Railroad Diagram"> to automatically send it to https://www.bottlecaps.de/rr/ui .
+
+</p>
+<textarea id="gramarEBNF" name="text"></textarea>
+</form>
 <script type="text/javascript">showTreesitterGrammarList()</script>
 </body>
 </html>
