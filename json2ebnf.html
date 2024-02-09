@@ -5,6 +5,8 @@
 <meta name="contact" content="mingodad _at_ gmail _dot_ com">
 <script type="text/javascript">
 
+	const INDENT = "\t";
+
 	function pattern2ebnf(pattern) {
 		let inClass = false;
 		let inQuote = false;
@@ -132,52 +134,75 @@
 		//print(json);
 		var result = "";
 		result += "//\n// EBNF to generate railroad diagram at https://www.bottlecaps.de/rr/ui\n//\n";
-		result += "//\n// From " + lang_raw_url + "\n//\n";
+		result += "//\n// From " + lang_raw_url + "\n//\n\n";
+
+		let isRuleOptional = function(rule) {
+			let isChoice = rule.type == "CHOICE";
+			let isOptional = isChoice && rule.members.length == 2 && rule.members[1].type == "BLANK";
+			return isOptional;
+		};
 
 		let manageRule = function (name, rule, depth) {
 			//print(name, rule.type); //, typeof rule);
 			switch(rule.type)
 			{
-				case "ALIAS":
-					//result += " ( ";
+				case "ALIAS": {
+					let needGroup = rule.content.hasOwnProperty('members');
+					let isOptional = isRuleOptional(rule.content);
+					if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
+						needGroup = false;
+					}
+					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
-					//result += " ) ";
+					if(needGroup) result += " )";
+					if(isOptional) result += "?";
+				}
 				break;
+
 				case "BLANK":
-					//print(rule.type);
+					result += " /*empty*/";
 				break;
+
 				case "CHOICE": {
 					let members = rule.members;
-					let mcount = members.length;
-					let isOptional = mcount == 2 && members[1].type == "BLANK";
+					let isOptional = isRuleOptional(rule);
 					if(isOptional) {
-						//result += " (";
 						manageRule(rule.type, members[0], depth+1);
-						//result += " )? ";
-						result += "? ";
 					}
 					else
 					{
-						if(mcount > 1 && depth) result += " (";
 						for(var idx in members) {
-							if(idx > 0) result += " " + choice_sep + " ";
-							manageRule(rule.type, members[idx], depth+1);
+							let child = members[idx];
+							let isChildChoice = child.type == "CHOICE";
+							if(idx > 0) {
+								if((depth <1)) {
+									result += "\n" + INDENT + choice_sep;
+								}
+								else
+								{
+									result += " " + choice_sep;
+								}
+							}
+							manageRule(rule.type, child, (isChildChoice ? depth : depth+1));
 						}
-						if(mcount > 1 && depth) result += " ) ";
 					}
 				}
 				break;
-				case "FIELD":
+
+				case "FIELD": {
 					//print(rule.type, rule.name);
-					result += " ( ";
+					let needGroup = rule.content.hasOwnProperty('members');
+					let isOptional = isRuleOptional(rule.content);
+					if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
+						needGroup = false;
+					}
+					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
-					result += " ) ";
+					if(needGroup) result += " )";
+					if(isOptional) result += "?";
+				}
 				break;
-				case "IMMEDIATE_TOKEN":
-					result += " ( ";
-					manageRule(rule.type, rule.content, depth+1);
-					result += " ) ";
-				break;
+
 				case "PATTERN": {
 					//result += " " + pattern2str(rule.value);
 					result += " " + pattern2ebnf(rule.value);
@@ -201,34 +226,49 @@
 					//result += " " + value;
 				}
 				break;
+
 				case "PREC":
 				case "PREC_DYNAMIC":
 				case "PREC_LEFT":
 				case "PREC_RIGHT":
-					result += "  ( ";
+					//result += "  (";
 					manageRule(rule.type, rule.content, depth+1);
-					result += " ) ";
+					//result += " )";
 				break;
-				case "REPEAT":
-					//result += " ( ";
+
+				case "REPEAT": {
+					let needGroup = rule.content.hasOwnProperty('members');
+					if(needGroup) result += " (";
+					manageRule(rule.type, rule.content, 1, depth+1);
+					if(needGroup) result += " )";
+					result += "*";
+				}
+				break;
+
+				case "REPEAT1": {
+					let needGroup = rule.content.hasOwnProperty('members');
+					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
-					//result += " )* ";
-					result += "* ";
+					if(needGroup) result += " )";
+					result += "+";
+				}
 				break;
-				case "REPEAT1":
-					//result += " (";
-					manageRule(rule.type, rule.content, depth+1);
-					//result += " )+ ";
-					result += "+ ";
-				break;
+
 				case "SEQ": {
 					let members = rule.members;
-					let mcount = members.length;
-					if(mcount > 1 && depth) result += " (";
 					for(var idx in members) {
-						manageRule(rule.type, members[idx], depth+1);
+						let child = members[idx];
+						let isChoice = child.type == "CHOICE";
+						let needGroup = isChoice;
+						let isOptional = isRuleOptional(child);
+						if(isOptional && !child.members[0].hasOwnProperty('members')) {
+							needGroup = false;
+						}
+						if(needGroup) result += " (";
+						manageRule(rule.type, child, depth+1);
+						if(needGroup) result += " )";
+						if(isOptional) result += "?";
 					}
-					if(mcount > 1 && depth) result += " ) ";
 				}
 				break;
 
@@ -251,8 +291,8 @@
 							value = value.replaceAll(/\t/g, "\\t"); //order matter
 							value = value.replaceAll(/\n/g, "\\n"); //order matter
 							value = value.replaceAll(/\r/g, "\\r"); //order matter
-							if(value.indexOf("'") >= 0) result += " \"" + value + "\" ";
-							else result += " '" + value + "' ";
+							if(value.indexOf("'") >= 0) result += " \"" + value + "\"";
+							else result += " '" + value + "'";
 					}
 				}
 				break;
@@ -262,10 +302,20 @@
 					result += " " + rule.name;
 				break;
 
-				case "TOKEN":
-					result += " ( ";
+				case "IMMEDIATE_TOKEN": {
+					let needGroup = rule.content.hasOwnProperty('members');
+					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
-					result += " ) ";
+					if(needGroup) result += " )";
+				}
+				break;
+
+				case "TOKEN": {
+					let needGroup = rule.content.hasOwnProperty('members');
+					if(needGroup) result += " (";
+					manageRule(rule.type, rule.content, depth+1);
+					if(needGroup) result += " )";
+				}
 				break;
 
 				//case "IMMEDIATE_TOKEN":
@@ -279,9 +329,9 @@
 		for(var idx in rules) {
 			let rule = rules[idx];
 			//print(rule);
-			result += idx + " " + rule_sep + " ";
+			result += idx + " " + rule_sep + "\n" + INDENT;
 			manageRule(idx, rule, 0);
-			result += "\n";
+			result += "\n\n";
 		}
 		return result;
 	}
