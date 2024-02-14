@@ -2,7 +2,7 @@
 Grammar originally from https://github.com/nilshelmig/tree-sitter-sourcepawn
 Converted by excuting:
 	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+Then manualy fixing the problems reported by https://rr.red-dove.com/ui in a way to allow visualization (correctnes is not the priority now)
 */
 
 source_file ::=  (  ( function_declaration |  function_definition |  callback_implementation |  enum |  enum_struct |  typedef |  typeset |  methodmap |  struct |  global_variable |  _top_level_statements |  preproc_include |  preproc_tryinclude |  preproc_define |  preproc_undefine |  preproc_pragma_semicolon |  preproc_pragma_newdecls |  preproc_pragma_deprecated |  preproc_pragma_dynamic )  )*

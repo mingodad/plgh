@@ -248,7 +248,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 	json = JSON.parse(json);
 	//print(json);
 	fd.printf("//\n// From %s\n//\n", fname);
-	fd.printf("//\n// EBNF to generate railroad diagram at https://www.bottlecaps.de/rr/ui\n//\n\n");
+	fd.printf("//\n// EBNF to generate railroad diagram at https://rr.red-dove.com/ui\n//\n\n");
 
 	let isRuleOptional = function(rule) {
 		let isChoice = rule.type == "CHOICE";

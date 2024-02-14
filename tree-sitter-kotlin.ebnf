@@ -2,7 +2,7 @@
 Grammar originally from https://github.com/fwcd/tree-sitter-kotlin
 Converted by excuting:
 	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+Then manualy fixing the problems reported by https://rr.red-dove.com/ui in a way to allow visualization (correctnes is not the priority now)
 */
 
 source_file ::=  ( ( shebang_line )?  ( ( ( file_annotation )+  _semi )  )?  ( package_header )?  (  import_header )*  (  ( _statement _semi )  )*  )

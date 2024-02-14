@@ -1,7 +1,7 @@
 /*
 Grammar originally from https://sourceforge.net/projects/libparser/
 	files test/grammar/parser_c_preproc.bnf and test/grammar/scanner_c_preproc.bnf
-Manually converted to be viewd  by https://www.bottlecaps.de/rr/ui (correctnes is not the priority now)
+Manually converted to be viewd  by https://rr.red-dove.com/ui (correctnes is not the priority now)
 */
 
 PREPROCESSOR ::= CODE CONTROL_LINE PREPROCESSOR

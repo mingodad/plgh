@@ -2,7 +2,7 @@
 Grammar originally from  https://github.com/ikatyang/tree-sitter-yaml
 Converted by excuting:
 	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
+Then manualy fixing the problems reported by https://rr.red-dove.com/ui in a way to allow visualization (correctnes is not the priority now)
 */
 
 stream ::=  ( ( ( ( ( (  _bgn_imp_doc )  |  (  _drs_doc )  |  (  _exp_doc )  )  ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq )  )?  )  |  ( ( (  _bgn_imp_doc_end )  |  (  _drs_doc_end )  |  (  _exp_doc_end )  |  (  _doc_end )  )  ( ( _doc_w_bgn_w_end_seq |  _doc_w_bgn_wo_end_seq |  _doc_wo_bgn_w_end_seq |  _doc_wo_bgn_wo_end_seq )  )?  )  )  )?  _eof )
