@@ -1,275 +1,502 @@
-/*
-Grammar originally from https://github.com/haxscramper/tree-sitter-nim
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-nim/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+module ::=
+	 stmt*
+
+KEYW ::=
+	 'addr' | 'and' | 'as' | 'asm' | 'bind' | 'block' | 'break' | 'case' | 'cast' | 'concept' | 'const' | 'continue' | 'converter' | 'defer' | 'discard' | 'distinct' | 'div' | 'do' | 'elif' | 'else' | 'end' | 'enum' | 'except' | 'export' | 'finally' | 'for' | 'from' | 'func' | 'if' | 'import' | 'in' | 'include' | 'interface' | 'is' | 'isnot' | 'iterator' | 'let' | 'macro' | 'method' | 'mixin' | 'mod' | 'nil' | 'not' | 'notin' | 'object' | 'of' | 'or' | 'out' | 'proc' | 'ptr' | 'raise' | 'ref' | 'return' | 'shl' | 'shr' | 'static' | 'template' | 'try' | 'tuple' | 'type' | 'using' | 'var' | 'when' | 'while' | 'xor' | 'yield'
+
+IDENT ::=
+	 [A-Za-z\x80-\xFF]([_A-Za-z0-9\x80-\xFF])*
+
+operator ::=
+	 OP0
+	| OP1
+	| OP2
+	| OP3
+	| OP4
+	| OP5
+	| OP6
+	| OP7
+	| OP8
+	| OP9
+
+OPR ::=
+	 [=+#x2D-*\/<>@$~&%|!?^.:\]
+
+OP10 ::=
+	 [$^][=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP9 ::=
+	 'div'
+	| 'mod'
+	| 'shl'
+	| 'shr'
+	| ([*\/%][+#x2D-*\/<>@$~&%|!?^.:\][=+#x2D-*\/<>@$~&%|!?^.:\]*)|('div')|('mod')|('shl')|('shr')
+
+OP8 ::=
+	 [+#x2D-~|][+#x2D-*\/<>@$~&%|!?^.:\][=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP7 ::=
+	 [&][=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP6 ::=
+	 '..'[=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP5 ::=
+	 'in'
+	| 'notin'
+	| 'is'
+	| 'isnot'
+	| 'of'
+	| 'as'
+	| 'from'
+	| [=<>!][=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP4 ::=
+	 'and'
+
+OP3 ::=
+	 'or'
+	| 'xor'
+
+OP2 ::=
+	 [@:?][=+#x2D-*\/<>@$~&%|!?^.:\]*
+
+OP1 ::=
+	 [=+#x2D-*\/<>@$~&%|!?^.:\]+'='
+
+OP0 ::=
+	 [-=]+[>]+
+
+IND ::=
+	 IND_EQ
+	| IND_GE
+	| DED
+
+prefixOperator ::=
+	 operator
+
+simpleExpr ::=
+	 IDENT
+	| binaryExpr
+
+binaryExpr ::=
+	 binaryExpr OP9 binaryExpr
+	| binaryExpr OP8 binaryExpr
+	| binaryExpr OP7 binaryExpr
+	| binaryExpr OP6 binaryExpr
+	| binaryExpr OP5 binaryExpr
+	| binaryExpr OP4 binaryExpr
+	| binaryExpr OP3 binaryExpr
+	| binaryExpr OP2 binaryExpr
+	| binaryExpr OP1 binaryExpr
+	| binaryExpr OP0 binaryExpr
+
+symbol ::=
+	 '`' ( KEYW | IDENT | literal | ( operator | '(' | ')' | '[' | ']' | '{' | '}' | '=' )+ ) '`'
+
+exprColonEqExpr ::=
+	 expr ( ':' | '=' ) expr
+
+exprList ::=
+	 expr ( ',' expr )+
+
+exprColonEqExprList ::=
+	 exprColonEqExpr ( ',' exprColonEqExpr )* ','?
+
+dotExpr ::=
+	 expr '.' IND? ( symbol | '[:' exprList ']' )
 
-module ::=  (  stmt )*
+explicitGenericInstantiation ::=
+	 '[:' exprList ']' ( '(' exprColonEqExpr ')' )?
 
-KEYW ::=   (  ( 'addr'  |  'and'  |  'as'  |  'asm'  |  'bind'  |  'block'  |  'break'  |  'case'  |  'cast'  |  'concept'  |  'const'  |  'continue'  |  'converter'  |  'defer'  |  'discard'  |  'distinct'  |  'div'  |  'do'  |  'elif'  |  'else'  |  'end'  |  'enum'  |  'except'  |  'export'  |  'finally'  |  'for'  |  'from'  |  'func'  |  'if'  |  'import'  |  'in'  |  'include'  |  'interface'  |  'is'  |  'isnot'  |  'iterator'  |  'let'  |  'macro'  |  'method'  |  'mixin'  |  'mod'  |  'nil'  |  'not'  |  'notin'  |  'object'  |  'of'  |  'or'  |  'out'  |  'proc'  |  'ptr'  |  'raise'  |  'ref'  |  'return'  |  'shl'  |  'shr'  |  'static'  |  'template'  |  'try'  |  'tuple'  |  'type'  |  'using'  |  'var'  |  'when'  |  'while'  |  'xor'  |  'yield'  )  )
+qualifiedIdent ::=
+	 symbol ( '.' IND? symbol )?
 
-IDENT ::=  [A-Za-z\x80-\xFF]([_A-Za-z0-9\x80-\xFF])*
+setOrTableConstr ::=
+	 '{' ( exprColonEqExpr ',' | ':' ) '}'
 
-operator ::=  ( OP0 |  OP1 |  OP2 |  OP3 |  OP4 |  OP5 |  OP6 |  OP7 |  OP8 |  OP9 )
+castExpr ::=
+	 'cast' '[' IND? typeDesc ( IND_GE | IND_EQ )? ']' '(' IND? expr ( IND_GE | IND_EQ )? ')'
 
-OPR ::=  [=+\-*\/<>@$~&%|!?^.:\\]
+parKeyw ::=
+	 'discard' 'include' 'if' 'while' 'case' 'try' 'finally' 'except' 'for' 'block' 'const' 'let' 'when' 'var' 'mixin'
 
-OP10 ::=  [$^][=+\-*\/<>@$~&%|!?^.:\\]*
+par ::=
+	 '(' IND? ( parKeyw ( ifExpr | complexOrSimpleStmt ) ( ';' ( ifExpr | complexOrSimpleStmt ) )+ | ';' ( ifExpr | complexOrSimpleStmt ) ( ';' ( ifExpr | complexOrSimpleStmt ) )+ | pragmaStmt | simpleExpr | '=' expr ( ';' ( ifExpr | complexOrSimpleStmt ) ( ';' ( ifExpr | complexOrSimpleStmt ) )+ )? | ':' expr ( ',' exprColonEqExpr ( ',' exprColonEqExpr )+ )? ) ( IND_GE | IND_EQ )? ')'
 
-OP9 ::=  ( 'div'  |  'mod'  |  'shl'  |  'shr'  |  ([*\/%][+\-*\/<>@$~&%|!?^.:\\][=+\-*\/<>@$~&%|!?^.:\\]*)|(div)|(mod)|(shl)|(shr) )
+literal ::=
+	 INT_LIT
+	| INT8_LIT
+	| INT16_LIT
+	| INT32_LIT
+	| INT64_LIT
+	| UINT_LIT
+	| UINT8_LIT
+	| UINT16_LIT
+	| UINT32_LIT
+	| UINT64_LIT
+	| FLOAT_LIT
+	| FLOAT32_LIT
+	| FLOAT64_LIT
+	| STR_LIT
+	| RSTR_LIT
+	| TRIPLESTR_LIT
+	| CHAR_LIT
+	| NIL
 
-OP8 ::=  [+\-~|][+\-*\/<>@$~&%|!?^.:\\][=+\-*\/<>@$~&%|!?^.:\\]*
+generalizedLit ::=
+	 GENERALIZED_STR_LIT
+	| GENERALIZED_TRIPLESTR_LIT
 
-OP7 ::=  [&][=+\-*\/<>@$~&%|!?^.:\\]*
+identOrLiteral ::=
+	 generalizedLit
+	| symbol
+	| literal
+	| par
+	| arrayConstr
+	| setOrTableConstr
+	| castExpr
 
-OP6 ::=  '..'[=+\-*\/<>@$~&%|!?^.:\\]*
+tupleConstr ::=
+	 '(' IND? ( exprColonEqExpr ','? )* ( IND_GE | IND_EQ )? ')'
 
-OP5 ::=  ( 'in'  |  'notin'  |  'is'  |  'isnot'  |  'of'  |  'as'  |  'from'  |  [=<>!][=+\-*\/<>@$~&%|!?^.:\\]* )
+arrayConstr ::=
+	 '[' IND? ( exprColonEqExpr ','? )* ( IND_GE | IND_EQ )? ']'
 
-OP4 ::=  'and'
+primarySuffix ::=
+	 '(' ( exprColonEqExpr ','? )* ')'
+	| '.' IND? symbol generalizedLit?
+	| '[' IND? exprColonEqExprList ( IND_GE | IND_EQ )? ']'
+	| '{' IND? exprColonEqExprList ( IND_GE | IND_EQ )? '}'
+	| ( '`' | IDENT | literal | 'cast' | 'addr' | 'type' ) expr
 
-OP3 ::=  ( 'or'  |  'xor'  )
+pragma ::=
+	 '{.' IND? ( exprColonEqExpr ','? )* ( IND_GE | IND_EQ )? ( '.}' | '}' )
 
-OP2 ::=  [@:?][=+\-*\/<>@$~&%|!?^.:\\]*
+identVis ::=
+	 symbol OPR?
 
-OP1 ::=  [=+\-*\/<>@$~&%|!?^.:\\]+'='
+identVisDot ::=
+	 symbol '.' IND? symbol OPR?
 
-OP0 ::=  [-=]+[>]+
+identWithPragma ::=
+	 identVis pragma?
 
-IND ::=  ( IND_EQ |  IND_GE |  DED )
+identWithPragmaDot ::=
+	 identVisDot pragma?
 
-prefixOperator ::=  operator
+declColonEquals ::=
+	 identWithPragma ( ',' identWithPragma )* ','? ( ':' IND? typeDesc )? ( '=' IND? expr )?
 
-simpleExpr ::=  ( IDENT |  binaryExpr )
+identColonEquals ::=
+	 IDENT ( ',' IDENT )* ','? ( ':' IND? typeDesc )? ( '=' IND? expr )?
 
-binaryExpr ::=  (  (  ( binaryExpr OP9 binaryExpr )  )  |   (  ( binaryExpr OP8 binaryExpr )  )  |   (  ( binaryExpr OP7 binaryExpr )  )  |   (  ( binaryExpr OP6 binaryExpr )  )  |   (  ( binaryExpr OP5 binaryExpr )  )  |   (  ( binaryExpr OP4 binaryExpr )  )  |   (  ( binaryExpr OP3 binaryExpr )  )  |   (  ( binaryExpr OP2 binaryExpr )  )  |   (  ( binaryExpr OP1 binaryExpr )  )  |   (  ( binaryExpr OP0 binaryExpr )  )  )
+inlTupleDecl ::=
+	 'tuple' '[' IND? ( identColonEquals ',;' )* ( IND_GE | IND_EQ )? ']'
 
-symbol ::=  ( '`'  ( KEYW |  IDENT |  literal |  ( ( operator |  '('  |  ')'  |  '['  |  ']'  |  '{'  |  '}'  |  '='  )  )+  )  '`'  )
+extTupleDecl ::=
+	 'tuple' IND_GE identColonEquals ( IND_EQ identColonEquals )*
 
-exprColonEqExpr ::=  ( expr ( ( ':'  |  '='  )  expr )  )
+tupleClass ::=
+	 'tuple'
 
-exprList ::=  ( expr ( ( ','  expr )  )+  )
+paramList ::=
+	 '(' declColonEquals ( ',;' declColonEquals )* ')'
 
-exprColonEqExprList ::=  ( exprColonEqExpr (  ( ','  exprColonEqExpr )  )*  ( ','  )?  )
+doBlock ::=
+	 'do' paramList? ( '->' IND? typeDesc )? pragma? ':' stmt
 
-dotExpr ::=  ( expr '.'  ( IND )?  ( symbol |  ( '[:'  exprList ']'  )  )  )
+procExpr ::=
+	 'proc' paramList? ( ':' IND? typeDesc )? pragma? ( '=' stmt )?
 
-explicitGenericInstantiation ::=  ( '[:'  exprList ']'  ( ( '('  exprColonEqExpr ')'  )  )?  )
+distinct ::=
+	 'distinct' IND? typeDesc
 
-qualifiedIdent ::=  ( symbol ( ( '.'  ( IND )?  symbol )  )?  )
+forStmt ::=
+	 'for' identWithPragma ( ',' identWithPragma )+ 'in' expr ':' stmt
 
-setOrTableConstr ::=  ( '{'  ( ( exprColonEqExpr ','  )  |  ':'  )  '}'  )
+forExpr ::=
+	 forStmt
 
-castExpr ::=  ( 'cast'  ( '['  ( IND )?  typeDesc ( ( IND_GE |  IND_EQ )  )?  ']'  '('  ( IND )?  expr ( ( IND_GE |  IND_EQ )  )?  ')'  )  )
+expr ::=
+	 blockExpr | ifExpr | whenExpr | caseStmt | forExpr | tryExpr | simpleExpr
 
-parKeyw ::=  ( 'discard'  'include'  'if'  'while'  'case'  'try'  'finally'  'except'  'for'  'block'  'const'  'let'  'when'  'var'  'mixin'  )
+typeKeyw ::=
+	 'var' | 'out' | 'ref' | 'ptr' | 'shared' | 'tuple' | 'proc' | 'iterator' | 'distinct' | 'object' | 'enum'
 
-par ::=  ( '('  ( IND )?  ( ( parKeyw ( ( ifExpr |  complexOrSimpleStmt )  ( ( ';'  ( ifExpr |  complexOrSimpleStmt )  )  )+  )  )  |  ( ';'  ( ( ifExpr |  complexOrSimpleStmt )  ( ( ';'  ( ifExpr |  complexOrSimpleStmt )  )  )+  )  )  |  pragmaStmt |  simpleExpr |  ( ( '='  expr ( ( ';'  ( ( ifExpr |  complexOrSimpleStmt )  ( ( ';'  ( ifExpr |  complexOrSimpleStmt )  )  )+  )  )  )?  )  |  ( ':'  expr ( ( ','  ( exprColonEqExpr ( ( ','  exprColonEqExpr )  )+  )  )  )?  )  )  )  ( ( IND_GE |  IND_EQ )  )?  ')'  )
+primary ::=
+	 typeKeyw IND? typeDesc prefixOperator* identOrLiteral primarySuffix* 'bind' primary
 
-literal ::=  ( INT_LIT |  INT8_LIT |  INT16_LIT |  INT32_LIT |  INT64_LIT |  UINT_LIT |  UINT8_LIT |  UINT16_LIT |  UINT32_LIT |  UINT64_LIT |  FLOAT_LIT |  FLOAT32_LIT |  FLOAT64_LIT |  STR_LIT |  RSTR_LIT |  TRIPLESTR_LIT |  CHAR_LIT |  NIL )
+typeDesc ::=
+	 simpleExpr ( 'not' expr )?
 
-generalizedLit ::=  ( GENERALIZED_STR_LIT |  GENERALIZED_TRIPLESTR_LIT )
+typeDefAux ::=
+	 simpleExpr ( 'not' expr )?
+	| 'concept' typeClass
 
-identOrLiteral ::=  ( generalizedLit |  symbol |  literal |  par |  arrayConstr |  setOrTableConstr |  castExpr )
+postExprBlocks ::=
+	 ':' stmt? ( IND_EQ doBlock | IND_EQ 'of' exprList ':' stmt | IND_EQ 'elif' expr ':' stmt | IND_EQ 'except' exprList ':' stmt | IND_EQ 'else' ':' stmt )*
 
-tupleConstr ::=  ( '('  ( IND )?  (  ( exprColonEqExpr ( ','  )?  )  )*  ( ( IND_GE |  IND_EQ )  )?  ')'  )
+exprStmt ::=
+	 simpleExpr ( '=' IND? expr colonBody? | expr ( ',' expr )+ postExprBlocks )?
 
-arrayConstr ::=   (  ( '['  ( IND )?  (  ( exprColonEqExpr ( ','  )?  )  )*  ( ( IND_GE |  IND_EQ )  )?  ']'  )  )
+importStmt ::=
+	 'import' IND? expr ( ( ',' expr )* | 'except' IND? expr ( ',' expr )+ )
 
-primarySuffix ::=  ( ( '('  (  ( exprColonEqExpr ( ','  )?  )  )*  ')'  )  |  ( '.'  ( IND )?  symbol ( generalizedLit )?  )  |  ( '['  ( IND )?  exprColonEqExprList ( ( IND_GE |  IND_EQ )  )?  ']'  )  |  ( '{'  ( IND )?  exprColonEqExprList ( ( IND_GE |  IND_EQ )  )?  '}'  )  |  ( ( '`'  |  IDENT |  literal |  'cast'  |  'addr'  |  'type'  )  expr )  )
+exportStmt ::=
+	 'export' IND? expr ( ( ',' expr )* | 'except' IND? expr ( ',' expr )+ )
 
-pragma ::=   (  ( '{.'  ( IND )?  (  ( exprColonEqExpr ( ','  )?  )  )*  ( ( IND_GE |  IND_EQ )  )?  ( '.}'  |  '}'  )  )  )
+includeStmt ::=
+	 'include' IND? expr ( ',' expr )+
 
-identVis ::=  ( symbol ( OPR )?  )
+fromStmt ::=
+	 'from' expr 'import' IND? expr ( ',' expr )*
 
-identVisDot ::=  ( symbol '.'  ( IND )?  symbol ( OPR )?  )
+returnStmt ::=
+	 'return' IND? expr?
 
-identWithPragma ::=  ( identVis ( pragma )?  )
+raiseStmt ::=
+	 'raise' IND? expr?
 
-identWithPragmaDot ::=  ( identVisDot ( pragma )?  )
+yieldStmt ::=
+	 'yield' IND? expr?
 
-declColonEquals ::=   (  ( identWithPragma (  ( ','  identWithPragma )  )*  ( ','  )?  ( ( ':'  ( IND )?  typeDesc )  )?  ( ( '='  ( IND )?  expr )  )?  )  )
+discardStmt ::=
+	 'discard' IND? expr?
 
-identColonEquals ::=   (  ( IDENT (  ( ','  IDENT )  )*  ( ','  )?  ( ( ':'  ( IND )?  typeDesc )  )?  ( ( '='  ( IND )?  expr )  )?  )  )
+breakStmt ::=
+	 'break' IND? expr?
 
-inlTupleDecl ::=  ( 'tuple'  '['  ( IND )?  (  ( identColonEquals ',;' )  )*  ( ( IND_GE |  IND_EQ )  )?  ']'  )
+continueStmt ::=
+	 'continue' IND? expr?
 
-extTupleDecl ::=  ( 'tuple'  ( IND_GE identColonEquals (  ( IND_EQ identColonEquals )  )*  )  )
+condStmt ::=
+	 expr ':' stmt ( IND_EQ 'elif' expr ':' stmt )* ( IND_EQ 'else' ':' stmt )?
 
-tupleClass ::=  'tuple'
+ifStmt ::=
+	 'if' condStmt
 
-paramList ::=  ( '('  ( declColonEquals (  ( ',;' declColonEquals )  )*  )  ')'  )
+whenStmt ::=
+	 'when' condStmt
 
-doBlock ::=  ( 'do'  ( ( paramList )?  ( ( '->'  ( IND )?  typeDesc )  )?  )  ( pragma )?  ':'  stmt )
+condExpr ::=
+	 expr ':' expr IND? ( 'elif' expr ':' expr IND? )* 'else' ':' expr
 
-procExpr ::=  ( 'proc'  ( ( paramList )?  ( ( ':'  ( IND )?  typeDesc )  )?  )  ( pragma )?  ( ( '='  stmt )  )?  )
+ifExpr ::=
+	 'if' condExpr
 
-distinct ::=  ( 'distinct'  ( IND )?  typeDesc )
+whenExpr ::=
+	 'when' condExpr
 
-forStmt ::=  ( 'for'  ( identWithPragma ( ( ','  identWithPragma )  )+  )   (  'in'  )  expr ':'  stmt )
+whileStmt ::=
+	 'while' expr ':' stmt
 
-forExpr ::=  forStmt
+ofBranch ::=
+	 'of' exprList ':' stmt
 
-expr ::=   (  ( ( blockExpr |  ifExpr |  whenExpr |  caseStmt |  forExpr |  tryExpr )  |  simpleExpr )  )
+ofBranches ::=
+	 ofBranch ( IND_EQ ofBranch )* ( IND_EQ 'elif' expr ':' stmt )* ( IND_EQ 'else' ':' stmt )?
 
-typeKeyw ::=   (  ( 'var'  |  'out'  |  'ref'  |  'ptr'  |  'shared'  |  'tuple'  |  'proc'  |  'iterator'  |  'distinct'  |  'object'  |  'enum'  )  )
+caseStmt ::=
+	 'case' expr ':'? IND_GE ofBranches DED IND_EQ ofBranches
 
-primary ::=  ( ( typeKeyw ( IND )?  typeDesc )  ( (  prefixOperator )*  identOrLiteral (  primarySuffix )*  )  ( 'bind'  primary )  )
+tryStmt ::=
+	 'try' ':' stmt IND_EQ? 'except' 'finally' ( IND_EQ? 'except' exprList ':' stmt )* ( IND_EQ? 'finally' ':' stmt )?
 
-typeDesc ::=  ( simpleExpr ( ( 'not'  expr )  )?  )
+tryExpr ::=
+	 'try' ':' stmt IND? ( 'except' | 'finally' ) ( IND? 'except' exprList ':' stmt )* ( IND? 'finally' ':' stmt )?
 
-typeDefAux ::=  ( ( simpleExpr ( ( 'not'  expr )  )?  )  |  ( 'concept'  typeClass )  )
+exceptBlock ::=
+	 'except' ':' stmt
 
-postExprBlocks ::=   (  ( ':'  ( stmt )?  (  ( ( IND_EQ doBlock )  |  ( IND_EQ 'of'  exprList ':'  stmt )  |  ( IND_EQ 'elif'  expr ':'  stmt )  |  ( IND_EQ 'except'  exprList ':'  stmt )  |  ( IND_EQ 'else'  ':'  stmt )  )  )*  )  )
+blockStmt ::=
+	 'block' symbol? ':' stmt
 
-exprStmt ::=   (  ( simpleExpr ( ( ( '='  ( IND )?  expr ( colonBody )?  )  |  ( ( expr ( ( ','  expr )  )+  )  postExprBlocks )  )  )?  )  )
+blockExpr ::=
+	 'block' symbol? ':' stmt
 
-importStmt ::=   (  ( 'import'  ( IND )?  expr ( (  ( ','  expr )  )*  |  ( 'except'  ( IND )?  ( expr ( ( ','  expr )  )+  )  )  )  )  )
+staticStmt ::=
+	 'static' ':' stmt
 
-exportStmt ::=   (  ( 'export'  ( IND )?  expr ( (  ( ','  expr )  )*  |  ( 'except'  ( IND )?  ( expr ( ( ','  expr )  )+  )  )  )  )  )
+deferStmt ::=
+	 'defer' ':' stmt
 
-includeStmt ::=   (  ( 'include'  ( IND )?  ( expr ( ( ','  expr )  )+  )  )  )
+asmStmt ::=
+	 'asm' pragma? ( STR_LIT | RSTR_LIT | TRIPLESTR_LIT )
 
-fromStmt ::=   (  ( 'from'  expr 'import'  ( IND )?  expr (  ( ','  expr )  )*  )  )
+genericParam ::=
+	 symbol ( ',' symbol )* ( ':' expr )? ( '=' IND? expr )?
 
-returnStmt ::=   (  ( 'return'  ( IND )?  ( expr )?  )  )
+genericParamList ::=
+	 '[' IND? genericParam ( ',;' genericParam )* ( IND_GE | IND_EQ )? ']'
 
-raiseStmt ::=   (  ( 'raise'  ( IND )?  ( expr )?  )  )
+pattern ::=
+	 '{' stmt '}'
 
-yieldStmt ::=   (  ( 'yield'  ( IND )?  ( expr )?  )  )
+routine ::=
+	 IND? identVis pattern? genericParamList? paramList? ( ':' IND? typeDesc )? pragma? ( '=' stmt )? ( IND_GE COMMENT | COMMENT )
 
-discardStmt ::=   (  ( 'discard'  ( IND )?  ( expr )?  )  )
+commentStmt ::=
+	 COMMENT
 
-breakStmt ::=   (  ( 'break'  ( IND )?  ( expr )?  )  )
+enum ::=
+	 'enum' IND? ( symbol pragma? IND? ( '=' IND? expr )? ','? )+
 
-continueStmt ::=   (  ( 'continue'  ( IND )?  ( expr )?  )  )
+objectWhen ::=
+	 'when' expr ':' objectPart ( 'elif' expr ':' objectPart )* ( 'else' ':' objectPart )?
 
-condStmt ::=   (  ( ( expr ':'  stmt )  (  ( IND_EQ 'elif'  expr ':'  stmt )  )*  ( ( IND_EQ 'else'  ':'  stmt )  )?  )  )
+objectBranch ::=
+	 'of' exprList ':' objectPart
 
-ifStmt ::=  ( 'if'  condStmt )
+objectBranches ::=
+	 objectBranch ( IND_EQ objectBranch )* ( IND_EQ 'elif' expr ':' objectPart )* ( IND_EQ 'else' ':' objectPart )?
 
-whenStmt ::=  ( 'when'  condStmt )
+objectCase ::=
+	 'case' identWithPragma ':' typeDesc ':'? ( IND_GE objectBranches DED | IND_EQ objectBranches )
 
-condExpr ::=  ( ( expr ':'  expr ( IND )?  )  (  ( 'elif'  expr ':'  expr ( IND )?  )  )*  ( 'else'  ':'  expr )  )
+objectPart ::=
+	 IND_GE objectPart ( IND_EQ objectPart )+ DED
+	| objectWhen
+	| objectCase
+	| 'nil'
+	| 'discard'
+	| declColonEquals
 
-ifExpr ::=  ( 'if'  condExpr )
+object ::=
+	 'object' pragma? ( 'of' typeDesc )? objectPart
 
-whenExpr ::=  ( 'when'  condExpr )
+typeClassParam ::=
+	 ( 'var' | 'out' )? symbol
 
-whileStmt ::=  ( 'while'  expr ':'  stmt )
+typeClass ::=
+	 typeClassParam ( ',' typeClassParam )* pragma? ( 'of' typeDesc ( ',' typeDesc )* )? IND_GE stmt
 
-ofBranch ::=  ( 'of'  exprList ':'  stmt )
+typeDef ::=
+	 identWithPragmaDot genericParamList? '=' IND? typeDefAux ( IND_GE COMMENT | COMMENT | identVisDot ) genericParamList? pragma '=' IND? typeDefAux ( IND_GE COMMENT | COMMENT )?
 
-ofBranches ::=   (  ( ofBranch (  ( IND_EQ ofBranch )  )*  (  ( IND_EQ 'elif'  expr ':'  stmt )  )*  ( ( IND_EQ 'else'  ':'  stmt )  )?  )  )
+varTuple ::=
+	 '(' IND? identWithPragma ( ',' identWithPragma )+ ( IND_GE | IND_EQ )? ')' '=' IND? expr
 
-caseStmt ::=  ( ( 'case'  expr ( ':'  )?  )  ( IND_GE ofBranches DED IND_EQ ofBranches )  )
+colonBody ::=
+	 ':' stmt postExprBlocks?
 
-tryStmt ::=   (  ( 'try'  ':'  stmt ( ( IND_EQ )?  'except'  'finally'  )  (  ( ( IND_EQ )?  'except'  exprList ':'  stmt )  )*  ( ( ( IND_EQ )?  'finally'  ':'  stmt )  )?  )  )
+variable ::=
+	 ( varTuple | identColonEquals ) colonBody? ( IND_GE COMMENT | COMMENT )
 
-tryExpr ::=   (  ( 'try'  ':'  stmt ( ( IND )?  ( 'except'  |  'finally'  )  )  (  ( ( IND )?  'except'  exprList ':'  stmt )  )*  ( ( ( IND )?  'finally'  ':'  stmt )  )?  )  )
+constant ::=
+	 ( varTuple | identWithPragma ) ( ':' typeDesc )? '=' IND? expr ( IND_GE COMMENT | COMMENT )
 
-exceptBlock ::=  ( 'except'  ':'  stmt )
+bindStmt ::=
+	 'bind' IND? qualifiedIdent ( ',' qualifiedIdent )+
 
-blockStmt ::=  ( 'block'  ( symbol )?  ':'  stmt )
+mixinStmt ::=
+	 'mixin' IND? qualifiedIdent ( ',' qualifiedIdent )+
 
-blockExpr ::=  ( 'block'  ( symbol )?  ':'  stmt )
+pragmaStmt ::=
+	 pragma ( ':' stmt )?
 
-staticStmt ::=  ( 'static'  ':'  stmt )
+simpleStmt ::=
+	 ( returnStmt | raiseStmt | yieldStmt | discardStmt | breakStmt | continueStmt | pragmaStmt | importStmt | exportStmt | fromStmt | includeStmt | commentStmt | exprStmt )
 
-deferStmt ::=  ( 'defer'  ':'  stmt )
+complexOrSimpleStmt ::=
+	 ifStmt
+	| whenStmt
+	| whileStmt
+	| tryStmt
+	| forStmt
+	| blockStmt
+	| staticStmt
+	| deferStmt
+	| asmStmt
+	| 'proc' routine
+	| 'method' routine
+	| 'func' routine
+	| 'iterator' routine
+	| 'macro' routine
+	| 'template' routine
+	| 'converter' routine
+	| 'type' ( typeDef | IND_GE typeDef ( IND_EQ typeDef )+ DED )
+	| 'const' ( constant | IND_GE constant ( IND_EQ constant )+ DED )
+	| ( 'let' | 'var' | 'using' ) ( variable | IND_GE variable ( IND_EQ variable )+ DED )
+	| bindStmt
+	| mixinStmt
+	| simpleStmt
 
-asmStmt ::=  ( 'asm'  ( pragma )?  ( STR_LIT |  RSTR_LIT |  TRIPLESTR_LIT )  )
+stmt ::=
+	 IND_GE complexOrSimpleStmt ( ( IND_EQ | ';' ) complexOrSimpleStmt )+ DED
+	| simpleStmt ( ';' simpleStmt )+
 
-genericParam ::=   (  ( symbol (  ( ','  symbol )  )*  ( ( ':'  expr )  )?  ( ( '='  ( IND )?  expr )  )?  )  )
+NIL ::=
+	 'nil'
 
-genericParamList ::=  ( '['  ( IND )?  ( genericParam (  ( ',;' genericParam )  )*  )  ( ( IND_GE |  IND_EQ )  )?  ']'  )
+HEX_LIT ::=
+	 '0'('x'|'X')[0-9A-Fa-f]([_0-9A-Fa-f])*
 
-pattern ::=  ( '{'  stmt '}'  )
+DEC_LIT ::=
+	 [0-9]([_0-9])*
 
-routine ::=   (  ( ( IND )?  identVis ( pattern )?  ( genericParamList )?  ( ( paramList )?  ( ( ':'  ( IND )?  typeDesc )  )?  )  ( pragma )?  ( ( '='  stmt )  )?  ( ( ( IND_GE COMMENT )  )?  |  COMMENT )  )  )
+OCT_LIT ::=
+	 '0o'[0-7]([_0-7])*
 
-commentStmt ::=   (  COMMENT )
+BIN_LIT ::=
+	 '0b'[01]([_01])*
 
-enum ::=  ( 'enum'  ( IND )?  ( ( symbol ( pragma )?  ( IND )?  ( ( '='  ( IND )?  expr )  )?  ( ','  )?  )  )+  )
+INT_LIT ::=
+	 HEX_LIT DEC_LIT OCT_LIT BIN_LIT
 
-objectWhen ::=  ( 'when'  ( expr ':'  objectPart )  (  ( 'elif'  expr ':'  objectPart )  )*  ( ( 'else'  ':'  objectPart )  )?  )
+INT8_LIT ::=
+	 INT_LIT "\'"("i"|"I")"8"
 
-objectBranch ::=  ( 'of'  exprList ':'  objectPart )
+INT16_LIT ::=
+	 INT_LIT "\'"("i"|"I")"16"
 
-objectBranches ::=  ( objectBranch (  ( IND_EQ objectBranch )  )*  (  ( IND_EQ 'elif'  expr ':'  objectPart )  )*  ( ( IND_EQ 'else'  ':'  objectPart )  )?  )
+INT32_LIT ::=
+	 INT_LIT "\'"("i"|"I")"32"
 
-objectCase ::=  ( 'case'  identWithPragma ':'  typeDesc ( ':'  )?  ( ( IND_GE objectBranches DED )  |  ( IND_EQ objectBranches )  )  )
+INT64_LIT ::=
+	 INT_LIT "\'"("i"|"I")"64"
 
-objectPart ::=  ( ( IND_GE ( objectPart ( ( IND_EQ objectPart )  )+  )  DED )  |  objectWhen |  objectCase |  'nil'  |  'discard'  |  declColonEquals )
+UINT_LIT ::=
+	 INT_LIT "\'u"
 
-object ::=  ( 'object'  ( pragma )?  ( ( 'of'  typeDesc )  )?  objectPart )
+UINT8_LIT ::=
+	 INT_LIT "\'"("u"|"U")"8"
 
-typeClassParam ::=  ( ( ( 'var'  |  'out'  )  )?  symbol )
+UINT16_LIT ::=
+	 INT_LIT "\'"("u"|"U")"16"
 
-typeClass ::=  ( ( typeClassParam (  ( ','  typeClassParam )  )*  )  ( pragma )?  ( ( 'of'  ( typeDesc (  ( ','  typeDesc )  )*  )  )  )?  IND_GE stmt )
+UINT32_LIT ::=
+	 INT_LIT "\'"("u"|"U")"32"
 
-typeDef ::=   (  ( identWithPragmaDot ( genericParamList )?  '='  ( IND )?  typeDefAux ( ( ( ( ( IND_GE COMMENT )  )?  |  COMMENT )  )?  |  identVisDot )  ( genericParamList )?  pragma '='  ( IND )?  typeDefAux ( ( ( ( IND_GE COMMENT )  )?  |  COMMENT )  )?  )  )
+UINT64_LIT ::=
+	 INT_LIT "\'"("u"|"U")"64"
 
-varTuple ::=  ( '('  ( IND )?  ( identWithPragma ( ( ','  identWithPragma )  )+  )  ( ( IND_GE |  IND_EQ )  )?  ')'  '='  ( IND )?  expr )
+exponent ::=
+	 [eE][+-][0-9][_0-9]*
 
-colonBody ::=   (  ( ':'  stmt ( postExprBlocks )?  )  )
+FLOAT_LIT ::=
+	 [0-9][_0-9]*('.'[0-9][_0-9]*[eE][+-][0-9][_0-9]*)|([eE][+-][0-9][_0-9]*)
 
-variable ::=   (  ( ( varTuple |  identColonEquals )  ( colonBody )?  ( ( ( IND_GE COMMENT )  )?  |  COMMENT )  )  )
+FLOAT32_SUFFIX ::=
+	 [fF]'32'
 
-constant ::=   (  ( ( varTuple |  identWithPragma )  ( ( ':'  typeDesc )  )?  '='  ( IND )?  expr ( ( ( IND_GE COMMENT )  )?  |  COMMENT )  )  )
+FLOAT32_LIT ::=
+	 HEX_LIT "'"  FLOAT32_SUFFIX
+	| ( FLOAT_LIT | DEC_LIT | OCT_LIT | BIN_LIT ) "'"  FLOAT32_SUFFIX
 
-bindStmt ::=  ( 'bind'  ( IND )?  ( qualifiedIdent ( ( ','  qualifiedIdent )  )+  )  )
+FLOAT64_SUFFIX ::=
+	 ([fF]'64'|'d'|'D')
 
-mixinStmt ::=  ( 'mixin'  ( IND )?  ( qualifiedIdent ( ( ','  qualifiedIdent )  )+  )  )
-
-pragmaStmt ::=   (  ( pragma ( ( ':'  stmt )  )?  )  )
-
-simpleStmt ::=   (  ( ( ( returnStmt |  raiseStmt |  yieldStmt |  discardStmt |  breakStmt |  continueStmt |  pragmaStmt |  importStmt |  exportStmt |  fromStmt |  includeStmt |  commentStmt )  |  exprStmt )  )  )
-
-complexOrSimpleStmt ::=  ( ( ifStmt |  whenStmt |  whileStmt |  tryStmt |  forStmt |  blockStmt |  staticStmt |  deferStmt |  asmStmt |  ( 'proc'  routine )  |  ( 'method'  routine )  |  ( 'func'  routine )  |  ( 'iterator'  routine )  |  ( 'macro'  routine )  |  ( 'template'  routine )  |  ( 'converter'  routine )  |  ( 'type'  ( typeDef |  ( IND_GE ( typeDef ( ( IND_EQ typeDef )  )+  )  DED )  )  )  |  ( 'const'  ( constant |  ( IND_GE ( constant ( ( IND_EQ constant )  )+  )  DED )  )  )  |  ( ( 'let'  |  'var'  |  'using'  )  ( variable |  ( IND_GE ( variable ( ( IND_EQ variable )  )+  )  DED )  )  )  |  bindStmt |  mixinStmt )  |  simpleStmt )
-
-stmt ::=  (  (  ( IND_GE ( complexOrSimpleStmt ( ( ( IND_EQ |  ';'  )  complexOrSimpleStmt )  )+  )  DED )  )  |   (  ( simpleStmt ( ( ';'  simpleStmt )  )+  )  )  )
-
-NIL ::=  'nil'
-
-HEX_LIT ::=  '0'('x'|'X')[0-9A-Fa-f]([_0-9A-Fa-f])*
-
-DEC_LIT ::=  [0-9]([_0-9])*
-
-OCT_LIT ::=  '0o'[0-7]([_0-7])*
-
-BIN_LIT ::=  '0b'[01]([_01])*
-
-INT_LIT ::=  ( HEX_LIT DEC_LIT OCT_LIT BIN_LIT )
-
-INT8_LIT ::=  ( INT_LIT "'"[iI]'8' )
-
-INT16_LIT ::=  ( INT_LIT "'"[iI]'16' )
-
-INT32_LIT ::=  ( INT_LIT "'"[iI]'32' )
-
-INT64_LIT ::=  ( INT_LIT "'"[iI]'64' )
-
-UINT_LIT ::=  ( INT_LIT "'u" )
-
-UINT8_LIT ::=  ( INT_LIT "'"[uU]'8' )
-
-UINT16_LIT ::=  ( INT_LIT "'"[uU]'16' )
-
-UINT32_LIT ::=  ( INT_LIT "'"[uU]'32' )
-
-UINT64_LIT ::=  ( INT_LIT "'"[uU]'64' )
-
-exponent ::=  [eE][+-][0-9][_0-9]*
-
-FLOAT_LIT ::=  [0-9][_0-9]*('.'[0-9][_0-9]*[eE][+-][0-9][_0-9]*)|([eE][+-][0-9][_0-9]*)
-
-FLOAT32_SUFFIX ::=  [fF]'32'
-
-FLOAT32_LIT ::=  ( ( HEX_LIT "'"  FLOAT32_SUFFIX )  |  ( ( FLOAT_LIT |  DEC_LIT |  OCT_LIT |  BIN_LIT )  "'"  FLOAT32_SUFFIX )  )
-
-FLOAT64_SUFFIX ::=  ([fF]'64'|[dD])
-
-FLOAT64_LIT ::=  ( ( HEX_LIT "'"  FLOAT64_SUFFIX )  |  ( ( FLOAT_LIT |  DEC_LIT |  OCT_LIT |  BIN_LIT )  "'"  FLOAT64_SUFFIX )  )
+FLOAT64_LIT ::=
+	 HEX_LIT "'"  FLOAT64_SUFFIX
+	| ( FLOAT_LIT | DEC_LIT | OCT_LIT | BIN_LIT ) "'"  FLOAT64_SUFFIX
 

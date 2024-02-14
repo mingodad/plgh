@@ -1,0 +1,379 @@
+//
+// From tree-sitter-elixir/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source ::=
+	 _terminator? ( _expression ( _terminator _expression )* _terminator? )?
+
+_terminator ::=
+	 '#x0D'?'#x0A'* ';' | '#x0D'?'#x0A'+
+
+_expression ::=
+	 block
+	| identifier
+	| alias
+	| integer
+	| float
+	| char
+	| boolean
+	| nil
+	| _atom
+	| string
+	| charlist
+	| sigil
+	| list
+	| tuple
+	| bitstring
+	| map
+	| _nullary_operator
+	| unary_operator
+	| binary_operator
+	| dot
+	| call
+	| access_call
+	| anonymous_function
+
+block ::=
+	 '(' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )? ')'
+
+identifier ::=
+	 [_\p{Ll}\p{Lm}\p{Lo}\p{Nl}\u1885\u1886\u2118\u212E\u309B\u309C][\p{ID_Continue}]*[?!]?
+	| '...'
+
+alias ::=
+	 ( [A-Z][_a-zA-Z0-9]* ( [ #x09#x0A#x0B#x0C#x0D]*'.'[ #x09#x0A#x0B#x0C#x0D]* [A-Z][_a-zA-Z0-9]* )* )
+
+integer ::=
+	 ( [0-9]+ ( '_' [0-9]+ )* | '0b' [0-1]+ ( '_' [0-1]+ )* | '0o' [0-7]+ ( '_' [0-7]+ )* | '0x' [0-9a-fA-F]+ ( '_' [0-9a-fA-F]+ )* )
+
+float ::=
+	 ( [0-9]+ ( '_' [0-9]+ )* '.' [0-9]+ ( '_' [0-9]+ )* ( [eE] ( '-' | '+' )? ( [0-9]+ ( '_' [0-9]+ )* | '0b' [0-1]+ ( '_' [0-1]+ )* | '0o' [0-7]+ ( '_' [0-7]+ )* | '0x' [0-9a-fA-F]+ ( '_' [0-9a-fA-F]+ )* ) )? )
+
+char ::=
+	 '\'?('.'|'\.')
+
+boolean ::=
+	 'true'
+	| 'false'
+
+nil ::=
+	 'nil'
+
+_atom ::=
+	 atom
+	| quoted_atom
+
+atom ::=
+	 ( ':' ( [\p{ID_Start}_][\p{ID_Continue}@]*[?!]? | '->' | '::' | '|' | '&' | '=' | '^^^' | '//' | '..' | '**' | '.' | '@' | '<-' | '\\' | '||' | '|||' | '&&' | '&&&' | '==' | '!=' | '=~' | '===' | '!==' | '<' | '>' | '<=' | '>=' | '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' | '++' | '--' | '+++' | '---' | '<>' | '+' | '-' | '*' | '/' | '+' | '-' | '!' | '^' | '~~~' | '...' | '%{}' | '{}' | '%' | '<<>>' | '..//' ) )
+
+quoted_atom ::=
+	 _quoted_atom_start ( _quoted_i_double | _quoted_i_single )
+
+_quoted_i_double ::=
+	 '"'  _quoted_content_i_double? ( ( interpolation | escape_sequence ) _quoted_content_i_double? )* '"' 
+
+_quoted_double ::=
+	 '"'  _quoted_content_double? ( escape_sequence _quoted_content_double? )* '"' 
+
+_quoted_i_single ::=
+	 "'"  _quoted_content_i_single? ( ( interpolation | escape_sequence ) _quoted_content_i_single? )* "'" 
+
+_quoted_single ::=
+	 "'"  _quoted_content_single? ( escape_sequence _quoted_content_single? )* "'" 
+
+_quoted_i_heredoc_single ::=
+	 "'''" _quoted_content_i_heredoc_single? ( ( interpolation | escape_sequence ) _quoted_content_i_heredoc_single? )* "'''"
+
+_quoted_heredoc_single ::=
+	 "'''" _quoted_content_heredoc_single? ( escape_sequence _quoted_content_heredoc_single? )* "'''"
+
+_quoted_i_heredoc_double ::=
+	 '"""' _quoted_content_i_heredoc_double? ( ( interpolation | escape_sequence ) _quoted_content_i_heredoc_double? )* '"""'
+
+_quoted_heredoc_double ::=
+	 '"""' _quoted_content_heredoc_double? ( escape_sequence _quoted_content_heredoc_double? )* '"""'
+
+_quoted_i_parenthesis ::=
+	 '(' _quoted_content_i_parenthesis? ( ( interpolation | escape_sequence ) _quoted_content_i_parenthesis? )* ')'
+
+_quoted_parenthesis ::=
+	 '(' _quoted_content_parenthesis? ( escape_sequence _quoted_content_parenthesis? )* ')'
+
+_quoted_i_curly ::=
+	 '{' _quoted_content_i_curly? ( ( interpolation | escape_sequence ) _quoted_content_i_curly? )* '}'
+
+_quoted_curly ::=
+	 '{' _quoted_content_curly? ( escape_sequence _quoted_content_curly? )* '}'
+
+_quoted_i_square ::=
+	 '[' _quoted_content_i_square? ( ( interpolation | escape_sequence ) _quoted_content_i_square? )* ']'
+
+_quoted_square ::=
+	 '[' _quoted_content_square? ( escape_sequence _quoted_content_square? )* ']'
+
+_quoted_i_angle ::=
+	 '<' _quoted_content_i_angle? ( ( interpolation | escape_sequence ) _quoted_content_i_angle? )* '>'
+
+_quoted_angle ::=
+	 '<' _quoted_content_angle? ( escape_sequence _quoted_content_angle? )* '>'
+
+_quoted_i_bar ::=
+	 '|' _quoted_content_i_bar? ( ( interpolation | escape_sequence ) _quoted_content_i_bar? )* '|'
+
+_quoted_bar ::=
+	 '|' _quoted_content_bar? ( escape_sequence _quoted_content_bar? )* '|'
+
+_quoted_i_slash ::=
+	 '/' _quoted_content_i_slash? ( ( interpolation | escape_sequence ) _quoted_content_i_slash? )* '/'
+
+_quoted_slash ::=
+	 '/' _quoted_content_slash? ( escape_sequence _quoted_content_slash? )* '/'
+
+string ::=
+	 _quoted_i_double
+	| _quoted_i_heredoc_double
+
+charlist ::=
+	 _quoted_i_single
+	| _quoted_i_heredoc_single
+
+interpolation ::=
+	 '#{' _expression? '}'
+
+escape_sequence ::=
+	 ( '\\'  ( [^ux] | 'x'[0-9a-fA-F]'{1,2}' | 'x{'[0-9a-fA-F]+'}' | 'u{'[0-9a-fA-F]+'}' | 'u'[0-9a-fA-F]'{4}' ) )
+
+sigil ::=
+	 '~' ( [a-z] ( _quoted_i_double | _quoted_i_single | _quoted_i_heredoc_single | _quoted_i_heredoc_double | _quoted_i_parenthesis | _quoted_i_curly | _quoted_i_square | _quoted_i_angle | _quoted_i_bar | _quoted_i_slash ) | [A-Z]+ ( _quoted_double | _quoted_single | _quoted_heredoc_single | _quoted_heredoc_double | _quoted_parenthesis | _quoted_curly | _quoted_square | _quoted_angle | _quoted_bar | _quoted_slash ) ) [a-zA-Z0-9]+?
+
+keywords ::=
+	 pair ( ',' pair )*
+
+_keywords_with_trailing_separator ::=
+	 pair ( ',' pair )* ','?
+
+pair ::=
+	 _keyword _expression
+
+_keyword ::=
+	 keyword
+	| quoted_keyword
+
+keyword ::=
+	 ( ( [\p{ID_Start}_][\p{ID_Continue}@]*[?!]? | '->' | '|' | '&' | '=' | '^^^' | '//' | '..' | '**' | '.' | '@' | '<-' | '\\' | '||' | '|||' | '&&' | '&&&' | '==' | '!=' | '=~' | '===' | '!==' | '<' | '>' | '<=' | '>=' | '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' | '++' | '--' | '+++' | '---' | '<>' | '+' | '-' | '*' | '/' | '+' | '-' | '!' | '^' | '~~~' | '...' | '%{}' | '{}' | '%' | '<<>>' | '..//' ) ':'[ #x09#x0A#x0B#x0C#x0D] )
+
+quoted_keyword ::=
+	 ( _quoted_i_double | _quoted_i_single ) ':'[ #x09#x0A#x0B#x0C#x0D]
+
+list ::=
+	 '[' _items_with_trailing_separator? ']'
+
+tuple ::=
+	 '{' _items_with_trailing_separator? '}'
+
+bitstring ::=
+	 '<<' _items_with_trailing_separator? '>>'
+
+map ::=
+	 '%' struct? '{' _items_with_trailing_separator? '}'
+
+struct ::=
+	 alias | _atom | identifier | unary_operator | dot | _call_with_parentheses
+
+_items_with_trailing_separator ::=
+	 ( _expression ( ',' _expression )* ','? | ( _expression ( ',' _expression )* ',' )? _keywords_with_trailing_separator )
+
+_nullary_operator ::=
+	 '..'
+
+unary_operator ::=
+	 _before_unary_op? '&' _capture_expression
+	| _before_unary_op? ( '+' | '-' | '!' | '^' | '~~~' | 'not' ) _expression
+	| _before_unary_op? '@' _expression
+	| _before_unary_op? '&' integer
+
+_capture_expression ::=
+	 '(' _expression ')'
+	| _expression
+
+binary_operator ::=
+	 _expression ( '<-' | '\\' ) _expression
+	| _expression 'when' ( _expression | keywords )
+	| _expression '::' _expression
+	| _expression '|' ( _expression | keywords )
+	| _expression '=>' _expression
+	| _expression '=' _expression
+	| _expression ( '||' | '|||' | 'or' ) _expression
+	| _expression ( '&&' | '&&&' | 'and' ) _expression
+	| _expression ( '==' | '!=' | '=~' | '===' | '!==' ) _expression
+	| _expression ( '<' | '>' | '<=' | '>=' ) _expression
+	| _expression ( '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' ) _expression
+	| _expression ( 'in' | _not_in ) _expression
+	| _expression '^^^' _expression
+	| _expression '//' _expression
+	| _expression ( '++' | '--' | '+++' | '---' | '<>' ) _expression
+	| _expression '..' _expression
+	| _expression ( '+' | '-' ) _expression
+	| _expression ( '*' | '/' ) _expression
+	| _expression '**' _expression
+	| operator_identifier '/' integer
+
+operator_identifier ::=
+	 '&'
+	| '+' | '-' | '!' | '^' | '~~~' | 'not'
+	| '@'
+	| '<-'
+	| '\\'
+	| 'when'
+	| '::'
+	| '|'
+	| '='
+	| '||'
+	| '|||'
+	| 'or'
+	| '&&'
+	| '&&&'
+	| 'and'
+	| '=='
+	| '!='
+	| '=~'
+	| '==='
+	| '!=='
+	| '<'
+	| '>'
+	| '<='
+	| '>='
+	| '|>'
+	| '<<<'
+	| '>>>'
+	| '<<~'
+	| '~>>'
+	| '<~'
+	| '~>'
+	| '<~>'
+	| '<|>'
+	| 'in'
+	| _not_in
+	| '^^^'
+	| '++'
+	| '--'
+	| '+++'
+	| '---'
+	| '<>'
+	| '*'
+	| '/'
+	| '**'
+	| '->'
+
+dot ::=
+	 _expression '.' ( alias | tuple )
+
+call ::=
+	 _call_without_parentheses
+	| _call_with_parentheses
+
+_call_without_parentheses ::=
+	 _local_call_without_parentheses
+	| _local_call_just_do_block
+	| _remote_call_without_parentheses
+
+_call_with_parentheses ::=
+	 _local_call_with_parentheses
+	| _remote_call_with_parentheses
+	| _anonymous_call
+	| _double_call
+
+_local_call_without_parentheses ::=
+	 identifier _call_arguments_without_parentheses ( _newline_before_do? do_block )?
+
+_local_call_with_parentheses ::=
+	 identifier _call_arguments_with_parentheses_immediate ( _newline_before_do? do_block )?
+
+_local_call_just_do_block ::=
+	 identifier do_block
+
+_remote_call_without_parentheses ::=
+	 _remote_dot _call_arguments_without_parentheses? ( _newline_before_do? do_block )?
+
+_remote_call_with_parentheses ::=
+	 _remote_dot _call_arguments_with_parentheses_immediate ( _newline_before_do? do_block )?
+
+_remote_dot ::=
+	 _expression '.' ( identifier | ( 'and' | 'in' | 'not' | 'or' | 'when' | 'true' | 'false' | 'nil' | 'after' | 'catch' | 'do' | 'else' | 'end' | 'fn' | 'rescue' ) | operator_identifier | _quoted_i_double | _quoted_i_single )
+
+_anonymous_call ::=
+	 _anonymous_dot _call_arguments_with_parentheses
+
+_anonymous_dot ::=
+	 _expression '.'
+
+_double_call ::=
+	 ( _local_call_with_parentheses | _remote_call_with_parentheses | _anonymous_call ) _call_arguments_with_parentheses ( _newline_before_do? do_block )?
+
+_call_arguments_with_parentheses ::=
+	 '(' _call_arguments_with_trailing_separator? ')'
+
+_call_arguments_with_parentheses_immediate ::=
+	 '(' _call_arguments_with_trailing_separator? ')'
+
+_call_arguments_with_trailing_separator ::=
+	 _expression ( ',' _expression )* ( ',' _keywords_with_trailing_separator )?
+	| _keywords_with_trailing_separator
+
+_call_arguments_without_parentheses ::=
+	 _expression ( ',' _expression )* ( ',' keywords )? | keywords
+
+do_block ::=
+	 'do' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )? ( after_block | rescue_block | catch_block | else_block )* 'end'
+
+after_block ::=
+	 'after' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+rescue_block ::=
+	 'rescue' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+catch_block ::=
+	 'catch' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+else_block ::=
+	 'else' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+access_call ::=
+	 _expression '[' _expression ']'
+
+stab_clause ::=
+	 _stab_clause_left? '->' body?
+
+_stab_clause_left ::=
+	 _stab_clause_arguments_with_parentheses
+	| _stab_clause_arguments_with_parentheses_with_guard
+	| _stab_clause_arguments_without_parentheses
+	| _stab_clause_arguments_without_parentheses_with_guard
+
+_stab_clause_arguments_with_parentheses ::=
+	 '(' ( _expression ( ',' _expression )* ( ',' keywords )? | keywords )? ')'
+
+_stab_clause_arguments_without_parentheses ::=
+	 _expression ( ',' _expression )* ( ',' keywords )? | keywords
+
+_stab_clause_arguments_with_parentheses_with_guard ::=
+	 _stab_clause_arguments_with_parentheses 'when' _expression
+
+_stab_clause_arguments_without_parentheses_with_guard ::=
+	 _stab_clause_arguments_without_parentheses 'when' _expression
+
+body ::=
+	 _terminator
+	| _terminator? _expression ( _terminator _expression )* _terminator?
+
+anonymous_function ::=
+	 'fn' _terminator? stab_clause ( _terminator stab_clause )* 'end'
+
+comment ::=
+	 '#' '.'*
+

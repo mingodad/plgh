@@ -1,0 +1,660 @@
+//
+// From tree-sitter-postgresql/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _statement*
+
+_statement ::=
+	 ( pg_command | begin_statement | commit_statement | rollback_statement | select_statement | update_statement | insert_statement | delete_statement | set_statement | grant_statement | drop_statement | create_statement | alter_statement | truncate_statement | create_type_statement | create_domain_statement | create_index_statement | create_table_statement | create_schema_statement | create_role_statement | create_extension_statement | create_trigger_statement | create_function_statement | comment_statement | create_view_statement | create_materialized_view_statement ) ';'?
+
+_simple_statement ::=
+	 ( pg_command | select_statement | update_statement | insert_statement | delete_statement | set_statement | grant_statement | drop_statement | create_statement | alter_statement | create_type_statement | create_domain_statement | create_table_statement | create_index_statement | create_schema_statement | create_role_statement | create_extension_statement | return_statement | declare_statement | create_view_statement | create_materialized_view_statement ) ';'?
+
+with_clause ::=
+	 [wW][iI][tT][hH] [rR][eE][cC][uU][rR][sS][iI][vV][eE]? cte ( ',' cte )*
+
+cte ::=
+	 identifier [aA][sS] ( [nN][oO][tT]? [mM][aA][tT][eE][rR][iI][aA][lL][iI][zZ][eE][dD] )? '(' ( select_statement | delete_statement | insert_statement | update_statement ) ')'
+
+select_statement ::=
+	 with_clause? _select_statement
+
+insert_statement ::=
+	 with_clause? _insert_statement
+
+update_statement ::=
+	 with_clause? _update_statement
+
+delete_statement ::=
+	 with_clause? _delete_statement
+
+truncate_statement ::=
+	 [tT][rR][uU][nN][cC][aA][tT][eE] [tT][aA][bB][lL][eE]? [oO][nN][lL][yY]? _identifier ( ',' _identifier )*
+
+comment_statement ::=
+	 ( [cC][oO][mM][mM][eE][nN][tT] [oO][nN] ) ( ( [cC][oO][lL][uU][mM][nN] | [eE][xX][tT][eE][nN][sS][iI][oO][nN] | [sS][cC][hH][eE][mM][aA] | [tT][aA][bB][lL][eE] ) _identifier | [fF][uU][nN][cC][tT][iI][oO][nN] function_call ) [iI][sS] ( string | NULL )
+
+begin_statement ::=
+	 [bB][eE][gG][iI][nN] ( [wW][oO][rR][kK] | [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN] )?
+
+commit_statement ::=
+	 [cC][oO][mM][mM][iI][tT] ( [wW][oO][rR][kK] | [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN] )?
+
+rollback_statement ::=
+	 [rR][oO][lL][lL][bB][aA][cC][kK] ( [wW][oO][rR][kK] | [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN] )?
+
+create_statement ::=
+	 [cC][rR][eE][aA][tT][eE] ( [tT][eE][mM][pP] | [tT][eE][mM][pP][oO][rR][aA][rR][yY] )? ( sequence )
+
+alter_statement ::=
+	 [aA][lL][tT][eE][rR] ( sequence | alter_table | alter_schema )
+
+alter_table ::=
+	 [tT][aA][bB][lL][eE] ( [iI][fF] [eE][xX][iI][sS][tT][sS] )? [oO][nN][lL][yY]? _identifier ( alter_table_action | alter_table_rename_column )
+
+alter_schema_rename_action ::=
+	 ( [rR][eE][nN][aA][mM][eE] [tT][oO] ) _identifier
+
+alter_owner_action ::=
+	 ( [oO][wW][nN][eE][rR] [tT][oO] ) ( _identifier | 'CURRENT_USER' | 'CURRENT_ROLE' | 'SESSION_USER' )
+
+alter_schema ::=
+	 [sS][cC][hH][eE][mM][aA] _identifier ( alter_schema_rename_action | alter_owner_action )
+
+alter_table_action_alter_column ::=
+	 ( [aA][lL][tT][eE][rR] [cC][oO][lL][uU][mM][nN] ) _identifier ( [sS][eE][tT] [dD][eE][fF][aA][uU][lL][tT] ) _column_default_expression
+
+alter_table_action_add ::=
+	 [aA][dD][dD] ( [cC][oO][lL][uU][mM][nN] table_column | _table_constraint )
+
+alter_table_action_set ::=
+	 [sS][eE][tT] _expression
+
+alter_table_rename_column ::=
+	 [rR][eE][nN][aA][mM][eE] [cC][oO][lL][uU][mM][nN]? _identifier [tT][oO] _identifier
+
+alter_table_action ::=
+	 alter_table_action_add
+	| alter_table_action_alter_column
+	| alter_table_action_set
+	| alter_owner_action
+
+sequence ::=
+	 [sS][eE][qQ][uU][eE][nN][cC][eE] ( [iI][fF] [nN][oO][tT]? [eE][xX][iI][sS][tT][sS] )? _identifier ( [aA][sS] type )? ( [sS][tT][aA][rR][tT] [wW][iI][tT][hH] number | [iI][nN][cC][rR][eE][mM][eE][nN][tT] [bB][yY]? number | [nN][oO] ( [mM][iI][nN][vV][aA][lL][uU][eE] | [mM][aA][xX][vV][aA][lL][uU][eE] ) | [cC][aA][cC][hH][eE] number | ( [oO][wW][nN][eE][dD] [bB][yY] ) ( _identifier ) )*
+
+pg_command ::=
+	 '\'[a-zA-Z]+ '.'*
+
+_compound_statement ::=
+	 ( identifier ':' )? [bB][eE][gG][iI][nN] [aA][tT][oO][mM][iI][cC]? _simple_statement+ [eE][nN][dD] identifier? ';'?
+
+return_statement ::=
+	 [rR][eE][tT][uU][rR][nN] ( _expression | select_statement )
+
+declare_statement ::=
+	 [dD][eE][cC][lL][aA][rR][eE] identifier _type default_clause?
+
+create_function_statement ::=
+	 ( ( [cC][rR][eE][aA][tT][eE] [oO][rR][  ][rR][eE][pP][lL][aA][cC][eE]? [fF][uU][nN][cC][tT][iI][oO][nN] ) | ( [cC][rR][eE][aA][tT][eE] [oO][rR][  ][rR][eE][pP][lL][aA][cC][eE]? [pP][rR][oO][cC][eE][dD][uU][rR][eE] ) ) _identifier create_function_parameters ( [rR][eE][tT][uU][rR][nN][sS] _create_function_return_type )? ( _function_language | ( [tT][rR][aA][nN][sS][fF][oO][rR][mM] [fF][oO][rR] [tT][yY][pP][eE] ) identifier ( ',' identifier )* | [wW][iI][nN][dD][oO][wW] | [nN][oO][tT]? [lL][eE][aA][kK][pP][rR][oO][oO][fF] | [cC][oO][sS][tT] number | [rR][oO][wW][sS] number | [sS][uU][pP][pP][oO][rR][tT] identifier | external_hint | optimizer_hint | parallel_hint | null_hint | deterministic_hint | sql_hint | sql_security_hint | function_body )*
+
+external_hint ::=
+	 [eE][xX][tT][eE][rR][nN][aA][lL]? ( [sS][eE][cC][uU][rR][iI][tT][yY] [iI][nN][vV][oO][kK][eE][rR] )
+	| [eE][xX][tT][eE][rR][nN][aA][lL]? ( [sS][eE][cC][uU][rR][iI][tT][yY] [dD][eE][fF][iI][nN][eE][rR] )
+
+optimizer_hint ::=
+	 [vV][oO][lL][aA][tT][iI][lL][eE]
+	| [iI][mM][mM][uU][tT][aA][bB][lL][eE]
+	| [sS][tT][aA][bB][lL][eE]
+
+parallel_hint ::=
+	 [pP][aA][rR][aA][lL][lL][eE][lL] ( [sS][aA][fF][eE] | [uU][nN][sS][aA][fF][eE] | [rR][eE][sS][tT][rR][iI][cC][tT][eE][dD] )
+
+null_hint ::=
+	 ( [cC][aA][lL][lL][eE][dD] [oO][nN] [nN][uU][lL][lL] [iI][nN][pP][uU][tT] )
+	| ( [rR][eE][tT][uU][rR][nN][sS] [nN][uU][lL][lL] [oO][nN] [nN][uU][lL][lL] [iI][nN][pP][uU][tT] )
+	| [sS][tT][rR][iI][cC][tT]
+
+deterministic_hint ::=
+	 [nN][oO][tT]? [dD][eE][tT][eE][rR][mM][iI][nN][iI][sS][tT][iI][cC]
+
+sql_hint ::=
+	 ( [cC][oO][nN][tT][aA][iI][nN][sS] [sS][qQ][lL] )
+	| ( [nN][oO] [sS][qQ][lL] )
+	| ( [rR][eE][aA][dD][sS] [sS][qQ][lL] [dD][aA][tT][aA] )
+	| ( [mM][oO][dD][iI][fF][iI][eE][sS] [sS][qQ][lL] [dD][aA][tT][aA] )
+
+sql_security_hint ::=
+	 ( [sS][qQ][lL] [sS][eE][cC][uU][rR][iI][tT][yY] ) ( [dD][eE][fF][iI][nN][eE][rR] | [iI][nN][vV][oO][kK][eE][rR] )
+
+_function_language ::=
+	 [lL][aA][nN][gG][uU][aA][gG][eE] ( [a-zA-Z]+ | "'"[a-zA-Z]+"'" )
+
+_create_function_return_type ::=
+	 setof | _type | constrained_type
+
+setof ::=
+	 [sS][eE][tT][oO][fF] ( _type | constrained_type )
+
+constrained_type ::=
+	 _type null_constraint
+
+create_function_parameter ::=
+	 ( [iI][nN] | [oO][uU][tT] | [iI][nN][oO][uU][tT] | [vV][aA][rR][iI][aA][dD][iI][cC] )? identifier? ( _type | constrained_type ) ( '=' _expression )?
+
+create_function_parameters ::=
+	 '(' ( create_function_parameter ( ',' create_function_parameter )* )? ')'
+
+function_body ::=
+	 _simple_statement
+	| _compound_statement
+	| [aA][sS] string
+	| [aA][sS] string string
+
+create_trigger_statement ::=
+	 [cC][rR][eE][aA][tT][eE] ( [oO][rR] [rR][eE][pP][lL][aA][cC][eE] )? [cC][oO][nN][sS][tT][rR][aA][iI][nN][tT]? [tT][rR][iI][gG][gG][eE][rR] ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? identifier trigger_time trigger_event [oO][nN] _identifier trigger_reference? trigger_preferencing? ( [fF][oO][rR] [eE][aA][cC][hH]? ( [rR][oO][wW] | [sS][tT][aA][tT][eE][mM][eE][nN][tT] ) )? trigger_condition? trigger_order? trigger_body
+
+trigger_reference ::=
+	 [fF][rR][oO][mM] _identifier
+
+trigger_preferencing ::=
+	 [rR][eE][fF][eE][rR][eE][nN][cC][iI][nN][gG] ( ( [nN][eE][wW] | [oO][lL][dD] ) [tT][aA][bB][lL][eE] [aA][sS]? identifier )+
+
+trigger_time ::=
+	 [bB][eE][fF][oO][rR][eE]
+	| [aA][fF][tT][eE][rR]
+	| ( [iI][nN][sS][tT][eE][aA][dD] [oO][fF] )
+
+trigger_event ::=
+	 [iI][nN][sS][eE][rR][tT]
+	| [dD][eE][lL][eE][tT][eE]
+	| [tT][rR][uU][nN][cC][aA][tT][eE]
+	| [uU][pP][dD][aA][tT][eE] ( [oO][fF] _identifier+ )?
+
+trigger_condition ::=
+	 [wW][hH][eE][nN] _expression
+
+trigger_order ::=
+	 ( [fF][oO][lL][lL][oO][wW][sS] | [pP][rR][eE][cC][eE][dD][eE][sS] ) _identifier
+
+trigger_body ::=
+	 [eE][xX][eE][cC][uU][tT][eE] ( [fF][uU][nN][cC][tT][iI][oO][nN] | [pP][rR][oO][cC][eE][dD][uU][rR][eE] ) identifier '(' ( string ( ',' string )* )? ')'
+	| _simple_statement
+	| _compound_statement
+
+create_extension_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [eE][xX][tT][eE][nN][sS][iI][oO][nN] ) ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? _identifier [wW][iI][tT][hH]? ( [sS][cC][hH][eE][mM][aA] _identifier | [vV][eE][rR][sS][iI][oO][nN] string | [cC][aA][sS][cC][aA][dD][eE] )*
+
+create_role_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [rR][oO][lL][eE] ) _identifier [wW][iI][tT][hH]? _identifier?
+
+create_schema_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [sS][cC][hH][eE][mM][aA] ) ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? _identifier
+
+drop_statement ::=
+	 [dD][rR][oO][pP] ( [tT][aA][bB][lL][eE] | [vV][iI][eE][wW] | [iI][nN][dD][eE][xX] | [eE][xX][tT][eE][nN][sS][iI][oO][nN] | [tT][aA][bB][lL][eE][sS][pP][aA][cC][eE] | ( [mM][aA][tT][eE][rR][iI][aA][lL][iI][zZ][eE][dD] [vV][iI][eE][wW] ) ) [cC][oO][nN][cC][uU][rR][rR][eE][nN][tT][lL][yY]? ( [iI][fF] [eE][xX][iI][sS][tT][sS] )? ( _identifier ( ',' _identifier )* ) ( [cC][aA][sS][cC][aA][dD][eE] | [rR][eE][sS][tT][rR][iI][cC][tT] )?
+
+set_statement ::=
+	 [sS][eE][tT] ( [sS][eE][sS][sS][iI][oO][nN] | [lL][oO][cC][aA][lL] )? identifier ( '=' | [tT][oO] ) ( _expression | [dD][eE][fF][aA][uU][lL][tT] )
+
+grant_statement ::=
+	 [gG][rR][aA][nN][tT] ( [aA][lL][lL] [pP][rR][iI][vV][iI][lL][eE][gG][eE][sS]? | ( [sS][eE][lL][eE][cC][tT] | [iI][nN][sS][eE][rR][tT] | [uU][pP][dD][aA][tT][eE] | [dD][eE][lL][eE][tT][eE] | [tT][rR][uU][nN][cC][aA][tT][eE] | [rR][eE][fF][eE][rR][eE][nN][cC][eE][sS] | [tT][rR][iI][gG][gG][eE][rR] | [uU][sS][aA][gG][eE] )* ) [oO][nN] ( [sS][cC][hH][eE][mM][aA] | [dD][aA][tT][aA][bB][aA][sS][eE] | [sS][eE][qQ][uU][eE][nN][cC][eE] | [tT][aA][bB][lL][eE] )? _identifier [tT][oO] ( [gG][rR][oO][uU][pP]? identifier | [pP][uU][bB][lL][iI][cC] ) ( [wW][iI][tT][hH] [gG][rR][aA][nN][tT] [oO][pP][tT][iI][oO][nN] )?
+
+create_domain_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [dD][oO][mM][aA][iI][nN] ) _identifier ( [aA][sS] _type ( null_constraint | check_constraint )* )?
+
+create_type_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [tT][yY][pP][eE] ) _identifier ( type_spec_composite | type_spec_enum | type_spec_range | type_spec_base )?
+
+type_spec_composite ::=
+	 [aA][sS] '(' identifier ( _type | constrained_type ) ( ',' identifier ( _type | constrained_type ) )* ')'
+
+type_spec_enum ::=
+	 [aA][sS] [eE][nN][uU][mM] '(' ( string ( ',' string )* )? ')'
+
+type_spec_range ::=
+	 [aA][sS] [rR][aA][nN][gG][eE] '(' ( ( ( [sS][uU][bB][tT][yY][pP][eE] '=' _identifier ) | ( [sS][uU][bB][tT][yY][pP][eE][__][oO][pP][cC][lL][aA][sS][sS] '=' _identifier ) | ( [cC][oO][lL][lL][aA][tT][iI][oO][nN] '=' _identifier ) | ( [cC][aA][nN][oO][nN][iI][cC][aA][lL] '=' _identifier ) | ( [sS][uU][bB][tT][yY][pP][eE][__][dD][iI][fF][fF] '=' _identifier ) | ( [mM][uU][lL][tT][iI][rR][aA][nN][gG][eE][__][tT][yY][pP][eE][__][nN][aA][mM][eE] '=' _identifier ) ) ( ',' ( ( [sS][uU][bB][tT][yY][pP][eE] '=' _identifier ) | ( [sS][uU][bB][tT][yY][pP][eE][__][oO][pP][cC][lL][aA][sS][sS] '=' _identifier ) | ( [cC][oO][lL][lL][aA][tT][iI][oO][nN] '=' _identifier ) | ( [cC][aA][nN][oO][nN][iI][cC][aA][lL] '=' _identifier ) | ( [sS][uU][bB][tT][yY][pP][eE][__][dD][iI][fF][fF] '=' _identifier ) | ( [mM][uU][lL][tT][iI][rR][aA][nN][gG][eE][__][tT][yY][pP][eE][__][nN][aA][mM][eE] '=' _identifier ) ) )* )? ')'
+
+type_spec_base ::=
+	 '(' ( ( ( [iI][nN][pP][uU][tT] '=' _identifier ) | ( [oO][uU][tT][pP][uU][tT] '=' _identifier ) | ( [rR][eE][cC][eE][iI][vV][eE] '=' _identifier ) | ( [sS][eE][nN][dD] '=' _identifier ) | ( [tT][yY][pP][mM][oO][dD][__][iI][nN] '=' _identifier ) | ( [tT][yY][pP][mM][oO][dD][__][oO][uU][tT] '=' _identifier ) | ( [aA][nN][aA][lL][yY][zZ][eE] '=' _identifier ) | ( [sS][uU][bB][sS][cC][rR][iI][pP][tT] '=' _identifier ) | ( [iI][nN][tT][eE][rR][nN][aA][lL][lL][eE][nN][gG][tT][hH] '=' ( number | [vV][aA][rR][iI][aA][bB][lL][eE] ) ) | [pP][aA][sS][sS][eE][dD][bB][yY][vV][aA][lL][uU][eE] | ( [aA][lL][iI][gG][nN][mM][eE][nN][tT] '=' _identifier ) | ( [sS][tT][oO][rR][aA][gG][eE] '=' _identifier ) | ( [lL][iI][kK][eE] '=' _identifier ) | ( [cC][aA][tT][eE][gG][oO][rR][yY] '=' string ) | ( [pP][rR][eE][fF][eE][rR][rR][eE][dD] '=' string ) | ( [dD][eE][fF][aA][uU][lL][tT] '=' _expression ) | ( [eE][lL][eE][mM][eE][nN][tT] '=' _identifier ) | ( [dD][eE][lL][iI][mM][iI][tT][eE][rR] '=' string ) | ( [cC][oO][lL][lL][aA][tT][aA][bB][lL][eE] '=' _identifier ) ) ( ',' ( ( [iI][nN][pP][uU][tT] '=' _identifier ) | ( [oO][uU][tT][pP][uU][tT] '=' _identifier ) | ( [rR][eE][cC][eE][iI][vV][eE] '=' _identifier ) | ( [sS][eE][nN][dD] '=' _identifier ) | ( [tT][yY][pP][mM][oO][dD][__][iI][nN] '=' _identifier ) | ( [tT][yY][pP][mM][oO][dD][__][oO][uU][tT] '=' _identifier ) | ( [aA][nN][aA][lL][yY][zZ][eE] '=' _identifier ) | ( [sS][uU][bB][sS][cC][rR][iI][pP][tT] '=' _identifier ) | ( [iI][nN][tT][eE][rR][nN][aA][lL][lL][eE][nN][gG][tT][hH] '=' ( number | [vV][aA][rR][iI][aA][bB][lL][eE] ) ) | [pP][aA][sS][sS][eE][dD][bB][yY][vV][aA][lL][uU][eE] | ( [aA][lL][iI][gG][nN][mM][eE][nN][tT] '=' _identifier ) | ( [sS][tT][oO][rR][aA][gG][eE] '=' _identifier ) | ( [lL][iI][kK][eE] '=' _identifier ) | ( [cC][aA][tT][eE][gG][oO][rR][yY] '=' string ) | ( [pP][rR][eE][fF][eE][rR][rR][eE][dD] '=' string ) | ( [dD][eE][fF][aA][uU][lL][tT] '=' _expression ) | ( [eE][lL][eE][mM][eE][nN][tT] '=' _identifier ) | ( [dD][eE][lL][iI][mM][iI][tT][eE][rR] '=' string ) | ( [cC][oO][lL][lL][aA][tT][aA][bB][lL][eE] '=' _identifier ) ) )* )? ')'
+
+create_index_with_clause ::=
+	 [wW][iI][tT][hH] '(' identifier '=' _expression ')'
+
+create_index_include_clause ::=
+	 [iI][nN][cC][lL][uU][dD][eE] '(' identifier ( ',' identifier )* ')'
+
+create_index_statement ::=
+	 [cC][rR][eE][aA][tT][eE] unique_constraint? [iI][nN][dD][eE][xX] [cC][oO][nN][cC][uU][rR][rR][eE][nN][tT][lL][yY]? ( ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? identifier )? [oO][nN] [oO][nN][lL][yY]? _identifier using_clause? index_table_parameters create_index_include_clause? create_index_with_clause? where_clause?
+
+table_column ::=
+	 _identifier _type ( default_clause | primary_key_constraint | check_constraint | references_constraint | unique_constraint | null_constraint | named_constraint | direction_constraint | auto_increment_constraint )*
+
+auto_increment_constraint ::=
+	 [aA][uU][tT][oO][__][iI][nN][cC][rR][eE][mM][eE][nN][tT]
+
+direction_constraint ::=
+	 [aA][sS][cC]
+	| [dD][eE][sS][cC]
+
+named_constraint ::=
+	 'CONSTRAINT' identifier
+
+_column_default_expression ::=
+	 _parenthesized_expression
+	| string
+	| number
+	| identifier
+	| function_call
+
+default_clause ::=
+	 [dD][eE][fF][aA][uU][lL][tT] ( _column_default_expression | type_cast )
+
+table_parameters ::=
+	 '(' ( ( table_column | _table_constraint ) ( ',' ( table_column | _table_constraint ) )* )? ')'
+
+mode ::=
+	 ( [nN][oO][tT] [dD][eE][fF][eE][rR][rR][aA][bB][lL][eE] )
+	| [dD][eE][fF][eE][rR][rR][aA][bB][lL][eE]
+
+initial_mode ::=
+	 [iI][nN][iI][tT][iI][aA][lL][lL][yY] ( [dD][eE][fF][eE][rR][rR][eE][dD] | [iI][mM][mM][eE][dD][iI][aA][tT][eE] )
+
+_table_constraint ::=
+	 ( [cC][oO][nN][sS][tT][rR][aA][iI][nN][tT] _identifier )? ( table_constraint_foreign_key | table_constraint_unique | table_constraint_primary_key | table_constraint_check | table_constraint_exclude ) mode? initial_mode?
+
+table_constraint_check ::=
+	 [cC][hH][eE][cC][kK] _expression
+
+op_class ::=
+	 _identifier
+
+exclude_entry ::=
+	 _identifier op_class? ( [wW][iI][tT][hH] binary_operator )?
+
+table_constraint_exclude ::=
+	 [eE][xX][cC][lL][uU][dD][eE] ( [uU][sS][iI][nN][gG] _identifier )? '(' exclude_entry ( ',' exclude_entry )* ')'
+
+table_constraint_foreign_key ::=
+	 ( [fF][oO][rR][eE][iI][gG][nN] [kK][eE][yY] ) '(' identifier ( ',' identifier )* ')' references_constraint
+
+table_constraint_unique ::=
+	 [uU][nN][iI][qQ][uU][eE] '(' _identifier ( ',' _identifier )* ')'
+
+table_constraint_primary_key ::=
+	 ( [pP][rR][iI][mM][aA][rR][yY] [kK][eE][yY] ) '(' _identifier ( ',' _identifier )* ')'
+
+primary_key_constraint ::=
+	 ( [pP][rR][iI][mM][aA][rR][yY] [kK][eE][yY] )
+
+create_table_statement ::=
+	 [cC][rR][eE][aA][tT][eE] ( [tT][eE][mM][pP][oO][rR][aA][rR][yY] | [tT][eE][mM][pP] )? [tT][aA][bB][lL][eE] ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? _identifier ( [aA][sS] select_statement | table_parameters ) ( [wW][iI][tT][hH][oO][uU][tT] [oO][iI][dD][sS] )?
+
+using_clause ::=
+	 [uU][sS][iI][nN][gG] ( identifier | '(' _identifier ( ',' _identifier )* ')' )
+
+index_table_parameters ::=
+	 '(' ( _expression | ordered_expression ) op_class? ( ',' ( _expression | ordered_expression ) op_class? )* ')'
+
+create_view_statement ::=
+	 [cC][rR][eE][aA][tT][eE] [oO][rR][  ][rR][eE][pP][lL][aA][cC][eE]? ( [tT][eE][mM][pP][oO][rR][aA][rR][yY] | [tT][eE][mM][pP] )? [vV][iI][eE][wW] _identifier view_columns? view_options? view_body view_check_option?
+
+view_columns ::=
+	 '(' _identifier ( ',' _identifier )* ')'
+
+view_option ::=
+	 _identifier
+	| assigment_expression
+
+view_options ::=
+	 [wW][iI][tT][hH] '(' view_option ( ',' view_option )* ')'
+
+view_check_option ::=
+	 [wW][iI][tT][hH] ( [cC][aA][sS][cC][aA][dD][eE][dD] | [lL][oO][cC][aA][lL] )? ( [cC][hH][eE][cC][kK] [oO][pP][tT][iI][oO][nN] )
+
+view_body ::=
+	 [aA][sS] ( select_statement | select_subexpression | values_clause )
+
+create_materialized_view_statement ::=
+	 ( [cC][rR][eE][aA][tT][eE] [mM][aA][tT][eE][rR][iI][aA][lL][iI][zZ][eE][dD] [vV][iI][eE][wW] ) ( [iI][fF] [nN][oO][tT] [eE][xX][iI][sS][tT][sS] )? _identifier view_columns? using_clause? view_options? tablespace_hint? view_body data_hint?
+
+tablespace_hint ::=
+	 [tT][aA][bB][lL][eE][sS][pP][aA][cC][eE] _identifier
+
+data_hint ::=
+	 [wW][iI][tT][hH] [nN][oO]? [dD][aA][tT][aA]
+
+_select_statement ::=
+	 select_clause from_clause? where_clause? group_by_clause? ( window_clause ( ',' window_clause )* )? order_by_clause? limit_clause? offset_clause?
+
+group_by_clause ::=
+	 ( [gG][rR][oO][uU][pP] [bB][yY] ) group_expression ( ',' group_expression )* having_clause?
+
+having_clause ::=
+	 [hH][aA][vV][iI][nN][gG] _expression
+
+group_expression ::=
+	 _expression
+	| grouping_sets_clause
+	| rollup_clause
+	| cube_clause
+
+grouping_sets_clause ::=
+	 ( [gG][rR][oO][uU][pP][iI][nN][gG] [sS][eE][tT][sS] ) '(' expression_list ( ',' expression_list )* ')'
+
+rollup_clause ::=
+	 [rR][oO][lL][lL][uU][pP] '(' ( _expression | expression_list ) ( ',' ( _expression | expression_list ) )* ')'
+
+cube_clause ::=
+	 [cC][uU][bB][eE] '(' ( _expression | expression_list ) ( ',' ( _expression | expression_list ) )* ')'
+
+expression_list ::=
+	 '(' ( _expression ( ',' _expression )* )? ')'
+
+order_expression ::=
+	 _expression ( [aA][sS][cC] | [dD][eE][sS][cC] )? ( [nN][uU][lL][lL][sS] ( [fF][iI][rR][sS][tT] | [lL][aA][sS][tT] ) )?
+
+window_clause ::=
+	 [wW][iI][nN][dD][oO][wW] identifier [aA][sS] window_definition
+
+order_by_clause ::=
+	 ( [oO][rR][dD][eE][rR] [bB][yY] ) order_expression ( ',' order_expression )*
+
+limit_clause ::=
+	 [lL][iI][mM][iI][tT] ( number | [aA][lL][lL] ) ( ',' number )?
+
+offset_clause ::=
+	 [oO][fF][fF][sS][eE][tT] number ( [rR][oO][wW] | [rR][oO][wW][sS] )?
+
+fetch_clause ::=
+	 [fF][eE][tT][cC][hH] ( [fF][iI][rR][sS][tT] | [nN][eE][xX][tT] ) number? ( [rR][oO][wW] | [rR][oO][wW][sS] ) [oO][nN][lL][yY]
+
+where_clause ::=
+	 [wW][hH][eE][rR][eE] _expression
+
+alias ::=
+	 identifier ( column_names | column_definitions )?
+	| column_definitions
+
+_aliased_expression ::=
+	 _expression [aA][sS]? alias
+
+column_names ::=
+	 '(' identifier ( ',' identifier )* ')'
+
+column_definitions ::=
+	 '(' table_column ( ',' table_column )* ')'
+
+_aliasable_expression ::=
+	 _expression | _aliased_expression
+
+select_clause_body ::=
+	 _aliasable_expression ( [iI][nN][tT][oO] identifier )? ( ',' _aliasable_expression ( [iI][nN][tT][oO] identifier )? )*
+
+select_clause ::=
+	 [sS][eE][lL][eE][cC][tT] select_clause_body?
+
+from_clause ::=
+	 [fF][rR][oO][mM] _from_item ( ',' _from_item )*
+
+_from_item ::=
+	 [oO][nN][lL][yY]? _aliasable_expression tablesample_clause?
+	| '(' join_clause ')'
+	| join_clause
+
+tablesample_clause ::=
+	 [tT][aA][bB][lL][eE][sS][aA][mM][pP][lL][eE] function_call repeatable_clause?
+
+repeatable_clause ::=
+	 [rR][eE][pP][eE][aA][tT][aA][bB][lL][eE] '(' _expression ')'
+
+rows_from_expression ::=
+	 [lL][aA][tT][eE][rR][aA][lL]? ( [rR][oO][wW][sS] [fF][rR][oO][mM] ) '(' function_call ( [aA][sS] alias )? ( ',' function_call ( [aA][sS] alias )? )* ')' with_ordinality?
+
+join_clause ::=
+	 _from_item [nN][aA][tT][uU][rR][aA][lL]? join_type? [jJ][oO][iI][nN] _from_item ( join_condition | using_clause )
+
+join_type ::=
+	 ( [iI][nN][nN][eE][rR] | ( [lL][eE][fF][tT] | [rR][iI][gG][hH][tT] | [fF][uU][lL][lL] ) [oO][uU][tT][eE][rR]? )
+
+join_condition ::=
+	 [oO][nN] _expression
+
+select_subexpression ::=
+	 [lL][aA][tT][eE][rR][aA][lL]? '(' select_statement ')'
+
+_update_statement ::=
+	 [uU][pP][dD][aA][tT][eE] identifier set_clause from_clause? where_clause?
+
+set_clause ::=
+	 [sS][eE][tT] set_clause_body
+
+set_clause_body ::=
+	 assigment_expression ( ',' assigment_expression )*
+
+assigment_expression ::=
+	 _identifier '=' _expression
+
+_insert_statement ::=
+	 [iI][nN][sS][eE][rR][tT] [iI][nN][tT][oO] _identifier ( '(' _identifier ( ',' _identifier )* ')' )? ( values_clause | select_statement | set_clause )
+
+values_clause ::=
+	 [vV][aA][lL][uU][eE][sS] values_clause_item ( ',' values_clause_item )* order_by_clause? limit_clause? offset_clause? fetch_clause?
+
+values_clause_item ::=
+	 '(' _expression ( ',' _expression )* ')'
+
+_delete_statement ::=
+	 [dD][eE][lL][eE][tT][eE] from_clause where_clause?
+
+conditional_expression ::=
+	 [cC][aA][sS][eE] ( [wW][hH][eE][nN] _expression [tT][hH][eE][nN] _expression )+ ( [eE][lL][sS][eE] _expression )? [eE][nN][dD]
+
+in_expression ::=
+	 _expression [nN][oO][tT]? [iI][nN] tuple
+
+tuple ::=
+	 '(' ( _expression ( ',' _expression )* ) ')'
+
+references_constraint ::=
+	 [rR][eE][fF][eE][rR][eE][nN][cC][eE][sS] _identifier ( '(' identifier ( ',' identifier )* ')' )? ( on_update_action | on_delete_action )*
+
+on_update_action ::=
+	 ( [oO][nN] [uU][pP][dD][aA][tT][eE] ) _constraint_action
+
+on_delete_action ::=
+	 ( [oO][nN] [dD][eE][lL][eE][tT][eE] ) _constraint_action
+
+_constraint_action ::=
+	 [rR][eE][sS][tT][rR][iI][cC][tT]
+	| [cC][aA][sS][cC][aA][dD][eE]
+	| ( [sS][eE][tT] [nN][uU][lL][lL] )
+
+unique_constraint ::=
+	 [uU][nN][iI][qQ][uU][eE]
+
+null_constraint ::=
+	 [nN][oO][tT]? NULL
+
+check_constraint ::=
+	 [cC][hH][eE][cC][kK] _expression
+
+_constraint ::=
+	 ( null_constraint | check_constraint ) check_constraint?
+
+function_call ::=
+	 [lL][aA][tT][eE][rR][aA][lL]? _identifier '(' _function_call_arguments? ')' with_ordinality? within_group_clause? filter_clause? over_clause?
+
+_function_call_arguments ::=
+	 ( [aA][lL][lL] | [dD][iI][sS][tT][iI][nN][cC][tT] )? _expression ( ',' _expression )* order_by_clause?
+
+within_group_clause ::=
+	 ( [wW][iI][tT][hH][iI][nN] [gG][rR][oO][uU][pP] ) '(' order_by_clause ')'
+
+filter_clause ::=
+	 [fF][iI][lL][tT][eE][rR] '(' where_clause ')'
+
+over_clause ::=
+	 [oO][vV][eE][rR] ( identifier | window_definition )
+
+window_definition ::=
+	 '(' partition_by_clause? order_by_clause? frame_clause? ')'
+
+partition_by_clause ::=
+	 ( [pP][aA][rR][tT][iI][tT][iI][oO][nN] [bB][yY] ) _expression ( ',' _expression )*
+
+frame_clause ::=
+	 frame_kind frame_bound frame_exclusion?
+	| frame_kind [bB][eE][tT][wW][eE][eE][nN] frame_bound [aA][nN][dD] frame_bound frame_exclusion?
+
+frame_kind ::=
+	 [rR][aA][nN][gG][eE]
+	| [rR][oO][wW][sS]
+	| [gG][rR][oO][uU][pP][sS]
+
+frame_bound ::=
+	 ( [uU][nN][bB][oO][uU][nN][dD][eE][dD] [pP][rR][eE][cC][eE][dD][iI][nN][gG] )
+	| _expression [pP][rR][eE][cC][eE][dD][iI][nN][gG]
+	| ( [cC][uU][rR][rR][eE][nN][tT] [rR][oO][wW] )
+	| _expression [fF][oO][lL][lL][oO][wW][iI][nN][gG]
+	| ( [uU][nN][bB][oO][uU][nN][dD][eE][dD] [fF][oO][lL][lL][oO][wW][iI][nN][gG] )
+
+frame_exclusion ::=
+	 ( [eE][xX][cC][lL][uU][dD][eE] [cC][uU][rR][rR][eE][nN][tT] [rR][oO][wW] )
+	| ( [eE][xX][cC][lL][uU][dD][eE] [gG][rR][oO][uU][pP] )
+	| ( [eE][xX][cC][lL][uU][dD][eE] [tT][iI][eE][sS] )
+	| ( [eE][xX][cC][lL][uU][dD][eE] [nN][oO] [oO][tT][hH][eE][rR][sS] )
+
+_parenthesized_expression ::=
+	 '(' _expression ')'
+
+with_ordinality ::=
+	 ( [wW][iI][tT][hH] [oO][rR][dD][iI][nN][aA][lL][iI][tT][yY] )
+
+is_expression ::=
+	 _expression [iI][sS] [nN][oO][tT]? ( NULL | TRUE | FALSE | distinct_from )
+
+distinct_from ::=
+	 ( [dD][iI][sS][tT][iI][nN][cC][tT] [fF][rR][oO][mM] ) _expression
+
+boolean_expression ::=
+	 [nN][oO][tT] _expression
+	| _expression [aA][nN][dD] _expression
+	| _expression [oO][rR] _expression
+
+at_time_zone_expression ::=
+	 _expression ( [aA][tT] [tT][iI][mM][eE] [zZ][oO][nN][eE] ) _expression
+
+NULL ::=
+	 [nN][uU][lL][lL]
+
+TRUE ::=
+	 [tT][rR][uU][eE]
+
+FALSE ::=
+	 [fF][aA][lL][sS][eE]
+
+number ::=
+	 ( ( [0-9]+'_'?+ '.' [0-9]+'_'?+? ( [eE][\+-]? [0-9]+'_'?+ )? | [0-9]+'_'?+? '.' [0-9]+'_'?+ ( [eE][\+-]? [0-9]+'_'?+ )? | [0-9]+'_'?+ [eE][\+-]? [0-9]+'_'?+ | [0-9]+'_'?+ ) )
+
+_unquoted_identifier ::=
+	 [a-zA-Z0-9_]+
+
+_quoted_identifier ::=
+	 '`' [^`]* '`'
+	| '"'  ('""'|[^"])* '"' 
+
+identifier ::=
+	 _unquoted_identifier
+	| _quoted_identifier
+
+dotted_name ::=
+	 identifier ( '.' identifier )+
+
+_identifier ::=
+	 identifier
+	| dotted_name
+
+string ::=
+	 "'"  ("''"|[^'])* "'" 
+	| _dollar_quoted_string_tag _dollar_quoted_string_content _dollar_quoted_string_end_tag
+
+json_access ::=
+	 _expression ( '->' | '->>' | '#>' | '#>>' ) ( string | number )
+
+ordered_expression ::=
+	 _expression ( [aA][sS][cC] | [dD][eE][sS][cC] )
+
+type ::=
+	 _identifier [vV][aA][rR][yY][iI][nN][gG]? [pP][rR][eE][cC][iI][sS][iI][oO][nN]? ( '(' number ( ',' number )* ')' )? ( ( [wW][iI][tT][hH] | [wW][iI][tT][hH][oO][uU][tT] ) ( [tT][iI][mM][eE] [zZ][oO][nN][eE] ) )?
+
+array_type ::=
+	 _type ( '[' number? ']' )+
+
+_type ::=
+	 type
+	| array_type
+
+type_cast ::=
+	 ( _parenthesized_expression | string | _identifier | function_call ) '::' _type
+
+comment ::=
+	 ( '--' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+array_element_access ::=
+	 ( identifier | argument_reference ) '[' _expression ']'
+
+unary_expression ::=
+	 ( '+' | '-' | '!!' | '~' | '@' | '|/' | '||/' ) _expression
+
+binary_expression ::=
+	 _expression '^' _expression
+	| _expression ( '*' | '/' | '%' | '<<' | '>>' | '&' ) _expression
+	| _expression ( '+' | '-' | '|' | '#' ) _expression
+	| _expression ( '<' | '<=' | '<>' | '!=' | '=' | '>' | '>=' | '~' | '!~' | '~*' | '!~*' ) _expression
+
+binary_operator ::=
+	 '='
+	| '&&'
+	| '||'
+
+asterisk_expression ::=
+	 '*'
+	| _identifier '.*'
+
+interval_expression ::=
+	 [iI][nN][tT][eE][rR][vV][aA][lL] string
+
+argument_reference ::=
+	 '$' [0-9]+
+
+_expression ::=
+	 interval_expression
+	| function_call
+	| string
+	| json_access
+	| TRUE
+	| FALSE
+	| NULL
+	| asterisk_expression
+	| _identifier
+	| number
+	| in_expression
+	| is_expression
+	| boolean_expression
+	| _parenthesized_expression
+	| type_cast
+	| unary_expression
+	| binary_expression
+	| conditional_expression
+	| array_element_access
+	| argument_reference
+	| select_subexpression
+	| at_time_zone_expression
+	| rows_from_expression
+

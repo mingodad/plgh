@@ -1,195 +1,705 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-scala
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-scala/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-compilation_unit ::=  (  _definition )*
+compilation_unit ::=
+	 _shebang? ( _top_level_definition ( _semicolon _top_level_definition )* _semicolon? )?
 
-_definition ::=  ( package_clause |  package_object |  class_definition |  import_declaration |  object_definition |  trait_definition |  val_definition |  val_declaration |  var_definition |  var_declaration |  type_definition |  function_definition |  function_declaration )
+_top_level_definition ::=
+	 package_clause
+	| package_object
+	| _definition
+	| _end_marker
+	| expression
 
-package_clause ::=  ( 'package'  (  package_identifier )  (  ( template_body )?  )  )
+_definition ::=
+	 given_definition
+	| extension_definition
+	| class_definition
+	| import_declaration
+	| export_declaration
+	| object_definition
+	| enum_definition
+	| trait_definition
+	| val_definition
+	| val_declaration
+	| var_definition
+	| var_declaration
+	| type_definition
+	| function_definition
+	| function_declaration
 
-package_identifier ::=  ( identifier (  ( '.'  identifier )  )*  )
+enum_definition ::=
+	 annotation* 'enum' _class_constructor extends_clause? derives_clause? enum_body
 
-package_object ::=  ( 'package'  'object'  _object_definition )
+_enum_block ::=
+	 ( enum_case_definitions | expression | _definition ) ( _semicolon ( enum_case_definitions | expression | _definition ) )* _semicolon?
 
-import_declaration ::=  ( 'import'  ( _import_expression (  ( ','  _import_expression )  )*  )  )
+enum_body ::=
+	 ':' _indent _enum_block _outdent
+	| '{' _enum_block? '}'
 
-_import_expression ::=  ( (  ( stable_identifier |  identifier )  )  ( ( '.'  ( wildcard |  import_selectors )  )  )?  )
+enum_case_definitions ::=
+	 annotation* 'case' ( simple_enum_case ( ',' simple_enum_case )* | full_enum_case )
 
-import_selectors ::=  ( '{'  ( ( identifier |  renamed_identifier )  (  ( ','  ( identifier |  renamed_identifier )  )  )*  )  '}'  )
+simple_enum_case ::=
+	 _identifier extends_clause?
 
-renamed_identifier ::=  ( (  identifier )  '=>'  (  ( identifier |  wildcard )  )  )
+full_enum_case ::=
+	 _identifier _full_enum_def
 
-object_definition ::=  ( ( 'case'  )?  'object'  _object_definition )
+_full_enum_def ::=
+	 type_parameters? class_parameters+ extends_clause?
 
-_object_definition ::=  ( (  identifier )  (  ( extends_clause )?  )  (  ( template_body )?  )  )
+package_clause ::=
+	 'package' package_identifier template_body?
 
-class_definition ::=  ( (  annotation )*  ( modifiers )?  ( 'case'  )?  'class'  (  identifier )  (  ( type_parameters )?  )  (  (  class_parameters )*  )  (  ( extends_clause )?  )  (  ( template_body )?  )  )
+package_identifier ::=
+	 _identifier ( '.' _identifier )*
 
-trait_definition ::=  ( 'trait'  (  identifier )  (  ( type_parameters )?  )  (  ( extends_clause )?  )  (  ( template_body )?  )  )
+package_object ::=
+	 'package' 'object' _object_definition
 
-type_parameters ::=  ( '['  ( _variant_type_parameter (  ( ','  _variant_type_parameter )  )*  )  ']'  )
+import_declaration ::=
+	 'import' _namespace_expression ( ',' _namespace_expression )*
 
-_variant_type_parameter ::=  ( (  annotation )*  ( covariant_type_parameter |  contravariant_type_parameter |  _type_parameter )  )
+export_declaration ::=
+	 'export' _namespace_expression ( ',' _namespace_expression )*
 
-covariant_type_parameter ::=  ( '+'  _type_parameter )
+_namespace_expression ::=
+	 ( _identifier ( '.' _identifier )* ) ( '.' ( namespace_wildcard | namespace_selectors | as_renamed_identifier ) )?
 
-contravariant_type_parameter ::=  ( '-'  _type_parameter )
+namespace_wildcard ::=
+	 '*' | '_' | 'given'
 
-_type_parameter ::=  ( (  ( wildcard |  identifier )  )  (  ( type_parameters )?  )  (  ( upper_bound )?  )  (  ( lower_bound )?  )  (  ( (  view_bound )*  )?  )  (  ( (  context_bound )*  )?  )  )
+_namespace_given_by_type ::=
+	 'given' _type
 
-upper_bound ::=  ( '<:'  (  _type )  )
+namespace_selectors ::=
+	 '{' ( _namespace_given_by_type | namespace_wildcard | _identifier | arrow_renamed_identifier | as_renamed_identifier ) ( ',' ( _namespace_given_by_type | namespace_wildcard | _identifier | arrow_renamed_identifier | as_renamed_identifier ) )* ','? '}'
 
-lower_bound ::=  ( '>:'  (  _type )  )
+_import_selectors ::=
+	 namespace_selectors
 
-view_bound ::=  ( '<%'  (  _type )  )
+arrow_renamed_identifier ::=
+	 _identifier '=>' ( _identifier | wildcard )
 
-context_bound ::=  ( ':'  (  _type )  )
+as_renamed_identifier ::=
+	 _identifier 'as' ( _identifier | wildcard )
 
-template_body ::=  ( '{'  ( _block )?  '}'  )
+object_definition ::=
+	 annotation* modifiers? 'case'? 'object' _object_definition
 
-annotation ::=   (  ( '@'  (  _simple_type )  (  (  arguments )*  )  )  )
+_object_definition ::=
+	 _identifier extends_clause? derives_clause? _definition_body?
 
-val_definition ::=  ( (  annotation )*  ( modifiers )?  'val'  (  _pattern )  ( ( ':'  (  _type )  )  )?  '='  (  _expression )  )
+class_definition ::=
+	 annotation* modifiers? 'case'? 'class' _class_definition
 
-val_declaration ::=  ( (  annotation )*  ( modifiers )?  'val'  ( (  identifier )  (  ( ','  (  identifier )  )  )*  )  ':'  (  _type )  )
+_class_definition ::=
+	 _class_constructor extends_clause? derives_clause? _definition_body?
 
-var_declaration ::=  ( (  annotation )*  ( modifiers )?  'var'  ( (  identifier )  (  ( ','  (  identifier )  )  )*  )  ':'  (  _type )  )
+_definition_body ::=
+	 _automatic_semicolon? template_body
 
-var_definition ::=  ( (  annotation )*  ( modifiers )?  'var'  (  _pattern )  ( ( ':'  (  _type )  )  )?  '='  (  _expression )  )
+_class_constructor ::=
+	 _identifier type_parameters? annotation? access_modifier? ( _automatic_semicolon? class_parameters )*
 
-type_definition ::=  ( (  annotation )*  ( modifiers )?  'type'  (  _type_identifier )  (  ( type_parameters )?  )  '='  (  _type )  )
+trait_definition ::=
+	 annotation* modifiers? 'trait' _class_definition
 
-function_definition ::=  ( (  annotation )*  ( modifiers )?  'def'  (  identifier )  (  ( type_parameters )?  )  (  (  parameters )*  )  ( ( ':'  (  _type )  )  )?  ( ( '='  (  _expression )  )  |  (  block )  )  )
+type_parameters ::=
+	 '[' _variant_type_parameter ( ',' _variant_type_parameter )* ','? ']'
 
-function_declaration ::=  ( (  annotation )*  ( modifiers )?  'def'  (  identifier )  (  ( type_parameters )?  )  (  (  parameters )*  )  ( ( ':'  (  _type )  )  )?  )
+_variant_type_parameter ::=
+	 annotation* ( covariant_type_parameter | contravariant_type_parameter | _type_parameter | type_lambda )
 
-modifiers ::=  ( ( 'abstract'  |  'final'  |  'sealed'  |  'implicit'  |  'lazy'  |  'override'  |  'private'  |  'protected'  )  )+
+covariant_type_parameter ::=
+	 '+' _type_parameter
 
-extends_clause ::=  ( 'extends'  (  _type )  ( arguments )?  )
+contravariant_type_parameter ::=
+	 '-' _type_parameter
 
-class_parameters ::=  ( '('  ( 'implicit'  )?  ( ( class_parameter (  ( ','  class_parameter )  )*  )  )?  ')'  )
+_type_parameter ::=
+	 ( wildcard | _identifier ) type_parameters? lower_bound? upper_bound? view_bound*? context_bound*?
 
-parameters ::=  ( '('  ( 'implicit'  )?  ( ( parameter (  ( ','  parameter )  )*  )  )?  ')'  )
+upper_bound ::=
+	 '<:' _type
 
-class_parameter ::=  ( (  annotation )*  ( ( 'val'  |  'var'  )  )?  (  identifier )  ( ( ':'  (  _type )  )  )?  ( ( '='  (  _expression )  )  )?  )
+lower_bound ::=
+	 '>:' _type
 
-parameter ::=  ( (  annotation )*  (  identifier )  ( ( ':'  (  _param_type )  )  )?  ( ( '='  (  _expression )  )  )?  )
+view_bound ::=
+	 '<%' _type
 
-_block ::=   (  ( ( ( _expression |  _definition )  (  ( _semicolon ( _expression |  _definition )  )  )*  )  ( _semicolon )?  )  )
+context_bound ::=
+	 ':' _type
 
-block ::=  ( '{'  ( _block )?  '}'  )
+template_body ::=
+	 _indented_template_body
+	| _braced_template_body
 
-_type ::=  ( function_type |  compound_type |  infix_type |  _annotated_type )
+_indented_template_body ::=
+	 ':' _indent self_type? _block _outdent
 
-_annotated_type ::=   (  ( _simple_type (  annotation )*  )  )
+_braced_template_body ::=
+	 '{' ( _braced_template_body1 | _braced_template_body2 )? '}'
 
-_simple_type ::=  ( generic_type |  projected_type |  tuple_type |  stable_type_identifier |  _type_identifier )
+_braced_template_body1 ::=
+	 self_type? _block
 
-compound_type ::=   (  ( (  _annotated_type )  ( ( 'with'  (  _annotated_type )  )  )+  )  )
+_braced_template_body2 ::=
+	 ( _indent self_type? | self_type? _indent ) _block? _outdent
 
-infix_type ::=   (  ( (  ( compound_type |  infix_type |  _annotated_type )  )  (  ( identifier |  operator_identifier )  )  (  ( compound_type |  infix_type |  _annotated_type )  )  )  )
+with_template_body ::=
+	 _indent self_type? _block _outdent
 
-tuple_type ::=  ( '('  ( _type (  ( ','  _type )  )*  )  ')'  )
+_extension_template_body ::=
+	 _indent _block _outdent
+	| '{' _block? '}'
 
-stable_type_identifier ::=  ( ( identifier |  stable_identifier )  '.'  _type_identifier )
+_end_marker ::=
+	 'end' ( 'if' | 'while' | 'for' | 'match' | 'try' | 'new' | 'this' | 'given' | 'extension' | 'val' | _identifier )
 
-stable_identifier ::=  ( ( identifier |  stable_identifier )  '.'  identifier )
+self_type ::=
+	 _identifier _self_type_ascription? '=>'
 
-generic_type ::=  ( (  _simple_type )  (  type_arguments )  )
+_self_type_ascription ::=
+	 ':' _type
 
-projected_type ::=  ( (  _simple_type )  '#'  (  _type_identifier )  )
+annotation ::=
+	 '@' _simple_type arguments*
 
-function_type ::=   (  ( (  parameter_types )  '=>'  (  _type )  )  )
+val_definition ::=
+	 _start_val ( _pattern | identifiers ) ( ':' _type )? '=' _indentable_expression
 
-parameter_types ::=   (  ( _annotated_type |   (  ( '('  ( ( _param_type (  ( ','  _param_type )  )*  )  )?  ')'  )  )  |  compound_type |  infix_type )  )
+val_declaration ::=
+	 _start_val _identifier ( ',' _identifier )* ':' _type
 
-_param_type ::=  ( _type |  lazy_parameter_type |  repeated_parameter_type )
+_start_val ::=
+	 annotation* modifiers? 'val'
 
-lazy_parameter_type ::=  ( '=>'  (  _type )  )
+var_declaration ::=
+	 _start_var _identifier ( ',' _identifier )* ':' _type
 
-repeated_parameter_type ::=  ( (  _type )  '*'  )
+var_definition ::=
+	 _start_var ( _pattern | identifiers ) ( ':' _type )? '=' _indentable_expression
 
-_type_identifier ::=  (  identifier )
+_start_var ::=
+	 annotation* modifiers? 'var'
 
-_pattern ::=  ( identifier |  capture_pattern |  tuple_pattern |  case_class_pattern |  infix_pattern |  alternative_pattern |  typed_pattern |  number |  string |  wildcard )
+type_definition ::=
+	 annotation* modifiers? opaque_modifier? 'type' _type_constructor ( '=' _type )?
 
-case_class_pattern ::=  ( (  ( _type_identifier |  stable_type_identifier )  )  '('  (  ( ( _pattern (  ( ','  _pattern )  )*  )  )?  )  ')'  )
+_type_constructor ::=
+	 _type_identifier type_parameters? lower_bound? upper_bound?
 
-infix_pattern ::=   (  ( (  _pattern )  (  ( identifier |  operator_identifier )  )  (  _pattern )  )  )
+function_definition ::=
+	 _function_declaration ( '=' _indentable_expression | block )
 
-capture_pattern ::=   (  ( (  identifier )  '@'  (  _pattern )  )  )
+function_declaration ::=
+	 _function_declaration
 
-typed_pattern ::=   (  ( (  _pattern )  ':'  (  _type )  )  )
+_function_declaration ::=
+	 annotation* modifiers? 'def' _function_constructor ( ':' _type )?
 
-alternative_pattern ::=   (  ( _pattern '|'  _pattern )  )
+_function_constructor ::=
+	 _identifier type_parameters? ( _automatic_semicolon? parameters )* _automatic_semicolon?
 
-tuple_pattern ::=  ( '('  _pattern ( ( ','  _pattern )  )+  ')'  )
+opaque_modifier ::=
+	 'opaque'
 
-_expression ::=  ( if_expression |  match_expression |  try_expression |  call_expression |  generic_function |  assignment_expression |  parenthesized_expression |  interpolated_string_expression |  field_expression |  instance_expression |  infix_expression |  prefix_expression |  tuple_expression |  case_block |  block |  identifier |  number |  string )
+extension_definition ::=
+	 'extension' type_parameters? parameters* ( _extension_template_body | function_definition | function_declaration )
 
-if_expression ::=   (  ( 'if'  (  parenthesized_expression )  (  _expression )  ( ( 'else'  (  _expression )  )  )?  )  )
+given_definition ::=
+	 annotation* modifiers? 'given' _given_constructor? ( _structural_instance | _annotated_type ( '=' _indentable_expression )? )
 
-match_expression ::=  ( (  _expression )  'match'  (  case_block )  )
+_given_constructor ::=
+	 _identifier? type_parameters? ( _automatic_semicolon? parameters )* _automatic_semicolon? ':'
 
-try_expression ::=   (  ( 'try'  (  _expression )  ( catch_clause )?  ( finally_clause )?  )  )
+_structural_instance ::=
+	 _constructor_application 'with' with_template_body
 
-catch_clause ::=   (  ( 'catch'  case_block )  )
+_constructor_application ::=
+	 _annotated_type | compound_type | _structural_type | _simple_type arguments | _annotated_type arguments | compound_type arguments
 
-finally_clause ::=   (  ( 'finally'  _expression )  )
+_constructor_applications ::=
+	 _constructor_application ( ',' _constructor_application )* | _constructor_application ( 'with' _constructor_application )*
 
-case_block ::=  (  (  ( '{'  '}'  )  )  |  ( '{'  ( case_clause )+  '}'  )  )
+modifiers ::=
+	 'abstract' | 'final' | 'sealed' | 'implicit' | 'lazy' | 'override' | access_modifier | inline_modifier | infix_modifier | open_modifier | transparent_modifier+
 
-case_clause ::=   (  ( 'case'  (  _pattern )  ( guard )?  '=>'  (  ( _block )?  )  )  )
+access_modifier ::=
+	 ( 'private' | 'protected' ) access_qualifier?
 
-guard ::=  ( 'if'  (  _expression )  )
+access_qualifier ::=
+	 '[' _identifier ']'
 
-assignment_expression ::=   (  ( (  _expression )  '='  (  _expression )  )  )
+inline_modifier ::=
+	 'inline'
 
-generic_function ::=   (  ( (  _expression )  (  type_arguments )  )  )
+infix_modifier ::=
+	 'infix'
 
-call_expression ::=   (  ( (  _expression )  (  arguments )  (  ( ( block |  case_block )  )?  )  )  )
+open_modifier ::=
+	 'open'
 
-field_expression ::=   (  ( (  _expression )  '.'  (  identifier )  )  )
+transparent_modifier ::=
+	 'transparent'
 
-instance_expression ::=   (  ( 'new'  _expression )  )
+extends_clause ::=
+	 'extends' _constructor_applications arguments?
 
-infix_expression ::=   (  ( (  _expression )  (  ( identifier |  operator_identifier )  )  (  _expression )  )  )
+derives_clause ::=
+	 'derives' ( _type_identifier | stable_type_identifier ) ( ',' ( _type_identifier | stable_type_identifier ) )*
 
-prefix_expression ::=   (  ( ( '+'  |  '-'  |  '!'  |  '~'  )  _expression )  )
+class_parameters ::=
+	 _automatic_semicolon? '(' ( 'implicit' | 'using' )? ( class_parameter ( ',' class_parameter )* ','? )? ')'
 
-tuple_expression ::=  ( '('  _expression ( ( ','  _expression )  )+  ')'  )
+parameters ::=
+	 '(' 'implicit'? ( parameter ( ',' parameter )* ','? )? ')'
+	| _using_parameters_clause
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+_using_parameters_clause ::=
+	 '(' 'using' ( parameter ( ',' parameter )* ','? | _param_type ( ',' _param_type )* ','? ) ')'
 
-type_arguments ::=  ( '['  ( _type (  ( ','  _type )  )*  )  ']'  )
+class_parameter ::=
+	 annotation* modifiers? ( 'val' | 'var' )? _identifier ( ':' _param_type )? ( '=' expression )?
 
-arguments ::=  ( '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )
+parameter ::=
+	 annotation* inline_modifier? _identifier ':' _param_type ( '=' expression )?
 
-identifier ::=  [a-zA-Z_][\w]*
+_block ::=
+	 ( expression | _definition | _end_marker | ';' ) ( _semicolon ( expression | _definition | _end_marker | ';' ) )* _semicolon?
 
-wildcard ::=  '_'
+_indentable_expression ::=
+	 indented_block | indented_cases | expression
 
-operator_identifier ::=  [^\s\w\(\)\[#x5d\{\}'"`\.;,]+
+block ::=
+	 '{' _block? '}'
 
-number ::=  [0-9.]+
+indented_block ::=
+	 _indent _block _outdent _end_marker?
 
-interpolated_string_expression ::=  ( identifier interpolated_string )
+indented_cases ::=
+	 _indent case_clause+ _outdent
 
-_interpolated_string_start ::=  '"'
+_indented_type_cases ::=
+	 _indent type_case_clause+ _outdent
 
-_interpolated_multiline_string_start ::=  '"""'
+_type ::=
+	 function_type
+	| compound_type
+	| infix_type
+	| match_type
+	| _annotated_type
+	| literal_type
+	| _structural_type
+	| type_lambda
 
-interpolation ::=  ( '$'  ( identifier |  block )  )
+_annotated_type ::=
+	 annotated_type | _simple_type
 
-interpolated_string ::=  ( ( _interpolated_string_start (  ( _interpolated_string_middle interpolation )  )*  _interpolated_string_end )  |  ( _interpolated_multiline_string_start (  ( _interpolated_multiline_string_middle interpolation )  )*  _interpolated_multiline_string_end )  )
+annotated_type ::=
+	 _simple_type annotation+
 
-string ::=  ( _simple_string |  _simple_multiline_string )
+_simple_type ::=
+	 generic_type
+	| projected_type
+	| tuple_type
+	| singleton_type
+	| stable_type_identifier
+	| _type_identifier
+	| wildcard
 
-_semicolon ::=  ( ';'  |  _automatic_semicolon )
+compound_type ::=
+	 _annotated_type ( 'with' _annotated_type )+
+	| _annotated_type _refinement
+	| _annotated_type ( 'with' _annotated_type )+ _refinement
 
-comment ::=  (  ( ( '//'  .* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+_structural_type ::=
+	 template_body
+
+_refinement ::=
+	 template_body
+
+_infix_type_choice ::=
+	 compound_type | infix_type | _annotated_type
+
+infix_type ::=
+	 _infix_type_choice _identifier _infix_type_choice
+
+tuple_type ::=
+	 '(' _type ( ',' _type )* ','? ')'
+
+singleton_type ::=
+	 ( _identifier | stable_identifier ) '.' 'type'
+
+stable_type_identifier ::=
+	 ( _identifier | stable_identifier ) '.' _type_identifier
+
+stable_identifier ::=
+	 ( _identifier | stable_identifier ) '.' _identifier
+
+generic_type ::=
+	 _simple_type type_arguments
+
+projected_type ::=
+	 _simple_type '#' _type_identifier
+
+match_type ::=
+	 _infix_type_choice 'match' _indented_type_cases
+
+type_case_clause ::=
+	 'case' _infix_type_choice _arrow_then_type
+
+function_type ::=
+	 parameter_types _arrow_then_type
+
+_arrow_then_type ::=
+	 ( '=>' | '?=>' ) _type
+
+parameter_types ::=
+	 _annotated_type | '(' ( _param_type ( ',' _param_type )* ','? )? ')' | compound_type | infix_type
+
+_param_type ::=
+	 _type
+	| lazy_parameter_type
+	| repeated_parameter_type
+
+lazy_parameter_type ::=
+	 '=>' _type
+
+repeated_parameter_type ::=
+	 _type '*'
+
+_type_identifier ::=
+	 _identifier
+
+type_lambda ::=
+	 '[' _type_parameter ( ',' _type_parameter )* ','? ']' '=>>' _type
+
+_pattern ::=
+	 _identifier
+	| stable_identifier
+	| interpolated_string_expression
+	| capture_pattern
+	| tuple_pattern
+	| case_class_pattern
+	| infix_pattern
+	| alternative_pattern
+	| typed_pattern
+	| given_pattern
+	| quote_expression
+	| literal
+	| wildcard
+	| repeat_pattern
+
+case_class_pattern ::=
+	 ( _type_identifier | stable_type_identifier ) '(' ( _pattern ( ',' _pattern )* ','? )? ')'
+
+infix_pattern ::=
+	 _pattern _identifier _pattern
+
+capture_pattern ::=
+	 ( _identifier | wildcard ) '@' _pattern
+
+repeat_pattern ::=
+	 _pattern '*'
+
+typed_pattern ::=
+	 _pattern ':' _type
+
+given_pattern ::=
+	 'given' _type
+
+alternative_pattern ::=
+	 _pattern '|' _pattern
+
+tuple_pattern ::=
+	 '(' _pattern ( ',' _pattern )* ')'
+
+expression ::=
+	 if_expression
+	| match_expression
+	| try_expression
+	| assignment_expression
+	| lambda_expression
+	| postfix_expression
+	| ascription_expression
+	| infix_expression
+	| prefix_expression
+	| return_expression
+	| throw_expression
+	| while_expression
+	| do_while_expression
+	| for_expression
+	| macro_body
+	| _simple_expression
+
+_simple_expression ::=
+	 identifier
+	| operator_identifier
+	| literal
+	| interpolated_string_expression
+	| unit
+	| tuple_expression
+	| wildcard
+	| block
+	| splice_expression
+	| case_block
+	| quote_expression
+	| instance_expression
+	| parenthesized_expression
+	| field_expression
+	| generic_function
+	| call_expression
+
+lambda_expression ::=
+	 ( bindings | 'implicit'? _identifier | wildcard ) ( '=>' | '?=>' ) _indentable_expression
+
+if_expression ::=
+	 inline_modifier? 'if' _if_condition _indentable_expression ( ';'? 'else' _indentable_expression )?
+
+_if_condition ::=
+	 parenthesized_expression | _indentable_expression 'then'
+
+match_expression ::=
+	 inline_modifier? expression 'match' ( case_block | indented_cases )
+
+try_expression ::=
+	 'try' _indentable_expression catch_clause? finally_clause?
+
+catch_clause ::=
+	 'catch' ( _indentable_expression | _expr_case_clause )
+
+_expr_case_clause ::=
+	 'case' _case_pattern expression
+
+finally_clause ::=
+	 'finally' _indentable_expression
+
+binding ::=
+	 ( _identifier | wildcard ) ( ':' _param_type )?
+
+bindings ::=
+	 '(' ( binding ( ',' binding )* ','? )? ')'
+
+case_block ::=
+	 '{' '}'
+	| '{' case_clause+ '}'
+
+case_clause ::=
+	 'case' _case_pattern _block?
+
+_case_pattern ::=
+	 _pattern guard? '=>'
+
+guard ::=
+	 'if' _postfix_expression_choice
+
+assignment_expression ::=
+	 ( prefix_expression | _simple_expression ) '=' expression
+
+generic_function ::=
+	 expression type_arguments
+
+call_expression ::=
+	 _simple_expression ( arguments | case_block | block )
+	| _postfix_expression_choice ':' colon_argument
+
+colon_argument ::=
+	 ( ( bindings | _identifier | wildcard ) '=>' )? ( indented_block | indented_cases )
+
+field_expression ::=
+	 _simple_expression '.' _identifier
+
+instance_expression ::=
+	 'new' _constructor_application template_body
+	| 'new' template_body
+	| 'new' _constructor_application
+
+ascription_expression ::=
+	 _postfix_expression_choice ':' ( _param_type | annotation )
+
+infix_expression ::=
+	 ( infix_expression | prefix_expression | _simple_expression ) _identifier ( prefix_expression | _simple_expression | ':' colon_argument )
+
+postfix_expression ::=
+	 ( infix_expression | prefix_expression | _simple_expression ) _identifier
+
+_postfix_expression_choice ::=
+	 postfix_expression | infix_expression | prefix_expression | _simple_expression
+
+macro_body ::=
+	 'macro' ( infix_expression | prefix_expression | _simple_expression )
+
+prefix_expression ::=
+	 ( '+' | '-' | '!' | '~' ) _simple_expression
+
+tuple_expression ::=
+	 '(' expression ( ',' expression )+ ','? ')'
+
+parenthesized_expression ::=
+	 '(' expression ')'
+
+type_arguments ::=
+	 '[' _type ( ',' _type )* ','? ']'
+
+arguments ::=
+	 '(' ( _exprs_in_parens | 'using' _exprs_in_parens ) ')'
+
+_exprs_in_parens ::=
+	 expression ( ',' expression )* ','?
+
+splice_expression ::=
+	 '$' ( '{' _block '}' | '[' _type ']' | identifier )
+
+quote_expression ::=
+	 "'"  ( '{' _block '}' | '[' _type ']' | identifier )
+
+symbol_literal ::=
+	 '__no_longer_used_symbol_literal_'
+
+identifier ::=
+	 _alpha_identifier | _backquoted_id | _soft_identifier
+
+_soft_identifier ::=
+	 'infix' | 'inline' | 'opaque' | 'open' | 'transparent' | 'end'
+
+_alpha_identifier ::=
+	 [\p{Lu}\p{Lt}\p{Nl}\p{Lo}\p{Lm}\$\p{Ll}_\u00AA\u00BB\u02B0-\u02B8\u02C0-\u02C1\u02E0-\u02E4\u037A\u1D78\u1D9B-\u1DBF\u2071\u207F\u2090-\u209C\u2C7C-\u2C7D\uA69C-\uA69D\uA770\uA7F8-\uA7F9\uAB5C-\uAB5F\$][\p{Lu}\p{Lt}\p{Nl}\p{Lo}\p{Lm}\$\p{Ll}_\u00AA\u00BB\u02B0-\u02B8\u02C0-\u02C1\u02E0-\u02E4\u037A\u1D78\u1D9B-\u1DBF\u2071\u207F\u2090-\u209C\u2C7C-\u2C7D\uA69C-\uA69D\uA770\uA7F8-\uA7F9\uAB5C-\uAB5F0-9\$_\p{Ll}]*('_'[#x2D-!#x23%&*+\/\:<=>?@\u005e\u007c~\p{Sm}\p{So}]+)?
+
+_interpolation_identifier ::=
+	 [\p{Lu}\p{Lt}\p{Nl}\p{Lo}\p{Lm}\p{Ll}_\u00AA\u00BB\u02B0-\u02B8\u02C0-\u02C1\u02E0-\u02E4\u037A\u1D78\u1D9B-\u1DBF\u2071\u207F\u2090-\u209C\u2C7C-\u2C7D\uA69C-\uA69D\uA770\uA7F8-\uA7F9\uAB5C-\uAB5F][\p{Lu}\p{Lt}\p{Nl}\p{Lo}\p{Lm}\p{Ll}_\u00AA\u00BB\u02B0-\u02B8\u02C0-\u02C1\u02E0-\u02E4\u037A\u1D78\u1D9B-\u1DBF\u2071\u207F\u2090-\u209C\u2C7C-\u2C7D\uA69C-\uA69D\uA770\uA7F8-\uA7F9\uAB5C-\uAB5F0-9_\p{Ll}]*
+
+_backquoted_id ::=
+	 '`'[^#x0A`]+'`'
+
+_identifier ::=
+	 identifier
+	| operator_identifier
+
+identifiers ::=
+	 identifier ',' identifier ( ',' identifier )*
+
+wildcard ::=
+	 '_'
+
+operator_identifier ::=
+	 ( [#x2D-!#x23%&*+\/\:<=>?@\u005e\u007c~\p{Sm}\p{So}] | [#x2D-!#x23%&*+\:<=>?@\u005e\u007c~\p{Sm}\p{So}] [#x2D-!#x23%&*+\/\:<=>?@\u005e\u007c~\p{Sm}\p{So}]+ | [#x2D-!#x23%&*+\/\:<=>?@\u005e\u007c~\p{Sm}\p{So}] [#x2D-!#x23%&+\:<=>?@\u005e\u007c~\p{Sm}\p{So}] [#x2D-!#x23%&*+\/\:<=>?@\u005e\u007c~\p{Sm}\p{So}]* )
+
+_non_null_literal ::=
+	 integer_literal
+	| floating_point_literal
+	| boolean_literal
+	| character_literal
+	| string
+
+literal_type ::=
+	 _non_null_literal
+
+literal ::=
+	 _non_null_literal
+	| null_literal
+
+integer_literal ::=
+	 ( [-]? ( [0-9]('_'?[0-9])* | '0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])* ) [lL]? )
+
+floating_point_literal ::=
+	 ( [-]? ( [0-9]+'.'[0-9]+ [eE][+-]?[0-9]+? [dfDF]? | '.'[0-9]+ [eE][+-]?[0-9]+? [dfDF]? | [0-9]+ [eE][+-]?[0-9]+ [dfDF]? | [0-9]+ [eE][+-]?[0-9]+? [dfDF] ) )
+
+boolean_literal ::=
+	 'true'
+	| 'false'
+
+character_literal ::=
+	 ( "'"  ( '\\'  ( [^xu] | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F]+'}' | 'x'[0-9a-fA-F]'{2}' ) | [^\'#x0A] )? "'"  )
+
+interpolated_string_expression ::=
+	 identifier interpolated_string
+
+_interpolated_string_start ::=
+	 '"' 
+
+_interpolated_multiline_string_start ::=
+	 '"""'
+
+_dollar_escape ::=
+	 '$' ( '$' | '"'  )
+
+_aliased_interpolation_identifier ::=
+	 _interpolation_identifier
+
+interpolation ::=
+	 '$' ( _aliased_interpolation_identifier | block )
+
+interpolated_string ::=
+	 _interpolated_string_start ( _interpolated_string_middle ( _dollar_escape | interpolation ) )* _interpolated_string_end
+	| _interpolated_multiline_string_start ( _interpolated_multiline_string_middle ( _dollar_escape | interpolation ) )* _interpolated_multiline_string_end
+
+string ::=
+	 _simple_string
+	| _simple_multiline_string
+
+_semicolon ::=
+	 ';'
+	| _automatic_semicolon
+
+null_literal ::=
+	 'null'
+
+unit ::=
+	 '(' ')'
+
+return_expression ::=
+	 'return' expression?
+
+throw_expression ::=
+	 'throw' expression
+
+while_expression ::=
+	 'while' parenthesized_expression expression | 'while' ( _indentable_expression 'do' ) _indentable_expression
+
+do_while_expression ::=
+	 'do' expression 'while' parenthesized_expression
+
+for_expression ::=
+	 'for' ( '(' enumerators ')' | '{' enumerators '}' ) ( expression | 'yield' _indentable_expression )
+	| 'for' enumerators ( 'do' _indentable_expression | 'yield' _indentable_expression )
+
+enumerators ::=
+	 enumerator ( _semicolon enumerator )* _automatic_semicolon?
+	| _indent enumerator ( _semicolon enumerator )* _automatic_semicolon? _outdent
+
+enumerator ::=
+	 'case'? _pattern ( '<-' | '=' ) expression guard?
+	| guard+
+
+_shebang ::=
+	 ( '#!' '.'* )
+
+comment ::=
+	 '//' ( using_directive | _comment_text )
+
+_comment_text ::=
+	 '.'*
+
+using_directive ::=
+	 '>' 'using' using_directive_key using_directive_value
+
+using_directive_key ::=
+	 [^ #x09#x0A#x0B#x0C#x0D]+
+
+using_directive_value ::=
+	 '.'*
+
+block_comment ::=
+	 '/*' ( '.' | '//' )* '*/'
 

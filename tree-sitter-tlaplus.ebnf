@@ -1,0 +1,1275 @@
+//
+// From tree-sitter-tlaplus/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 leading_extramodular_text? module trailing_extramodular_text?+
+	| extends? _unit*
+
+comment ::=
+	 '\\'*'.'*
+
+block_comment ::=
+	 '(*' ( pcal_algorithm | block_comment_text )* '*)'
+
+block_comment_text ::=
+	 ( [^*()]|[^*][)]|[(][^(*]|[*][)][ #x09]*('\r\n'|'\n')?[ #x09]*[(][*] | '\'* | '\'( | '\') )+
+
+module ::=
+	 single_line 'MODULE' identifier single_line extends? _unit* double_line
+
+single_line ::=
+	 '----' '-'*
+
+double_line ::=
+	 '====' '='*
+
+def_eq ::=
+	 '=='
+	| '≜'
+
+set_in ::=
+	 '\in'
+	| '∈'
+
+gets ::=
+	 '<-'
+	| '⟵'
+	| '←'
+
+forall ::=
+	 '\A'
+	| '\forall'
+	| '∀'
+
+exists ::=
+	 '\E'
+	| '\exists'
+	| '∃'
+
+temporal_forall ::=
+	 '\AA'
+
+temporal_exists ::=
+	 '\EE'
+
+all_map_to ::=
+	 '|->'
+	| '⟼'
+	| '↦'
+
+maps_to ::=
+	 '->'
+	| '⟶'
+	| '→'
+
+langle_bracket ::=
+	 '<<'
+	| '〈'
+	| '⟨'
+
+rangle_bracket ::=
+	 '>>'
+	| '〉'
+	| '⟩'
+
+rangle_bracket_sub ::=
+	 '>>_'
+	| '〉_'
+	| '⟩_'
+
+case_box ::=
+	 '[]'
+	| '□'
+
+case_arrow ::=
+	 '->'
+	| '⟶'
+	| '→'
+
+colon ::=
+	 ':'
+
+address ::=
+	 '@'
+
+label_as ::=
+	 '::'
+	| '∷'
+
+placeholder ::=
+	 '_'
+
+bullet_conj ::=
+	 '/\'
+	| '∧'
+
+bullet_disj ::=
+	 '\/'
+	| '∨'
+
+keyword ::=
+	 'ASSUME'
+	| 'ELSE'
+	| 'LOCAL'
+	| 'UNION'
+	| 'ASSUMPTION'
+	| 'ENABLED'
+	| 'MODULE'
+	| 'VARIABLE'
+	| 'AXIOM'
+	| 'EXCEPT'
+	| 'OTHER'
+	| 'VARIABLES'
+	| 'CASE'
+	| 'EXTENDS'
+	| 'SF_'
+	| 'WF_'
+	| 'CHOOSE'
+	| 'IF'
+	| 'SUBSET'
+	| 'WITH'
+	| 'CONSTANT'
+	| 'IN'
+	| 'THEN'
+	| 'CONSTANTS'
+	| 'INSTANCE'
+	| 'THEOREM'
+	| 'COROLLARY'
+	| 'DOMAIN'
+	| 'LET'
+	| 'UNCHANGED'
+	| 'BY'
+	| 'HAVE'
+	| 'QED'
+	| 'TAKE'
+	| 'DEF'
+	| 'HIDE'
+	| 'RECURSIVE'
+	| 'USE'
+	| 'DEFINE'
+	| 'PROOF'
+	| 'WITNESS'
+	| 'PICK'
+	| 'DEFS'
+	| 'PROVE'
+	| 'SUFFICES'
+	| 'NEW'
+	| 'LAMBDA'
+	| 'STATE'
+	| 'ACTION'
+	| 'TEMPORAL'
+	| 'OBVIOUS'
+	| 'OMITTED'
+	| 'LEMMA'
+	| 'PROPOSITION'
+	| 'ONLY'
+
+identifier ::=
+	 [0-9_]*[A-Za-z][A-Za-z0-9_]*
+
+extends ::=
+	 'EXTENDS' identifier ( ',' identifier )*
+
+_unit ::=
+	 variable_declaration
+	| constant_declaration
+	| recursive_declaration
+	| use_or_hide
+	| local_definition
+	| _definition
+	| assumption
+	| theorem
+	| module
+	| single_line
+
+local_definition ::=
+	 'LOCAL' _definition
+
+_definition ::=
+	 operator_definition
+	| function_definition
+	| instance
+	| module_definition
+
+variable_declaration ::=
+	 ( 'VARIABLE' | 'VARIABLES' ) identifier ( ',' identifier )*
+
+constant_declaration ::=
+	 ( 'CONSTANT' | 'CONSTANTS' ) _id_or_op_declaration ( ',' _id_or_op_declaration )*
+
+recursive_declaration ::=
+	 'RECURSIVE' _id_or_op_declaration ( ',' _id_or_op_declaration )*
+
+operator_declaration ::=
+	 identifier '(' placeholder ( ',' placeholder )* ')'
+	| prefix_op_symbol placeholder
+	| placeholder infix_op_symbol placeholder
+	| placeholder postfix_op_symbol
+
+_id_or_op_declaration ::=
+	 identifier
+	| operator_declaration
+
+operator_definition ::=
+	 ( identifier ( '(' _id_or_op_declaration ( ',' _id_or_op_declaration )* ')' )? | prefix_op_symbol identifier | identifier infix_op_symbol identifier | identifier postfix_op_symbol ) def_eq _expr
+
+function_definition ::=
+	 identifier '[' quantifier_bound ( ',' quantifier_bound )* ']' def_eq _expr
+
+quantifier_bound ::=
+	 ( identifier ( ',' identifier )* | tuple_of_identifiers ) set_in _expr
+
+tuple_of_identifiers ::=
+	 langle_bracket identifier ( ',' identifier )* rangle_bracket
+
+instance ::=
+	 'INSTANCE' identifier ( 'WITH' substitution ( ',' substitution )* )?
+
+substitution ::=
+	 ( identifier | prefix_op_symbol | infix_op_symbol | postfix_op_symbol ) gets _op_or_expr
+
+_op_or_expr ::=
+	 _op
+	| _expr
+
+_op ::=
+	 prefix_op_symbol
+	| infix_op_symbol
+	| postfix_op_symbol
+	| lambda
+
+subexpr_prefix ::=
+	 ( subexpr_component | proof_step_ref ) '!' ( ( subexpr_component | subexpr_tree_nav ) '!' )*
+
+subexpr_component ::=
+	 identifier
+	| bound_op
+	| bound_nonfix_op
+	| prefix_op_symbol
+	| infix_op_symbol
+	| postfix_op_symbol
+
+bound_op ::=
+	 identifier '(' _op_or_expr ( ',' _op_or_expr )* ')'
+
+bound_nonfix_op ::=
+	 prefix_op_symbol '(' _expr ')'
+	| infix_op_symbol '(' _expr ',' _expr ')'
+	| postfix_op_symbol '(' _expr ')'
+
+subexpr_tree_nav ::=
+	 langle_bracket
+	| rangle_bracket
+	| child_id
+	| colon
+	| address
+	| operator_args
+
+child_id ::=
+	 [0-9]+
+
+operator_args ::=
+	 '(' _op_or_expr ( ',' _op_or_expr )* ')'
+
+lambda ::=
+	 'LAMBDA' identifier ( ',' identifier )* ':' _expr
+
+module_definition ::=
+	 identifier ( '(' _id_or_op_declaration ( ',' _id_or_op_declaration )* ')' )? def_eq instance
+
+_expr ::=
+	 _number
+	| string
+	| boolean
+	| _primitive_value_set
+	| parentheses
+	| label
+	| subexpression
+	| proof_step_ref
+	| identifier
+	| bound_op
+	| bound_nonfix_op
+	| prefixed_op
+	| bound_prefix_op
+	| bound_infix_op
+	| bound_postfix_op
+	| bounded_quantification
+	| unbounded_quantification
+	| choose
+	| finite_set_literal
+	| set_filter
+	| set_map
+	| function_evaluation
+	| function_literal
+	| set_of_functions
+	| record_literal
+	| set_of_records
+	| record_value
+	| except
+	| prev_func_val
+	| tuple_literal
+	| step_expr_or_stutter
+	| step_expr_no_stutter
+	| fairness
+	| if_then_else
+	| case
+	| let_in
+	| conj_list
+	| disj_list
+
+_subscript_expr ::=
+	 identifier
+	| bound_op
+	| bound_nonfix_op
+	| prefixed_op
+	| parentheses
+	| finite_set_literal
+	| set_filter
+	| set_map
+	| function_literal
+	| set_of_functions
+	| record_literal
+	| set_of_records
+	| except
+	| tuple_literal
+	| step_expr_or_stutter
+	| step_expr_no_stutter
+
+prefixed_op ::=
+	 subexpr_prefix ( identifier | bound_op | bound_nonfix_op )
+
+_number ::=
+	 nat_number
+	| real_number
+	| binary_number
+	| octal_number
+	| hex_number
+
+nat_number ::=
+	 [0-9]+
+
+real_number ::=
+	 [0-9]*'.'[0-9]+
+
+binary_number ::=
+	 ( '\b' | '\B' ) [0-1]+
+
+octal_number ::=
+	 ( '\o' | '\O' ) [0-7]+
+
+hex_number ::=
+	 ( '\h' | '\H' ) [0-9a-fA-F]+
+
+string ::=
+	 '"'  ( [^"#x0A] | escape_char )* '"' 
+
+escape_char ::=
+	 '\\'  '.'
+
+boolean ::=
+	 'TRUE'
+	| 'FALSE'
+
+_primitive_value_set ::=
+	 string_set
+	| boolean_set
+	| nat_number_set
+	| int_number_set
+	| real_number_set
+
+string_set ::=
+	 'STRING'
+
+boolean_set ::=
+	 'BOOLEAN'
+
+nat_number_set ::=
+	 'Nat'
+	| 'ℕ'
+
+int_number_set ::=
+	 'Int'
+	| 'ℤ'
+
+real_number_set ::=
+	 'Real'
+	| 'ℝ'
+
+label ::=
+	 ( identifier ( '(' identifier ( ',' identifier )* ')' )? ) label_as _expr
+
+subexpression ::=
+	 subexpr_prefix subexpr_tree_nav
+
+parentheses ::=
+	 '(' _expr ')'
+
+bounded_quantification ::=
+	 ( forall | exists ) ( quantifier_bound ( ',' quantifier_bound )* ) ':' _expr
+
+unbounded_quantification ::=
+	 ( forall | exists | temporal_forall | temporal_exists ) ( identifier ( ',' identifier )* ) ':' _expr
+
+choose ::=
+	 'CHOOSE' ( identifier | tuple_of_identifiers ) ( set_in _expr )? ':' _expr
+
+finite_set_literal ::=
+	 '{' ( _expr ( ',' _expr )* )? '}'
+
+set_filter ::=
+	 '{' quantifier_bound ':' _expr '}'
+
+set_map ::=
+	 '{' _expr ':' ( quantifier_bound ( ',' quantifier_bound )* ) '}'
+
+function_evaluation ::=
+	 _expr '[' _expr ( ',' _expr )* ']'
+
+function_literal ::=
+	 '[' quantifier_bound ( ',' quantifier_bound )* all_map_to _expr ']'
+
+set_of_functions ::=
+	 '[' _expr maps_to _expr ']'
+
+record_literal ::=
+	 '[' identifier all_map_to _expr ( ',' identifier all_map_to _expr )* ']'
+
+set_of_records ::=
+	 '[' identifier ':' _expr ( ',' identifier ':' _expr )* ']'
+
+record_value ::=
+	 _expr '.' identifier
+
+except ::=
+	 '[' _expr 'EXCEPT' except_update ( ',' except_update )* ']'
+
+except_update ::=
+	 ( '!' except_update_specifier ) '=' _expr
+
+except_update_specifier ::=
+	 ( except_update_record_field | except_update_fn_appl )+
+
+except_update_record_field ::=
+	 '.' identifier
+
+except_update_fn_appl ::=
+	 '[' _expr ( ',' _expr )* ']'
+
+prev_func_val ::=
+	 '@'
+
+tuple_literal ::=
+	 langle_bracket ( _expr ( ',' _expr )* )? rangle_bracket
+
+step_expr_or_stutter ::=
+	 '[' _expr ']_' _subscript_expr
+
+step_expr_no_stutter ::=
+	 langle_bracket _expr rangle_bracket_sub _subscript_expr
+
+fairness ::=
+	 ( 'WF_' | 'SF_' ) _subscript_expr '(' _expr ')'
+
+if_then_else ::=
+	 'IF' _expr 'THEN' _expr 'ELSE' _expr
+
+case ::=
+	 'CASE' case_arm ( case_box case_arm )* ( case_box other_arm )?
+
+case_arm ::=
+	 _expr case_arrow _expr
+
+other_arm ::=
+	 'OTHER' case_arrow _expr
+
+let_in ::=
+	 'LET' ( operator_definition | function_definition | module_definition | recursive_declaration )+ 'IN' _expr
+
+conj_list ::=
+	 _indent conj_item+ _dedent
+
+conj_item ::=
+	 _bullet bullet_conj _expr
+
+disj_list ::=
+	 _indent disj_item+ _dedent
+
+disj_item ::=
+	 _bullet bullet_disj _expr
+
+lnot ::=
+	 '\lnot'
+	| '\neg'
+	| '~'
+	| '¬'
+
+union ::=
+	 'UNION'
+
+powerset ::=
+	 'SUBSET'
+
+domain ::=
+	 'DOMAIN'
+
+negative ::=
+	 '-'
+
+negative_dot ::=
+	 '-.'
+
+enabled ::=
+	 'ENABLED'
+
+unchanged ::=
+	 'UNCHANGED'
+
+always ::=
+	 '[]'
+	| '□'
+
+eventually ::=
+	 '<>'
+	| '⋄'
+	| '◇'
+
+prefix_op_symbol ::=
+	 lnot
+	| union
+	| powerset
+	| domain
+	| enabled
+	| unchanged
+	| always
+	| eventually
+	| negative_dot
+
+bound_prefix_op ::=
+	 lnot _expr
+	| ( union | powerset ) _expr
+	| domain _expr
+	| negative _expr
+	| ( enabled | unchanged | always | eventually ) _expr
+
+implies ::=
+	 '=>'
+	| '⟹'
+	| '⇒'
+
+plus_arrow ::=
+	 '-+->'
+	| '⇸'
+	| '⥅'
+
+equiv ::=
+	 '\equiv'
+	| '≡'
+
+iff ::=
+	 '<=>'
+	| '⟺'
+	| '⇔'
+
+leads_to ::=
+	 '~>'
+	| '⇝'
+	| '↝'
+
+land ::=
+	 '/\'
+	| '\land'
+	| '∧'
+
+lor ::=
+	 '\/'
+	| '\lor'
+	| '∨'
+
+assign ::=
+	 ':='
+	| '≔'
+
+bnf_rule ::=
+	 '::='
+	| '⩴'
+
+eq ::=
+	 '='
+
+neq ::=
+	 '/='
+	| '#'
+	| '≠'
+
+lt ::=
+	 '<'
+
+gt ::=
+	 '>'
+
+leq ::=
+	 '<='
+	| '=<'
+	| '\leq'
+	| '≤'
+
+geq ::=
+	 '>='
+	| '\geq'
+	| '≥'
+
+approx ::=
+	 '\approx'
+	| '≈'
+
+rs_ttile ::=
+	 '|-'
+	| '⊢'
+
+rd_ttile ::=
+	 '|='
+	| '⊨'
+
+ls_ttile ::=
+	 '-|'
+	| '⊣'
+
+ld_ttile ::=
+	 '=|'
+	| '⫤'
+
+asymp ::=
+	 '\asymp'
+	| '≍'
+
+cong ::=
+	 '\cong'
+	| '≅'
+
+doteq ::=
+	 '\doteq'
+	| '≐'
+
+gg ::=
+	 '\gg'
+	| '≫'
+
+ll ::=
+	 '\ll'
+	| '≪'
+
+in ::=
+	 '\in'
+	| '∈'
+
+notin ::=
+	 '\notin'
+	| '∉'
+
+prec ::=
+	 '\prec'
+	| '≺'
+
+succ ::=
+	 '\succ'
+	| '≻'
+
+preceq ::=
+	 '\preceq'
+	| '⪯'
+
+succeq ::=
+	 '\succeq'
+	| '⪰'
+
+propto ::=
+	 '\propto'
+	| '∝'
+
+sim ::=
+	 '\sim'
+	| '∼'
+
+simeq ::=
+	 '\simeq'
+	| '≃'
+
+sqsubset ::=
+	 '\sqsubset'
+	| '⊏'
+
+sqsupset ::=
+	 '\sqsupset'
+	| '⊐'
+
+sqsubseteq ::=
+	 '\sqsubseteq'
+	| '⊑'
+
+sqsupseteq ::=
+	 '\sqsupseteq'
+	| '⊒'
+
+subset ::=
+	 '\subset'
+	| '⊂'
+
+supset ::=
+	 '\supset'
+	| '⊃'
+
+subseteq ::=
+	 '\subseteq'
+	| '⊆'
+
+supseteq ::=
+	 '\supseteq'
+	| '⊇'
+
+compose ::=
+	 '@@'
+
+map_to ::=
+	 ':>'
+
+map_from ::=
+	 '<:'
+
+setminus ::=
+	 '\\' 
+
+cap ::=
+	 '\cap'
+	| '\intersect'
+	| '∩'
+
+cup ::=
+	 '\cup'
+	| '\union'
+	| '∪'
+
+dots_2 ::=
+	 '..'
+	| '‥'
+
+dots_3 ::=
+	 '...'
+	| '…'
+
+plus ::=
+	 '+'
+
+plusplus ::=
+	 '++'
+
+oplus ::=
+	 '\oplus'
+	| '(+)'
+	| '⊕'
+
+ominus ::=
+	 '\ominus'
+	| '(-)'
+	| '⊖'
+
+mod ::=
+	 '%'
+
+modmod ::=
+	 '%%'
+
+vert ::=
+	 '|'
+
+vertvert ::=
+	 '||'
+	| '‖'
+
+minus ::=
+	 '-'
+
+minusminus ::=
+	 '--'
+
+amp ::=
+	 '&'
+
+ampamp ::=
+	 '&&'
+
+odot ::=
+	 '\odot'
+	| '(.)'
+	| '⊙'
+
+oslash ::=
+	 '\oslash'
+	| '(/)'
+	| '⊘'
+
+otimes ::=
+	 '\otimes'
+	| '(\X)'
+	| '⊗'
+
+mul ::=
+	 '*'
+
+mulmul ::=
+	 '**'
+
+slash ::=
+	 '/'
+
+slashslash ::=
+	 '//'
+
+bigcirc ::=
+	 '\bigcirc'
+	| '◯'
+
+bullet ::=
+	 '\bullet'
+	| '●'
+
+div ::=
+	 '\div'
+	| '÷'
+
+circ ::=
+	 '\o'
+	| '\circ'
+	| '∘'
+
+star ::=
+	 '\star'
+	| '⋆'
+
+excl ::=
+	 '!!'
+	| '‼'
+
+hashhash ::=
+	 '##'
+
+dol ::=
+	 '$'
+
+doldol ::=
+	 '$$'
+
+qq ::=
+	 '??'
+	| '⁇'
+
+sqcap ::=
+	 '\sqcap'
+	| '⊓'
+
+sqcup ::=
+	 '\sqcup'
+	| '⊔'
+
+uplus ::=
+	 '\uplus'
+	| '⊎'
+
+times ::=
+	 '\X'
+	| '\times'
+	| '×'
+
+wr ::=
+	 '\wr'
+	| '≀'
+
+cdot ::=
+	 '\cdot'
+	| '⋅'
+
+pow ::=
+	 '^'
+
+powpow ::=
+	 '^^'
+
+infix_op_symbol ::=
+	 implies
+	| plus_arrow
+	| equiv
+	| iff
+	| leads_to
+	| land
+	| lor
+	| assign
+	| bnf_rule
+	| eq
+	| neq
+	| lt
+	| gt
+	| leq
+	| geq
+	| approx
+	| rs_ttile
+	| rd_ttile
+	| ls_ttile
+	| ld_ttile
+	| asymp
+	| cong
+	| doteq
+	| gg
+	| ll
+	| in
+	| notin
+	| prec
+	| succ
+	| preceq
+	| succeq
+	| propto
+	| sim
+	| simeq
+	| sqsubset
+	| sqsupset
+	| sqsubseteq
+	| sqsupseteq
+	| subset
+	| supset
+	| subseteq
+	| supseteq
+	| compose
+	| map_to
+	| setminus
+	| cap
+	| cup
+	| dots_2
+	| dots_3
+	| plus
+	| plusplus
+	| oplus
+	| ominus
+	| mod
+	| modmod
+	| vert
+	| vertvert
+	| minus
+	| minusminus
+	| amp
+	| ampamp
+	| odot
+	| oslash
+	| otimes
+	| mul
+	| mulmul
+	| slash
+	| slashslash
+	| bigcirc
+	| bullet
+	| div
+	| circ
+	| star
+	| excl
+	| hashhash
+	| dol
+	| doldol
+	| qq
+	| sqcap
+	| sqcup
+	| uplus
+	| times
+	| wr
+	| cdot
+	| pow
+	| powpow
+	| map_from
+
+bound_infix_op ::=
+	 _expr implies _expr
+	| _expr ( plus_arrow | equiv | iff | leads_to ) _expr
+	| _expr ( land | lor ) _expr
+	| _expr ( assign | bnf_rule | eq | neq | lt | gt | leq | geq | approx | rs_ttile | rd_ttile | ls_ttile | ld_ttile | asymp | cong | doteq | gg | ll | in | notin | prec | succ | preceq | succeq | propto | sim | simeq | sqsubset | sqsupset | sqsubseteq | sqsupseteq | subset | supset | subseteq | supseteq ) _expr
+	| _expr compose _expr
+	| _expr ( map_to | map_from ) _expr
+	| _expr ( setminus | cap | cup ) _expr
+	| _expr ( dots_2 | dots_3 ) _expr
+	| _expr ( plus | plusplus | oplus ) _expr
+	| _expr ( ominus | mod | modmod | vert | vertvert | minus | minusminus ) _expr
+	| _expr ( amp | ampamp | odot | oslash | otimes | mul | mulmul | slash | slashslash | bigcirc | bullet | div | circ | star | excl | hashhash | dol | doldol | qq | sqcap | sqcup | uplus | times ) _expr
+	| _expr ( wr | cdot | pow | powpow ) _expr
+
+sup_plus ::=
+	 '^+'
+	| '⁺'
+
+asterisk ::=
+	 '^*'
+
+sup_hash ::=
+	 '^#'
+
+prime ::=
+	 "'" 
+
+postfix_op_symbol ::=
+	 sup_plus
+	| asterisk
+	| sup_hash
+	| prime
+
+bound_postfix_op ::=
+	 _expr ( sup_plus | asterisk | sup_hash | prime )
+
+assumption ::=
+	 ( 'ASSUME' | 'ASSUMPTION' | 'AXIOM' ) ( identifier def_eq )? _expr
+
+theorem ::=
+	 ( 'THEOREM' | 'PROPOSITION' | 'LEMMA' | 'COROLLARY' ) ( identifier def_eq )? ( _expr | assume_prove ) _proof?
+
+assume_prove ::=
+	 'ASSUME' ( ( _expr | new | inner_assume_prove ) ( ',' ( _expr | new | inner_assume_prove ) )* ) 'PROVE' _expr
+
+inner_assume_prove ::=
+	 ( identifier label_as )? assume_prove
+
+new ::=
+	 ( 'NEW' | level | 'NEW' level ) ( identifier set_in _expr | _id_or_op_declaration )
+
+level ::=
+	 'CONSTANT'
+	| 'VARIABLE'
+	| 'STATE'
+	| 'ACTION'
+	| 'TEMPORAL'
+
+_proof ::=
+	 terminal_proof
+	| non_terminal_proof
+
+terminal_proof ::=
+	 'PROOF'? ( 'BY' 'ONLY'? use_body | 'OBVIOUS' | 'OMITTED' )
+
+non_terminal_proof ::=
+	 'PROOF'? _begin_proof proof_step* qed_step
+
+proof_step ::=
+	 _begin_proof_step proof_step_id ( definition_proof_step | have_proof_step | witness_proof_step | take_proof_step | suffices_proof_step | case_proof_step | pick_proof_step | use_or_hide | instance )
+
+definition_proof_step ::=
+	 'DEFINE'? ( operator_definition | function_definition | module_definition )+
+
+have_proof_step ::=
+	 'HAVE' _expr
+
+witness_proof_step ::=
+	 'WITNESS' _expr ( ',' _expr )*
+
+take_proof_step ::=
+	 'TAKE' _bound_or_identifier_list
+
+suffices_proof_step ::=
+	 'SUFFICES'? ( _expr | assume_prove ) _proof?
+
+case_proof_step ::=
+	 'CASE' _expr _proof?
+
+pick_proof_step ::=
+	 'PICK' _bound_or_identifier_list ':' _expr _proof?
+
+_bound_or_identifier_list ::=
+	 quantifier_bound ( ',' quantifier_bound )*
+	| identifier ( ',' identifier )*
+
+qed_step ::=
+	 _begin_proof_step proof_step_id 'QED' _proof?
+
+use_or_hide ::=
+	 ( 'USE' | 'HIDE' ) use_body
+
+use_body ::=
+	 use_body_expr
+	| use_body_def
+	| use_body_expr use_body_def
+
+use_body_expr ::=
+	 ( _expr | module_ref ) ( ',' ( _expr | module_ref ) )*
+
+use_body_def ::=
+	 ( 'DEF' | 'DEFS' ) ( _op_or_expr | module_ref ) ( ',' ( _op_or_expr | module_ref ) )*
+
+module_ref ::=
+	 'MODULE' identifier
+
+proof_step_id ::=
+	 '<' [0-9]+|'\'+|'\'* '>' [a-zA-Z_|0-9]* '.'*
+
+proof_step_ref ::=
+	 '<' [0-9]+|'\'* '>' [a-zA-Z_|0-9]+
+
+pcal_algorithm ::=
+	 _pcal_p_algorithm
+	| _pcal_c_algorithm
+
+_pcal_p_algorithm ::=
+	 pcal_algorithm_start identifier pcal_var_decls? pcal_p_definitions? pcal_p_macro* pcal_p_procedure* ( pcal_p_algorithm_body | pcal_p_process+ ) 'end' 'algorithm' _notify_pcal_algorithm_end ';'?
+
+_pcal_c_algorithm ::=
+	 pcal_algorithm_start identifier '{' pcal_var_decls? pcal_c_definitions? pcal_c_macro* pcal_c_procedure* ( pcal_c_algorithm_body | pcal_c_process+ ) '}' _notify_pcal_algorithm_end
+
+pcal_algorithm_start ::=
+	 ( '--algorithm' | fair ) _notify_pcal_algorithm_start
+
+fair ::=
+	 '--fair' 'algorithm'
+
+pcal_p_definitions ::=
+	 'define' _definition+ 'end' 'define' ';'?
+
+pcal_c_definitions ::=
+	 'define' '{' _definition+ '}' ';'?
+
+pcal_p_macro ::=
+	 pcal_macro_decl pcal_p_algorithm_body 'end' 'macro' ';'?
+
+pcal_c_macro ::=
+	 pcal_macro_decl pcal_c_algorithm_body ';'?
+
+pcal_macro_decl ::=
+	 'macro' identifier '(' ( identifier ( ',' identifier )* )? ')'
+
+pcal_p_procedure ::=
+	 pcal_proc_decl pcal_p_algorithm_body 'end' 'procedure' ';'?
+
+pcal_c_procedure ::=
+	 pcal_proc_decl pcal_c_algorithm_body ';'?
+
+pcal_proc_decl ::=
+	 'procedure' identifier '(' ( pcal_proc_var_decl ( ',' pcal_proc_var_decl )* )? ')' pcal_proc_var_decls?
+
+pcal_p_process ::=
+	 ( 'fair' '+'? )? 'process' identifier ( '=' | set_in ) _expr pcal_var_decls? pcal_p_algorithm_body 'end' 'process' ';'?
+
+pcal_c_process ::=
+	 ( 'fair' '+'? )? 'process' '(' identifier ( '=' | set_in ) _expr ')' pcal_var_decls? pcal_c_algorithm_body ';'?
+
+pcal_var_decls ::=
+	 ( 'variable' | 'variables' ) pcal_var_decl ( ( ';' | ',' ) pcal_var_decl )* ';'?
+
+pcal_var_decl ::=
+	 identifier ( ( '=' | set_in ) _expr )?
+
+pcal_proc_var_decls ::=
+	 ( 'variable' | 'variables' ) ( pcal_proc_var_decl ( ';' | ',' ) )+
+
+pcal_proc_var_decl ::=
+	 identifier ( '=' _expr )?
+
+pcal_p_algorithm_body ::=
+	 'begin' _pcal_p_stmts
+
+_pcal_p_stmts ::=
+	 ( _pcal_p_stmt ';' )* _pcal_p_stmt ';'?
+
+pcal_c_algorithm_body ::=
+	 '{' _pcal_c_stmt ( ';' _pcal_c_stmt )* ';'? '}'
+
+_pcal_p_stmt ::=
+	 _pcal_label? _pcal_p_unlabeled_stmt
+
+_pcal_c_stmt ::=
+	 _pcal_label? ( _pcal_c_unlabeled_stmt | pcal_c_algorithm_body )
+
+_pcal_label ::=
+	 ( identifier ':' ) ( '+' | '-' )?
+
+_pcal_p_unlabeled_stmt ::=
+	 pcal_assign
+	| pcal_p_if
+	| pcal_p_while
+	| pcal_p_either
+	| pcal_p_with
+	| pcal_await
+	| pcal_print
+	| pcal_assert
+	| pcal_skip
+	| pcal_return
+	| pcal_goto
+	| pcal_proc_call
+	| pcal_macro_call
+
+_pcal_c_unlabeled_stmt ::=
+	 pcal_assign
+	| pcal_c_if
+	| pcal_c_while
+	| pcal_c_either
+	| pcal_c_with
+	| pcal_await
+	| pcal_print
+	| pcal_assert
+	| pcal_skip
+	| pcal_return
+	| pcal_goto
+	| pcal_proc_call
+	| pcal_macro_call
+
+pcal_assign ::=
+	 pcal_lhs assign _expr ( vertvert pcal_lhs assign _expr )*
+
+pcal_lhs ::=
+	 identifier ( '[' _expr ( ',' _expr )* ']' | '.' identifier )*
+
+pcal_p_if ::=
+	 'if' _expr 'then' _pcal_p_stmts ( 'elsif' _expr 'then' _pcal_p_stmts )* ( 'else' _pcal_p_stmts )? 'end' 'if'
+
+pcal_c_if ::=
+	 'if' '(' _expr ')' _pcal_c_stmt ( 'else' _pcal_c_stmt )?
+
+pcal_p_while ::=
+	 'while' _expr 'do' _pcal_p_stmts 'end' 'while'
+
+pcal_c_while ::=
+	 'while' '(' _expr ')' _pcal_c_stmt
+
+pcal_p_either ::=
+	 'either' _pcal_p_stmts ( 'or' _pcal_p_stmts )+ 'end' 'either'
+
+pcal_c_either ::=
+	 'either' _pcal_c_stmt ( 'or' _pcal_c_stmt )+
+
+pcal_p_with ::=
+	 'with' _pcal_with_vars 'do' _pcal_p_stmts 'end' 'with'
+
+pcal_c_with ::=
+	 'with' '(' _pcal_with_vars ')' _pcal_c_stmt
+
+_pcal_with_vars ::=
+	 identifier ( '=' | set_in ) _expr ( ( ',' | ';' ) identifier ( '=' | set_in ) _expr )* ( ',' | ';' )?
+
+pcal_await ::=
+	 ( 'await' | 'when' ) _expr
+
+pcal_print ::=
+	 'print' _expr
+
+pcal_assert ::=
+	 'assert' _expr
+
+pcal_skip ::=
+	 'skip'
+
+pcal_return ::=
+	 'return'
+
+pcal_goto ::=
+	 'goto' identifier
+
+pcal_proc_call ::=
+	 'call' identifier '(' ( _expr ( ',' _expr )* )? ')'
+
+pcal_macro_call ::=
+	 identifier '(' ( _expr ( ',' _expr )* )? ')'
+

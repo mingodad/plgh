@@ -1,0 +1,751 @@
+//
+// From tree-sitter-sql/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+sql_stmt_list ::=
+	 sql_stmt? ( ';' sql_stmt? )*
+
+ABORT ::=
+	 [aA][bB][oO][rR][tT]
+
+ACTION ::=
+	 [aA][cC][tT][iI][oO][nN]
+
+ADD ::=
+	 [aA][dD][dD]
+
+AFTER ::=
+	 [aA][fF][tT][eE][rR]
+
+ALL ::=
+	 [aA][lL][lL]
+
+ALTER ::=
+	 [aA][lL][tT][eE][rR]
+
+ALWAYS ::=
+	 [aA][lL][wW][aA][yY][sS]
+
+ANALYZE ::=
+	 [aA][nN][aA][lL][yY][zZ][eE]
+
+AND ::=
+	 [aA][nN][dD]
+
+AS ::=
+	 [aA][sS]
+
+ASC ::=
+	 [aA][sS][cC]
+
+ATTACH ::=
+	 [aA][tT][tT][aA][cC][hH]
+
+AUTOINCREMENT ::=
+	 [aA][uU][tT][oO][iI][nN][cC][rR][eE][mM][eE][nN][tT]
+
+BEFORE ::=
+	 [bB][eE][fF][oO][rR][eE]
+
+BEGIN ::=
+	 [bB][eE][gG][iI][nN]
+
+BETWEEN ::=
+	 [bB][eE][tT][wW][eE][eE][nN]
+
+BY ::=
+	 [bB][yY]
+
+CASCADE ::=
+	 [cC][aA][sS][cC][aA][dD][eE]
+
+CASE ::=
+	 [cC][aA][sS][eE]
+
+CAST ::=
+	 [cC][aA][sS][tT]
+
+CHECK ::=
+	 [cC][hH][eE][cC][kK]
+
+COLLATE ::=
+	 [cC][oO][lL][lL][aA][tT][eE]
+
+COLUMN ::=
+	 [cC][oO][lL][uU][mM][nN]
+
+COMMIT ::=
+	 [cC][oO][mM][mM][iI][tT]
+
+CONFLICT ::=
+	 [cC][oO][nN][fF][lL][iI][cC][tT]
+
+CONSTRAINT ::=
+	 [cC][oO][nN][sS][tT][rR][aA][iI][nN][tT]
+
+CREATE ::=
+	 [cC][rR][eE][aA][tT][eE]
+
+CROSS ::=
+	 [cC][rR][oO][sS][sS]
+
+CURRENT ::=
+	 [cC][uU][rR][rR][eE][nN][tT]
+
+CURRENT_DATE ::=
+	 [cC][uU][rR][rR][eE][nN][tT][__][dD][aA][tT][eE]
+
+CURRENT_TIME ::=
+	 [cC][uU][rR][rR][eE][nN][tT][__][tT][iI][mM][eE]
+
+CURRENT_TIMESTAMP ::=
+	 [cC][uU][rR][rR][eE][nN][tT][__][tT][iI][mM][eE][sS][tT][aA][mM][pP]
+
+DATABASE ::=
+	 [dD][aA][tT][aA][bB][aA][sS][eE]
+
+DEFAULT ::=
+	 [dD][eE][fF][aA][uU][lL][tT]
+
+DEFERRABLE ::=
+	 [dD][eE][fF][eE][rR][rR][aA][bB][lL][eE]
+
+DEFERRED ::=
+	 [dD][eE][fF][eE][rR][rR][eE][dD]
+
+DELETE ::=
+	 [dD][eE][lL][eE][tT][eE]
+
+DESC ::=
+	 [dD][eE][sS][cC]
+
+DETACH ::=
+	 [dD][eE][tT][aA][cC][hH]
+
+DISTINCT ::=
+	 [dD][iI][sS][tT][iI][nN][cC][tT]
+
+DO ::=
+	 [dD][oO]
+
+DROP ::=
+	 [dD][rR][oO][pP]
+
+EACH ::=
+	 [eE][aA][cC][hH]
+
+ELSE ::=
+	 [eE][lL][sS][eE]
+
+END ::=
+	 [eE][nN][dD]
+
+ESCAPE ::=
+	 [eE][sS][cC][aA][pP][eE]
+
+EXCEPT ::=
+	 [eE][xX][cC][eE][pP][tT]
+
+EXCLUDE ::=
+	 [eE][xX][cC][lL][uU][dD][eE]
+
+EXCLUSIVE ::=
+	 [eE][xX][cC][lL][uU][sS][iI][vV][eE]
+
+EXISTS ::=
+	 [eE][xX][iI][sS][tT][sS]
+
+EXPLAIN ::=
+	 [eE][xX][pP][lL][aA][iI][nN]
+
+FAIL ::=
+	 [fF][aA][iI][lL]
+
+FALSE ::=
+	 [fF][aA][lL][sS][eE]
+
+FILTER ::=
+	 [fF][iI][lL][tT][eE][rR]
+
+FIRST ::=
+	 [fF][iI][rR][sS][tT]
+
+FOLLOWING ::=
+	 [fF][oO][lL][lL][oO][wW][iI][nN][gG]
+
+FOR ::=
+	 [fF][oO][rR]
+
+FOREIGN ::=
+	 [fF][oO][rR][eE][iI][gG][nN]
+
+FROM ::=
+	 [fF][rR][oO][mM]
+
+GENERATED ::=
+	 [gG][eE][nN][eE][rR][aA][tT][eE][dD]
+
+GLOB ::=
+	 [gG][lL][oO][bB]
+
+GROUP ::=
+	 [gG][rR][oO][uU][pP]
+
+GROUPS ::=
+	 [gG][rR][oO][uU][pP][sS]
+
+HAVING ::=
+	 [hH][aA][vV][iI][nN][gG]
+
+IF ::=
+	 [iI][fF]
+
+IGNORE ::=
+	 [iI][gG][nN][oO][rR][eE]
+
+IMMEDIATE ::=
+	 [iI][mM][mM][eE][dD][iI][aA][tT][eE]
+
+IN ::=
+	 [iI][nN]
+
+INDEX ::=
+	 [iI][nN][dD][eE][xX]
+
+INDEXED ::=
+	 [iI][nN][dD][eE][xX][eE][dD]
+
+INITIALLY ::=
+	 [iI][nN][iI][tT][iI][aA][lL][lL][yY]
+
+INNER ::=
+	 [iI][nN][nN][eE][rR]
+
+INSERT ::=
+	 [iI][nN][sS][eE][rR][tT]
+
+INSTEAD ::=
+	 [iI][nN][sS][tT][eE][aA][dD]
+
+INTERSECT ::=
+	 [iI][nN][tT][eE][rR][sS][eE][cC][tT]
+
+INTO ::=
+	 [iI][nN][tT][oO]
+
+IS ::=
+	 [iI][sS]
+
+ISNULL ::=
+	 [iI][sS][nN][uU][lL][lL]
+
+JOIN ::=
+	 [jJ][oO][iI][nN]
+
+KEY ::=
+	 [kK][eE][yY]
+
+LAST ::=
+	 [lL][aA][sS][tT]
+
+LEFT ::=
+	 [lL][eE][fF][tT]
+
+LIKE ::=
+	 [lL][iI][kK][eE]
+
+LIMIT ::=
+	 [lL][iI][mM][iI][tT]
+
+MATCH ::=
+	 [mM][aA][tT][cC][hH]
+
+MATERIALIZED ::=
+	 [mM][aA][tT][eE][rR][iI][aA][lL][iI][zZ][eE][dD]
+
+NATURAL ::=
+	 [nN][aA][tT][uU][rR][aA][lL]
+
+NO ::=
+	 [nN][oO]
+
+NOT ::=
+	 [nN][oO][tT]
+
+NOTHING ::=
+	 [nN][oO][tT][hH][iI][nN][gG]
+
+NOTNULL ::=
+	 [nN][oO][tT][nN][uU][lL][lL]
+
+NULL ::=
+	 [nN][uU][lL][lL]
+
+NULLS ::=
+	 [nN][uU][lL][lL][sS]
+
+OF ::=
+	 [oO][fF]
+
+OFFSET ::=
+	 [oO][fF][fF][sS][eE][tT]
+
+ON ::=
+	 [oO][nN]
+
+OR ::=
+	 [oO][rR]
+
+ORDER ::=
+	 [oO][rR][dD][eE][rR]
+
+OTHERS ::=
+	 [oO][tT][hH][eE][rR][sS]
+
+OUTER ::=
+	 [oO][uU][tT][eE][rR]
+
+OVER ::=
+	 [oO][vV][eE][rR]
+
+PARTITION ::=
+	 [pP][aA][rR][tT][iI][tT][iI][oO][nN]
+
+PLAN ::=
+	 [pP][lL][aA][nN]
+
+PRAGMA ::=
+	 [pP][rR][aA][gG][mM][aA]
+
+PRECEDING ::=
+	 [pP][rR][eE][cC][eE][dD][iI][nN][gG]
+
+PRIMARY ::=
+	 [pP][rR][iI][mM][aA][rR][yY]
+
+QUERY ::=
+	 [qQ][uU][eE][rR][yY]
+
+RAISE ::=
+	 [rR][aA][iI][sS][eE]
+
+RANGE ::=
+	 [rR][aA][nN][gG][eE]
+
+RECURSIVE ::=
+	 [rR][eE][cC][uU][rR][sS][iI][vV][eE]
+
+REFERENCES ::=
+	 [rR][eE][fF][eE][rR][eE][nN][cC][eE][sS]
+
+REGEXP ::=
+	 [rR][eE][gG][eE][xX][pP]
+
+REINDEX ::=
+	 [rR][eE][iI][nN][dD][eE][xX]
+
+RELEASE ::=
+	 [rR][eE][lL][eE][aA][sS][eE]
+
+RENAME ::=
+	 [rR][eE][nN][aA][mM][eE]
+
+REPLACE ::=
+	 [rR][eE][pP][lL][aA][cC][eE]
+
+RESTRICT ::=
+	 [rR][eE][sS][tT][rR][iI][cC][tT]
+
+RETURNING ::=
+	 [rR][eE][tT][uU][rR][nN][iI][nN][gG]
+
+ROLLBACK ::=
+	 [rR][oO][lL][lL][bB][aA][cC][kK]
+
+ROW ::=
+	 [rR][oO][wW]
+
+ROWID ::=
+	 [rR][oO][wW][iI][dD]
+
+ROWS ::=
+	 [rR][oO][wW][sS]
+
+SAVEPOINT ::=
+	 [sS][aA][vV][eE][pP][oO][iI][nN][tT]
+
+SELECT ::=
+	 [sS][eE][lL][eE][cC][tT]
+
+SET ::=
+	 [sS][eE][tT]
+
+STORED ::=
+	 [sS][tT][oO][rR][eE][dD]
+
+STRICT ::=
+	 [sS][tT][rR][iI][cC][tT]
+
+TABLE ::=
+	 [tT][aA][bB][lL][eE]
+
+TEMP ::=
+	 [tT][eE][mM][pP]
+
+TEMPORARY ::=
+	 [tT][eE][mM][pP][oO][rR][aA][rR][yY]
+
+THEN ::=
+	 [tT][hH][eE][nN]
+
+TIES ::=
+	 [tT][iI][eE][sS]
+
+TO ::=
+	 [tT][oO]
+
+TRANSACTION ::=
+	 [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN]
+
+TRIGGER ::=
+	 [tT][rR][iI][gG][gG][eE][rR]
+
+TRUE ::=
+	 [tT][rR][uU][eE]
+
+UNBOUNDED ::=
+	 [uU][nN][bB][oO][uU][nN][dD][eE][dD]
+
+UNION ::=
+	 [uU][nN][iI][oO][nN]
+
+UNIQUE ::=
+	 [uU][nN][iI][qQ][uU][eE]
+
+UPDATE ::=
+	 [uU][pP][dD][aA][tT][eE]
+
+USING ::=
+	 [uU][sS][iI][nN][gG]
+
+VACUUM ::=
+	 [vV][aA][cC][uU][uU][mM]
+
+VALUES ::=
+	 [vV][aA][lL][uU][eE][sS]
+
+VIEW ::=
+	 [vV][iI][eE][wW]
+
+VIRTUAL ::=
+	 [vV][iI][rR][tT][uU][aA][lL]
+
+WHEN ::=
+	 [wW][hH][eE][nN]
+
+WHERE ::=
+	 [wW][hH][eE][rR][eE]
+
+WINDOW ::=
+	 [wW][iI][nN][dD][oO][wW]
+
+WITH ::=
+	 [wW][iI][tT][hH]
+
+WITHOUT ::=
+	 [wW][iI][tT][hH][oO][uU][tT]
+
+_whitespace ::=
+	 [ #x09#x0A#x0C#x0D]+
+
+numeric_literal ::=
+	 ( ( '0' | [1-9] [0-9]+? ) ( '.' [0-9]+? )? ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9]+ )? | '.' [0-9]+? ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9]+ )? | ( '0x' | '0X' ) [0-9a-fA-F]+ )
+
+_string ::=
+	 "'"  ("''"|[^'])* "'" 
+
+string_literal ::=
+	 _string
+
+blob_literal ::=
+	 ( "x'" | "X'" ) ("''"|[^'])* "'" 
+
+identifier ::=
+	 [_a-zA-Z\x80-\xFF][$_0-9a-zA-Z\x80-\xFF]*
+	| '"'  ('""'|[^"])* '"' 
+	| '`' ('``'|[^`])* '`'
+	| '[' [^#x5D]* ']'
+
+bind_parameter ::=
+	 '?' [0-9]*
+	| ( '@' | '$' | ':' | '#' ) [$_0-9a-zA-Z\x80-\xFF]+
+
+comment ::=
+	 '--' '.'*
+	| '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/'
+
+sql_stmt ::=
+	 ( EXPLAIN ( QUERY PLAN )? )? ( alter_table_stmt | analyze_stmt | attach_stmt | begin_stmt | commit_stmt | create_index_stmt | create_table_stmt | create_trigger_stmt | create_view_stmt | create_virtual_table_stmt | delete_stmt | detach_stmt | drop_index_stmt | drop_table_stmt | drop_trigger_stmt | drop_view_stmt | insert_stmt | pragma_stmt | reindex_stmt | release_stmt | rollback_stmt | savepoint_stmt | select_stmt | update_stmt | vacuum_stmt )
+
+alter_table_stmt ::=
+	 ALTER TABLE _name2 ( RENAME TO _name | RENAME COLUMN? _name TO _name | ADD COLUMN? column_def | DROP COLUMN? _name )
+
+analyze_stmt ::=
+	 ANALYZE _name2?
+
+attach_stmt ::=
+	 ATTACH DATABASE? _expr AS _name
+
+begin_stmt ::=
+	 BEGIN ( DEFERRED | IMMEDIATE | EXCLUSIVE )? ( TRANSACTION _name? )?
+
+commit_stmt ::=
+	 ( COMMIT | END ) ( TRANSACTION _name? )?
+
+create_index_stmt ::=
+	 CREATE UNIQUE? INDEX ( IF NOT EXISTS )? _name2 ON _name '(' indexed_column ( ',' indexed_column )* ')' where_clause?
+
+create_table_stmt ::=
+	 CREATE ( TEMP | TEMPORARY )? TABLE ( IF NOT EXISTS )? _name2 ( AS select_stmt | '(' column_def ( ',' column_def )* ( ',' table_constraint )* ')' ( ( WITHOUT ROWID | STRICT ) ( ',' ( WITHOUT ROWID | STRICT ) )* )? )
+
+create_trigger_stmt ::=
+	 CREATE ( TEMP | TEMPORARY )? TRIGGER ( IF NOT EXISTS )? _name2 ( BEFORE | AFTER | INSTEAD OF )? ( DELETE | INSERT | UPDATE ( OF _name ( ',' _name )* )? ) ON _name ( FOR EACH ROW ( WHEN _expr )? | WHEN _expr )? BEGIN ( ( update_stmt | insert_stmt | delete_stmt | select_stmt ) ';' )+ END
+
+create_view_stmt ::=
+	 CREATE ( TEMP | TEMPORARY )? VIEW ( IF NOT EXISTS )? _name2 ( '(' _name ( ',' _name )* ')' )? AS select_stmt
+
+create_virtual_table_stmt ::=
+	 CREATE VIRTUAL TABLE ( IF NOT EXISTS )? _name2 USING _name ( '(' column_def ( ',' column_def )* ( ',' table_constraint )* ')' )?
+
+delete_stmt ::=
+	 with_clause? DELETE FROM qualified_table_name where_clause? returning_clause? order_by_clause? limit_clause?
+
+detach_stmt ::=
+	 DETACH DATABASE? _name
+
+drop_index_stmt ::=
+	 DROP INDEX ( IF EXISTS )? _name2
+
+drop_table_stmt ::=
+	 DROP TABLE ( IF EXISTS )? _name2
+
+drop_trigger_stmt ::=
+	 DROP TRIGGER ( IF EXISTS )? _name2
+
+drop_view_stmt ::=
+	 DROP VIEW ( IF EXISTS )? _name2
+
+insert_stmt ::=
+	 with_clause? ( REPLACE | INSERT ( OR ( ABORT | FAIL | IGNORE | REPLACE | ROLLBACK ) )? ) INTO _name2 ( AS _name )? ( '(' _name ( ',' _name )* ')' )? ( VALUES '(' _expr ( ',' _expr )* ')' ( ',' '(' _expr ( ',' _expr )* ')' )* upsert_clause? | select_stmt upsert_clause? | DEFAULT VALUES ) returning_clause?
+
+pragma_stmt ::=
+	 PRAGMA _name2 ( '=' pragma_value | '(' pragma_value ')' )?
+
+reindex_stmt ::=
+	 REINDEX _name2?
+
+release_stmt ::=
+	 RELEASE SAVEPOINT? _name
+
+rollback_stmt ::=
+	 ROLLBACK ( TRANSACTION _name? )? ( TO SAVEPOINT? _name )?
+
+savepoint_stmt ::=
+	 SAVEPOINT _name
+
+select_stmt ::=
+	 with_clause? _select_core ( _compound_operator _select_core )* order_by_clause? limit_clause?
+
+update_stmt ::=
+	 with_clause? UPDATE ( OR ( ABORT | FAIL | IGNORE | REPLACE | ROLLBACK ) )? qualified_table_name SET ( _name | _column_name_list ) '=' _expr ( ',' ( _name | _column_name_list ) '=' _expr )* from_clause? where_clause? returning_clause? order_by_clause? limit_clause?
+
+vacuum_stmt ::=
+	 VACUUM _name? ( INTO filename )?
+
+_name ::=
+	 string_literal
+	| identifier
+
+_name2 ::=
+	 ( _name '.' )? _name
+
+function_name ::=
+	 identifier
+
+collation_name ::=
+	 string_literal
+	| identifier
+
+error_message ::=
+	 _name
+
+pragma_value ::=
+	 signed_number
+	| _name
+
+filename ::=
+	 _expr
+
+_literal_value ::=
+	 numeric_literal
+	| string_literal
+	| blob_literal
+	| NULL
+	| TRUE
+	| FALSE
+	| CURRENT_TIME
+	| CURRENT_DATE
+	| CURRENT_TIMESTAMP
+
+_expr ::=
+	 _literal_value
+	| bind_parameter
+	| _name
+	| _name '.' _name
+	| _name '.' _name '.' _name
+	| '~' _expr
+	| ( '-' | '+' ) _expr
+	| NOT _expr
+	| _expr '||' _expr
+	| _expr '->' _expr
+	| _expr '->>' _expr
+	| _expr ( '*' | '/' | '%' ) _expr
+	| _expr ( '+' | '-' ) _expr
+	| _expr ( '<<' | '>>' | '&' | '|' ) _expr
+	| _expr ( '<' | '<=' | '>' | '>=' ) _expr
+	| _expr ( '=' | '==' | '!=' | '<>' ) _expr
+	| _expr NOT? IN ( '(' ( select_stmt | _expr ( ',' _expr )* )? ')' | _name2 ( '(' ( _expr ( ',' _expr )* )? ')' )? )
+	| _expr AND _expr
+	| _expr OR _expr
+	| function_name '(' ( DISTINCT? _expr ( ',' _expr )* | '*' )? ')' filter_clause? over_clause?
+	| '(' _expr ( ',' _expr )* ')'
+	| CAST '(' _expr AS type_name ')'
+	| _expr COLLATE collation_name
+	| _expr NOT? ( LIKE | GLOB | REGEXP | MATCH ) _expr ( ESCAPE _expr )?
+	| _expr ( ISNULL | NOTNULL | NOT NULL )
+	| _expr IS NOT? ( DISTINCT FROM )? _expr
+	| _expr NOT? BETWEEN _expr AND _expr
+	| '(' select_stmt ')'
+	| EXISTS '(' select_stmt ')'
+	| NOT EXISTS '(' select_stmt ')'
+	| CASE _expr? ( WHEN _expr THEN _expr )+ ( ELSE _expr )? END
+	| raise_function
+
+signed_number ::=
+	 ( '+' | '-' )? numeric_literal
+
+indexed_column ::=
+	 _expr ( ASC | DESC )?
+
+column_def ::=
+	 _name type_name? column_constraint*
+
+type_name ::=
+	 _name+ ( '(' signed_number ')' | '(' signed_number ',' signed_number ')' )?
+
+column_constraint ::=
+	 ( CONSTRAINT _name )? ( PRIMARY KEY ( ASC | DESC )? conflict_clause? AUTOINCREMENT? | NOT? NULL conflict_clause? | UNIQUE conflict_clause? | CHECK '(' _expr ')' | DEFAULT ( '(' _expr ')' | _literal_value | signed_number ) | COLLATE collation_name | foreign_key_clause | ( GENERATED ALWAYS )? AS '(' _expr ')' ( STORED | VIRTUAL )? )
+
+table_constraint ::=
+	 ( CONSTRAINT _name )? ( ( PRIMARY KEY | UNIQUE ) '(' indexed_column ( ',' indexed_column )* ')' conflict_clause? | CHECK '(' _expr ')' | FOREIGN KEY '(' _name ( ',' _name )* ')' foreign_key_clause )
+
+where_clause ::=
+	 WHERE _expr
+
+returning_clause ::=
+	 RETURNING _result_column ( ',' _result_column )*
+
+order_by_clause ::=
+	 ORDER BY ordering_term ( ',' ordering_term )*
+
+limit_clause ::=
+	 LIMIT _expr ( OFFSET _expr | ',' _expr )?
+
+group_by_clause ::=
+	 GROUP BY _expr ( ',' _expr )* ( HAVING _expr )?
+
+window_clause ::=
+	 WINDOW _name AS window_defn ( ',' _name AS window_defn )*
+
+window_defn ::=
+	 '(' _name? ( PARTITION BY _expr ( ',' _expr )* )? ( ORDER BY ordering_term ( ',' ordering_term )* )? frame_spec? ')'
+
+_select_core ::=
+	 SELECT ( DISTINCT | ALL )? _result_column ( ',' _result_column )* from_clause? where_clause? group_by_clause? window_clause?
+	| VALUES '(' _expr ( ',' _expr )* ')' ( ',' '(' _expr ( ',' _expr )* ')' )*
+
+_compound_operator ::=
+	 UNION
+	| UNION ALL
+	| INTERSECT
+	| EXCEPT
+
+_result_column ::=
+	 _name '.' '*'
+	| '*'
+	| _expr ( AS? _name )?
+
+with_clause ::=
+	 WITH RECURSIVE? common_table_expression ( ',' common_table_expression )*
+
+common_table_expression ::=
+	 _name ( '(' _name ( ',' _name )* ')' )? AS ( NOT? MATERIALIZED )? '(' select_stmt ')'
+
+conflict_clause ::=
+	 ON CONFLICT ( ROLLBACK | ABORT | FAIL | IGNORE | REPLACE )
+
+foreign_key_clause ::=
+	 REFERENCES _name ( '(' _name ( ',' _name )* ')' )? ( ON ( DELETE | UPDATE ) ( SET NULL | SET DEFAULT | CASCADE | RESTRICT | NO ACTION ) | MATCH _name )* ( NOT? DEFERRABLE ( INITIALLY DEFERRED | INITIALLY IMMEDIATE )? )?
+
+filter_clause ::=
+	 FILTER '(' WHERE _expr ')'
+
+over_clause ::=
+	 OVER ( _name | '(' _name? ( PARTITION BY _expr ( ',' _expr )* )? ( ORDER BY ordering_term ( ',' ordering_term )* )? frame_spec? ')' )
+
+raise_function ::=
+	 RAISE '(' ( IGNORE | ( ROLLBACK | ABORT | FAIL ) ',' error_message ) ')'
+
+ordering_term ::=
+	 _expr ( ASC | DESC )? ( NULLS ( FIRST | LAST ) )?
+
+frame_spec ::=
+	 ( RANGE | ROWS | GROUPS ) ( BETWEEN ( UNBOUNDED PRECEDING | _expr PRECEDING | CURRENT ROW | _expr FOLLOWING ) AND ( _expr PRECEDING | CURRENT ROW | _expr FOLLOWING | UNBOUNDED FOLLOWING ) | UNBOUNDED PRECEDING | _expr PRECEDING | CURRENT ROW ) ( EXCLUDE ( NOT OTHERS | CURRENT ROW | GROUP | TIES ) )?
+
+_column_name_list ::=
+	 '(' _name ( ',' _name )* ')'
+
+qualified_table_name ::=
+	 _name2 ( AS _name )? ( INDEXED BY _name | NOT INDEXED )?
+
+from_clause ::=
+	 FROM _join_clause
+
+_join_clause ::=
+	 table_or_subquery ( join_operator table_or_subquery join_constraint? )*
+
+join_operator ::=
+	 ','
+	| NATURAL? ( LEFT OUTER? | INNER | CROSS )? JOIN
+
+join_constraint ::=
+	 ON _expr
+	| USING '(' _name ( ',' _name )* ')'
+
+table_or_subquery ::=
+	 _name2 ( AS? _name )? ( INDEXED BY _name | NOT INDEXED )? join_constraint?
+	| _name2 '(' _expr ( ',' _expr )* ')' ( AS? _name )? join_constraint?
+	| '(' select_stmt ')' ( AS? _name )? join_constraint?
+	| '(' _join_clause ')'
+
+upsert_clause ::=
+	 ON CONFLICT ( '(' indexed_column ( ',' indexed_column )* ')' where_clause? )? DO ( NOTHING | UPDATE SET ( _name | _column_name_list ) '=' _expr ( ',' ( _name | _column_name_list ) '=' _expr )* where_clause? )
+
+_word ::=
+	 [_a-zA-Z\x80-\xFF$@#x23:?][$_0-9a-zA-Z\x80-\xFF]*
+

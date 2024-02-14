@@ -1,107 +1,185 @@
-/*
-Grammar originally from https://github.com/jrsconfitto/tree-sitter-powershell
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-powershell/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-script ::=  ( ( script_block )?  ( signature_block )?  )
+script ::=
+	 script_block? signature_block?
 
-script_block ::=  ( ( param_block )?  statement_list )
+script_block ::=
+	 param_block? statement_list
 
-param_block ::=  ( [pP][aA][rR][aA][mM] parameter_list )
+param_block ::=
+	 [pP][aA][rR][aA][mM] parameter_list
 
-parameter_list ::=  ( '('  ( ( parameter_declaration (  ( ','  parameter_declaration )  )*  )  )?  ')'  )
+parameter_list ::=
+	 '(' ( parameter_declaration ( ',' parameter_declaration )* )? ')'
 
-parameter_declaration ::=  ( (  attribute )*  user_variable )
+parameter_declaration ::=
+	 attribute* user_variable
 
-attribute ::=  ( '['  identifier ( attribute_arguments )?  ']'  )
+attribute ::=
+	 '[' identifier attribute_arguments? ']'
 
-array_declaration ::=  ( '['  ( (  ','  )*  )?  ']'  )
+array_declaration ::=
+	 '[' ','*? ']'
 
-attribute_arguments ::=  ( '('  ( ( attribute_argument (  ( ','  attribute_argument )  )*  )  )?  ')'  )
+attribute_arguments ::=
+	 '(' ( attribute_argument ( ',' attribute_argument )* )? ')'
 
-attribute_argument ::=  ( identifier ( ( '='  ( string |  identifier |  number )  )  )?  )
+attribute_argument ::=
+	 identifier ( '=' ( string | identifier | number ) )?
 
-statement_block ::=  ( '{'  ( statement_list )?  '}'  )
+statement_block ::=
+	 '{' statement_list? '}'
 
-statement_list ::=  ( ( statement ( statement_terminator )?  )  )+
+statement_list ::=
+	 ( statement statement_terminator? )+
 
-statement_terminator ::=  ';'
+statement_terminator ::=
+	 ';'
 
-statement ::=  ( function_definition |  if |  while |  do |  for |  foreach |  try |  trap |  data |  switch |  flow_control_statement |  labeled_statement |  user_variable |  boolean_value |  number |  string |  expandable_here_string )
+statement ::=
+	 function_definition
+	| if
+	| while
+	| do
+	| for
+	| foreach
+	| try
+	| trap
+	| data
+	| switch
+	| flow_control_statement
+	| labeled_statement
+	| user_variable
+	| boolean_value
+	| number
+	| string
+	| expandable_here_string
 
-pipeline ::=  ( boolean_value |  user_variable )
+pipeline ::=
+	 boolean_value
+	| user_variable
 
-function_definition ::=  ( ( [fF][uU][nN][cC][tT][iI][oO][nN] |  [fF][iI][lL][tT][eE][rR] |  [wW][oO][rR][kK][fF][lL][oO][wW] )  identifier ( parameter_list )?  '{'  script_block '}'  )
+function_definition ::=
+	 ( [fF][uU][nN][cC][tT][iI][oO][nN] | [fF][iI][lL][tT][eE][rR] | [wW][oO][rR][kK][fF][lL][oO][wW] ) identifier parameter_list? '{' script_block '}'
 
-if ::=  ( [iI][fF] '('  boolean_value ')'  statement_block (  elseif )*  ( else )?  )
+if ::=
+	 [iI][fF] '(' boolean_value ')' statement_block elseif* else?
 
-elseif ::=  ( [eE][lL][sS][eE][iI][fF] statement_block )
+elseif ::=
+	 [eE][lL][sS][eE][iI][fF] statement_block
 
-else ::=  ( [eE][lL][sS][eE] statement_block )
+else ::=
+	 [eE][lL][sS][eE] statement_block
 
-while ::=  ( [wW][hH][iI][lL][eE] '('  boolean_value ')'  statement_block )
+while ::=
+	 [wW][hH][iI][lL][eE] '(' boolean_value ')' statement_block
 
-do ::=  ( [dD][oO] statement_block ( [wW][hH][iI][lL][eE] |  [uU][nN][tT][iI][lL] )  '('  boolean_value ')'  )
+do ::=
+	 [dD][oO] statement_block ( [wW][hH][iI][lL][eE] | [uU][nN][tT][iI][lL] ) '(' boolean_value ')'
 
-for ::=  ( [fF][oO][rR] '('  ( ( pipeline ( statement_terminator )?  )  )?  ( ( pipeline ( statement_terminator )?  )  )?  ( pipeline )?  ')'  statement_block )
+for ::=
+	 [fF][oO][rR] '(' ( pipeline statement_terminator? )? ( pipeline statement_terminator? )? pipeline? ')' statement_block
 
-foreach ::=  ( [fF][oO][rR][eE][aA][cC][hH] ( foreach_parameter )?  '('  user_variable [iI][nN] user_variable ')'  statement_block )
+foreach ::=
+	 [fF][oO][rR][eE][aA][cC][hH] foreach_parameter? '(' user_variable [iI][nN] user_variable ')' statement_block
 
-foreach_parameter ::=  ( '-'  [pP][aA][rR][aA][lL][lL][eE][lL] )
+foreach_parameter ::=
+	 '-' [pP][aA][rR][aA][lL][lL][eE][lL]
 
-try ::=  ( [tT][rR][yY] statement_block (  catch )*  ( finally )?  )
+try ::=
+	 [tT][rR][yY] statement_block catch* finally?
 
-catch ::=  ( [cC][aA][tT][cC][hH] (  type_literal )*  statement_block )
+catch ::=
+	 [cC][aA][tT][cC][hH] type_literal* statement_block
 
-finally ::=  ( [fF][iI][nN][aA][lL][lL][yY] statement_block )
+finally ::=
+	 [fF][iI][nN][aA][lL][lL][yY] statement_block
 
-trap ::=  ( [tT][rR][aA][pP] ( type_literal )?  statement_block )
+trap ::=
+	 [tT][rR][aA][pP] type_literal? statement_block
 
-data ::=  ( [dD][aA][tT][aA] ( identifier )?  statement_block )
+data ::=
+	 [dD][aA][tT][aA] identifier? statement_block
 
-labeled_statement ::=  ( label ( switch |  foreach |  for |  while |  do )  )
+labeled_statement ::=
+	 label ( switch | foreach | for | while | do )
 
-label ::=  ( ':'  identifier )
+label ::=
+	 ':' identifier
 
-flow_control_statement ::=  ( flow_break_continue |  [rR][eE][tT][uU][rR][nN] |  [tT][hH][rR][oO][wW] |  [eE][xX][iI][tT] )
+flow_control_statement ::=
+	 flow_break_continue
+	| [rR][eE][tT][uU][rR][nN]
+	| [tT][hH][rR][oO][wW]
+	| [eE][xX][iI][tT]
 
-flow_break_continue ::=  ( ( [bB][rR][eE][aA][kK] |  [cC][oO][nN][tT][iI][nN][uU][eE] )  ( identifier )?  )
+flow_break_continue ::=
+	 ( [bB][rR][eE][aA][kK] | [cC][oO][nN][tT][iI][nN][uU][eE] ) identifier?
 
-switch ::=  ( [sS][wW][iI][tT][cC][hH] (  switch_parameter )*  switch_condition switch_body )
+switch ::=
+	 [sS][wW][iI][tT][cC][hH] switch_parameter* switch_condition switch_body
 
-switch_parameter ::=  ( '-'  ( ( [rR] |  [rR][eE] |  [rR][eE][gG] |  [rR][eE][gG][eE] |  [rR][eE][gG][eE][xX] )  |  ( [wW] |  [wW][iI] |  [wW][iI][lL] |  [wW][iI][lL][dD] |  [wW][iI][lL][dD][cC] |  [wW][iI][lL][dD][cC][aA] |  [wW][iI][lL][dD][cC][aA][rR] |  [wW][iI][lL][dD][cC][aA][rR][dD] )  |  ( [eE] |  [eE][xX] |  [eE][xX][aA] |  [eE][xX][aA][cC] |  [eE][xX][aA][cC][tT] )  |  ( [cC] |  [cC][aA] |  [cC][aA][sS] |  [cC][aA][sS][eE] |  [cC][aA][sS][eE][sS] |  [cC][aA][sS][eE][sS][eE] |  [cC][aA][sS][eE][sS][eE][nN] |  [cC][aA][sS][eE][sS][eE][nN][sS] |  [cC][aA][sS][eE][sS][eE][nN][sS][iI] |  [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT] |  [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI] |  [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI][vV] |  [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI][vV][eE] )  |  ( [pP] |  [pP][aA] |  [pP][aA][rR] |  [pP][aA][rR][aA] |  [pP][aA][rR][aA][lL] |  [pP][aA][rR][aA][lL][lL] |  [pP][aA][rR][aA][lL][lL][eE] |  [pP][aA][rR][aA][lL][lL][eE][lL] )  )  )
+switch_parameter ::=
+	 '-' ( [rR] | [rR][eE] | [rR][eE][gG] | [rR][eE][gG][eE] | [rR][eE][gG][eE][xX] | [wW] | [wW][iI] | [wW][iI][lL] | [wW][iI][lL][dD] | [wW][iI][lL][dD][cC] | [wW][iI][lL][dD][cC][aA] | [wW][iI][lL][dD][cC][aA][rR] | [wW][iI][lL][dD][cC][aA][rR][dD] | [eE] | [eE][xX] | [eE][xX][aA] | [eE][xX][aA][cC] | [eE][xX][aA][cC][tT] | [cC] | [cC][aA] | [cC][aA][sS] | [cC][aA][sS][eE] | [cC][aA][sS][eE][sS] | [cC][aA][sS][eE][sS][eE] | [cC][aA][sS][eE][sS][eE][nN] | [cC][aA][sS][eE][sS][eE][nN][sS] | [cC][aA][sS][eE][sS][eE][nN][sS][iI] | [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT] | [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI] | [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI][vV] | [cC][aA][sS][eE][sS][eE][nN][sS][iI][tT][iI][vV][eE] | [pP] | [pP][aA] | [pP][aA][rR] | [pP][aA][rR][aA] | [pP][aA][rR][aA][lL] | [pP][aA][rR][aA][lL][lL] | [pP][aA][rR][aA][lL][lL][eE] | [pP][aA][rR][aA][lL][lL][eE][lL] )
 
-switch_condition ::=  ( '('  boolean_value ')'  )
+switch_condition ::=
+	 '(' boolean_value ')'
 
-switch_body ::=  ( '{'  (  switch_clause )*  '}'  )
+switch_body ::=
+	 '{' switch_clause* '}'
 
-switch_clause ::=  ( switch_clause_condition statement_block )
+switch_clause ::=
+	 switch_clause_condition statement_block
 
-switch_clause_condition ::=  identifier
+switch_clause_condition ::=
+	 identifier
 
-type_literal ::=  ( '['  identifier ( ( array_declaration |  type_literal )  )?  ']'  )
+type_literal ::=
+	 '[' identifier ( array_declaration | type_literal )? ']'
 
-boolean_value ::=   (  (  ( '$'  ( [tT][rR][uU][eE] |  [fF][aA][lL][sS][eE] )  )  )  )
+boolean_value ::=
+	 ( '$' ( [tT][rR][uU][eE] | [fF][aA][lL][sS][eE] ) )
 
-user_variable ::=   (  '$'[a-zA-Z][\w]* )
+user_variable ::=
+	 '\$'[a-zA-Z][a-zA-Z_]*
 
-identifier ::=  [a-zA-Z][\w]*
+identifier ::=
+	 [a-zA-Z][a-zA-Z_]*
 
-string ::=  (  ( ( '"'  (  ( [^\\"\n] |  '\'([.]|[\n]) )  )*  '"'  )  |  ( "'"  (  ( [^\\'\n] |  '\'([.]|[\n]) )  )*  "'"  )  |  ( "@'"  (  [^(\'@)] )*  [\r|\r\n|\n]"'@" )  )  )
+string ::=
+	 ( '"'  ( [^\"#x0A] | '\'('.'|'#x0A') )* '"'  | "'"  ( [^\'#x0A] | '\'('.'|'#x0A') )* "'"  | "@'" [^(\'@)]* [#x0D|#x0D#x0A|#x0A]"'@" )
 
-expandable_here_string ::=  ( '@"'  (  ( expandable_string_chars |  expandable_string_part )  )*  '"@'  )
+expandable_here_string ::=
+	 '@"' ( expandable_string_chars | expandable_string_part )* '"@'
 
-expandable_string_chars ::=  (  ( ( [^"@$] |  '$'[^(] |  '"'[^@] )  )+  )
+expandable_string_chars ::=
+	 ( [^"@$] | '\$'[^(] | '"'[^@] )+
 
-expandable_string_part ::=  ( '$'  '('  statement ')'  )
+expandable_string_part ::=
+	 '$' '(' statement ')'
 
-number ::=  ( (  ( ( ( '0x'  |  '0X'  )  [0-9a-fA-F]+ )  |  ( ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  '.'  ( [0-9]+ )?  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( '.'  [0-9]+ ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( ( '0'  |  ( [1-9] ( [0-9]+ )?  )  )  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  )  )  )  (  suffix )*  )
+number ::=
+	 ( ( '0x' | '0X' ) [0-9a-fA-F]+ | ( '0' | [1-9] [0-9]+? ) '.' [0-9]+? ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9]+ )? | '.' [0-9]+ ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9]+ )? | ( '0' | [1-9] [0-9]+? ) ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9]+ )? ) suffix*
 
-suffix ::=  ( [lL] |  [dD] |  [kK][bB] |  [mM][bB] |  [gG][bB] |  [tT][bB] |  [pP][bB] )
+suffix ::=
+	 [lL]
+	| [dD]
+	| [kK][bB]
+	| [mM][bB]
+	| [gG][bB]
+	| [tT][bB]
+	| [pP][bB]
 
-comment ::=  (  ( '#'[^\n]* |  ( '<#'  [^#]*'#'+('?:'[^<#][^#]*'#'+)* '>'  )  )  )
+comment ::=
+	 ( '#.'* | '<#' [^#x23]*'\#'+(?':'[^<#x23][^#x23]*'#'+)* '>' )
 
-signature_block ::=  '# SIG'
+signature_block ::=
+	 '# SIG'
 

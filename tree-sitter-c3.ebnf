@@ -1,0 +1,809 @@
+//
+// From tree-sitter-c3/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _top_level_item*
+
+integer_literal ::=
+	 ( ( [0-9]('_'*[0-9])* | '0'[xX] [a-fA-F0-9]('_'*[a-fA-F0-9])* | '0'[oO] [0-7]('_'*[0-7])* | '0'[bB] [0-1]('_'*[0-1])* ) (([ui]('8'|'16'|'32'|'64'|'128'))|([Uu][Ll]?|[Ll]))?? )
+
+real_literal ::=
+	 ( ( [0-9]('_'*[0-9])* [Ee][+-]?[0-9]+? | [0-9]('_'*[0-9])* '.' [0-9]('_'*[0-9])* [Ee][+-]?[0-9]+? | '0'[xX] [a-fA-F0-9]('_'*[a-fA-F0-9])* [Pp][+-]?[0-9]+ | '0'[xX] [a-fA-F0-9]('_'*[a-fA-F0-9])* '.' [a-fA-F0-9]('_'*[a-fA-F0-9])* [Pp][+-]?[0-9]+ ) [f]('8'|'16'|'32'|'64'|'128')?? )
+
+escape_sequence ::=
+	 '\\'  ( [0abefnrtv\'\"\] | 'x'[0-9a-fA-F]'{2}' | 'u'[0-9a-fA-F]'{4}' | 'U'[0-9a-fA-F]'{8}' )
+
+char_literal ::=
+	 "'"  ( escape_sequence | [^#x0A'] ) "'" 
+
+string_literal ::=
+	 '"'  ( [^\"#x0A]+ | escape_sequence )* '"' 
+
+raw_string_literal ::=
+	 '`' ('``'|[^`])* '`'
+
+bytes_literal ::=
+	 ( "x'" [ #x09#x0B#x0A#x0C]?[A-Fa-f0-9][ #x09#x0B#x0A#x0CA-Fa-f0-9]++ "'"  | 'x"' [ #x09#x0B#x0A#x0C]?[A-Fa-f0-9][ #x09#x0B#x0A#x0CA-Fa-f0-9]++ '"'  | 'x`' [ #x09#x0B#x0A#x0C]?[A-Fa-f0-9][ #x09#x0B#x0A#x0CA-Fa-f0-9]++ '`' | "b64'" [ #x09#x0B#x0A#x0C]?[A-Za-z0-9+\/][ #x09#x0B#x0A#x0CA-Za-z0-9+\/=]++ "'"  | 'b64"' [ #x09#x0B#x0A#x0C]?[A-Za-z0-9+\/][ #x09#x0B#x0A#x0CA-Za-z0-9+\/=]++ '"'  | 'b64`' [ #x09#x0B#x0A#x0C]?[A-Za-z0-9+\/][ #x09#x0B#x0A#x0CA-Za-z0-9+\/=]++ '`' )
+
+line_comment ::=
+	 ( '//' ([^#x0A])* )
+
+doc_comment ::=
+	 '/**' block_comment_text '*/'
+
+block_comment ::=
+	 '/*' block_comment_text '*/'
+
+ident ::=
+	 [_a-z][_a-zA-Z0-9]*
+
+ct_ident ::=
+	 ( '$' [_a-z][_a-zA-Z0-9]* )
+
+at_ident ::=
+	 ( '@' [_a-z][_a-zA-Z0-9]* )
+
+hash_ident ::=
+	 ( '#' [_a-z][_a-zA-Z0-9]* )
+
+type_ident ::=
+	 [_A-Z][_a-zA-Z0-9]*[a-z][_a-zA-Z0-9]*
+
+ct_type_ident ::=
+	 ( '$' [_A-Z][_a-zA-Z0-9]*[a-z][_a-zA-Z0-9]* )
+
+at_type_ident ::=
+	 ( '@' [_A-Z][_a-zA-Z0-9]*[a-z][_a-zA-Z0-9]* )
+
+const_ident ::=
+	 [_A-Z][_A-Z0-9]*
+
+ct_const_ident ::=
+	 ( '$' [_A-Z][_A-Z0-9]* )
+
+builtin ::=
+	 ( '$$' ( [_A-Z][_A-Z0-9]* | [_a-z][_a-zA-Z0-9]* ) )
+
+module_resolution ::=
+	 ident '::'
+
+_module_path ::=
+	 module_resolution+
+
+path_ident ::=
+	 _module_path? ident
+
+path_const_ident ::=
+	 _module_path? const_ident
+
+path_at_ident ::=
+	 _module_path? at_ident
+
+path_at_type_ident ::=
+	 _module_path? at_type_ident
+
+_generic_parameter_list ::=
+	 ( _expr | type ) ( ',' ( _expr | type ) )*
+
+generic_parameters ::=
+	 '(<' _generic_parameter_list '>)'
+
+_assign_right_expr ::=
+	 '=' _expr
+
+_assign_right_constant_expr ::=
+	 '=' _constant_expr
+
+_cond ::=
+	 _try_unwrap_chain
+	| catch_unwrap
+	| _decl_or_expr ( ',' _decl_or_expr )* ( ',' ( _try_unwrap_chain | catch_unwrap ) )?
+
+paren_cond ::=
+	 '(' _cond ')'
+
+_parameter ::=
+	 type ident attributes?
+	| type '...' ident attributes?
+	| type '...' ct_ident
+	| type ct_ident
+	| type '...' attributes?
+	| type hash_ident attributes?
+	| type '&' ident attributes?
+	| type attributes?
+	| '&' ident attributes?
+	| hash_ident attributes?
+	| '...'
+	| ident attributes?
+	| ident '...' attributes?
+	| ct_ident
+	| ct_ident '...'
+
+parameter_default ::=
+	 _assign_right_expr
+
+parameter ::=
+	 _parameter parameter_default?
+
+_parameters ::=
+	 parameter ( ',' parameter )* ','?
+
+_attribute_name ::=
+	 at_ident
+	| path_at_type_ident
+
+_attribute_operator_expr ::=
+	 '&' '[' ']'
+	| '[' ']' '='
+	| '[' ']'
+
+attr_param ::=
+	 _attribute_operator_expr
+	| _constant_expr
+
+attribute ::=
+	 _attribute_name ( '(' attr_param ( ',' attr_param )* ')' )?
+
+attributes ::=
+	 attribute+
+
+local_decl_storage ::=
+	 'static'
+	| 'tlocal'
+
+global_storage ::=
+	 'tlocal'
+
+_top_level_item ::=
+	 module
+	| import_declaration
+	| 'extern'? func_declaration
+	| 'extern'? func_definition
+	| 'extern'? const_declaration
+	| 'extern'? global_declaration
+	| ct_assert_stmt
+	| ct_echo_stmt
+	| ct_include_stmt
+	| ct_exec_stmt
+	| struct_declaration
+	| fault_declaration
+	| enum_declaration
+	| macro_declaration
+	| define_declaration
+	| bitstruct_declaration
+	| distinct_declaration
+	| interface_declaration
+
+_module_param ::=
+	 const_ident
+	| type_ident
+
+generic_params ::=
+	 '(<' _module_param ( ',' _module_param )* '>)'
+
+module ::=
+	 'module' path_ident generic_params? attributes? ';'
+
+import_declaration ::=
+	 'import' ( path_ident ( ',' path_ident )* ) attributes? ';'
+
+func_typedef ::=
+	 'fn' _type_or_optional_type fn_parameter_list
+
+typedef_type ::=
+	 func_typedef
+	| type
+
+define_attribute ::=
+	 at_type_ident ( '(' _parameters ')' )? attributes? '=' '{' attributes? '}'
+
+define_ident ::=
+	 ( ident '=' path_ident | const_ident '=' path_const_ident | at_ident '=' path_at_ident ) generic_parameters?
+
+define_declaration ::=
+	 'def' ( define_ident | define_attribute | type_ident attributes? '=' typedef_type ) attributes? ';'
+
+distinct_declaration ::=
+	 'distinct' type_ident interface_impl? attributes? '=' 'inline'? type ';'
+
+const_declaration ::=
+	 'const' type? const_ident attributes? _assign_right_expr? ';'
+
+multi_declaration ::=
+	 ',' ident ( ',' ident )*
+
+global_declaration ::=
+	 global_storage? _type_or_optional_type? ident ( multi_declaration? attributes? | attributes? _assign_right_expr? ) ';'
+
+_struct_or_union ::=
+	 'struct'
+	| 'union'
+
+interface ::=
+	 type_ident generic_parameters?
+
+interface_impl ::=
+	 '(' ( interface ( ',' interface )* )? ')'
+
+identifier_list ::=
+	 ident ( ',' ident )*
+
+struct_member_declaration ::=
+	 type identifier_list attributes? ';'
+	| _struct_or_union ident? attributes? struct_body
+	| 'bitstruct' ident? ':' type attributes? bitstruct_body
+	| 'inline' type ident? attributes? ';'
+
+struct_body ::=
+	 '{' struct_member_declaration+ '}'
+
+struct_declaration ::=
+	 _struct_or_union type_ident interface_impl? attributes? struct_body
+
+bitstruct_def ::=
+	 base_type ident ':' _constant_expr ( '..' _constant_expr )? ';'
+
+_bitstruct_defs ::=
+	 bitstruct_def+
+
+_bitstruct_simple_defs ::=
+	 ( base_type ident ';' )+
+
+bitstruct_body ::=
+	 '{' ( _bitstruct_defs | _bitstruct_simple_defs )? '}'
+
+bitstruct_declaration ::=
+	 'bitstruct' type_ident interface_impl? ':' type attributes? bitstruct_body
+
+fault_body ::=
+	 '{' const_ident ( ',' const_ident )* ','? '}'
+
+fault_declaration ::=
+	 'fault' type_ident interface_impl? attributes? fault_body
+
+enum_arg ::=
+	 '(' arg ( ',' arg )* ','? ')'
+
+enum_constant ::=
+	 const_ident enum_arg? attributes?
+
+enum_param_declaration ::=
+	 type ( ident parameter_default? )
+
+enum_param_list ::=
+	 '(' ( enum_param_declaration ( ',' enum_param_declaration )* )? ')'
+
+enum_spec ::=
+	 ':' type enum_param_list?
+
+enum_body ::=
+	 '{' enum_constant ( ',' enum_constant )* ','? '}'
+
+enum_declaration ::=
+	 'enum' type_ident interface_impl? enum_spec? attributes? enum_body
+
+interface_body ::=
+	 '{' func_declaration* '}'
+
+interface_declaration ::=
+	 'interface' type_ident interface_body
+
+_func_macro_name ::=
+	 ident
+	| at_ident
+
+fn_parameter_list ::=
+	 '(' _parameters? ')'
+
+func_header ::=
+	 _type_or_optional_type ( type '.' )? _func_macro_name
+
+macro_header ::=
+	 ( type '.' )? _func_macro_name
+
+implies_body ::=
+	 '=>' _expr
+
+macro_func_body ::=
+	 implies_body ';'
+	| compound_stmt
+
+func_declaration ::=
+	 'fn' func_header fn_parameter_list attributes? ';'
+
+func_definition ::=
+	 'fn' func_header fn_parameter_list attributes? macro_func_body
+
+trailing_block_param ::=
+	 at_ident fn_parameter_list?
+
+macro_parameter_list ::=
+	 '(' ( _parameters | _parameters? ';' trailing_block_param )? ')'
+
+macro_declaration ::=
+	 'macro' ( func_header | macro_header ) macro_parameter_list attributes? macro_func_body
+
+lambda_declaration ::=
+	 'fn' _type_or_optional_type? fn_parameter_list attributes?
+
+_statement ::=
+	 compound_stmt
+	| expr_stmt
+	| declaration_stmt
+	| var_stmt
+	| return_stmt
+	| continue_stmt
+	| break_stmt
+	| switch_stmt
+	| nextcase_stmt
+	| if_stmt
+	| for_stmt
+	| foreach_stmt
+	| while_stmt
+	| do_stmt
+	| defer_stmt
+	| assert_stmt
+	| asm_block_stmt
+	| ct_echo_stmt
+	| ct_assert_stmt
+	| ct_if_stmt
+	| ct_switch_stmt
+	| ct_foreach_stmt
+	| ct_for_stmt
+	| ';'
+
+label ::=
+	 const_ident ':'
+
+label_target ::=
+	 const_ident
+
+compound_stmt ::=
+	 '{' _statement* '}'
+
+expr_stmt ::=
+	 _expr ';'
+
+var_decl ::=
+	 'var' ident _assign_right_expr
+	| 'var' ct_ident _assign_right_expr?
+	| 'var' ct_type_ident ( '=' type )?
+
+var_stmt ::=
+	 var_decl ';'
+
+return_stmt ::=
+	 'return' _expr? ';'
+
+continue_stmt ::=
+	 'continue' label_target? ';'
+
+break_stmt ::=
+	 'break' label_target? ';'
+
+defer_stmt ::=
+	 'defer' ( 'try' | 'catch' )? _statement
+
+assert_stmt ::=
+	 'assert' '(' _expr ( ',' _expr )* ')' ';'
+
+local_decl_after_type ::=
+	 ident attributes? _assign_right_expr?
+	| ct_ident _assign_right_constant_expr?
+
+_decl_statement_after_type ::=
+	 local_decl_after_type ( ',' local_decl_after_type )*
+
+declaration_stmt ::=
+	 const_declaration
+	| local_decl_storage? _type_or_optional_type _decl_statement_after_type ';'
+
+case_range ::=
+	 _expr '..' _expr
+
+case_stmt ::=
+	 'case' ( _expr | case_range | type ) ':' _statement*
+
+default_stmt ::=
+	 'default' ':' _statement*
+
+nextcase_stmt ::=
+	 'nextcase' ( ( label_target ':' )? ( _expr | type | 'default' ) )? ';'
+
+switch_body ::=
+	 '{' ( case_stmt | default_stmt )* '}'
+
+switch_stmt ::=
+	 'switch' label? paren_cond? switch_body
+
+catch_unwrap_list ::=
+	 _relational_expr ( ',' _relational_expr )*
+
+catch_unwrap ::=
+	 'catch' ( catch_unwrap_list | type? ident '=' catch_unwrap_list )
+
+_rel_or_lambda_expr ::=
+	 _relational_expr
+	| lambda_declaration '=>' _relational_expr
+
+try_unwrap ::=
+	 'try' ( _rel_or_lambda_expr | type? ident '=' _rel_or_lambda_expr )
+
+_try_unwrap_chain ::=
+	 try_unwrap ( '&&' ( try_unwrap | _rel_or_lambda_expr ) )*
+
+_if_body ::=
+	 _statement
+	| compound_stmt else_part
+	| switch_body else_part?
+
+if_stmt ::=
+	 'if' label? paren_cond _if_body
+
+else_part ::=
+	 'else' ( if_stmt | compound_stmt )
+
+_decl_or_expr ::=
+	 var_decl
+	| _type_or_optional_type local_decl_after_type
+	| _expr
+
+comma_decl_or_expr ::=
+	 _decl_or_expr ( ',' _decl_or_expr )*
+
+for_cond ::=
+	 '(' comma_decl_or_expr? ';' _cond? ';' comma_decl_or_expr? ')'
+
+for_stmt ::=
+	 'for' label? for_cond _statement
+
+foreach_var ::=
+	 _type_or_optional_type? '&'? ident
+
+foreach_cond ::=
+	 '(' ( foreach_var ',' )? foreach_var ':' _expr ')'
+
+foreach_stmt ::=
+	 ( 'foreach' | 'foreach_r' ) label? foreach_cond _statement
+
+while_stmt ::=
+	 'while' label? paren_cond _statement
+
+do_stmt ::=
+	 'do' label? compound_stmt ( 'while' paren_expr )? ';'
+
+asm_instr ::=
+	 ( 'int' | ident ) ( '.' ident )?
+
+_additive_op ::=
+	 '+'
+	| '-'
+
+_shift_op ::=
+	 '<<'
+	| '>>'
+
+_asm_addr ::=
+	 asm_expr
+	| asm_expr _additive_op asm_expr ( '*' integer_literal _additive_op integer_literal | _shift_op integer_literal | _additive_op integer_literal )?
+
+asm_addr ::=
+	 '[' _asm_addr ']'
+
+asm_expr ::=
+	 ct_ident
+	| ct_const_ident
+	| '&'? ident
+	| const_ident
+	| real_literal
+	| integer_literal
+	| paren_expr
+	| asm_addr
+
+asm_stmt ::=
+	 asm_instr ( asm_expr ( ',' asm_expr )* )? ';'
+
+asm_block_stmt ::=
+	 'asm' '(' _constant_expr ')' at_ident? ';'
+	| 'asm' at_ident? '{' asm_stmt* '}'
+
+ct_stmt_body ::=
+	 _statement+
+
+ct_assert_stmt ::=
+	 '$assert' _constant_expr ( ':' _constant_expr )? ';'
+	| '$error' _constant_expr ';'
+
+ct_include_stmt ::=
+	 '$include' string_expr ';'
+
+ct_exec_stmt ::=
+	 '$exec' '(' ( _constant_expr ( ',' _constant_expr )* )? ')' ';'
+
+ct_echo_stmt ::=
+	 '$echo' _constant_expr ';'
+
+ct_if_cond ::=
+	 _constant_expr ':'
+
+ct_if_stmt ::=
+	 '$if' ct_if_cond ct_stmt_body? '$endif'
+	| '$if' ct_if_cond ct_stmt_body? '$else' ct_stmt_body? '$endif'
+
+ct_case_stmt ::=
+	 ( '$case' _constant_expr ':' | '$case' type ':' | '$default' ':' ) ct_stmt_body?
+
+ct_switch_cond ::=
+	 '(' ( _constant_expr | type ) ')'
+
+_ct_switch ::=
+	 '$switch' ct_switch_cond?
+
+_ct_switch_body ::=
+	 ct_case_stmt+
+
+ct_switch_stmt ::=
+	 _ct_switch _ct_switch_body '$endswitch'
+
+ct_for_stmt ::=
+	 '$for' for_cond ct_stmt_body? '$endfor'
+
+ct_foreach_cond ::=
+	 '(' ( ct_ident ',' )? ct_ident ':' _expr ')'
+
+ct_foreach_stmt ::=
+	 '$foreach' ct_foreach_cond ct_stmt_body? '$endforeach'
+
+_expr ::=
+	 assignment_expr | ternary_expr | lambda_expr | elvis_orelse_expr | suffix_expr | binary_expr | unary_expr | cast_expr | rethrow_expr | trailing_generic_expr | update_expr | call_expr | subscript_expr | initializer_list | _base_expr
+
+_constant_expr ::=
+	 ternary_expr | lambda_expr | elvis_orelse_expr | suffix_expr | binary_expr | unary_expr | cast_expr | rethrow_expr | trailing_generic_expr | update_expr | call_expr | subscript_expr | initializer_list | _base_expr
+
+_relational_expr ::=
+	 binary_expr | unary_expr | cast_expr | rethrow_expr | trailing_generic_expr | update_expr | call_expr | subscript_expr | initializer_list | _base_expr
+
+_trailing_expr ::=
+	 rethrow_expr | trailing_generic_expr | update_expr | call_expr | subscript_expr | initializer_list | _base_expr
+
+_ident_expr ::=
+	 const_ident
+	| ident
+	| at_ident
+
+_local_ident_expr ::=
+	 ct_ident
+	| hash_ident
+
+_ct_call ::=
+	 '$alignof'
+	| '$extnameof'
+	| '$nameof'
+	| '$offsetof'
+	| '$qnameof'
+
+_ct_analyse ::=
+	 '$eval'
+	| '$defined'
+	| '$sizeof'
+	| '$stringify'
+	| '$is_const'
+
+_ct_arg ::=
+	 '$vaconst'
+	| '$vaarg'
+	| '$varef'
+	| '$vaexpr'
+
+flat_path ::=
+	 _base_expr param_path | type | _base_expr
+
+string_expr ::=
+	 ( string_literal | raw_string_literal )+
+
+bytes_expr ::=
+	 bytes_literal+
+
+paren_expr ::=
+	 '(' _expr ')'
+
+_base_expr ::=
+	 'true' | 'false' | 'null' | builtin | integer_literal | real_literal | char_literal | string_literal | string_expr | raw_string_literal | bytes_expr | _ident_expr | _local_ident_expr | initializer_list | type initializer_list | module_ident_expr | field_expr | type_access_expr | paren_expr | expr_block | '$vacount' | _ct_call '(' flat_path ')' | _ct_arg '(' _expr ')' | _ct_analyse '(' comma_decl_or_expr ')' | '$feature' '(' const_ident ')' | '$and' '(' comma_decl_or_expr ')' | '$or' '(' comma_decl_or_expr ')' | '$assignable' '(' _expr ',' type ')' | '$embed' '(' ( _constant_expr ( ',' _constant_expr )* )? ')' | lambda_declaration compound_stmt
+
+module_ident_expr ::=
+	 _module_path _ident_expr
+
+module_type_ident ::=
+	 _module_path type_ident
+
+initializer_list ::=
+	 '{' ( arg ( ',' arg )* ','? )? '}'
+
+_assignment_op ::=
+	 '='
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '%='
+	| '<<='
+	| '>>='
+	| '&='
+	| '^='
+	| '|='
+
+assignment_expr ::=
+	 _expr _assignment_op _expr | ct_type_ident '=' type
+
+ternary_expr ::=
+	 _relational_expr '?' _expr ':' _constant_expr
+
+lambda_expr ::=
+	 lambda_declaration implies_body
+
+elvis_orelse_expr ::=
+	 _constant_expr ( '?:' | '??' ) _constant_expr
+
+suffix_expr ::=
+	 _relational_expr ( '?' | '?' '!' )
+
+cast_expr ::=
+	 '(' type ')' _expr
+
+_unary_op ::=
+	 '&'
+	| '&&'
+	| '*'
+	| '+'
+	| '-'
+	| '~'
+	| '!'
+	| '++'
+	| '--'
+
+unary_expr ::=
+	 _unary_op _expr
+
+binary_expr ::=
+	 _expr '+' _expr
+	| _expr '-' _expr
+	| _expr '*' _expr
+	| _expr '/' _expr
+	| _expr '%' _expr
+	| _expr '|' _expr
+	| _expr '^' _expr
+	| _expr '&' _expr
+	| _expr '==' _expr
+	| _expr '!=' _expr
+	| _expr '>' _expr
+	| _expr '>=' _expr
+	| _expr '<=' _expr
+	| _expr '<' _expr
+	| _expr '<<' _expr
+	| _expr '>>' _expr
+	| _expr '||' _expr
+	| _expr '&&' _expr
+
+param_path_element ::=
+	 '[' _expr ']' | '[' _expr '..' _expr ']' | '.' _base_expr
+
+param_path ::=
+	 param_path_element+
+
+arg ::=
+	 param_path '=' ( _expr | type )
+	| type
+	| _expr
+	| '$vasplat' '(' range_expr? ')'
+	| '...' _expr
+
+_call_arg_list ::=
+	 arg ( ',' arg )* ','?
+	| ( arg ( ',' arg )* ','? )? ';' _parameters?
+
+call_inline_attributes ::=
+	 at_ident+
+
+call_invocation ::=
+	 '(' _call_arg_list? ')' call_inline_attributes?
+
+call_expr ::=
+	 _trailing_expr call_invocation compound_stmt?
+
+update_expr ::=
+	 _trailing_expr ( '--' | '++' )
+
+rethrow_expr ::=
+	 _trailing_expr ( '!' | '!!' )
+
+trailing_generic_expr ::=
+	 _trailing_expr generic_parameters
+
+_range_loc ::=
+	 '^'? _expr
+
+range_expr ::=
+	 _range_loc ( '..' | ':' ) _range_loc
+	| _range_loc ( '..' | ':' )
+	| ( '..' | ':' ) _range_loc
+	| '..'
+
+subscript_expr ::=
+	 _trailing_expr '[' ( _expr | range_expr ) ']'
+
+field_expr ::=
+	 _expr '.' access_ident
+
+access_ident ::=
+	 ident
+	| at_ident
+	| hash_ident
+	| '$eval' '(' _expr ')'
+	| 'typeid'
+
+type_access_expr ::=
+	 type '.' ( access_ident | const_ident )
+
+expr_block ::=
+	 '{|' _statement* '|}'
+
+base_type_name ::=
+	 'void'
+	| 'bool'
+	| 'char'
+	| 'ichar'
+	| 'short'
+	| 'ushort'
+	| 'int'
+	| 'uint'
+	| 'long'
+	| 'ulong'
+	| 'int128'
+	| 'uint128'
+	| 'float'
+	| 'double'
+	| 'float16'
+	| 'bfloat16'
+	| 'float128'
+	| 'iptr'
+	| 'uptr'
+	| 'isz'
+	| 'usz'
+	| 'anyfault'
+	| 'any'
+	| 'typeid'
+
+base_type ::=
+	 base_type_name
+	| type_ident generic_parameters?
+	| module_type_ident generic_parameters?
+	| ct_type_ident
+	| '$typeof' '(' _expr ')'
+	| '$typefrom' '(' _constant_expr ')'
+	| '$vatype' '(' _constant_expr ')'
+	| '$evaltype' '(' _constant_expr ')'
+
+type_suffix ::=
+	 '*'
+	| '[' _constant_expr ']'
+	| '[' ']'
+	| '[' '*' ']'
+	| '[<' _constant_expr '>]'
+	| '[<' '*' '>]'
+
+type ::=
+	 base_type type_suffix*
+
+_type_or_optional_type ::=
+	 type
+	| optional_type
+
+optional_type ::=
+	 type '!'?
+

@@ -1,275 +1,743 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-ruby
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-ruby/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-program ::=  ( ( _statements )?  ( ( '__END__'  _line_break uninterpreted )  )?  )
+program ::=
+	 _statements? ( '__END__'[#x0D#x0A] uninterpreted | '__END__' '' )?
 
-uninterpreted ::=  ([.]|[\s])*
+uninterpreted ::=
+	 ('.'|[ #x09#x0A#x0B#x0C#x0D])*
 
-_statements ::=  ( ( ( ( ( _statement _terminator )  |  empty_statement )  )+  ( _statement )?  )  |  _statement )
+block_body ::=
+	 _statements
 
-begin_block ::=  ( 'BEGIN'  '{'  ( _statements )?  '}'  )
+_statements ::=
+	 ( _statement _terminator | empty_statement )+ _statement?
+	| _statement
 
-end_block ::=  ( 'END'  '{'  ( _statements )?  '}'  )
+begin_block ::=
+	 'BEGIN' '{' _statements? '}'
 
-_statement ::=  ( undef |  alias |  if_modifier |  unless_modifier |  while_modifier |  until_modifier |  rescue_modifier |  begin_block |  end_block |  _expression )
+end_block ::=
+	 'END' '{' _statements? '}'
 
-method ::=  ( 'def'  _method_rest )
+_statement ::=
+	 undef
+	| alias
+	| if_modifier
+	| unless_modifier
+	| while_modifier
+	| until_modifier
+	| rescue_modifier
+	| begin_block
+	| end_block
+	| _expression
 
-singleton_method ::=  ( 'def'  ( ( (  _variable )  |  ( '('  (  _arg )  ')'  )  )  ( '.'  |  '::'  )  )  _method_rest )
+method ::=
+	 'def' _method_rest
 
-_method_rest ::=  ( (  _method_name )  ( ( (  (  parameters )  )  ( _terminator )?  )  |  ( ( (  (  bare_parameters )  )  )?  _terminator )  )  _body_statement )
+singleton_method ::=
+	 'def' ( _variable | '(' _arg ')' ) ( '.' | '::' ) _method_rest
 
-parameters ::=  ( '('  ( ( _formal_parameter (  ( ','  _formal_parameter )  )*  )  )?  ')'  )
+_method_rest ::=
+	 _method_name ( _body_expr | parameters ( _terminator? body_statement? 'end' | _body_expr ) | bare_parameters? _terminator body_statement? 'end' )
 
-bare_parameters ::=  ( _simple_formal_parameter (  ( ','  _formal_parameter )  )*  )
+rescue_modifier_arg ::=
+	 _arg 'rescue' _arg
 
-block_parameters ::=  ( '|'  ( ( ( _formal_parameter (  ( ','  _formal_parameter )  )*  )  )?  ( ','  )?  )  ( ( ';'  ( identifier (  ( ','  identifier )  )*  )  )  )?  '|'  )
+rescue_modifier_expression ::=
+	 _expression 'rescue' _arg
 
-_formal_parameter ::=  ( _simple_formal_parameter |  (  parameters )  )
+_body_expr ::=
+	 '=' ( _arg | rescue_modifier_arg )
 
-_simple_formal_parameter ::=  ( identifier |  splat_parameter |  hash_splat_parameter |  block_parameter |  keyword_parameter |  optional_parameter )
+parameters ::=
+	 '(' ( _formal_parameter ( ',' _formal_parameter )* )? ')'
 
-splat_parameter ::=  ( '*'  (  ( identifier )?  )  )
+bare_parameters ::=
+	 _simple_formal_parameter ( ',' _formal_parameter )*
 
-hash_splat_parameter ::=  ( '**'  (  ( identifier )?  )  )
+block_parameters ::=
+	 '|' ( _formal_parameter ( ',' _formal_parameter )* )? ','? ( ';' identifier ( ',' identifier )* )? '|'
 
-block_parameter ::=  ( '&'  (  identifier )  )
+_formal_parameter ::=
+	 _simple_formal_parameter
+	| parameters
 
-keyword_parameter ::=   (  ( (  identifier )  (  ':'  )  (  ( _arg )?  )  )  )
+_simple_formal_parameter ::=
+	 identifier
+	| splat_parameter
+	| hash_splat_parameter
+	| hash_splat_nil
+	| forward_parameter
+	| block_parameter
+	| keyword_parameter
+	| optional_parameter
 
-optional_parameter ::=   (  ( (  identifier )  '='  (  _arg )  )  )
+forward_parameter ::=
+	 '...'
 
-class ::=  ( 'class'  (  ( constant |  scope_resolution )  )  (  ( superclass )?  )  _terminator _body_statement )
+splat_parameter ::=
+	 '*' identifier?
 
-superclass ::=  ( '<'  _expression )
+hash_splat_parameter ::=
+	 '**' identifier?
 
-singleton_class ::=  ( 'class'  (  _singleton_class_left_angle_left_langle )  (  _arg )  _terminator _body_statement )
+hash_splat_nil ::=
+	 '**' 'nil'
 
-module ::=  ( 'module'  (  ( constant |  scope_resolution )  )  ( ( _terminator _body_statement )  |  'end'  )  )
+block_parameter ::=
+	 '&' identifier?
 
-return_command ::=   (  ( 'return'  (  command_argument_list )  )  )
+keyword_parameter ::=
+	 identifier ':' _arg?
 
-yield_command ::=   (  ( 'yield'  (  command_argument_list )  )  )
+optional_parameter ::=
+	 identifier '=' _arg
 
-break_command ::=   (  ( 'break'  (  command_argument_list )  )  )
+class ::=
+	 'class' ( constant | scope_resolution ) ( superclass _terminator | _terminator ) body_statement? 'end'
 
-next_command ::=   (  ( 'next'  (  command_argument_list )  )  )
+superclass ::=
+	 '<' _expression
 
-return ::=   (  ( 'return'  ( argument_list )?  )  )
+singleton_class ::=
+	 'class' _singleton_class_left_angle_left_langle _arg _terminator body_statement? 'end'
 
-yield ::=   (  ( 'yield'  ( argument_list )?  )  )
+module ::=
+	 'module' ( constant | scope_resolution ) _terminator? body_statement? 'end'
 
-break ::=   (  ( 'break'  ( argument_list )?  )  )
+return_command ::=
+	 'return' command_argument_list
 
-next ::=   (  ( 'next'  ( argument_list )?  )  )
+yield_command ::=
+	 'yield' command_argument_list
 
-redo ::=   (  ( 'redo'  ( argument_list )?  )  )
+break_command ::=
+	 'break' command_argument_list
 
-retry ::=   (  ( 'retry'  ( argument_list )?  )  )
+next_command ::=
+	 'next' command_argument_list
 
-if_modifier ::=   (  ( (  _statement )  'if'  (  _expression )  )  )
+return ::=
+	 'return' argument_list?
 
-unless_modifier ::=   (  ( (  _statement )  'unless'  (  _expression )  )  )
+yield ::=
+	 'yield' argument_list?
 
-while_modifier ::=   (  ( (  _statement )  'while'  (  _expression )  )  )
+break ::=
+	 'break' argument_list?
 
-until_modifier ::=   (  ( (  _statement )  'until'  (  _expression )  )  )
+next ::=
+	 'next' argument_list?
 
-rescue_modifier ::=   (  ( (  _statement )  'rescue'  (  _expression )  )  )
+redo ::=
+	 'redo' argument_list?
 
-while ::=  ( 'while'  (  _statement )  (  do )  )
+retry ::=
+	 'retry' argument_list?
 
-until ::=  ( 'until'  (  _statement )  (  do )  )
+if_modifier ::=
+	 _statement 'if' _expression
 
-for ::=  ( 'for'  (  ( _lhs |  left_assignment_list )  )  (  in )  (  do )  )
+unless_modifier ::=
+	 _statement 'unless' _expression
 
-in ::=  ( 'in'  _arg )
+while_modifier ::=
+	 _statement 'while' _expression
 
-do ::=  ( ( 'do'  |  _terminator )  ( _statements )?  'end'  )
+until_modifier ::=
+	 _statement 'until' _expression
 
-case ::=  ( 'case'  (  ( _statement )?  )  ( _terminator )?  (  when )*  ( else )?  'end'  )
+rescue_modifier ::=
+	 _statement 'rescue' _expression
 
-when ::=  ( 'when'  ( (  pattern )  (  ( ','  (  pattern )  )  )*  )  ( _terminator |  (  then )  )  )
+while ::=
+	 'while' _statement do
 
-pattern ::=  ( _arg |  splat_argument )
+until ::=
+	 'until' _statement do
 
-if ::=  ( 'if'  (  _statement )  ( _terminator |  (  then )  )  (  ( ( else |  elsif )  )?  )  'end'  )
+for ::=
+	 'for' ( _lhs | left_assignment_list ) in do
 
-unless ::=  ( 'unless'  (  _statement )  ( _terminator |  (  then )  )  (  ( ( else |  elsif )  )?  )  'end'  )
+in ::=
+	 'in' _arg
 
-elsif ::=  ( 'elsif'  (  _statement )  ( _terminator |  (  then )  )  (  ( ( else |  elsif )  )?  )  )
+do ::=
+	 ( 'do' | _terminator ) _statements? 'end'
 
-else ::=  ( 'else'  ( _terminator )?  ( _statements )?  )
+case ::=
+	 'case' ( _line_break? _statement )? _terminator? when* else? 'end'
 
-then ::=  ( ( _terminator _statements )  |  ( ( _terminator )?  'then'  ( _statements )?  )  )
+case_match ::=
+	 'case' _line_break? _statement _terminator? in_clause+ else? 'end'
 
-begin ::=  ( 'begin'  ( _terminator )?  _body_statement )
+when ::=
+	 'when' pattern ( ',' pattern )* ( _terminator | then )
 
-ensure ::=  ( 'ensure'  ( _statements )?  )
+in_clause ::=
+	 'in' _pattern_top_expr_body _guard? ( _terminator | then )
 
-rescue ::=  ( 'rescue'  (  ( exceptions )?  )  (  ( exception_variable )?  )  ( _terminator |  (  then )  )  )
+pattern ::=
+	 _arg
+	| splat_argument
 
-exceptions ::=  ( ( _arg |  splat_argument )  (  ( ','  ( _arg |  splat_argument )  )  )*  )
+_guard ::=
+	 if_guard
+	| unless_guard
 
-exception_variable ::=  ( '=>'  _lhs )
+if_guard ::=
+	 'if' _expression
 
-_body_statement ::=  ( ( _statements )?  (  ( rescue |  else |  ensure )  )*  'end'  )
+unless_guard ::=
+	 'unless' _expression
 
-_expression ::=  ( (  command_binary )  |  (  command_unary )  |  (  command_assignment )  |  (  command_operator_assignment )  |  (  command_call )  |  (  command_call_with_block )  |   (  (  _chained_command_call )  )  |  (  return_command )  |  (  yield_command )  |  (  break_command )  |  (  next_command )  |  _arg )
+_pattern_top_expr_body ::=
+	 _pattern_expr | _array_pattern_n | _find_pattern_body | _hash_pattern_body
 
-_arg ::=  ( _primary |  assignment |  operator_assignment |  conditional |  range |  binary |  unary )
+_array_pattern_n ::=
+	 _pattern_expr ',' | _pattern_expr ',' ( _pattern_expr | _array_pattern_n ) | splat_parameter ( ',' _pattern_expr )*
 
-_primary ::=  ( parenthesized_statements |  _lhs |  array |  string_array |  symbol_array |  hash |  subshell |  simple_symbol |  delimited_symbol |  integer |  float |  complex |  rational |  string |  character |  chained_string |  regex |  lambda |  method |  singleton_method |  class |  singleton_class |  module |  begin |  while |  until |  if |  unless |  for |  case |  return |  yield |  break |  next |  redo |  retry |  (  parenthesized_unary )  |  (  unary_literal )  |  heredoc_beginning )
+_pattern_expr ::=
+	 as_pattern
+	| _pattern_expr_alt
 
-parenthesized_statements ::=  ( '('  ( _statements )?  ')'  )
+as_pattern ::=
+	 _pattern_expr '=>' identifier
 
-element_reference ::=   (  ( (  _primary )  (  _element_reference_bracket )  ( _argument_list_with_trailing_comma )?  ']'  )  )
+_pattern_expr_alt ::=
+	 alternative_pattern
+	| _pattern_expr_basic
 
-scope_resolution ::=   (  ( ( '::'  |  ( (  _primary )  (  '::'  )  )  )  (  ( identifier |  constant )  )  )  )
+alternative_pattern ::=
+	 _pattern_expr_basic ( '|' _pattern_expr_basic )+
 
-_call ::=   (  ( (  _primary )  ( '.'  |  '&.'  )  (  ( identifier |  operator |  constant |  argument_list )  )  )  )
+_array_pattern_body ::=
+	 _pattern_expr
+	| _array_pattern_n
 
-command_call ::=  ( ( _call |  _chained_command_call |  (  ( _variable |  scope_resolution )  )  )  (  (  command_argument_list )  )  )
+array_pattern ::=
+	 '[' _array_pattern_body? ']' | _pattern_constant '[' _array_pattern_body? ']' | _pattern_constant '(' _array_pattern_body? ')'
 
-command_call_with_block ::=  ( ( ( _call |  (  ( _variable |  scope_resolution )  )  )   (  ( (  (  command_argument_list )  )  (  block )  )  )  )  |  ( ( _call |  (  ( _variable |  scope_resolution )  )  )   (  ( (  (  command_argument_list )  )  (  do_block )  )  )  )  )
+_find_pattern_body ::=
+	 splat_parameter ( ',' _pattern_expr )+ ',' splat_parameter
 
-_chained_command_call ::=  ( (  (  command_call_with_block )  )  ( '.'  |  '&.'  )  (  ( identifier |  operator |  constant |  argument_list )  )  )
+find_pattern ::=
+	 '[' _find_pattern_body ']'
+	| _pattern_constant '[' _find_pattern_body ']'
+	| _pattern_constant '(' _find_pattern_body ')'
 
-call ::=  ( ( ( _call |  (  ( _variable |  scope_resolution )  )  )  (  argument_list )  )  |  ( ( _call |  (  ( _variable |  scope_resolution )  )  )   (  ( (  argument_list )  (  block )  )  )  )  |  ( ( _call |  (  ( _variable |  scope_resolution )  )  )   (  ( (  argument_list )  (  do_block )  )  )  )  |   (  ( ( _call |  (  ( _variable |  scope_resolution )  )  )  (  block )  )  )  |   (  ( ( _call |  (  ( _variable |  scope_resolution )  )  )  (  do_block )  )  )  )
+_hash_pattern_body ::=
+	 keyword_pattern ( ',' keyword_pattern )* ','? | keyword_pattern ( ',' keyword_pattern )* ',' _hash_pattern_any_rest | _hash_pattern_any_rest
 
-command_argument_list ::=   (  ( _argument (  ( ','  _argument )  )*  )  )
+keyword_pattern ::=
+	 ( identifier | constant | identifier_suffix | constant_suffix | string ) ':' _pattern_expr?
 
-argument_list ::=   (  ( (  '('  )  ( _argument_list_with_trailing_comma )?  ')'  )  )
+_hash_pattern_any_rest ::=
+	 hash_splat_parameter
+	| hash_splat_nil
 
-_argument_list_with_trailing_comma ::=   (  ( ( _argument (  ( ','  _argument )  )*  )  ( ','  )?  )  )
+hash_pattern ::=
+	 '{' _hash_pattern_body? '}' | _pattern_constant '[' _hash_pattern_body ']' | _pattern_constant '(' _hash_pattern_body ')'
 
-_argument ::=   (  ( _expression |  splat_argument |  hash_splat_argument |  block_argument |  pair )  )
+_pattern_expr_basic ::=
+	 _pattern_value | identifier | array_pattern | find_pattern | hash_pattern | parenthesized_pattern
 
-splat_argument ::=  ( (  _splat_star )  _arg )
+parenthesized_pattern ::=
+	 '(' _pattern_expr ')'
 
-hash_splat_argument ::=  ( (  _hash_splat_star_star )  _arg )
+_pattern_value ::=
+	 _pattern_primitive | _pattern_range | variable_reference_pattern | expression_reference_pattern | _pattern_constant
 
-block_argument ::=  ( (  _block_ampersand )  _arg )
+_pattern_range ::=
+	 _pattern_primitive ( '..' | '...' ) _pattern_primitive
+	| ( '..' | '...' ) _pattern_primitive
+	| _pattern_primitive ( '..' | '...' )
 
-do_block ::=  ( 'do'  ( _terminator )?  ( ( (  block_parameters )  ( _terminator )?  )  )?  _body_statement )
+_pattern_primitive ::=
+	 _pattern_literal
+	| _pattern_lambda
 
-block ::=   (  ( '{'  (  ( block_parameters )?  )  ( _statements )?  '}'  )  )
+_pattern_lambda ::=
+	 lambda
 
-assignment ::=   (  ( ( (  ( _lhs |  left_assignment_list )  )  '='  (  ( _arg |  splat_argument |  right_assignment_list )  )  )  )  )
+_pattern_literal ::=
+	 _literal | string | subshell | heredoc_beginning | regex | string_array | symbol_array | _keyword_variable
 
-command_assignment ::=   (  ( ( (  ( _lhs |  left_assignment_list )  )  '='  (  _expression )  )  )  )
+_keyword_variable ::=
+	 nil | self | true | false | line | file | encoding
 
-operator_assignment ::=   (  ( (  _lhs )  (  ( '+='  |  '-='  |  '*='  |  '**='  |  '/='  |  '||='  |  '|='  |  '&&='  |  '&='  |  '%='  |  '>>='  |  '<<='  |  '^='  )  )  (  _arg )  )  )
+line ::=
+	 '__LINE__'
 
-command_operator_assignment ::=   (  ( (  _lhs )  (  ( '+='  |  '-='  |  '*='  |  '**='  |  '/='  |  '||='  |  '|='  |  '&&='  |  '&='  |  '%='  |  '>>='  |  '<<='  |  '^='  )  )  (  _expression )  )  )
+file ::=
+	 '__FILE__'
 
-conditional ::=   (  ( (  _arg )  '?'  (  _arg )  ':'  (  _arg )  )  )
+encoding ::=
+	 '__ENCODING__'
 
-range ::=   (  ( ( (  _arg )  (  ( '..'  |  '...'  )  )  (  _arg )  )  |  ( (  ( '..'  |  '...'  )  )  (  _arg )  )  |  ( (  _arg )  (  ( '..'  |  '...'  )  )  )  )  )
+variable_reference_pattern ::=
+	 '^' ( identifier | _nonlocal_variable )
 
-binary ::=  (  (  ( (  _arg )  (  'and'  )  (  _arg )  )  )  |   (  ( (  _arg )  (  'or'  )  (  _arg )  )  )  |   (  ( (  _arg )  (  '||'  )  (  _arg )  )  )  |   (  ( (  _arg )  (  '&&'  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '<<'  |  '>>'  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '<'  |  '<='  |  '>'  |  '>='  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  '&'  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '^'  |  '|'  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '+'  |  (  _binary_minus )  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '/'  |  '%'  |  (  _binary_star )  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  ( '=='  |  '!='  |  '==='  |  '<=>'  |  '=~'  |  '!~'  )  )  (  _arg )  )  )  |   (  ( (  _arg )  (  (  _binary_star_star )  )  (  _arg )  )  )  )
+expression_reference_pattern ::=
+	 '^' '(' _expression ')'
 
-command_binary ::=   (  ( (  _expression )  (  ( 'or'  |  'and'  )  )  (  _expression )  )  )
+_pattern_constant ::=
+	 constant | _pattern_constant_resolution
 
-unary ::=  (  (  ( (  'defined?'  )  (  _arg )  )  )  |   (  ( (  'not'  )  (  _arg )  )  )  |   (  ( (  ( (  _unary_minus )  |  '+'  )  )  (  _arg )  )  )  |   (  ( (  ( '!'  |  '~'  )  )  (  _arg )  )  )  )
+_pattern_constant_resolution ::=
+	 _pattern_constant? '::' constant
 
-command_unary ::=  (  (  ( (  'defined?'  )  (  _expression )  )  )  |   (  ( (  'not'  )  (  _expression )  )  )  |   (  ( (  ( (  _unary_minus )  |  '+'  )  )  (  _expression )  )  )  |   (  ( (  ( '!'  |  '~'  )  )  (  _expression )  )  )  )
+if ::=
+	 'if' _statement ( _terminator | then ) ( else | elsif )? 'end'
 
-parenthesized_unary ::=   (  ( (  ( 'defined?'  |  'not'  )  )  (  parenthesized_statements )  )  )
+unless ::=
+	 'unless' _statement ( _terminator | then ) ( else | elsif )? 'end'
 
-unary_literal ::=   (  ( (  ( (  _unary_minus )  |  '+'  )  )  (  ( integer |  float )  )  )  )
+elsif ::=
+	 'elsif' _statement ( _terminator | then ) ( else | elsif )?
 
-right_assignment_list ::=   (  ( ( _arg |  splat_argument )  (  ( ','  ( _arg |  splat_argument )  )  )*  )  )
+else ::=
+	 'else' _terminator? _statements?
 
-left_assignment_list ::=  _mlhs
+then ::=
+	 _terminator _statements
+	| _terminator? 'then' _statements?
 
-_mlhs ::=   (  ( ( ( _lhs |  rest_assignment |  destructured_left_assignment )  (  ( ','  ( _lhs |  rest_assignment |  destructured_left_assignment )  )  )*  )  ( ','  )?  )  )
+begin ::=
+	 'begin' _terminator? _body_statement? 'end'
 
-destructured_left_assignment ::=   (  ( '('  _mlhs ')'  )  )
+ensure ::=
+	 'ensure' _statements?
 
-rest_assignment ::=   (  ( '*'  ( _lhs )?  )  )
+rescue ::=
+	 'rescue' exceptions? exception_variable? ( _terminator | then )
 
-_lhs ::=   (  ( _variable |  true |  false |  nil |  scope_resolution |  element_reference |  (  _call )  |  call )  )
+exceptions ::=
+	 ( _arg | splat_argument ) ( ',' ( _arg | splat_argument ) )*
 
-_variable ::=   (  ( self |  super |  instance_variable |  class_variable |  global_variable |  identifier |  constant )  )
+exception_variable ::=
+	 '=>' _lhs
 
-operator ::=  ( '..'  |  '|'  |  '^'  |  '&'  |  '<=>'  |  '=='  |  '==='  |  '=~'  |  '>'  |  '>='  |  '<'  |  '<='  |  '+'  |  '-'  |  '*'  |  '/'  |  '%'  |  '!'  |  '!~'  |  '**'  |  '<<'  |  '>>'  |  '~'  |  '+@'  |  '-@'  |  '[]'  |  '[]='  |  '`'  )
+body_statement ::=
+	 _body_statement
 
-_method_name ::=  ( identifier |  constant |  setter |  simple_symbol |  delimited_symbol |  operator |  instance_variable |  class_variable |  global_variable )
+_body_statement ::=
+	 _statements ( rescue | else | ensure )*
+	| _statements? ( rescue | else | ensure )+
 
-setter ::=  ( (  identifier )  '='  )
+_expression ::=
+	 command_binary
+	| command_unary
+	| command_assignment
+	| command_operator_assignment
+	| command_call
+	| command_call_with_block
+	| _chained_command_call
+	| return_command
+	| yield_command
+	| break_command
+	| next_command
+	| match_pattern
+	| test_pattern
+	| _arg
 
-undef ::=  ( 'undef'  ( _method_name (  ( ','  _method_name )  )*  )  )
+match_pattern ::=
+	 _arg '=>' _pattern_top_expr_body
 
-alias ::=  ( 'alias'  (  _method_name )  (  _method_name )  )
+test_pattern ::=
+	 _arg 'in' _pattern_top_expr_body
 
-comment ::=  (   (  ( ( '#'  [^\n]* )  |  ( '=begin' [^\r\n]*[\r]?[\n] (  ( [^=] |  '='[^e] |  '=e'[^n] |  '=en'[^d] )  )*  '=end' )  )  )  )
+_arg ::=
+	 _unary_minus_pow
+	| _primary
+	| assignment
+	| operator_assignment
+	| conditional
+	| range
+	| binary
+	| unary
 
-integer ::=  '0'[bB][01]('_'?[01])*|'0'[oO]?[0-7]('_'?[0-7])*|('0'[dD])?[0-9]('_'?[\d])*|'0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])*
+_unary_minus_pow ::=
+	 _unary_minus_num _pow
 
-float ::=  [0-9]('_'?[\d])*([.\d])?('_'?[\d])*([eE][+-]?[\d]('_'?[\d])*)?
+_pow ::=
+	 _simple_numeric _binary_star_star _arg
 
-complex ::=  ([0-9]+)?([+]|[-])?([\d]+)'i'
+_primary ::=
+	 parenthesized_statements
+	| _lhs
+	| _function_identifier_call
+	| call
+	| array
+	| string_array
+	| symbol_array
+	| hash
+	| subshell
+	| _literal
+	| string
+	| character
+	| chained_string
+	| regex
+	| lambda
+	| method
+	| singleton_method
+	| class
+	| singleton_class
+	| module
+	| begin
+	| while
+	| until
+	| if
+	| unless
+	| for
+	| case
+	| case_match
+	| return
+	| yield
+	| break
+	| next
+	| redo
+	| retry
+	| parenthesized_unary
+	| heredoc_beginning
 
-rational ::=  ( ( integer |  float )  'r'  )
+parenthesized_statements ::=
+	 '(' _statements? ')'
 
-super ::=  'super'
+element_reference ::=
+	 _primary _element_reference_bracket _argument_list_with_trailing_comma? ']'
 
-self ::=  'self'
+scope_resolution ::=
+	 ( '::' | _primary '::' ) constant
 
-true ::=  (  ( 'true'  |  'TRUE'  )  )
+_call_operator ::=
+	 '.'
+	| '&.'
+	| '::'
 
-false ::=  (  ( 'false'  |  'FALSE'  )  )
+_call ::=
+	 _primary _call_operator ( identifier | operator | constant | _function_identifier )
 
-nil ::=  (  ( 'nil'  |  'NIL'  )  )
+command_call ::=
+	 ( _call | _chained_command_call | ( _variable | _function_identifier ) ) command_argument_list
 
-constant ::=  (  ( [A-Z] [^\x00-\x1F\s:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}]* ('?'|'!')? )  )
+command_call_with_block ::=
+	 ( _call | ( _variable | _function_identifier ) ) command_argument_list block
+	| ( _call | ( _variable | _function_identifier ) ) command_argument_list do_block
 
-identifier ::=  (  ( [^\x00-\x1F\sA-Z0-9:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}] [^\x00-\x1F\s:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}]* ('?'|'!')? )  )
+_chained_command_call ::=
+	 command_call_with_block _call_operator ( identifier | _function_identifier | operator | constant )
 
-instance_variable ::=  (  ( '@'  [^\x00-\x1F\s0-9:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}] [^\x00-\x1F\s:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}]* )  )
+call ::=
+	 ( _call | ( _variable | _function_identifier ) | _primary _call_operator ) argument_list
+	| ( _call | ( _variable | _function_identifier ) | _primary _call_operator ) argument_list block
+	| ( _call | ( _variable | _function_identifier ) | _primary _call_operator ) argument_list do_block
+	| ( _call | ( _variable | _function_identifier ) ) block
+	| ( _call | ( _variable | _function_identifier ) ) do_block
 
-class_variable ::=  (  ( '@@'  [^\x00-\x1F\s0-9:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}] [^\x00-\x1F\s:;`"'@$#.,|^&<=>+\-*/\\%?!~()\[#x5d{}]* )  )
+command_argument_list ::=
+	 _argument ( ',' _argument )*
 
-global_variable ::=  '$-'?(([!@&`'+~=/\\,;.<>*$?:"])|([0-9]*)|([a-zA-Z_][a-zA-Z0-9_]*))
+argument_list ::=
+	 '(' _argument_list_with_trailing_comma? ')'
 
-chained_string ::=  ( string ( string )+  )
+_argument_list_with_trailing_comma ::=
+	 _argument ( ',' _argument )* ','?
 
-character ::=  '\'?('\\'[\S]('{'[0-9A-Fa-f]*'}'|[0-9A-Fa-f]*|'-'[\S]([MC]'-'[\S])?)?|[\S])
+_argument ::=
+	 _expression | splat_argument | hash_splat_argument | forward_argument | block_argument | pair
 
-interpolation ::=  ( '#{'  ( _statements )?  '}'  )
+forward_argument ::=
+	 '...'
 
-string ::=  ( (  _string_start )  ( _literal_contents )?  (  _string_end )  )
+splat_argument ::=
+	 _splat_star _arg?
 
-subshell ::=  ( (  _subshell_start )  ( _literal_contents )?  (  _string_end )  )
+hash_splat_argument ::=
+	 _hash_splat_star_star _arg?
 
-string_array ::=  ( (  _string_array_start )  ( [\s]+ )?  ( ( (  _literal_contents )  (  ( [\s]+ (  _literal_contents )  )  )*  )  )?  ( [\s]+ )?  (  _string_end )  )
+block_argument ::=
+	 _block_ampersand _arg?
 
-symbol_array ::=  ( (  _symbol_array_start )  ( [\s]+ )?  ( ( (  _literal_contents )  (  ( [\s]+ (  _literal_contents )  )  )*  )  )?  ( [\s]+ )?  (  _string_end )  )
+do_block ::=
+	 'do' _terminator? ( block_parameters _terminator? )? body_statement? 'end'
 
-delimited_symbol ::=  ( (  _symbol_start )  ( _literal_contents )?  (  _string_end )  )
+block ::=
+	 '{' block_parameters? block_body? '}'
 
-regex ::=  ( (  _regex_start )  ( _literal_contents )?  (  _string_end )  )
+_arg_rhs ::=
+	 _arg
+	| rescue_modifier_arg
 
-heredoc_body ::=  ( _heredoc_body_start (  ( heredoc_content |  interpolation |  escape_sequence )  )*  heredoc_end )
+assignment ::=
+	 ( _lhs | left_assignment_list ) '=' ( _arg_rhs | splat_argument | right_assignment_list )
 
-_literal_contents ::=  ( ( string_content |  interpolation |  escape_sequence )  )+
+command_assignment ::=
+	 ( _lhs | left_assignment_list ) '=' ( _expression | rescue_modifier_expression )
 
-escape_sequence ::=  (  ( '\\'  ( [^ux0-7] |  'x'[0-9a-fA-F]+/*{1,2}*/ |  [0-7]+/*{1,3}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F ]+'}' )  )  )
+operator_assignment ::=
+	 _lhs ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ) _arg_rhs
 
-array ::=  ( '['  ( _argument_list_with_trailing_comma )?  ']'  )
+command_operator_assignment ::=
+	 _lhs ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ) ( _expression | rescue_modifier_expression )
 
-hash ::=  ( '{'  ( ( ( ( pair |  hash_splat_argument )  (  ( ','  ( pair |  hash_splat_argument )  )  )*  )  ( ','  )?  )  )?  '}'  )
+conditional ::=
+	 _arg '?' _arg ':' _arg
 
-pair ::=  ( ( (  _arg )  '=>'  (  _arg )  )  |  ( (  ( hash_key_symbol |  (  identifier )  |  (  constant )  |  string )  )  (  ':'  )  (  _arg )  )  )
+range ::=
+	 _arg ( '..' | '...' ) _arg | ( '..' | '...' ) _arg | _arg ( '..' | '...' )
 
-lambda ::=  ( '->'  (  ( ( (  parameters )  |  (  bare_parameters )  )  )?  )  (  ( block |  do_block )  )  )
+binary ::=
+	 _arg 'and' _arg
+	| _arg 'or' _arg
+	| _arg '||' _arg
+	| _arg '&&' _arg
+	| _arg ( '<<' | '>>' ) _arg
+	| _arg ( '<' | '<=' | '>' | '>=' ) _arg
+	| _arg '&' _arg
+	| _arg ( '^' | '|' ) _arg
+	| _arg ( '+' | _binary_minus ) _arg
+	| _arg ( '/' | '%' | _binary_star ) _arg
+	| _arg ( '==' | '!=' | '===' | '<=>' | '=~' | '!~' ) _arg
+	| _arg _binary_star_star _arg
+
+command_binary ::=
+	 _expression ( 'or' | 'and' ) _expression
+
+unary ::=
+	 'defined?' _arg
+	| 'not' _arg
+	| ( _unary_minus | _binary_minus | '+' ) _arg
+	| ( '!' | '~' ) _arg
+
+command_unary ::=
+	 'defined?' _expression
+	| 'not' _expression
+	| ( _unary_minus | '+' ) _expression
+	| ( '!' | '~' ) _expression
+
+parenthesized_unary ::=
+	 ( 'defined?' | 'not' ) parenthesized_statements
+
+unary_literal ::=
+	 ( _unary_minus_num | '+' ) _simple_numeric
+
+_literal ::=
+	 simple_symbol
+	| delimited_symbol
+	| _numeric
+
+_numeric ::=
+	 _simple_numeric
+	| unary_literal
+
+_simple_numeric ::=
+	 integer
+	| float
+	| complex
+	| rational
+
+right_assignment_list ::=
+	 ( _arg | splat_argument ) ( ',' ( _arg | splat_argument ) )*
+
+left_assignment_list ::=
+	 _mlhs
+
+_mlhs ::=
+	 ( _lhs | rest_assignment | destructured_left_assignment ) ( ',' ( _lhs | rest_assignment | destructured_left_assignment ) )* ','?
+
+destructured_left_assignment ::=
+	 '(' _mlhs ')'
+
+rest_assignment ::=
+	 '*' _lhs?
 
-empty_statement ::=   (  ';'  )
+_function_identifier ::=
+	 identifier_suffix
+	| constant_suffix
 
-_terminator ::=  ( _line_break |  ';'  )
+_function_identifier_call ::=
+	 _function_identifier
+
+_lhs ::=
+	 _variable | true | false | nil | scope_resolution | element_reference | _call
+
+_variable ::=
+	 self | super | _nonlocal_variable | identifier | constant
+
+operator ::=
+	 '..'
+	| '|'
+	| '^'
+	| '&'
+	| '<=>'
+	| '=='
+	| '==='
+	| '=~'
+	| '>'
+	| '>='
+	| '<'
+	| '<='
+	| '+'
+	| '-'
+	| '*'
+	| '/'
+	| '%'
+	| '!'
+	| '!~'
+	| '**'
+	| '<<'
+	| '>>'
+	| '~'
+	| '+@'
+	| '-@'
+	| '~@'
+	| '[]'
+	| '[]='
+	| '`'
+
+_method_name ::=
+	 identifier
+	| _function_identifier
+	| constant
+	| setter
+	| simple_symbol
+	| delimited_symbol
+	| operator
+	| _nonlocal_variable
+
+_nonlocal_variable ::=
+	 instance_variable
+	| class_variable
+	| global_variable
+
+setter ::=
+	 identifier '='
+
+undef ::=
+	 'undef' _method_name ( ',' _method_name )*
+
+alias ::=
+	 'alias' _method_name _method_name
+
+comment ::=
+	 '#' '.'* | '=begin.'*'#x0D'?'#x0A' ( [^=] | '='[^e] | '=e'[^n] | '=en'[^d] )* '=end.'*
+
+integer ::=
+	 '0'[bB][01]('_'?[01])*|'0'[oO]?[0-7]('_'?[0-7])*|('0'[dD])?[0-9]('_'?[0-9])*|'0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])*
+
+_int_or_float ::=
+	 integer
+	| float
+
+float ::=
+	 [0-9]('_'?[0-9])*('.'[0-9])?('_'?[0-9])*([eE][\+-]?[0-9]('_'?[0-9])*)?
+
+complex ::=
+	 _int_or_float 'i'
+	| _int_or_float 'ri'
+
+rational ::=
+	 _int_or_float 'r'
+
+super ::=
+	 'super'
+
+self ::=
+	 'self'
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+nil ::=
+	 'nil'
+
+constant ::=
+	 ( [A-Z] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* )
+
+constant_suffix ::=
+	 ( [A-Z] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* [?] )
+	| _constant_suffix
+
+identifier ::=
+	 ( [^\x00-\x1F #x09#x0A#x0B#x0C#x0DA-Z0-9:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* )
+
+identifier_suffix ::=
+	 ( [^\x00-\x1F #x09#x0A#x0B#x0C#x0DA-Z0-9:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* [?] )
+	| _identifier_suffix
+
+instance_variable ::=
+	 ( '@' [^\x00-\x1F #x09#x0A#x0B#x0C#x0D0-9:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* )
+
+class_variable ::=
+	 ( '@@' [^\x00-\x1F #x09#x0A#x0B#x0C#x0D0-9:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}] [^\x00-\x1F #x09#x0A#x0B#x0C#x0D:;`"'@$#x23.,|^&<=>+#x2D-*/\%?!~()#x5B#x5D{}]* )
+
+global_variable ::=
+	 '\$'('-'[a-zA-Z0-9_]|[!@&`'+~=/\,;.<>*$?:"]|[0-9]+|[a-zA-Z_][a-zA-Z0-9_]*)
+
+chained_string ::=
+	 string string+
+
+character ::=
+	 '\'?('\\S'('{'[0-9A-Fa-f]*'}'|[0-9A-Fa-f]*|'-\S'([MC]'-\S')?)?|'\S')
+
+interpolation ::=
+	 '#{' _statements? '}'
+	| _short_interpolation _nonlocal_variable
+
+string ::=
+	 _string_start _literal_contents? _string_end
+
+subshell ::=
+	 _subshell_start _literal_contents? _string_end
+
+string_array ::=
+	 _string_array_start [ #x09#x0A#x0B#x0C#x0D]+? ( _literal_contents ( [ #x09#x0A#x0B#x0C#x0D]+ _literal_contents )* )? [ #x09#x0A#x0B#x0C#x0D]+? _string_end
+
+symbol_array ::=
+	 _symbol_array_start [ #x09#x0A#x0B#x0C#x0D]+? ( _literal_contents ( [ #x09#x0A#x0B#x0C#x0D]+ _literal_contents )* )? [ #x09#x0A#x0B#x0C#x0D]+? _string_end
+
+delimited_symbol ::=
+	 _symbol_start _literal_contents? _string_end
+
+regex ::=
+	 _regex_start _literal_contents? _string_end
+
+heredoc_body ::=
+	 _heredoc_body_start ( heredoc_content | interpolation | escape_sequence )* heredoc_end
+
+_literal_contents ::=
+	 ( string_content | interpolation | escape_sequence )+
+
+escape_sequence ::=
+	 ( '\\'  ( [^ux0-7] | 'x'[0-9a-fA-F]'{1,2}' | [0-7]'{1,3}' | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F ]+'}' ) )
+
+array ::=
+	 '[' _argument_list_with_trailing_comma? ']'
+
+hash ::=
+	 '{' ( ( pair | hash_splat_argument ) ( ',' ( pair | hash_splat_argument ) )* ','? )? '}'
+
+pair ::=
+	 _arg '=>' _arg | ( string ) ':' _arg | ( hash_key_symbol | identifier | constant | identifier_suffix | constant_suffix ) ':' ( _arg? | _no_line_break )
+
+lambda ::=
+	 '->' ( parameters | bare_parameters )? ( block | do_block )
+
+empty_statement ::=
+	 ';'
+
+_terminator ::=
+	 _line_break
+	| ';'
 

@@ -1,89 +1,154 @@
-/*
-Grammar originally from https://github.com/BonaBeavis/tree-sitter-turtle
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-turtle/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-turtle_doc ::=  (  statement )*
+turtle_doc ::=
+	 statement*
 
-comment ::=  '#' [^\n]*
+comment ::=
+	 '#.'*
 
-statement ::=  ( directive |  ( triples '.'  )  )
+statement ::=
+	 directive
+	| triples '.'
 
-directive ::=  ( prefix_id |  base |  sparql_prefix |  sparql_base )
+directive ::=
+	 prefix_id
+	| base
+	| sparql_prefix
+	| sparql_base
 
-prefix_id ::=  ( '@prefix'  namespace iri_reference '.'  )
+prefix_id ::=
+	 '@prefix' namespace iri_reference '.'
 
-base ::=  ( '@base'  iri_reference '.'  )
+base ::=
+	 '@base' iri_reference '.'
 
-sparql_base ::=  ( (  (  [Bb][Aa][Ss][Ee] )  )  iri_reference )
+sparql_base ::=
+	 [Bb][Aa][Ss][Ee] iri_reference
 
-sparql_prefix ::=  ( (  (  [Pp][Rr][Ee][Ff][Ii][Xx] )  )  namespace iri_reference )
+sparql_prefix ::=
+	 [Pp][Rr][Ee][Ff][Ii][Xx] namespace iri_reference
 
-triples ::=  ( ( subject property_list )  |  ( blank_node_property_list ( property_list )?  )  )
+triples ::=
+	 subject property_list
+	| blank_node_property_list property_list?
 
-property_list ::=  ( property (  ( ';'  ( property )?  )  )*  )
+property_list ::=
+	 property ( ';' property? )*
 
-property ::=  ( predicate object_list )
+property ::=
+	 predicate object_list
 
-object_list ::=  ( _object (  ( ','  _object )  )*  )
+object_list ::=
+	 _object ( ',' _object )*
 
-predicate ::=  ( _iri |  'a'  )
+predicate ::=
+	 _iri
+	| 'a'
 
-subject ::=  ( _iri |  _blank_node |  collection )
+subject ::=
+	 _iri
+	| _blank_node
+	| collection
 
-_object ::=  ( _iri |  _blank_node |  collection |  blank_node_property_list |  _literal )
+_object ::=
+	 _iri
+	| _blank_node
+	| collection
+	| blank_node_property_list
+	| _literal
 
-_literal ::=  ( rdf_literal |  _numeric_literal |  boolean_literal )
+_literal ::=
+	 rdf_literal
+	| _numeric_literal
+	| boolean_literal
 
-blank_node_property_list ::=  ( '['  property_list ']'  )
+blank_node_property_list ::=
+	 '[' property_list ']'
 
-collection ::=  ( '('  ( object_collection )?  ')'  )
+collection ::=
+	 '(' object_collection? ')'
 
-object_collection ::=  ( _object )+
+object_collection ::=
+	 _object+
 
-_numeric_literal ::=  ( integer |  decimal |  double )
+_numeric_literal ::=
+	 integer
+	| decimal
+	| double
 
-string ::=  ( _string_literal_quote |  _string_literal_single_quote |  _string_literal_long_quote |  _string_literal_long_single_quote )
+string ::=
+	 _string_literal_quote
+	| _string_literal_single_quote
+	| _string_literal_long_quote
+	| _string_literal_long_single_quote
 
-iri_reference ::=  ( '<'  (  (  ( ([^<>"{}|^`\\\x00-\x20]) |  ('\u'[0-9A-Fa-f]+/*{4}*/|'\U'[0-9A-Fa-f]+/*{8}*/) )  )*  )  (  '>'  )  )
+iri_reference ::=
+	 '<' ( ([^<>"{}|^`\\x00-\x20]) | ('\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}') )* '>'
 
-integer ::=  (  [+-]?[0-9]+ )*
+integer ::=
+	 [+-]?[0-9]+
 
-decimal ::=  (  ( [+-]? [0-9]* '.'  [0-9]+ )  )*
+decimal ::=
+	 ( [+-]? [0-9]* '.' [0-9]+ )
 
-double ::=  (  ( [+-]? ( ( [0-9]+ '.'  [0-9]* ( [eE] [+-]? [0-9]+ )  )  |  ( '.'  [0-9]+ ( [eE] [+-]? [0-9]+ )  )  |  ( [0-9]+ ( [eE] [+-]? [0-9]+ )  )  )  )  )
+double ::=
+	 ( [+-]? ( [0-9]+ '.' [0-9]* [eE] [+-]? [0-9]+ | '.' [0-9]+ [eE] [+-]? [0-9]+ | [0-9]+ [eE] [+-]? [0-9]+ ) )
 
-_string_literal_quote ::=  ( '"'  (  ( [^#x22#x5C#x0A#x0D] |  echar |  ('\u'[0-9A-Fa-f]+/*{4}*/|'\U'[0-9A-Fa-f]+/*{8}*/) )  )*  '"'  )
+_string_literal_quote ::=
+	 '"'  ( [^\x22\x5C\x0A\x0D] | echar | ('\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}') )* '"' 
 
-_string_literal_single_quote ::=  ( "'"  (  ( [^#x27#x5C#x0A#x0D] |  echar |  ('\u'[0-9A-Fa-f]+/*{4}*/|'\U'[0-9A-Fa-f]+/*{8}*/) )  )*  "'"  )
+_string_literal_single_quote ::=
+	 "'"  ( [^\x27\x5C\x0A\x0D] | echar | ('\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}') )* "'" 
 
-_string_literal_long_single_quote ::=  ( "'''"  (  ( ( ( "'"  |  "''"  )  )?  ( [^'\\] |  echar |  ('\u'[0-9A-Fa-f]+/*{4}*/|'\U'[0-9A-Fa-f]+/*{8}*/) )  )  )*  "'''"  )
+_string_literal_long_single_quote ::=
+	 "'''" ( ( "'"  | "''" )? ( [^'\] | echar | ('\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}') ) )* "'''"
 
-_string_literal_long_quote ::=  ( '"""'  (  ( ( ( '"'  |  '""'  )  )?  ( [^"\\] |  echar |  ('\u'[0-9A-Fa-f]+/*{4}*/|'\U'[0-9A-Fa-f]+/*{8}*/) )  )  )*  '"""'  )
+_string_literal_long_quote ::=
+	 '"""' ( ( '"'  | '""' )? ( [^"\] | echar | ('\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}') ) )* '"""'
 
-rdf_literal ::=  ( (  string )  ( ( lang_tag |  (  ( '^^'  _iri )  )  )  )?  )
+rdf_literal ::=
+	 string ( lang_tag | ( '^^' _iri ) )?
 
-boolean_literal ::=  ( 'true'  |  'false'  )
+boolean_literal ::=
+	 'true'
+	| 'false'
 
-_iri ::=  ( iri_reference |  prefixed_name )
+_iri ::=
+	 iri_reference
+	| prefixed_name
 
-prefixed_name ::=  ( namespace ( pn_local )?  )
+prefixed_name ::=
+	 namespace pn_local?
 
-_blank_node ::=  ( blank_node_label |  anon )
+_blank_node ::=
+	 blank_node_label
+	| anon
 
-namespace ::=  ( ( pn_prefix )?  ':'  )
+namespace ::=
+	 pn_prefix? ':'
 
-blank_node_label ::=  ( '_:'  (  ( ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  [0-9] )  ( ( (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  '.'  )  )*  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] )  )  )?  )  )  )
+blank_node_label ::=
+	 '_:' ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | [0-9] ) ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] | '.' )* ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] ) )? )
 
-lang_tag ::=  (  ( '@'  [a-zA-Z]+ (  ( '-'  [a-zA-Z0-9]+ )  )*  )  )
+lang_tag ::=
+	 ( '@' [a-zA-Z]+ ( '-' [a-zA-Z0-9]+ )* )
 
-echar ::=  '\'[tbnrf\\"']
+echar ::=
+	 '\'[tbnrf\"']
 
-anon ::=  (  ( '['  (  ( #x20 |  #x09 |  #x0D |  #x0A )  )*  ']'  )  )
+anon ::=
+	 ( '[' ( '\x20' | '\x09' | '\x0D' | '\x0A' )* ']' )
 
-pn_prefix ::=  (  ( ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] )  ( ( (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  '.'  )  )*  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] )  )  )?  )  )
+pn_prefix ::=
+	 ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] ) ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] | '.' )* ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] ) )? )
 
-pn_local ::=  (  ( ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  ':'  |  [0-9] |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  ( ( (  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  '.'  |  ':'  |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  )*  ( [A-Z] |  [a-z] |  [\u00C0-\u00D6] |  [\u00D8-\u00F6] |  [\u00F8-\u02FF] |  [\u0370-\u037D] |  [\u037F-\u1FFF] |  [\u200C-\u200D] |  [\u2070-\u218F] |  [\u2C00-\u2FEF] |  [\u3001-\uD7FF] |  [\uF900-\uFDCF] |  [\uFDF0-\uFFFD] |  [\u{10000}-\u{EFFFF}] |  '_'  |  '-'  |  [0-9] |  [\u00B7] |  [\u0300-\u036F] |  [\u203F-\u2040] |  ':'  |  ( '%'  ( [0-9] |  [A-F] |  [a-f] )  ( [0-9] |  [A-F] |  [a-f] )  )  |  '\\_'  |  '\\~'  |  '\\.'  |  '\\-'  |  '\\!'  |  '\\$'  |  '\\&'  |  "\\'"  |  '\\('  |  '\\)'  |  '\\*'  |  '\\+'  |  '\\,'  |  '\\;'  |  '\\='  |  '\\/'  |  '\\?'  |  '\\#'  |  '\\@'  |  '\\%'  )  )  )?  )  )
+pn_local ::=
+	 ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | ':' | [0-9] | '%' ( [0-9] | [A-F] | [a-f] ) ( [0-9] | [A-F] | [a-f] ) | '\_' | '\~' | '\.' | '\-' | '\!' | '\$' | '\&' | "\'" | '\(' | '\)' | '\*' | '\+' | '\,' | '\;' | '\=' | '\/' | '\?' | '\#' | '\@' | '\%' ) ( ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] | '.' | ':' | '%' ( [0-9] | [A-F] | [a-f] ) ( [0-9] | [A-F] | [a-f] ) | '\_' | '\~' | '\.' | '\-' | '\!' | '\$' | '\&' | "\'" | '\(' | '\)' | '\*' | '\+' | '\,' | '\;' | '\=' | '\/' | '\?' | '\#' | '\@' | '\%' )* ( [A-Z] | [a-z] | [\u00C0-\u00D6] | [\u00D8-\u00F6] | [\u00F8-\u02FF] | [\u0370-\u037D] | [\u037F-\u1FFF] | [\u200C-\u200D] | [\u2070-\u218F] | [\u2C00-\u2FEF] | [\u3001-\uD7FF] | [\uF900-\uFDCF] | [\uFDF0-\uFFFD] | [\u{10000}-\u{EFFFF}] | '_' | '-' | [0-9] | [\u00B7] | [\u0300-\u036F] | [\u203F-\u2040] | ':' | '%' ( [0-9] | [A-F] | [a-f] ) ( [0-9] | [A-F] | [a-f] ) | '\_' | '\~' | '\.' | '\-' | '\!' | '\$' | '\&' | "\'" | '\(' | '\)' | '\*' | '\+' | '\,' | '\;' | '\=' | '\/' | '\?' | '\#' | '\@' | '\%' ) )? )
 

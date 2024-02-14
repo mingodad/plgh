@@ -1,213 +1,407 @@
-/*
-Grammar originally from https://github.com/GrayJack/tree-sitter-zig
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-zig/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-source_file ::=  (  _statement )*
+source_file ::=
+	 _statement*
 
-doc_comment ::=  (  ( '///'  .* )  )
+doc_comment ::=
+	 ( '///' '.'* )
 
-line_comment ::=  (  ( '//'  .* )  )
+line_comment ::=
+	 ( '//' '.'* )
 
-_any ::=  ( _statement |  _expression )
+_any ::=
+	 _statement
+	| _expression
 
-_statement ::=  ( _expression_statement |  _declaration_statement )
+_statement ::=
+	 _expression_statement
+	| _declaration_statement
 
-_expression_statement ::=   (  ( ( _expression ';'  )  |   (  _expression_ending_with_block )  )  )
+_expression_statement ::=
+	 _expression ';' | _expression_ending_with_block
 
-_expression_ending_with_block ::=   (  ( block |  comptime_block |  defer_block |  suspend_block |  resume_block |  if_expression |  while_expression |  for_expression |  test_expression )  )
+_expression_ending_with_block ::=
+	 block | comptime_block | defer_block | suspend_block | resume_block | if_expression | while_expression | for_expression | test_expression
 
-_declaration_statement ::=  ( empty_statement |  assignment_statement |  function_signature |  function_declaration )
+_declaration_statement ::=
+	 empty_statement
+	| assignment_statement
+	| function_signature
+	| function_declaration
 
-_expression ::=   (  ( build_in_call_expr |  call_expression |  await_expression |  suspend_expression |  resume_expression |  index_expression |  field_expression |  _expression_ending_with_block |  struct_expression |  struct_construction |  anonymous_struct_enum |  enum_expression |  union_expression |  error_expression |  switch_expression |  continue_expression |  break_expression |  return_expression |  assignment_expression |  array_expression |  anonymous_array_expr |  compound_assignment_expr |  payload_expression |  unary_expression |  binary_expression |  reference_expression |  dereference_expression |  orelse_postfix_expression |  try_expression |  range_pattern |  unreachable_expression |  usingnamespace_expression |  defer_expression |  _type |  _literals |  identifier )  )
+_expression ::=
+	 build_in_call_expr | call_expression | await_expression | suspend_expression | resume_expression | index_expression | field_expression | _expression_ending_with_block | struct_expression | struct_construction | anonymous_struct_enum | enum_expression | union_expression | error_expression | switch_expression | continue_expression | break_expression | return_expression | assignment_expression | array_expression | anonymous_array_expr | compound_assignment_expr | payload_expression | unary_expression | binary_expression | reference_expression | dereference_expression | orelse_postfix_expression | try_expression | range_pattern | unreachable_expression | usingnamespace_expression | defer_expression | _type | _literals | identifier
 
-empty_statement ::=  ';'
+empty_statement ::=
+	 ';'
 
-assignment_statement ::=  ( ( visibility_modifier )?  ( (  ( 'threadlocal'  |  'comptime'  )  )  )?  ( 'const'  |  'var'  )  (  identifier )  ( ( ':'  (  _type )  )  )?  '='  (  _expression )  ';'  )
+assignment_statement ::=
+	 visibility_modifier? ( 'threadlocal' | 'comptime' )? ( 'const' | 'var' ) identifier ( ':' _type )? '=' _expression ';'
 
-function_signature ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  identifier )  (  parameters )  ( (  _expression )  )?  ';'  )
+function_signature ::=
+	 visibility_modifier? function_modifiers? 'fn' identifier parameters _expression? ';'
 
-function_declaration ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  identifier )  (  parameters )  ( (  _expression )  )?  (  block )  )
+function_declaration ::=
+	 visibility_modifier? function_modifiers? 'fn' identifier parameters _expression? block
 
-visibility_modifier ::=  ( 'pub'  )
+visibility_modifier ::=
+	 'pub'
 
-function_modifiers ::=  ( 'export'  |  'stdcallcc'  |  'nakedcc'  |  'inline'  |  extern_modifier )
+function_modifiers ::=
+	 'export'
+	| 'stdcallcc'
+	| 'nakedcc'
+	| 'inline'
+	| extern_modifier
 
-extern_modifier ::=  ( 'extern'  ( string_literal )?  )
+extern_modifier ::=
+	 'extern' string_literal?
 
-parameters ::=  ( '('  ( ( parameter (  ( ','  parameter )  )*  ( ','  )?  )  )?  ')'  )
+parameters ::=
+	 '(' ( parameter ( ',' parameter )* ','? )? ')'
 
-parameter ::=  ( ( 'comptime'  )?  (  identifier )  ':'  (  ( _type |  (  'var'  )  |  variadic_parameter )  )  )
+parameter ::=
+	 'comptime'? identifier ':' ( _type | 'var' | variadic_parameter )
 
-variadic_parameter ::=  '...'
+variadic_parameter ::=
+	 '...'
 
-build_in_call_expr ::=   (  ( '@'  (  identifier )  (  arguments )  )  )
+build_in_call_expr ::=
+	 '@'[a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ0-9_]* arguments
 
-call_expression ::=   (  ( ( (  'async'  )  )?  (  identifier )  (  arguments )  )  )
+call_expression ::=
+	 'async'? identifier arguments
 
-await_expression ::=   (  ( 'await'  _expression )  )
+await_expression ::=
+	 'await' _expression
 
-suspend_expression ::=   (  ( 'suspend'  ( _expression )?  )  )
+suspend_expression ::=
+	 'suspend' _expression?
 
-resume_expression ::=   (  ( 'resume'  ( _expression )?  )  )
+resume_expression ::=
+	 'resume' _expression?
 
-arguments ::=  ( '('  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  ')'  )
+arguments ::=
+	 '(' ( _expression ( ',' _expression )* ','? )? ')'
 
-field_expression ::=   (  ( (  _expression )  '.'  (  ( (  identifier )  |  _expression )  )  )  )
+field_expression ::=
+	 _expression '.' ( identifier | _expression )
 
-index_expression ::=   (  ( _expression '['  ( _expression |  slice_pattern )  ']'  )  )
+index_expression ::=
+	 _expression '[' ( _expression | slice_pattern ) ']'
 
-_pattern ::=  ( slice_pattern |  range_pattern |  (  field_expression )  |  (  _literals )  )
+_pattern ::=
+	 slice_pattern
+	| range_pattern
+	| field_expression
+	| _literals
 
-slice_pattern ::=   (  ( ( (  _expression )  )?  '..'  ( (  _expression )  )?  )  )
+slice_pattern ::=
+	 _expression? '..' _expression?
+
+range_pattern ::=
+	 _expression '...' _expression
+
+switch_expression ::=
+	 'switch' '(' _expression ')' switch_block
+
+switch_block ::=
+	 '{' ( switch_arm* switch_last_arm )? '}'
+
+switch_arm ::=
+	 switch_pattern '=>' ( _expression ',' | _expression_ending_with_block )
+
+switch_last_arm ::=
+	 ( 'else' | switch_pattern ) '=>' _expression ','?
+
+switch_pattern ::=
+	 _pattern
+	| _pattern ( ',' _pattern )* ','?
+
+if_expression ::=
+	 'if' _condition ( _expression | block ) _else_tail?
+
+while_expression ::=
+	 loop_label? 'inline'? 'while' ( _condition | _condition_with_continue ) block _else_tail?
+
+for_expression ::=
+	 loop_label? 'inline'? 'for' _condition block _else_tail?
+
+_condition ::=
+	 '(' _expression ')' payload?
+
+_condition_with_continue ::=
+	 '(' _expression ')' ':' '(' ( _expression | '{' _expression ( ';' _expression )* ';'? '}' ) ')'
+
+_else_tail ::=
+	 'else' _else_case
 
-range_pattern ::=   (  ( (  _expression )  '...'  (  _expression )  )  )
+_else_case ::=
+	 ( _expression | block | if_expression | payload_expression )
 
-switch_expression ::=  ( 'switch'  '('  (  _expression )  ')'  (  switch_block )  )
+loop_label ::=
+	 identifier ':'
 
-switch_block ::=  ( '{'  ( ( (  switch_arm )*  switch_last_arm )  )?  '}'  )
+payload ::=
+	 '|' '*'? ( identifier ( ',' identifier )* ','? ) '|'
 
-switch_arm ::=  ( (  switch_pattern )  '=>'  ( ( (  _expression )  ','  )  |  (   (  _expression_ending_with_block )  )  )  )
+payload_expression ::=
+	 payload ( _expression | block )
 
-switch_last_arm ::=  ( (  ( (  'else'  )  |  switch_pattern )  )  '=>'  (  _expression )  ( ','  )?  )
+break_expression ::=
+	 'break' loop_label_inverse? _expression?
 
-switch_pattern ::=  ( _pattern |  ( _pattern (  ( ','  _pattern )  )*  ( ','  )?  )  )
+continue_expression ::=
+	 'continue' loop_label_inverse?
 
-if_expression ::=   (  ( 'if'  _condition (  ( _expression |  block )  )  ( _else_tail )?  )  )
+loop_label_inverse ::=
+	 ':' identifier
 
-while_expression ::=   (  ( ( loop_label )?  ( (  'inline'  )  )?  'while'  ( _condition |  _condition_with_continue )  (  block )  ( _else_tail )?  )  )
+return_expression ::=
+	 'return' _expression
+	| 'return'
 
-for_expression ::=   (  ( ( loop_label )?  ( (  'inline'  )  )?  'for'  _condition (  block )  ( _else_tail )?  )  )
+test_expression ::=
+	 'test' string_literal block
 
-_condition ::=   (  ( '('  (  _expression )  ')'  ( payload )?  )  )
+try_expression ::=
+	 'try' _expression
 
-_condition_with_continue ::=  ( '('  (  _expression )  ')'  ':'  '('  (  ( _expression |  ( '{'  ( _expression (  ( ';'  _expression )  )*  ( ';'  )?  )  '}'  )  )  )  ')'  )
+usingnamespace_expression ::=
+	 visibility_modifier? 'usingnamespace' _expression
 
-_else_tail ::=   (  ( 'else'  _else_case )  )
+_type ::=
+	 primitive_type | optional_type | pointer_type | error_type | array_type | custom_number_type | _struct_standalone | identifier
 
-_else_case ::=   (  (  ( _expression |  block |  if_expression |  payload_expression )  )  )
+primitive_type ::=
+	 'i8'
+	| 'u8'
+	| 'i16'
+	| 'u16'
+	| 'i32'
+	| 'u32'
+	| 'i64'
+	| 'u64'
+	| 'i128'
+	| 'u128'
+	| 'isize'
+	| 'usize'
+	| 'c_short'
+	| 'c_ushort'
+	| 'c_int'
+	| 'c_uint'
+	| 'c_long'
+	| 'c_ulong'
+	| 'c_longlong'
+	| 'c_ulonglong'
+	| 'c_longdouble'
+	| 'c_void'
+	| 'f16'
+	| 'f32'
+	| 'f64'
+	| 'f128'
+	| 'comptime_int'
+	| 'comptime_float'
+	| 'bool'
+	| 'void'
+	| 'noreturn'
+	| 'type'
+	| 'anyerror'
 
-loop_label ::=  ( (  (  identifier )  )  ':'  )
+custom_number_type ::=
+	 ('i'|'u')[0-9]+
 
-payload ::=  ( '|'  ( '*'  )?  (  ( (  identifier )  (  ( ','  (  identifier )  )  )*  ( ','  )?  )  )  '|'  )
+error_type ::=
+	 _type '!' _type
 
-payload_expression ::=   (  ( payload ( _expression |  block )  )  )
+optional_type ::=
+	 '?' _type
 
-break_expression ::=   (  ( 'break'  ( (  loop_label_inverse )  )?  ( (  _expression )  )?  )  )
+array_type ::=
+	 ( '[' ( integer_literal | identifier | ( '*' 'c'? ) )? ']' )* type_prefix*? ( primitive_type | optional_type | pointer_type | error_type | custom_number_type | identifier )
 
-continue_expression ::=  ( 'continue'  ( (  loop_label_inverse )  )?  )
+pointer_type ::=
+	 '*' type_prefix*? _type
 
-loop_label_inverse ::=  ( ':'  (  (  identifier )  )  )
+type_prefix ::=
+	 'null' | 'const' | 'volatile' | 'allowzero' | 'align' '(' _expression ')' | 'promise' '-'
 
-return_expression ::=  (  (  ( 'return'  _expression )  )  |   (  'return'  )  )
+defer_expression ::=
+	 ( 'defer' | 'errdefer' ) _expression
 
-test_expression ::=  ( 'test'  (  string_literal )  (  block )  )
+comptime_block ::=
+	 'comptime' block
 
-try_expression ::=   (  ( 'try'  (  _expression )  )  )
+defer_block ::=
+	 ( 'defer' | 'errdefer' ) block
 
-usingnamespace_expression ::=   (  ( ( visibility_modifier )?  'usingnamespace'  (  _expression )  )  )
+suspend_block ::=
+	 'suspend' block
 
-_type ::=   (  ( primitive_type |  optional_type |  pointer_type |  error_type |  array_type |  custom_number_type |  (  identifier )  )  )
+resume_block ::=
+	 'resume' block
 
-primitive_type ::=  ( 'i8'  |  'u8'  |  'i16'  |  'u16'  |  'i32'  |  'u32'  |  'i64'  |  'u64'  |  'i128'  |  'u128'  |  'isize'  |  'usize'  |  'c_short'  |  'c_ushort'  |  'c_int'  |  'c_uint'  |  'c_long'  |  'c_ulong'  |  'c_longlong'  |  'c_ulonglong'  |  'c_longdouble'  |  'c_void'  |  'f16'  |  'f32'  |  'f64'  |  'f128'  |  'comptime_int'  |  'comptime_float'  |  'bool'  |  'void'  |  'noreturn'  |  'type'  |  'anyerror'  )
+block ::=
+	 loop_label? '{' _statement*? _expression? '}'
 
-custom_number_type ::=  (i|u)[0-9]+
+reference_expression ::=
+	 '&' _expression
 
-error_type ::=   (  ( (  _type )  '!'  (  _type )  )  )
+dereference_expression ::=
+	 _expression '.*'
 
-optional_type ::=   (  ( '?'  _type )  )
+orelse_postfix_expression ::=
+	 _expression '.?'
 
-array_type ::=   (  ( (  ( '['  (  ( ( integer_literal |  identifier |  (  ( '*'  ( 'c'  )?  )  )  )  )?  )  ']'  )  )*  ( (  type_prefix )*  )?  ( primitive_type |  optional_type |  pointer_type |  error_type |  custom_number_type |  (  identifier )  )  )  )
+struct_construction ::=
+	 identifier '{' ( field_init ( ',' field_init )* ','? )? '}'
 
-pointer_type ::=   (  ( '*'  ( (  type_prefix )*  )?  _type )  )
+anonymous_struct_enum ::=
+	 '.{' ( field_init ( ',' field_init )* ','? ) '}'
 
-type_prefix ::=   (  ( 'null'  |  'const'  |  'volatile'  |  'allowzero'  |  ( 'align'  '('  _expression ')'  )  |  ( 'promise'  '-'  )  )  )
+field_init ::=
+	 '.' identifier '=' _expression
 
-defer_expression ::=   (  ( ( 'defer'  |  'errdefer'  )  _expression )  )
+union_expression ::=
+	 ( 'packed' | 'extern' )? 'union' ( '(' ( _type | 'enum' ) ')' )? '{' ( union_field_variant ( ',' union_field_variant )* ','? )? _statement*? '}'
 
-comptime_block ::=  ( 'comptime'  block )
+union_field_variant ::=
+	 identifier ( ':' ( _type | 'var' ) )?
 
-defer_block ::=  ( ( 'defer'  |  'errdefer'  )  block )
+enum_expression ::=
+	 ( 'packed' | 'extern' )? 'enum' ( '(' _type ')' )? '{' ( variant_declaration ( ',' variant_declaration )* ','? )? _statement*? '}'
 
-suspend_block ::=  ( 'suspend'  block )
+variant_declaration ::=
+	 identifier ( '=' _expression )?
 
-resume_block ::=  ( 'resume'  block )
+struct_expression ::=
+	 ( 'packed' | 'extern' )? _struct_standalone
 
-block ::=   (  ( ( (  loop_label )  )?  '{'  ( (  _statement )*  )?  ( _expression )?  '}'  )  )
+_struct_standalone ::=
+	 'struct' '{' ( field_declaration ( ',' field_declaration )* ','? )? _statement*? '}'
 
-reference_expression ::=   (  ( '&'  (  _expression )  )  )
+field_declaration ::=
+	 visibility_modifier? identifier ':' ( _type | 'var' ) ( '=' _expression )?
 
-dereference_expression ::=  ( (  _expression )  '.*'  )
+error_expression ::=
+	 'error' ( _error_one_shorthand | _default_error )
 
-orelse_postfix_expression ::=  ( (  _expression )  '.?'  )
+_error_one_shorthand ::=
+	 '.' identifier
 
-struct_construction ::=  ( (  identifier )  '{'  (  ( ( field_init (  ( ','  field_init )  )*  ( ','  )?  )  )?  )  '}'  )
+_default_error ::=
+	 '{' ( identifier ( ',' identifier )* ','? )? '}'
 
-anonymous_struct_enum ::=  ( '.{'  (  ( field_init (  ( ','  field_init )  )*  ( ','  )?  )  )  '}'  )
+array_expression ::=
+	 ( '[' ( integer_literal | identifier ) ']' )* _type array_values
 
-field_init ::=  ( '.'  (  (  identifier )  )  '='  (  _expression )  )
+anonymous_array_expr ::=
+	 '.{' ( _expression ( ',' _expression )* ','? )? '}'
 
-union_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'union'  ( ( '('  (  ( _type |  (  'enum'  )  )  )  ')'  )  )?  '{'  (  ( ( union_field_variant (  ( ','  union_field_variant )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+array_values ::=
+	 '{' ( _expression ( ',' _expression )* ','? )? '}'
 
-union_field_variant ::=   (  ( (  (  identifier )  )  ( ( ':'  (  ( _type |  (  'var'  )  )  )  )  )?  )  )
+assignment_expression ::=
+	 ( 'defer' | 'errdefer' )? _expression '=' _expression
 
-enum_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'enum'  ( ( '('  (  _type )  ')'  )  )?  '{'  (  ( ( variant_declaration (  ( ','  variant_declaration )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+compound_assignment_expr ::=
+	 _expression assignment_operator _expression
 
-variant_declaration ::=   (  ( (  (  identifier )  )  ( ( '='  (  _expression )  )  )?  )  )
+unary_expression ::=
+	 unary_operator _expression
 
-struct_expression ::=  ( ( (  ( 'packed'  |  'extern'  )  )  )?  'struct'  '{'  (  ( ( field_declaration (  ( ','  field_declaration )  )*  ( ','  )?  )  )?  )  ( (  _statement )*  )?  '}'  )
+unreachable_expression ::=
+	 'unreachable'
 
-field_declaration ::=   (  ( ( visibility_modifier )?  (  (  identifier )  )  ':'  (  ( _type |  (  'var'  )  )  )  ( ( '='  (  _expression )  )  )?  )  )
+binary_expression ::=
+	 _expression 'and' _expression
+	| _expression 'or' _expression
+	| _expression '&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression ( '==' | '!=' | '<' | '<=' | '>' | '>=' ) _expression
+	| _expression ( '<<' | '>>' ) _expression
+	| _expression ( '+' | '-' | '++' | '+%' | '-%' ) _expression
+	| _expression ( '*' | '/' | '%' | '**' | '*%' | '||' ) _expression
+	| _expression ( 'orelse' | 'catch' ) _expression
 
-error_expression ::=  ( 'error'  ( _error_one_shorthand |  _default_error )  )
+_literals ::=
+	 integer_literal
+	| float_literal
+	| boolean_literal
+	| null_literal
+	| undefined_literal
+	| char_literal
+	| string_literal
+	| multiline_string_literal
+	| enum_literal
 
-_error_one_shorthand ::=  ( '.'  (  (  identifier )  )  )
+enum_literal ::=
+	 '.' identifier
 
-_default_error ::=  ( '{'  (  ( ( (  identifier )  (  ( ','  (  identifier )  )  )*  ( ','  )?  )  )?  )  '}'  )
+integer_literal ::=
+	 ( ( [0-9]+ | '0x'[0-9a-fA-F]+ | '0b'[01]+ | '0o'[0-7]+ ) )
 
-array_expression ::=  ( (  ( '['  (  ( integer_literal |  identifier )  )  ']'  )  )*  (  _type )  (  array_values )  )
+float_literal ::=
+	 ( ( '0'[xX] [0-9a-fA-F][0-9a-fA-F_]* '.'? [0-9a-fA-F][0-9a-fA-F_]*? | [0-9][0-9_]* '.'? [0-9][0-9_]*? ) [eEpP][+-]?[0-9]+? )
 
-anonymous_array_expr ::=  ( '.{'  (  (  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  )  )  '}'  )
+char_literal ::=
+	 "'"  ( escape_sequence | '.' )? "'" 
 
-array_values ::=  ( '{'  ( ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )?  '}'  )
+string_literal ::=
+	 '"'  ( escape_sequence | [^"\]+ )* '"' 
 
-assignment_expression ::=   (  ( ( ( 'defer'  |  'errdefer'  )  )?  (  _expression )  '='  (  _expression )  )  )
+multiline_string_literal ::=
+	 ( '\\' ( [^#x0D#x0A] | escape_sequence )* )+
 
-compound_assignment_expr ::=   (  ( (  _expression )  (  assignment_operator )  (  _expression )  )  )
+escape_sequence ::=
+	 ( '\\'  ( [^xu#x0A] | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F]+'}' | 'x'[0-9a-fA-F]'{2}' ) )
 
-unary_expression ::=   (  ( (  unary_operator )  (  _expression )  )  )
+boolean_literal ::=
+	 'true'
+	| 'false'
 
-unreachable_expression ::=  'unreachable'
+null_literal ::=
+	 'null'
 
-binary_expression ::=  (  (  ( (  _expression )  (  (  'and'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  'or'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '&'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '|'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  '^'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '=='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '<<'  |  '>>'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '+'  |  '-'  |  '++'  |  '+%'  |  '-%'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( '*'  |  '/'  |  '%'  |  '**'  |  '*%'  |  '||'  )  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  (  ( 'orelse'  |  'catch'  )  )  )  (  _expression )  )  )  )
+undefined_literal ::=
+	 'undefined'
 
-_literals ::=  ( integer_literal |  float_literal |  boolean_literal |  null_literal |  undefined_literal |  char_literal |  string_literal |  multiline_string_literal |  enum_literal )
+assignment_operator ::=
+	 '+='
+	| '-='
+	| '*='
+	| '/='
+	| '+%='
+	| '-%='
+	| '*%='
+	| '%='
+	| '&='
+	| '|='
+	| '^='
+	| '<<='
+	| '>>='
 
-enum_literal ::=   (  ( '.'  (  (  identifier )  )  )  )
+unary_operator ::=
+	 '~'
+	| '!'
+	| '-'
+	| '-%'
 
-integer_literal ::=  (  ( ( [0-9]+ |  '0x'[0-9a-fA-F]+ |  '0b'[01]+ |  '0o'[0-7]+ )  )  )
+identifier ::=
+	 _str_identifier
+	| _identifier_text
 
-float_literal ::=  (  ( ( ( '0'[xX] [0-9a-fA-F][0-9a-fA-F_]* ( '.'  )?  ( [0-9a-fA-F][0-9a-fA-F_]* )?  )  |  ( [0-9][0-9_]* ( '.'  )?  ( [0-9][0-9_]* )?  )  )  ( [eEpP][+-]?[0-9]+ )?  )  )*
+_str_identifier ::=
+	 '@"' ( escape_sequence | [^"\]+ )* '"' 
 
-char_literal ::=  ( "'"  ( ( escape_sequence |  . )  )?  "'"  )
-
-string_literal ::=  ( ( '"'  |  'c"'  )  (  ( escape_sequence |  [^"\\]+ )  )*  (  '"'  )  )
-
-multiline_string_literal ::=  ( ( '\\\'  |  'c\\\'  )  (  ( escape_sequence |  [.]+ )  )*  )
-
-escape_sequence ::=  (  ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]/*{2}*/ )  )  )
-
-boolean_literal ::=  ( 'true'  |  'false'  )
-
-null_literal ::=  'null'
-
-undefined_literal ::=  'undefined'
-
-assignment_operator ::=  ( '+='  |  '-='  |  '*='  |  '+%='  |  '-%='  |  '*%='  |  '/='  |  '%='  |  '&='  |  '|='  |  '^='  |  '<<='  |  '>>='  )
-
-unary_operator ::=  ( '~'  |  '!'  |  '-'  |  '-%'  )
-
-identifier ::=  [a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ0-9_]*
+_identifier_text ::=
+	 [a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ0-9_]*
 

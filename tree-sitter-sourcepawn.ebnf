@@ -1,245 +1,545 @@
-/*
-Grammar originally from https://github.com/nilshelmig/tree-sitter-sourcepawn
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-sourcepawn/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 ( assertion | function_definition | function_declaration | enum | enum_struct | typedef | typeset | functag | funcenum | methodmap | struct | struct_declaration | global_variable_declaration | old_global_variable_declaration | hardcoded_symbol | alias_declaration | alias_assignment )*
+
+_preproc_expression ::=
+	 preproc_binary_expression
+	| preproc_unary_expression
+	| identifier
+	| _literal
+	| preproc_parenthesized_expression
+	| preproc_defined_condition
+
+preproc_parenthesized_expression ::=
+	 '(' _preproc_expression ')'
+
+preproc_unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _preproc_expression
+
+preproc_binary_expression ::=
+	 _preproc_expression '+' _preproc_expression
+	| _preproc_expression '-' _preproc_expression
+	| _preproc_expression '*' _preproc_expression
+	| _preproc_expression '/' _preproc_expression
+	| _preproc_expression '%' _preproc_expression
+	| _preproc_expression '||' _preproc_expression
+	| _preproc_expression '&&' _preproc_expression
+	| _preproc_expression '|' _preproc_expression
+	| _preproc_expression '^' _preproc_expression
+	| _preproc_expression '&' _preproc_expression
+	| _preproc_expression '==' _preproc_expression
+	| _preproc_expression '!=' _preproc_expression
+	| _preproc_expression '>' _preproc_expression
+	| _preproc_expression '>=' _preproc_expression
+	| _preproc_expression '<=' _preproc_expression
+	| _preproc_expression '<' _preproc_expression
+	| _preproc_expression '<<' _preproc_expression
+	| _preproc_expression '>>' _preproc_expression
+	| _preproc_expression '>>>' _preproc_expression
+
+preproc_include ::=
+	 '#include' ( string_literal | system_lib_string )
+
+preproc_tryinclude ::=
+	 '#tryinclude' ( string_literal | system_lib_string )
 
-source_file ::=  (  ( function_declaration |  function_definition |  callback_implementation |  enum |  enum_struct |  typedef |  typeset |  methodmap |  struct |  global_variable |  _top_level_statements |  preproc_include |  preproc_tryinclude |  preproc_define |  preproc_undefine |  preproc_pragma_semicolon |  preproc_pragma_newdecls |  preproc_pragma_deprecated |  preproc_pragma_dynamic )  )*
+preproc_macro ::=
+	 '#define' identifier ( '(' ( macro_param ( ',' macro_param )* )? ')' ) preproc_arg
 
-preproc_include ::=  ( (  '#'[ \t]*'include' )  (  ( string_literal |  system_lib_string )  )  '\n'  )
+macro_param ::=
+	 ( '%' [0-9] )
 
-preproc_tryinclude ::=  ( (  '#'[ \t]*'tryinclude' )  (  ( string_literal |  system_lib_string )  )  '\n'  )
+preproc_define ::=
+	 '#define' identifier preproc_arg
 
-preproc_define ::=  ( (  '#'[ \t]*'define' )  (  symbol )  (  ( preproc_arg )?  )  '\n'  )
+preproc_undefine ::=
+	 '#undef' identifier
 
-preproc_arg ::=  (   (  ( '.'|'\\\r'?'\n' )+  )  )*
+preproc_if ::=
+	 '#if' preproc_arg
 
-preproc_undefine ::=  ( (  '#'[ \t]*'undef' )  (  symbol )  '\n'  )
+preproc_elseif ::=
+	 '#elseif' preproc_arg
 
-preproc_if ::=  ( (  '#'[ \t]*'if' )  (  ( symbol |  preproc_defined_condition )  )  ( comment )?  '\n'  )
+preproc_assert ::=
+	 '#assert' preproc_arg
 
-preproc_defined_condition ::=  ( (  ( ( '!'  )?  'defined'  )  )*  (  symbol )  )
+preproc_defined_condition ::=
+	 'defined' identifier
 
-preproc_else ::=  ( (  '#'[ \t]*'else' )  ( comment )?  '\n'  )
+preproc_else ::=
+	 '#else'
 
-preproc_endif ::=  ( (  '#'[ \t]*'endif' )  ( comment )?  '\n'  )
+preproc_endif ::=
+	 '#endif'
 
-preproc_pragma_semicolon ::=  ( (  '#'[ \t]*'pragma' )  'semicolon'  (  int_literal )  ( semicolon )?  '\n'  )
+preproc_endinput ::=
+	 '#endinput'
 
-preproc_pragma_newdecls ::=  ( (  '#'[ \t]*'pragma' )  'newdecls'  (  symbol )  ( semicolon )?  '\n'  )
+preproc_pragma ::=
+	 '#pragma' preproc_arg
 
-preproc_pragma_deprecated ::=  ( (  '#'[ \t]*'pragma' )  'deprecated'  (  ( preproc_arg )?  )  '\n'  )
+preproc_error ::=
+	 '#error' preproc_arg
 
-preproc_pragma_dynamic ::=  ( (  '#'[ \t]*'pragma' )  'dynamic'  (  int_literal )  '\n'  )
+preproc_warning ::=
+	 '#warning' preproc_arg
 
-function_declaration ::=  ( ( function_storage_class )?  (  ( _type )?  )  (  symbol )  (  argument_declarations )  block )
+hardcoded_symbol ::=
+	 'using __intrinsics__.Handle' _semicolon
 
-function_storage_class ::=  ( 'stock'  |  'static'  |  ( 'stock'  'static'  )  |  ( 'static'  'stock'  )  )
+assertion ::=
+	 ( 'assert' | 'static_assert' ) call_arguments _semicolon
 
-function_definition ::=  ( function_definition_type (  ( _type )?  )  (  symbol )  (  argument_declarations )  ( semicolon )?  )
+function_definition ::=
+	 visibility? ( type dimension* ) identifier parameter_declarations block
+	| visibility? old_type? identifier parameter_declarations _statement
 
-function_definition_type ::=  ( 'forward'  |  'native'  )
+function_declaration ::=
+	 function_declaration_kind ( type dimension? | old_type )? identifier parameter_declarations ( '=' identifier )? _semicolon
 
-callback_implementation ::=  ( 'public'  (  ( _type )?  )  (  symbol )  (  argument_declarations )  ( block |  _statement )  )
+function_declaration_kind ::=
+	 'forward'
+	| 'native'
 
-argument_declarations ::=  ( '('  ( rest_argument |  ( ( ( argument_declaration (  ( ','  argument_declaration )  )*  )  )?  ( ( ','  rest_argument )  )?  )  )  ')'  )
+parameter_declarations ::=
+	 '(' ( ( parameter_declaration | rest_parameter ) ( ',' ( parameter_declaration | rest_parameter ) )* )? ')'
 
-argument_declaration ::=   (  ( ( 'const'  )?  ( '&'  )?  (  ( ( type_expression |  old_type_expression )  )?  )  ( '&'  )?  (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  ( _literal |  old_type_cast |  symbol |  vector )  )  )?  )  )  )
+parameter_declaration ::=
+	 variable_storage_class? ( old_type? identifier ( dimension | fixed_dimension )* | '&' identifier | ( '&' old_type ) identifier | type '&' identifier | array_type identifier | type identifier ( dimension | fixed_dimension )* ) ( '=' _expression )?
 
-rest_argument ::=  ( (  ( type_expression |  old_type_expression )  )  '...'  )
+rest_parameter ::=
+	 ( type | old_type ) '...'
 
-variable_declaration_statement ::=   (  ( ( variable_storage_class )?  (  type_expression )  ( variable_declaration (  ( ','  variable_declaration )  )*  )  ( semicolon )?  )  )
+alias_operator ::=
+	 ( '+' | '++' | '-' | '--' | '*' | '/' | '%' | '||' | '&&' | '|' | '^' | '&' | '==' | '!=' | '>' | '>=' | '<=' | '<' | '<<' | '>>' | '>>>' | '!' | '%' )
 
-variable_storage_class ::=  ( 'const'  |  'static'  )
+alias_declaration ::=
+	 visibility? ( builtin_type | old_builtin_type ':' ) 'operator' alias_operator parameter_declarations _statement
+	| function_declaration_kind 'operator' alias_operator parameter_declarations _semicolon
 
-variable_declaration ::=  ( (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  ( _expression |  dynamic_array |  new_instance )  )  )?  )  )
+alias_assignment ::=
+	 function_declaration_kind? ( builtin_type | old_builtin_type ':' ) 'operator' alias_operator parameter_declarations '=' identifier _semicolon
 
-dynamic_array ::=  ( 'new'  (  ( builtin_type |  symbol )  )  ( fixed_dimension )+  )
+global_variable_declaration ::=
+	 visibility? variable_storage_class? type variable_declaration ( ',' variable_declaration )* _semicolon
 
-new_instance ::=  ( 'new'  (  symbol )  (  function_call_arguments )  )
+variable_declaration_statement ::=
+	 type dimension+ dynamic_array_declaration ( ',' dynamic_array_declaration )* _semicolon? | visibility? variable_storage_class? type variable_declaration ( ',' variable_declaration )* _semicolon?
 
-old_variable_declaration_statement ::=   (  ( old_variable_storage_class ( old_variable_declaration (  ( ','  old_variable_declaration )  )*  )  ( semicolon )?  )  )
+variable_storage_class ::=
+	 'const'
 
-old_variable_storage_class ::=  ( ( 'new'  ( 'const'  )?  )  |  'decl'  |  'static'  )
+visibility ::=
+	 'public'
+	| 'stock'
+	| 'static'
+	| 'public' 'static'
+	| 'stock' 'static'
+	| 'static' 'stock'
+	| 'static' 'public'
 
-old_variable_declaration ::=  ( (  ( _old_type )?  )  (  symbol )  (  ( dimension |  fixed_dimension )  )*  (  ( ( '='  _expression )  )?  )  )
+variable_declaration ::=
+	 identifier ( dimension | fixed_dimension )* ( '=' _expression )?
 
-enum ::=  ( 'enum'  (  ( symbol )?  )  enum_entries ( semicolon )?  )
+dynamic_array_declaration ::=
+	 identifier '=' ( dynamic_array | string_literal )
 
-enum_entries ::=  ( '{'  ( enum_entry (  ( ','  enum_entry )  )*  )  ( ','  )?  '}'  )
+dynamic_array ::=
+	 'new' ( builtin_type | identifier ) fixed_dimension+
 
-enum_entry ::=  ( (  symbol )  (  ( ( '='  _expression )  )?  )  )
+new_expression ::=
+	 'new' identifier call_arguments
 
-enum_struct ::=  ( 'enum'  'struct'  (  symbol )  '{'  ( ( enum_struct_field |  enum_struct_method )  )+  '}'  )
+old_global_variable_declaration ::=
+	 ( ( 'new' | 'decl' ) variable_storage_class? | variable_storage_class | visibility variable_storage_class? ) old_variable_declaration ( ',' old_variable_declaration )* _semicolon
+	| old_variable_declaration ( ',' old_variable_declaration )* _semicolon
 
-enum_struct_field ::=  ( (  ( builtin_type |  symbol )  )  (  symbol )  ( fixed_dimension )?  semicolon )
+old_variable_declaration_statement ::=
+	 ( ( 'new' | 'decl' ) variable_storage_class? | variable_storage_class | visibility variable_storage_class? ) old_variable_declaration ( ',' old_variable_declaration )* _semicolon?
 
-enum_struct_method ::=  ( (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations block )
+old_variable_declaration ::=
+	 old_type? identifier ( dimension | fixed_dimension )* ( '=' _expression )?
 
-typedef ::=  ( 'typedef'  (  symbol )  '='  typedef_expression ( semicolon )?  )
+enum ::=
+	 'enum' ( identifier ':'? )? ( '(' ( '=' | '+=' | '-=' | '*=' | '/=' | '|=' | '&=' | '^=' | '~=' | '<<=' | '>>=' ) _expression ')' )? enum_entries _semicolon?
 
-typeset ::=  ( 'typeset'  (  symbol )  '{'  ( ( typedef_expression ( semicolon )?  )  )+  '}'  ( semicolon )?  )
+enum_entries ::=
+	 '{' enum_entry ( ',' enum_entry )* ','? '}'
 
-typedef_expression ::=  ( 'function'  (  ( builtin_type |  symbol )  )  typedef_args )
+enum_entry ::=
+	 ( ( builtin_type | identifier ) ':' )? identifier fixed_dimension? ( '=' _expression )?
 
-typedef_args ::=  ( '('  ( ( typedef_arg (  ( ','  typedef_arg )  )*  )  )?  ')'  )
+enum_struct ::=
+	 'enum' 'struct' identifier '{' ( enum_struct_field | enum_struct_method )* '}'
 
-typedef_arg ::=  ( ( 'const'  )?  (  type_expression )  ( '&'  )?  (  symbol )  ( fixed_dimension )?  )
+enum_struct_field ::=
+	 type identifier fixed_dimension? _semicolon
 
-methodmap ::=  ( 'methodmap'  (  symbol )  ( ( '<'  (  symbol )  )  )?  '{'  (  ( methodmap_alias |  methodmap_native |  methodmap_native_constructor |  methodmap_native_destructor |  methodmap_method |  methodmap_method_constructor |  methodmap_method_destructor |  methodmap_property )  )*  '}'  ( semicolon )?  )
+enum_struct_method ::=
+	 ( type dimension* ) identifier parameter_declarations block
 
-methodmap_alias ::=  ( methodmap_visibility ( '~'  )?  (  symbol )  '('  ')'  '='  (  symbol )  semicolon )
+typedef ::=
+	 'typedef' identifier '=' typedef_expression _semicolon
 
-methodmap_native ::=  ( methodmap_visibility 'native'  (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations semicolon )
+typeset ::=
+	 'typeset' identifier '{' ( typedef_expression _semicolon? )+ '}' _semicolon?
 
-methodmap_native_constructor ::=  ( methodmap_visibility 'native'  (  symbol )  argument_declarations semicolon )
+typedef_expression ::=
+	 'function' ( type ( dimension | fixed_dimension )* ) parameter_declarations
+	| '(' 'function' ( type ( dimension | fixed_dimension )* ) parameter_declarations ')'
 
-methodmap_native_destructor ::=  ( methodmap_visibility 'native'  '~'  (  symbol )  '('  ')'  semicolon )
+funcenum ::=
+	 'funcenum' identifier '{' funcenum_member ( ',' funcenum_member )* ','? '}' _semicolon?
 
-methodmap_method ::=  ( methodmap_visibility ( 'static'  )?  (  ( builtin_type |  symbol )  )  (  symbol )  argument_declarations block )
+funcenum_member ::=
+	 old_type? 'public' parameter_declarations
 
-methodmap_method_constructor ::=  ( methodmap_visibility (  symbol )  argument_declarations block )
+functag ::=
+	 'functag' 'public' old_type identifier parameter_declarations _semicolon?
+	| 'functag' identifier 'public' parameter_declarations _semicolon?
+	| 'functag' identifier old_type 'public' parameter_declarations _semicolon?
 
-methodmap_method_destructor ::=  ( methodmap_visibility '~'  (  symbol )  '('  ')'  block )
+methodmap ::=
+	 'methodmap' identifier ( '<' identifier | '__nullable__' )? '{' ( methodmap_alias | methodmap_native | methodmap_native_constructor | methodmap_native_destructor | methodmap_method | methodmap_method_constructor | methodmap_method_destructor | methodmap_property )* '}' _semicolon?
 
-methodmap_property ::=  ( 'property'  (  ( builtin_type |  symbol )  )  (  symbol )  '{'  ( ( methodmap_property_alias |  methodmap_property_native |  methodmap_property_method )  )+  '}'  )
+methodmap_alias ::=
+	 methodmap_visibility '~'? identifier '(' ')' '=' identifier _semicolon?
 
-methodmap_property_alias ::=  ( methodmap_visibility methodmap_property_getter '='  (  symbol )  semicolon )
+methodmap_native ::=
+	 methodmap_visibility 'static'? 'native' ( type dimension* ) identifier parameter_declarations _semicolon?
 
-methodmap_property_native ::=  ( methodmap_visibility 'native'  ( methodmap_property_getter |  methodmap_property_setter )  semicolon )
+methodmap_native_constructor ::=
+	 methodmap_visibility 'static'? 'native' identifier parameter_declarations _semicolon?
 
-methodmap_property_method ::=  ( methodmap_visibility ( methodmap_property_getter |  methodmap_property_setter )  block )
+methodmap_native_destructor ::=
+	 methodmap_visibility 'native' '~' identifier '(' ')' _semicolon?
 
-methodmap_property_getter ::=  ( 'get'  '('  ')'  )
+methodmap_method ::=
+	 methodmap_visibility 'static'? ( type dimension* ) identifier parameter_declarations block
 
-methodmap_property_setter ::=  ( 'set'  '('  (  ( builtin_type |  symbol )  )  (  symbol )  ')'  )
+methodmap_method_constructor ::=
+	 methodmap_visibility identifier parameter_declarations block
 
-methodmap_visibility ::=  'public'
+methodmap_method_destructor ::=
+	 methodmap_visibility '~' identifier '(' ')' block
 
-struct ::=  ( 'struct'  (  symbol )  '{'  (  struct_field )*  '}'  ( semicolon )?  )
+methodmap_property ::=
+	 'property' type identifier '{' ( methodmap_property_alias | methodmap_property_native | methodmap_property_method )+ '}'
 
-struct_field ::=  ( 'public'  ( 'const'  )?  (  type_expression )  (  symbol )  semicolon )
+methodmap_property_alias ::=
+	 methodmap_visibility methodmap_property_getter '=' identifier _semicolon?
 
-global_variable ::=  ( 'public'  (  ( symbol |  ( symbol (  ':'  )  )  )  )  (  symbol )  '='  (  struct_constructor )  ( semicolon )?  )
+methodmap_property_native ::=
+	 methodmap_visibility 'native' ( methodmap_property_getter | methodmap_property_setter ) _semicolon?
 
-struct_constructor ::=  ( '{'  ( ( struct_field_value (  ( ','  struct_field_value )  )*  )  )?  ( ','  )?  '}'  )
+methodmap_property_method ::=
+	 methodmap_visibility ( methodmap_property_getter | methodmap_property_setter ) block
 
-struct_field_value ::=  ( (  symbol )  '='  (  _expression )  )
+methodmap_property_getter ::=
+	 'get' '(' ')'
 
-type_expression ::=  ( ( builtin_type |  symbol |  any_type )  (  dimension )*  )
+methodmap_property_setter ::=
+	 'set' '(' variable_storage_class? type identifier ')'
 
-old_type_expression ::=  ( ( _old_type |  ( any_type (  ':'  )  )  )  (  dimension )*  )
+methodmap_visibility ::=
+	 'public'
 
-dimension ::=  ( '['  ']'  )
+struct ::=
+	 'struct' identifier '{' struct_field* '}' _semicolon?
 
-fixed_dimension ::=  ( '['  _expression ']'  )
+struct_field ::=
+	 'public' 'const'? ( type ( dimension | fixed_dimension )* ) identifier _semicolon?
 
-_type ::=  ( builtin_type |  symbol |  _old_type )
+struct_declaration ::=
+	 'public' ( identifier | identifier ':' ) identifier '=' struct_constructor _semicolon?
 
-_old_type ::=  ( old_builtin_type |  ( symbol (  ':'  )  )  )
+struct_constructor ::=
+	 '{' ( struct_field_value ( ',' struct_field_value )* )? ','? '}'
 
-builtin_type ::=  ( 'void'  |  'bool'  |  'int'  |  'float'  |  'char'  )
+struct_field_value ::=
+	 identifier '=' _expression
 
-old_builtin_type ::=  (  ( ( '_'  |  'Float'  |  'bool'  |  'String'  )  (  ':'  )  )  )
+type ::=
+	 builtin_type
+	| identifier
+	| any_type
 
-any_type ::=  'any'
+array_type ::=
+	 type ( dimension | fixed_dimension )+
 
-block ::=  ( '{'  (  _statement )*  '}'  )
+old_type ::=
+	 ( old_builtin_type | identifier | any_type ) ':'
 
-_statement ::=  ( block |  _top_level_statements |  for_loop |  while_loop |  do_while_loop |  break_statement |  continue_statement |  condition_statement |  switch_statement |  return_statement |  delete_statement |  expression_statement )
+dimension ::=
+	 '[' ']'
 
-_top_level_statements ::=  ( variable_declaration_statement |  old_variable_declaration_statement )
+fixed_dimension ::=
+	 '[' _expression ']'
 
-for_loop ::=  ( 'for'  '('  (  ( ( _top_level_statements |  assignment_expression )  )?  )  semicolon (  ( _expression )?  )  semicolon (  ( _statement )?  )  ')'  _statement )
+builtin_type ::=
+	 'void'
+	| 'bool'
+	| 'int'
+	| 'float'
+	| 'char'
 
-while_loop ::=  ( 'while'  '('  (  _expression )  ')'  _statement )
+old_builtin_type ::=
+	 '_'
+	| 'Float'
+	| 'bool'
+	| 'String'
 
-do_while_loop ::=   (  ( 'do'  block 'while'  '('  (  _expression )  ')'  ( semicolon )?  )  )
+any_type ::=
+	 'any'
 
-break_statement ::=   (  ( 'break'  ( semicolon )?  )  )
+block ::=
+	 '{' _statement* '}'
 
-continue_statement ::=   (  ( 'continue'  ( semicolon )?  )  )
+_statement ::=
+	 block
+	| variable_declaration_statement
+	| old_variable_declaration_statement
+	| for_statement
+	| while_statement
+	| do_while_statement
+	| break_statement
+	| continue_statement
+	| condition_statement
+	| switch_statement
+	| return_statement
+	| delete_statement
+	| expression_statement
 
-condition_statement ::=   (  ( 'if'  '('  (  _expression )  ')'  (  _statement )  ( ( 'else'  (  _statement )  )  )?  )  )
+for_statement ::=
+	 'for' '(' ( variable_declaration_statement | old_variable_declaration_statement | assignment_expression ( ',' assignment_expression )* )? _manual_semicolon _expression? _manual_semicolon ( _expression | comma_expression )? ')' _statement
 
-switch_statement ::=  ( 'switch'  '('  (  _expression )  ')'  '{'  (  ( switch_case |  switch_default_case )  )*  '}'  )
+while_statement ::=
+	 'while' '(' _expression ')' _statement
 
-switch_case ::=  ( 'case'  (  switch_case_values )  ':'  _statement ( break_statement )?  )
+do_while_statement ::=
+	 'do' _statement 'while' '(' _expression ')' _semicolon?
 
-switch_case_values ::=   (  ( ( _literal |  symbol )  (  ( ','  ( _literal |  symbol )  )  )*  )  )
+break_statement ::=
+	 'break' _semicolon?
 
-switch_default_case ::=  ( 'default'  ':'  _statement ( break_statement )?  )
+continue_statement ::=
+	 'continue' _semicolon?
 
-expression_statement ::=   (  ( ( _expression |  comma_expression )  ( semicolon )?  )  )
+condition_statement ::=
+	 'if' '(' _expression ')' _statement ( 'else' _statement )?
 
-return_statement ::=   (  ( 'return'  ( ( _expression |  comma_expression )  )?  ( semicolon )?  )  )
+switch_statement ::=
+	 'switch' '(' _expression ')' '{' switch_case* '}'
 
-delete_statement ::=   (  ( 'delete'  (  _expression )  ( semicolon )?  )  )
+switch_case ::=
+	 ( 'case' ( _case_expression ( ',' _case_expression )* ) ':' | 'default' ':' ) _statement
 
-semicolon ::=  ';'
+switch_default_case ::=
+	 'default' ':' _statement break_statement?
 
-_expression ::=  ( assignment_expression |  function_call |  array_indexed_access |  conditional_expression |  field_access |  binary_expression |  unary_expression |  update_expression |  sizeof_expression |  view_as |  old_type_cast |  symbol |  _literal |  concatenated_string |  char_literal |  parenthesized_expression |  vector |  this )
+expression_statement ::=
+	 ( _expression | comma_expression ) _semicolon?
 
-assignment_expression ::=   (  ( (  ( array_indexed_access |  field_access |  symbol |  this )  )  (  ( '='  |  '+='  |  '-='  |  '*='  |  '/='  |  '|='  |  '&='  |  '^='  |  '~='  |  '<<='  |  '>>='  )  )  (  ( _expression |  dynamic_array |  new_instance )  )  )  )
+return_statement ::=
+	 'return' ( _expression | comma_expression )? _semicolon?
 
-function_call ::=   (  ( (  ( symbol |  field_access )  )  function_call_arguments )  )
+delete_statement ::=
+	 'delete' _expression _semicolon?
 
-function_call_arguments ::=   (  ( '('  ( ( ( ( '&'  symbol )  |  _expression |  named_arg |  ignore_argument )  (  ( ','  ( ( '&'  symbol )  |  _expression |  named_arg |  ignore_argument )  )  )*  )  )?  ')'  )  )
+_manual_semicolon ::=
+	 ';'
 
-named_arg ::=  ( '.'  (  symbol )  '='  (  ( ( '&'  symbol )  |  _expression )  )  )
+_semicolon ::=
+	 _automatic_semicolon
+	| _manual_semicolon
 
-ignore_argument ::=  '_'
+_expression ::=
+	 assignment_expression
+	| call_expression
+	| array_indexed_access
+	| ternary_expression
+	| field_access
+	| scope_access
+	| binary_expression
+	| unary_expression
+	| update_expression
+	| sizeof_expression
+	| view_as
+	| old_type_cast
+	| identifier
+	| _literal
+	| parenthesized_expression
+	| this
+	| new_expression
 
-array_indexed_access ::=   (  ( (  ( symbol |  array_indexed_access |  field_access )  )  '['  (  _expression )  ']'  )  )
+_case_expression ::=
+	 scope_access
+	| case_binary_expression
+	| case_unary_expression
+	| sizeof_expression
+	| view_as
+	| identifier
+	| _literal
+	| parenthesized_expression
+	| new_expression
 
-parenthesized_expression ::=  ( '('  ( _expression |  comma_expression )  ')'  )
+assignment_expression ::=
+	 ( array_indexed_access | view_as | field_access | scope_access | identifier | this ) ( '=' | '+=' | '-=' | '*=' | '/=' | '|=' | '&=' | '^=' | '~=' | '<<=' | '>>=' | '>>>=' | '%=' ) ( _expression | dynamic_array )
 
-comma_expression ::=  ( (  _expression )  ','  (  ( _expression |  comma_expression )  )  )
+call_expression ::=
+	 ( identifier | field_access ) call_arguments
 
-conditional_expression ::=   (  ( (  _expression )  '?'  (  _expression )  ':'  (  _expression )  )  )
+call_arguments ::=
+	 '(' ( ( '&' identifier | _expression | named_arg | ignore_argument ) ( ',' ( '&' identifier | _expression | named_arg | ignore_argument ) )* )? ')'
 
-field_access ::=   (  ( (  _expression )  '.'  (  symbol )  )  )
+named_arg ::=
+	 '.' identifier '=' ( '&' identifier | _expression )
+
+ignore_argument ::=
+	 '_'
 
-unary_expression ::=   (  ( (  ( '!'  |  '~'  |  '-'  |  '+'  )  )  (  _expression )  )  )
+array_indexed_access ::=
+	 ( identifier | array_indexed_access | field_access ) '[' _expression ']'
 
-binary_expression ::=  (  (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '*'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '/'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '%'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '||'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '|'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '=='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '!='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<='  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '<<'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '>>>'  )  (  _expression )  )  )  )
+parenthesized_expression ::=
+	 '(' ( _expression | comma_expression ) ')'
 
-update_expression ::=   (  ( ( (  ( '--'  |  '++'  )  )  (  _expression )  )  |  ( (  _expression )  (  ( '--'  |  '++'  )  )  )  )  )
+comma_expression ::=
+	 _expression ',' ( _expression | comma_expression )
 
-sizeof_expression ::=   (  ( 'sizeof'  ( ( '('  (  symbol )  (  dimension )*  ')'  )  |  ( (  symbol )  (  dimension )*  )  )  )  )
+ternary_expression ::=
+	 _expression '?' _expression _ternary_colon _expression
 
-view_as ::=   (  ( 'view_as'  '<'  (  ( builtin_type |  symbol )  )  '>'  '('  (  _expression )  ')'  )  )
+field_access ::=
+	 _expression '.' identifier
 
-old_type_cast ::=   (  ( (  _old_type )  (  _expression )  )  )
+scope_access ::=
+	 identifier '::' identifier
 
-vector ::=   (  ( '{'  ( ( vector |  _literal |  symbol )  (  ( ','  ( vector |  _literal |  symbol )  )  )*  )  ( ( ','  rest_operator )  )?  '}'  )  )
+unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _expression
 
-_literal ::=   (  ( int_literal |  float_literal |  char_literal |  string_literal |  concatenated_string |  bool_literal |  null )  )
+case_unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _case_expression
 
-int_literal ::=  (  ( ( [-\+] )?  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  |  ( '0b'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  |  ( '0x'  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )  ( ( [eEpP] ( ( ( [-\+] )?  ( ( [0-9a-fA-F] )+  (  ( "'"  ( [0-9a-fA-F] )+  )  )*  )  )  )?  )  )?  )  )
+binary_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression '&' _expression
+	| _expression '==' _expression
+	| _expression '!=' _expression
+	| _expression '>' _expression
+	| _expression '>=' _expression
+	| _expression '<=' _expression
+	| _expression '<' _expression
+	| _expression '<<' _expression
+	| _expression '>>' _expression
+	| _expression '>>>' _expression
 
-float_literal ::=  (  ( ( [-\+] )?  ( ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  ( ( '.'  ( ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )?  )  )?  )  |  ( '.'  ( ( [0-9] )+  (  ( "'"  ( [0-9] )+  )  )*  )  )  )  )  )
+case_binary_expression ::=
+	 _case_expression '+' _case_expression
+	| _case_expression '-' _case_expression
+	| _case_expression '*' _case_expression
+	| _case_expression '/' _case_expression
+	| _case_expression '%' _case_expression
+	| _case_expression '||' _case_expression
+	| _case_expression '&&' _case_expression
+	| _case_expression '|' _case_expression
+	| _case_expression '^' _case_expression
+	| _case_expression '&' _case_expression
+	| _case_expression '==' _case_expression
+	| _case_expression '!=' _case_expression
+	| _case_expression '>' _case_expression
+	| _case_expression '>=' _case_expression
+	| _case_expression '<=' _case_expression
+	| _case_expression '<' _case_expression
+	| _case_expression '<<' _case_expression
+	| _case_expression '>>' _case_expression
+	| _case_expression '>>>' _case_expression
 
-char_literal ::=  ( "'"  ( escape_sequence |  (  [^\n'] )  )  "'"  )
+update_expression ::=
+	 ( '--' | '++' ) _expression | _expression ( '--' | '++' )
 
-concatenated_string ::=   (  ( (  ( string_literal |  symbol )  )  '...'  (  ( string_literal |  symbol |  concatenated_string )  )  )  )
+_sizeof_call_expression ::=
+	 call_expression | identifier dimension* | array_indexed_access dimension* | field_access | scope_access | _literal | parenthesized_expression | this | array_scope_access
 
-string_literal ::=  ( '"'  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
+array_scope_access ::=
+	 identifier dimension+ '.' identifier
 
-escape_sequence ::=  (   (  ( '\'  ( [^xuU] |  [0-9]+/*{2,3}*/ |  'x'[0-9a-fA-F]+/*{2,}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'U'[0-9a-fA-F]+/*{8}*/ )  )  )  )
+sizeof_expression ::=
+	 'sizeof' ( '(' _sizeof_call_expression ')' | _sizeof_call_expression )
 
-bool_literal ::=  (  ( 'true'  |  'false'  )  )
+view_as ::=
+	 'view_as' '<' type '>' '(' _expression ')'
 
-null ::=  'null'
+old_type_cast ::=
+	 old_type _expression
 
-this ::=  'this'
+array_literal ::=
+	 '{' ( _literal | identifier | view_as | old_type_cast | unary_expression | binary_expression ) ( ',' ( _literal | identifier | view_as | old_type_cast | unary_expression | binary_expression ) )* ( ',' rest_operator? )? '}'
 
-rest_operator ::=  '...'
+_literal ::=
+	 int_literal
+	| float_literal
+	| char_literal
+	| string_literal
+	| concatenated_string
+	| bool_literal
+	| array_literal
+	| null
 
-system_lib_string ::=  (  ( '<'  (  ( [^>\n] |  '\\>'  )  )*  '>'  )  )
+int_literal ::=
+	 ( ( [0-9]+ ( "'"  [0-9]+ )* | '0b' [0-9]+ ( "'"  [0-9]+ )* | '0x' [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* | '0o' [o0-7]+ ( "'"  [o0-7]+ )* ) ( [eEpP] ( [-\+]? [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* )? )? )
 
-symbol ::=  [a-zA-Z_][\w]*
+float_literal ::=
+	 ( ( [0-9]+ ( "'"  [0-9]+ )* ( '.' ( [0-9]+ ( "'"  [0-9]+ )* )? )? | '.' [0-9]+ ( "'"  [0-9]+ )* ) )
 
-comment ::=  (  ( ( '//'  ('\'('.'|[\r]?[\n])|[^\\\n])* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+char_literal ::=
+	 "'"  ( escape_sequence | [^#x0A'] ) "'" 
+
+concatenated_string ::=
+	 ( string_literal | identifier ) '...' ( string_literal | identifier | concatenated_string )
+
+string_literal ::=
+	 '"'  ( [^"\]|'\#x0D'?'#x0A' | escape_sequence )* '"' 
+
+escape_sequence ::=
+	 '\\'  ( (?':'[abefnrt'\"\]|(?":x"[a-zA-Z0-9]"{0,2}"|[0-9]+)";"?) )
+
+bool_literal ::=
+	 ( 'true' | 'false' )
+
+null ::=
+	 'null'
+
+this ::=
+	 'this'
+
+rest_operator ::=
+	 '...'
+
+system_lib_string ::=
+	 ( '<' ( [^>] | '\>' )* '>' )
+
+identifier ::=
+	 [a-zA-Z_][a-zA-Z_]*
+
+comment ::=
+	 ( '//' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
 

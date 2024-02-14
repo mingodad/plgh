@@ -1,234 +1,754 @@
-translation_unit ::=  (  _top_level_item )*
+//
+// From tree-sitter-fortran/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-_top_level_item ::=  ( program_block |  module |  interface |  subroutine |  function )
+translation_unit ::=
+	 _top_level_item* program?
 
-program_block ::=  (  (  ( [pP][rR][oO][gG][rR][aA][mM] identifier )  )  ( comment )?  _end_of_statement (  _specification_part )*  (  _statement )*   (  ( [eE][nN][dD] ( ( [pP][rR][oO][gG][rR][aA][mM] ( identifier )?  )  )?  _end_of_statement )  )  )
+_top_level_item ::=
+	 include_statement _end_of_statement | program | module | submodule | interface | subroutine | function
 
-module ::=  ( module_statement (  _specification_part )*  ( internal_procedures )?   (  ( [eE][nN][dD] ( ( [mM][oO][dD][uU][lL][eE] ( identifier )?  )  )?  _end_of_statement )  )  )
+program ::=
+	 program_statement? _specification_part* _statement* internal_procedures? end_program_statement
 
-module_statement ::=  ( [mM][oO][dD][uU][lL][eE] _name )
+program_statement ::=
+	 [pP][rR][oO][gG][rR][aA][mM] _name
 
-interface ::=  ( interface_statement (  ( procedure_statement |  function |  subroutine )  )*  end_interface_statement )
+end_program_statement ::=
+	 ( [eE][nN][dD] [pP][rR][oO][gG][rR][aA][mM]? | [eE][nN][dD][pP][rR][oO][gG][rR][aA][mM] ) _name? _end_of_statement
 
-interface_statement ::=  ( [iI][nN][tT][eE][rR][fF][aA][cC][eE] ( ( _name |  assignment |  operator )  )?  )
+module ::=
+	 module_statement _specification_part* internal_procedures? end_module_statement
 
-end_interface_statement ::=   (  ( [eE][nN][dD] [iI][nN][tT][eE][rR][fF][aA][cC][eE] ( ( _name |  assignment |  operator )  )?  _end_of_statement )  )
+module_statement ::=
+	 [mM][oO][dD][uU][lL][eE] _name
 
-assignment ::=  ( [aA][sS][sS][iI][gG][nN][mM][eE][nN][tT] '('  '='  ')'  )
+end_module_statement ::=
+	 ( [eE][nN][dD] [mM][oO][dD][uU][lL][eE]? | [eE][nN][dD][mM][oO][dD][uU][lL][eE] ) _name? _end_of_statement
 
-operator ::=  ( [oO][pP][eE][rR][aA][tT][oO][rR] '('  [^()]+ ')'  )
+submodule ::=
+	 submodule_statement _specification_part* internal_procedures? end_submodule_statement
 
-subroutine ::=  ( subroutine_statement _end_of_statement (  _specification_part )*  (  _statement )*  ( internal_procedures )?   (  ( [eE][nN][dD] ( ( [sS][uU][bB][rR][oO][uU][tT][iI][nN][eE] ( identifier )?  )  )?  _end_of_statement )  )  )
+submodule_statement ::=
+	 [sS][uU][bB][mM][oO][dD][uU][lL][eE] '(' module_name ( ':' module_name )? ')' _name
 
-subroutine_statement ::=  ( (  procedure_qualifier )*  [sS][uU][bB][rR][oO][uU][tT][iI][nN][eE] _name ( parameters )?  )
+end_submodule_statement ::=
+	 ( [eE][nN][dD] [sS][uU][bB][mM][oO][dD][uU][lL][eE]? | [eE][nN][dD][sS][uU][bB][mM][oO][dD][uU][lL][eE] ) _name? _end_of_statement
 
-function ::=  ( function_statement _end_of_statement (  _specification_part )*  (  _statement )*  ( internal_procedures )?   (  ( [eE][nN][dD] ( ( [fF][uU][nN][cC][tT][iI][oO][nN] ( identifier )?  )  )?  _end_of_statement )  )  )
+module_name ::=
+	 _name
 
-function_statement ::=  ( (  procedure_qualifier )*  ( ( _intrinsic_type |  derived_type )  )?  [fF][uU][nN][cC][tT][iI][oO][nN] _name ( ( '()'  |  parameters )  )?  ( function_result )?  )
+interface ::=
+	 interface_statement ( import_statement | procedure_statement | function | subroutine )* end_interface_statement
 
-function_result ::=  ( [rR][eE][sS][uU][lL][tT] '('  identifier ')'  )
+interface_statement ::=
+	 abstract_specifier? [iI][nN][tT][eE][rR][fF][aA][cC][eE] ( _name | _generic_procedure )?
 
-_name ::=  (  identifier )
+end_interface_statement ::=
+	 ( [eE][nN][dD] [iI][nN][tT][eE][rR][fF][aA][cC][eE] | [eE][nN][dD][iI][nN][tT][eE][rR][fF][aA][cC][eE] ) ( _name | _generic_procedure )? _end_of_statement
 
-parameters ::=  ( '('  ( identifier (  ( ','  identifier )  )*  )  ')'  )
+assignment ::=
+	 [aA][sS][sS][iI][gG][nN][mM][eE][nN][tT] '(' '=' ')'
 
-internal_procedures ::=  ( contains_statement _end_of_statement (  ( function |  subroutine )  )*  )
+operator ::=
+	 [oO][pP][eE][rR][aA][tT][oO][rR] '(' [^()]+ ')'
 
-contains_statement ::=  [cC][oO][nN][tT][aA][iI][nN][sS]
+defined_io_procedure ::=
+	 ( [rR][eE][aA][dD] | [wW][rR][iI][tT][eE] ) '(' ( [fF][oO][rR][mM][aA][tT][tT][eE][dD] | [uU][nN][fF][oO][rR][mM][aA][tT][tT][eE][dD] ) ')'
 
-_specification_part ::=  (  (  ( include_statement _end_of_statement )  )  |  ( use_statement _end_of_statement )  |  ( implicit_statement _end_of_statement )  |  ( public_statement _end_of_statement )  |  ( private_statement _end_of_statement )  |  interface |  derived_type_definition |  ( variable_declaration _end_of_statement )  |  ( variable_modification _end_of_statement )  |  ( parameter_statement _end_of_statement )  |  ( equivalence_statement _end_of_statement )  |   (  ( statement_label format_statement _end_of_statement )  )  )
+_generic_procedure ::=
+	 assignment
+	| operator
+	| defined_io_procedure
 
-use_statement ::=  ( [uU][sS][eE] (  identifier )  ( included_items )?  )
+subroutine ::=
+	 subroutine_statement _end_of_statement _specification_part* _statement* internal_procedures? end_subroutine_statement
 
-included_items ::=  ( ','  [oO][nN][lL][yY] ':'  ( identifier (  ( ','  identifier )  )*  )  )
+subroutine_statement ::=
+	 _callable_interface_qualifers? [sS][uU][bB][rR][oO][uU][tT][iI][nN][eE] _name _parameters? language_binding?
 
-implicit_statement ::=  ( [iI][mM][pP][lL][iI][cC][iI][tT] ( ( ( intrinsic_type ( size )?  '('  ( implicit_range (  ( ','  implicit_range )  )*  )  ')'  )  (  ( ','  ( intrinsic_type ( size )?  '('  ( implicit_range (  ( ','  implicit_range )  )*  )  ')'  )  )  )*  )  |  (  [nN][oO][nN][eE] )  )  )
+end_subroutine_statement ::=
+	 ( [eE][nN][dD] [sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]? | [eE][nN][dD][sS][uU][bB][rR][oO][uU][tT][iI][nN][eE] ) _name? _end_of_statement
 
-implicit_range ::=  ( [a-zA-Z] ( ( '-'  [a-zA-Z] )  )?  )
+module_procedure ::=
+	 module_procedure_statement _end_of_statement _specification_part* _statement* internal_procedures? end_module_procedure_statement
 
-derived_type_definition ::=  ( derived_type_statement ( ( (  [sS][eE][qQ][uU][eE][nN][cC][eE] )  _end_of_statement )  )?  (  ( ( include_statement |  variable_declaration )  _end_of_statement )  )*  ( derived_type_procedures )?   (  ( [eE][nN][dD] ( ( [tT][yY][pP][eE] ( identifier )?  )  )?  _end_of_statement )  )  )
+module_procedure_statement ::=
+	 _callable_interface_qualifers? [mM][oO][dD][uU][lL][eE] [pP][rR][oO][cC][eE][dD][uU][rR][eE] _name
 
-derived_type_statement ::=  ( ( statement_label )?  [tT][yY][pP][eE] ( _type_name |  ( '::'  _type_name )  |  ( ','  type_qualifier '::'  _type_name )  )  _end_of_statement )
+end_module_procedure_statement ::=
+	 ( [eE][nN][dD] [pP][rR][oO][cC][eE][dD][uU][rR][eE]? | [eE][nN][dD][pP][rR][oO][cC][eE][dD][uU][rR][eE] ) _name? _end_of_statement
 
-_type_name ::=  (  identifier )
+function ::=
+	 function_statement _end_of_statement _specification_part* _statement* internal_procedures? end_function_statement
 
-derived_type_procedures ::=  ( contains_statement (  procedure_statement )*  )
+function_statement ::=
+	 _callable_interface_qualifers? [fF][uU][nN][cC][tT][iI][oO][nN] _name _parameters? ( language_binding | function_result )*?
 
-procedure_statement ::=  ( _procedure_kind ( ( ','  ( procedure_attribute (  ( ','  procedure_attribute )  )*  )  )  )?  ( ( ( '::'  _binding_name '=>'  )  |  '::'  )  )?  ( _method_name (  ( ','  _method_name )  )*  )  )
+language_binding ::=
+	 [bB][iI][nN][dD] '(' identifier ( ',' keyword_argument )? ')'
 
-_binding_name ::=  (  identifier )
+_callable_interface_qualifers ::=
+	 procedure_attributes | procedure_qualifier | _intrinsic_type | derived_type+
 
-_method_name ::=  (  identifier )
+procedure_attributes ::=
+	 [aA][tT][tT][rR][iI][bB][uU][tT][eE][sS] '(' ( [gG][lL][oO][bB][aA][lL] | [dD][eE][vV][iI][cC][eE] | [hH][oO][sS][tT] | [gG][rR][iI][dD]'_'[gG][lL][oO][bB][aA][lL] ) ( ',' ( [gG][lL][oO][bB][aA][lL] | [dD][eE][vV][iI][cC][eE] | [hH][oO][sS][tT] | [gG][rR][iI][dD]'_'[gG][lL][oO][bB][aA][lL] ) )* ')'
 
-_procedure_kind ::=  ( [gG][eE][nN][eE][rR][iI][cC] |  [iI][nN][iI][tT][iI][aA][lL] |  [pP][rR][oO][cC][eE][dD][uU][rR][eE] |  ( [mM][oO][dD][uU][lL][eE] [pP][rR][oO][cC][eE][dD][uU][rR][eE] )  |  [pP][rR][oO][pP][eE][rR][tT][yY] )
+end_function_statement ::=
+	 ( [eE][nN][dD] [fF][uU][nN][cC][tT][iI][oO][nN]? | [eE][nN][dD][fF][uU][nN][cC][tT][iI][oO][nN] ) _name? _end_of_statement
 
-procedure_attribute ::=  ( [pP][aA][sS][sS] |  [nN][oO][pP][aA][sS][sS] |  [nN][oO][nN]_[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE] |  [pP][uU][bB][lL][iI][cC] |  [pP][rR][iI][vV][aA][tT][eE] |  [fF][aA][mM][iI][lL][yY] |  [pP][oO][iI][nN][tT][eE][rR] )
+function_result ::=
+	 [rR][eE][sS][uU][lL][tT] '(' identifier ')'
 
-variable_declaration ::=  ( ( _intrinsic_type |  derived_type )  ( ( ','  ( type_qualifier (  ( ','  type_qualifier )  )*  )  )  )?  ( '::'  )?  _declaration_targets )
+_name ::=
+	 identifier
 
-variable_modification ::=  ( type_qualifier ( '::'  )?  _declaration_targets )
+_parameters ::=
+	 '(' ')'
+	| parameters
 
-_declaration_targets ::=  ( ( identifier |  call_expression |  assignment_statement |  pointer_association_statement )  (  ( ','  ( identifier |  call_expression |  assignment_statement |  pointer_association_statement )  )  )*  )
+parameters ::=
+	 '(' identifier ( ',' identifier )* ')'
 
-_intrinsic_type ::=   (  ( intrinsic_type ( size )?  )  )
+internal_procedures ::=
+	 contains_statement _end_of_statement ( function | module_procedure | subroutine )*
 
-intrinsic_type ::=  ( [bB][yY][tT][eE] |  [iI][nN][tT][eE][gG][eE][rR] |  [rR][eE][aA][lL] |  [dD][oO][uU][bB][lL][eE][ \t]*[pP][rR][eE][cC][iI][sS][iI][oO][nN] |  [cC][oO][mM][pP][lL][eE][xX] |  [dD][oO][uU][bB][lL][eE][ \t]*[cC][oO][mM][pP][lL][eE][xX] |  [lL][oO][gG][iI][cC][aA][lL] |  [cC][hH][aA][rR][aA][cC][tT][eE][rR] )
+contains_statement ::=
+	 [cC][oO][nN][tT][aA][iI][nN][sS]
 
-derived_type ::=  ( ( [tT][yY][pP][eE] |  [cC][lL][aA][sS][sS] )  '('  _type_name ')'  )
+_specification_part ::=
+	 include_statement _end_of_statement | use_statement _end_of_statement | implicit_statement _end_of_statement | save_statement _end_of_statement | import_statement _end_of_statement | public_statement _end_of_statement | private_statement _end_of_statement | enum | interface | derived_type_definition | namelist_statement _end_of_statement | common_statement _end_of_statement | variable_declaration _end_of_statement | variable_modification _end_of_statement | parameter_statement _end_of_statement | equivalence_statement _end_of_statement | data_statement _end_of_statement | statement_label format_statement _end_of_statement
 
-size ::=  ( argument_list |  ( '*'  ( [0-9]+ |  parenthesized_expression )  )  )
+use_statement ::=
+	 [uU][sS][eE] ( ',' ( [iI][nN][tT][rR][iI][nN][sS][iI][cC] | [nN][oO][nN]'_'[iI][nN][tT][rR][iI][nN][sS][iI][cC] ) '::' | '::' ) identifier ( ',' use_alias ( ',' use_alias )* | included_items )?
 
-type_qualifier ::=  ( [aA][lL][lL][oO][cC][aA][tT][aA][bB][lL][eE] |  [aA][uU][tT][oO][mM][aA][tT][iI][cC] |   (  ( [dD][iI][mM][eE][nN][sS][iI][oO][nN] ( argument_list )?  )  )  |  [eE][xX][tT][eE][rR][nN][aA][lL] |  ( [iI][nN][tT][eE][nN][tT] '('  ( [iI][nN] |  [oO][uU][tT] |  [iI][nN][ \t]*[oO][uU][tT] )  ')'  )  |  [iI][nN][tT][rR][iI][nN][sS][iI][cC] |  [oO][pP][tT][iI][oO][nN][aA][lL] |  [pP][aA][rR][aA][mM][eE][tT][eE][rR] |  [pP][oO][iI][nN][tT][eE][rR] |  [pP][rR][iI][vV][aA][tT][eE] |  [pP][uU][bB][lL][iI][cC] |  [sS][aA][vV][eE] |  [sS][eE][qQ][uU][eE][nN][cC][eE] |  [sS][tT][aA][tT][iI][cC] |  [tT][aA][rR][gG][eE][tT] |  [vV][oO][lL][aA][tT][iI][lL][eE] )
+included_items ::=
+	 ',' [oO][nN][lL][yY] ':' ( ( use_alias | identifier | _generic_procedure ) ( ',' ( use_alias | identifier | _generic_procedure ) )* )?
 
-procedure_qualifier ::=  ( [eE][lL][eE][mM][eE][nN][tT][aA][lL] |  [pP][uU][rR][eE] |  [rR][eE][cC][uU][rR][sS][iI][vV][eE] )
+use_alias ::=
+	 identifier '=>' identifier
 
-private_statement ::=  [pP][rR][iI][vV][aA][tT][eE]
+implicit_statement ::=
+	 [iI][mM][pP][lL][iI][cC][iI][tT] ( intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' ( ',' intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' )* | [nN][oO][nN][eE] ( '(' ( [tT][yY][pP][eE] | [eE][xX][tT][eE][rR][nN][aA][lL] ) ( ',' ( [tT][yY][pP][eE] | [eE][xX][tT][eE][rR][nN][aA][lL] ) )* ')' )? )
 
-public_statement ::=  [pP][uU][bB][lL][iI][cC]
+save_statement ::=
+	 [sS][aA][vV][eE] ( '::'? ( identifier | '/' identifier '/' ) ( ',' ( identifier | '/' identifier '/' ) )* )?
 
-parameter_statement ::=   (  ( [pP][aA][rR][aA][mM][eE][tT][eE][rR] '('  ( parameter_assignment (  ( ','  parameter_assignment )  )*  )  ')'  )  )
+private_statement ::=
+	 [pP][rR][iI][vV][aA][tT][eE] ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )?
 
-parameter_assignment ::=  ( identifier '='  _expression )
+public_statement ::=
+	 [pP][uU][bB][lL][iI][cC] ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )?
 
-equivalence_statement ::=  ( [eE][qQ][uU][iI][vV][aA][lL][eE][nN][cC][eE] ( equivalence_set (  ( ','  equivalence_set )  )*  )  )
+namelist_statement ::=
+	 [nN][aA][mM][eE][lL][iI][sS][tT] variable_group+
 
-equivalence_set ::=  ( '('  ( identifier |  call_expression )  ','  ( ( identifier |  call_expression )  (  ( ','  ( identifier |  call_expression )  )  )*  )  ')'  )
+common_statement ::=
+	 [cC][oO][mM][mM][oO][nN] ( variable_group | identifier ( ',' identifier )* )+
 
-_statement ::=  ( ( statement_label )?  _statements _end_of_statement )
+variable_group ::=
+	 '/' _name '/' identifier ( ',' identifier )*
 
-_statements ::=  ( assignment_statement |  pointer_association_statement |  call_expression |  subroutine_call |  keyword_statement |  include_statement |  if_statement |  where_statement |  forall_statement |  select_case_statement |  do_loop_statement |  format_statement |  print_statement |  write_statement |  read_statement )
+implicit_range ::=
+	 [a-zA-Z] ( '-' [a-zA-Z] )?
 
-statement_label ::=  [0-9]+
+import_statement ::=
+	 [iI][mM][pP][oO][rR][tT] _import_names?
 
-_statement_label_reference ::=  (  statement_label )
+_import_names ::=
+	 '::'? identifier ( ',' identifier )*
+	| ',' ( [oO][nN][lL][yY] ':' identifier ( ',' identifier )* | [nN][oO][nN][eE] | [aA][lL][lL] )
 
-assignment_statement ::=   (  ( _expression '='  _expression )  )
+derived_type_definition ::=
+	 derived_type_statement public_statement? private_statement? ( [sS][eE][qQ][uU][eE][nN][cC][eE] _end_of_statement )? ( ( include_statement | variable_declaration ) _end_of_statement )* derived_type_procedures? end_type_statement
 
-pointer_association_statement ::=   (  ( _expression '=>'  _expression )  )
+abstract_specifier ::=
+	 [aA][bB][sS][tT][rR][aA][cC][tT]
 
-subroutine_call ::=  ( [cC][aA][lL][lL] _name ( argument_list )?  )
+access_specifier ::=
+	 [pP][uU][bB][lL][iI][cC]
+	| [pP][rR][iI][vV][aA][tT][eE]
 
-keyword_statement ::=  ( [cC][oO][nN][tT][iI][nN][uU][eE] |  ( [cC][yY][cC][lL][eE] ( identifier )?  )  |  ( [eE][xX][iI][tT] ( identifier )?  )  |  ( [gG][oO][ \t]*[tT][oO] statement_label )  |  [rR][eE][tT][uU][rR][nN] |  ( [sS][tT][oO][pP] ( _expression )?  )  )
+base_type_specifier ::=
+	 [eE][xX][tT][eE][nN][dD][sS] '(' identifier ')'
 
-include_statement ::=  ( [iI][nN][cC][lL][uU][dD][eE] (  string_literal )  )
+_derived_type_qualifier ::=
+	 abstract_specifier
+	| access_specifier
+	| base_type_specifier
+	| language_binding
 
-do_loop_statement ::=  ( ( block_label_start_expression )?  [dD][oO] ( loop_control_expression )?  _end_of_statement (  _statement )*  [eE][nN][dD][ \t]*[dD][oO] ( _block_label )?  )
+derived_type_statement ::=
+	 statement_label? [tT][yY][pP][eE] ( '::'? _type_name | ',' _derived_type_qualifier ( ',' _derived_type_qualifier )* '::' _type_name ) _end_of_statement
 
-if_statement ::=  ( _inline_if_statement |  _block_if_statement )
+end_type_statement ::=
+	 ( [eE][nN][dD] [tT][yY][pP][eE]? | [eE][nN][dD][tT][yY][pP][eE] ) _name? _end_of_statement
 
-_inline_if_statement ::=   (  ( [iI][fF] parenthesized_expression _statements )  )
+_type_name ::=
+	 identifier
+
+derived_type_procedures ::=
+	 contains_statement public_statement? private_statement? procedure_statement*
 
-_block_if_statement ::=  ( ( block_label_start_expression )?  [iI][fF] parenthesized_expression [tT][hH][eE][nN] ( _block_label )?  _end_of_statement (  _statement )*  (  elseif_clause )*  ( else_clause )?  [eE][nN][dD][ \t]*[iI][fF] ( _block_label )?  )
+procedure_statement ::=
+	 _procedure_kind ( '(' identifier ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )? '::'? ( method_name | binding_name '=>' method_name ) ( ',' ( method_name | binding_name '=>' method_name ) )*
 
-elseif_clause ::=  ( [eE][lL][sS][eE][ \t]*[iI][fF] parenthesized_expression [tT][hH][eE][nN] ( _block_label )?  _end_of_statement (  _statement )*  )
+binding_name ::=
+	 identifier
+	| _generic_procedure
 
-else_clause ::=  ( [eE][lL][sS][eE] ( _block_label )?  _end_of_statement (  _statement )*  )
+method_name ::=
+	 identifier
 
-where_statement ::=  ( _inline_where_statement |  _block_where_statement )
+_procedure_kind ::=
+	 [gG][eE][nN][eE][rR][iI][cC]
+	| [iI][nN][iI][tT][iI][aA][lL]
+	| [pP][rR][oO][cC][eE][dD][uU][rR][eE]
+	| [mM][oO][dD][uU][lL][eE] [pP][rR][oO][cC][eE][dD][uU][rR][eE]
+	| [pP][rR][oO][pP][eE][rR][tT][yY]
+	| [fF][iI][nN][aA][lL]
 
-_inline_where_statement ::=   (  ( [wW][hH][eE][rR][eE] parenthesized_expression _statements )  )
+procedure_attribute ::=
+	 [dD][eE][fF][eE][rR][rR][eE][dD] | [pP][aA][sS][sS] ( '(' identifier ')' )? | [nN][oO][pP][aA][sS][sS] | [nN][oO][nN]'_'[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE] | [pP][uU][bB][lL][iI][cC] | [pP][rR][iI][vV][aA][tT][eE] | [fF][aA][mM][iI][lL][yY] | [pP][oO][iI][nN][tT][eE][rR]
+
+variable_declaration ::=
+	 ( _intrinsic_type | derived_type | procedure_declaration ) ( ',' type_qualifier ( ',' type_qualifier )* )? '::'? _declaration_targets
+
+procedure_declaration ::=
+	 [pP][rR][oO][cC][eE][dD][uU][rR][eE] ( '(' identifier? ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )?
+
+variable_modification ::=
+	 ( type_qualifier | variable_attributes )+ '::'? _declaration_targets
+
+variable_attributes ::=
+	 [aA][tT][tT][rR][iI][bB][uU][tT][eE][sS] '(' ( [dD][eE][vV][iI][cC][eE] | [mM][aA][nN][aA][gG][eE][dD] | [cC][oO][nN][sS][tT][aA][nN][tT] | [sS][hH][aA][rR][eE][dD] | [pP][iI][nN][nN][eE][dD] | [tT][eE][xX][tT][uU][rR][eE] ) ')'
+
+_declaration_targets ::=
+	 ( identifier | identifier character_length | call_expression | assignment_statement | pointer_association_statement ) ( ',' ( identifier | identifier character_length | call_expression | assignment_statement | pointer_association_statement ) )*
+
+_intrinsic_type ::=
+	 intrinsic_type size?
+
+intrinsic_type ::=
+	 [bB][yY][tT][eE]
+	| [iI][nN][tT][eE][gG][eE][rR]
+	| [rR][eE][aA][lL]
+	| ( [dD][oO][uU][bB][lL][eE] [pP][rR][eE][cC][iI][sS][iI][oO][nN] | [dD][oO][uU][bB][lL][eE][pP][rR][eE][cC][iI][sS][iI][oO][nN] )
+	| [cC][oO][mM][pP][lL][eE][xX]
+	| ( [dD][oO][uU][bB][lL][eE] [cC][oO][mM][pP][lL][eE][xX] | [dD][oO][uU][bB][lL][eE][cC][oO][mM][pP][lL][eE][xX] )
+	| [lL][oO][gG][iI][cC][aA][lL]
+	| [cC][hH][aA][rR][aA][cC][tT][eE][rR]
+
+derived_type ::=
+	 ( [tT][yY][pP][eE] | [cC][lL][aA][sS][sS] ) '(' ( _intrinsic_type | _type_name | unlimited_polymorphic ) ')'
+
+unlimited_polymorphic ::=
+	 '*'
+
+size ::=
+	 '*'? argument_list
+	| '*' ( [0-9]+ | parenthesized_expression )
+
+character_length ::=
+	 '*' [0-9]+? ( '(' '*' ')' )?
+
+type_qualifier ::=
+	 [aA][bB][sS][tT][rR][aA][cC][tT]
+	| [aA][lL][lL][oO][cC][aA][tT][aA][bB][lL][eE]
+	| [aA][uU][tT][oO][mM][aA][tT][iI][cC]
+	| [dD][iI][mM][eE][nN][sS][iI][oO][nN] argument_list?
+	| [cC][oO][nN][sS][tT][aA][nN][tT]
+	| [cC][oO][nN][tT][iI][gG][uU][oO][uU][sS]
+	| [dD][eE][vV][iI][cC][eE]
+	| [eE][xX][tT][eE][rR][nN][aA][lL]
+	| [iI][nN][tT][eE][nN][tT] '(' ( [iI][nN] | [oO][uU][tT] | ( [iI][nN] [oO][uU][tT] | [iI][nN][oO][uU][tT] ) ) ')'
+	| [iI][nN][tT][rR][iI][nN][sS][iI][cC]
+	| [mM][aA][nN][aA][gG][eE][dD]
+	| [oO][pP][tT][iI][oO][nN][aA][lL]
+	| [pP][aA][rR][aA][mM][eE][tT][eE][rR]
+	| [pP][iI][nN][nN][eE][dD]
+	| [pP][oO][iI][nN][tT][eE][rR]
+	| [pP][rR][iI][vV][aA][tT][eE]
+	| [pP][rR][oO][tT][eE][cC][tT][eE][dD]
+	| [pP][uU][bB][lL][iI][cC]
+	| [sS][aA][vV][eE]
+	| [sS][eE][qQ][uU][eE][nN][cC][eE]
+	| [sS][hH][aA][rR][eE][dD]
+	| [sS][tT][aA][tT][iI][cC]
+	| [tT][aA][rR][gG][eE][tT]
+	| [tT][eE][xX][tT][uU][rR][eE]
+	| [vV][aA][lL][uU][eE]
+	| [vV][oO][lL][aA][tT][iI][lL][eE]
+
+procedure_qualifier ::=
+	 [eE][lL][eE][mM][eE][nN][tT][aA][lL]
+	| [iI][mM][pP][uU][rR][eE]
+	| [mM][oO][dD][uU][lL][eE]
+	| [pP][uU][rR][eE]
+	| [rR][eE][cC][uU][rR][sS][iI][vV][eE]
+
+parameter_statement ::=
+	 [pP][aA][rR][aA][mM][eE][tT][eE][rR] '(' parameter_assignment ( ',' parameter_assignment )* ')'
+
+parameter_assignment ::=
+	 identifier '=' _expression
+
+equivalence_statement ::=
+	 [eE][qQ][uU][iI][vV][aA][lL][eE][nN][cC][eE] equivalence_set ( ',' equivalence_set )*
+
+equivalence_set ::=
+	 '(' ( identifier | call_expression ) ',' ( identifier | call_expression ) ( ',' ( identifier | call_expression ) )* ')'
+
+_statement ::=
+	 statement_label? _statements _end_of_statement
+
+_statements ::=
+	 assignment_statement
+	| pointer_association_statement
+	| call_expression
+	| subroutine_call
+	| keyword_statement
+	| include_statement
+	| if_statement
+	| arithmetic_if_statement
+	| where_statement
+	| forall_statement
+	| select_case_statement
+	| select_type_statement
+	| select_rank_statement
+	| do_loop_statement
+	| do_label_statement
+	| format_statement
+	| open_statement
+	| close_statement
+	| print_statement
+	| write_statement
+	| read_statement
+	| inquire_statement
+	| stop_statement
+	| block_construct
+	| associate_statement
+	| file_position_statement
 
-_block_where_statement ::=  ( ( block_label_start_expression )?  [wW][hH][eE][rR][eE] parenthesized_expression _end_of_statement (  _statement )*  (  elsewhere_clause )*  [eE][nN][dD][ \t]*[wW][hH][eE][rR][eE] ( _block_label )?  )
+statement_label ::=
+	 _integer_literal
 
-elsewhere_clause ::=  ( [eE][lL][sS][eE][ \t]*[wW][hH][eE][rR][eE] ( parenthesized_expression )?  ( _block_label )?  _end_of_statement (  _statement )*  )
+statement_label_reference ::=
+	 statement_label
 
-forall_statement ::=  ( _inline_forall_statement |  _block_forall_statement )
+stop_statement ::=
+	 [eE][rR][rR][oO][rR]? [sS][tT][oO][pP] _expression? ( ',' [qQ][uU][iI][eE][tT] '=' _expression )?
 
-triplet_spec ::=  ( identifier '='  _expression ':'  _expression ( ( ':'  _expression )  )?  )
+assignment_statement ::=
+	 _expression '=' _expression
 
-_forall_control_expression ::=  ( [fF][oO][rR][aA][lL][lL] '('  ( triplet_spec (  ( ','  triplet_spec )  )*  )  ( ( ','  ( logical_expression |  relational_expression )  )  )?  ')'  )
+pointer_association_statement ::=
+	 _expression '=>' _expression
 
-_inline_forall_statement ::=  ( _forall_control_expression _statements )
+subroutine_call ::=
+	 [cC][aA][lL][lL] _expression cuda_kernel_argument_list? argument_list?
 
-_block_forall_statement ::=  ( ( block_label_start_expression )?  _forall_control_expression _end_of_statement (  _statement )*  [eE][nN][dD][ \t]*[fF][oO][rR][aA][lL][lL] ( _block_label )?  )
+cuda_kernel_argument_list ::=
+	 '<<<' _expression ( ',' _expression )* '>>>'
 
-select_case_statement ::=  ( ( block_label_start_expression )?  [sS][eE][lL][eE][cC][tT][ \t]*[cC][aA][sS][eE] selector _end_of_statement ( case_statement )+  [eE][nN][dD][ \t]*[sS][eE][lL][eE][cC][tT] ( _block_label )?  )
+keyword_statement ::=
+	 [cC][oO][nN][tT][iI][nN][uU][eE]
+	| [cC][yY][cC][lL][eE] identifier?
+	| [eE][xX][iI][tT] identifier?
+	| ( [gG][oO] [tT][oO] | [gG][oO][tT][oO] ) ( statement_label_reference | '(' statement_label_reference ( ',' statement_label_reference )* ')' ','? _expression )
+	| [rR][eE][tT][uU][rR][nN]
 
-selector ::=  ( '('  _expression ')'  )
+include_statement ::=
+	 [iI][nN][cC][lL][uU][dD][eE] string_literal
 
-case_statement ::=  ( [cC][aA][sS][eE] ( ( '('  case_value_range_list ')'  )  |  (  [dD][eE][fF][aA][uU][lL][tT] )  )  ( _block_label )?  _end_of_statement (  _statement )*  )
+data_statement ::=
+	 [dD][aA][tT][aA] data_set ( ',' data_set )*
 
-case_value_range_list ::=  ( ( _expression |  extent_specifier |  (  [dD][eE][fF][aA][uU][lL][tT] )  )  (  ( ','  ( _expression |  extent_specifier |  (  [dD][eE][fF][aA][uU][lL][tT] )  )  )  )*  )
+data_set ::=
+	 ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) ( ',' ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) )* data_value
 
-format_statement ::=  ( [fF][oO][rR][mM][aA][tT] '('  (  _transfer_items )  ')'  )
+data_value ::=
+	 '/' number_literal '*'? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) ( ',' number_literal '*'? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) )* '/'
 
-_transfer_items ::=  ( ( string_literal |  edit_descriptor |  ( ( edit_descriptor )?  '('  _transfer_items ')'  )  )  (  ( ','  ( string_literal |  edit_descriptor |  ( ( edit_descriptor )?  '('  _transfer_items ')'  )  )  )  )*  )
+do_loop_statement ::=
+	 block_label_start_expression? [dD][oO] ','? ( while_statement | loop_control_expression | concurrent_statement )? _end_of_statement _statement* statement_label? end_do_loop_statement
 
-edit_descriptor ::=  [a-zA-Z0-9/:.*]+
+do_label_statement ::=
+	 [dD][oO] statement_label_reference ','? loop_control_expression
 
-read_statement ::=  ( _simple_read_statement |  _parameterized_read_statement )
+end_do_loop_statement ::=
+	 ( [eE][nN][dD] [dD][oO] | [eE][nN][dD][dD][oO] ) _block_label?
 
-_simple_read_statement ::=  ( [rR][eE][aA][dD] format_identifier ( ( ','  input_item_list )  )?  )
+while_statement ::=
+	 [wW][hH][iI][lL][eE] parenthesized_expression
 
-_parameterized_read_statement ::=  ( [rR][eE][aA][dD] '('  ( unit_identifier |  ( unit_identifier ','  format_identifier )  |  ( unit_identifier ','  ( keyword_argument (  ( ','  keyword_argument )  )*  )  )  |  ( keyword_argument (  ( ','  keyword_argument )  )*  )  )  ')'  ( input_item_list )?  )
+concurrent_statement ::=
+	 concurrent_header concurrent_locality*
 
-print_statement ::=  ( [pP][rR][iI][nN][tT] format_identifier ( ( ','  output_item_list )  )?  )
+concurrent_header ::=
+	 [cC][oO][nN][cC][uU][rR][rR][eE][nN][tT] '(' ( _intrinsic_type '::' )? concurrent_control ( ',' concurrent_control )* ( ',' _expression )? ')'
 
-write_statement ::=  ( [wW][rR][iI][tT][eE] '('  ( unit_identifier |  ( unit_identifier ','  format_identifier )  |  ( unit_identifier ','  format_identifier ','  ( keyword_argument (  ( ','  keyword_argument )  )*  )  )  |  ( unit_identifier ','  ( keyword_argument (  ( ','  keyword_argument )  )*  )  )  |  ( keyword_argument (  ( ','  keyword_argument )  )*  )  )  ')'  ( output_item_list )?  )
+concurrent_control ::=
+	 identifier '=' _expression ':' _expression ( ':' _expression )?
 
-unit_identifier ::=   (  ( number_literal |  _io_expressions )  )
+concurrent_locality ::=
+	 ( [lL][oO][cC][aA][lL] | [lL][oO][cC][aA][lL]'_'[iI][nN][iI][tT] | [sS][hH][aA][rR][eE][dD] ) '(' identifier ( ',' identifier )* ')'
+	| [dD][eE][fF][aA][uU][lL][tT] '(' [nN][oO][nN][eE] ')'
 
-format_identifier ::=  ( _statement_label_reference |  _io_expressions )
+if_statement ::=
+	 _inline_if_statement
+	| _block_if_statement
 
-_io_expressions ::=   (  ( '*'  |  string_literal |  identifier |  derived_type_member_expression |  concatenation_expression |  math_expression |  parenthesized_expression |  call_expression )  )
+_inline_if_statement ::=
+	 [iI][fF] parenthesized_expression _statements
 
-input_item_list ::=   (  ( _expression (  ( ','  _expression )  )*  )  )
+arithmetic_if_statement ::=
+	 [iI][fF] parenthesized_expression statement_label_reference ',' statement_label_reference ',' statement_label_reference
 
-output_item_list ::=   (  ( _expression (  ( ','  _expression )  )*  )  )
+_block_if_statement ::=
+	 block_label_start_expression? [iI][fF] parenthesized_expression [tT][hH][eE][nN] _block_label? _end_of_statement _statement* elseif_clause* else_clause? statement_label? end_if_statement
 
-_expression ::=  ( number_literal |  complex_literal |  string_literal |  boolean_literal |  array_literal |  identifier |  derived_type_member_expression |  logical_expression |  relational_expression |  concatenation_expression |  math_expression |  parenthesized_expression |  call_expression )
+end_if_statement ::=
+	 ( [eE][nN][dD] [iI][fF] | [eE][nN][dD][iI][fF] ) _block_label?
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+elseif_clause ::=
+	 ( [eE][lL][sS][eE] [iI][fF] | [eE][lL][sS][eE][iI][fF] ) parenthesized_expression [tT][hH][eE][nN] _block_label? _end_of_statement _statement*
 
-derived_type_member_expression ::=   (  ( _expression '%'  _expression )  )
+else_clause ::=
+	 [eE][lL][sS][eE] _block_label? _end_of_statement _statement*
 
-logical_expression ::=  (  (  ( _expression '.'[oO][rR]'.' _expression )  )  |   (  ( _expression '.'[aA][nN][dD]'.' _expression )  )  |   (  ( _expression '.'[eE][qQ][vV]'.' _expression )  )  |   (  ( _expression '.'[nN][eE][qQ][vV]'.' _expression )  )  |   (  ( '.'[nN][oO][tT]'.' _expression )  )  )
+where_statement ::=
+	 _inline_where_statement
+	| _block_where_statement
 
-relational_expression ::=   (  ( _expression ( '<'  |  '.'[lL][tT]'.' |  '>'  |  '.'[gG][tT]'.' |  '<='  |  '.'[lL][eE]'.' |  '>='  |  '.'[gG][eE]'.' |  '=='  |  '.'[eE][qQ]'.' |  '/='  |  '.'[nN][eE]'.' )  _expression )  )
+_inline_where_statement ::=
+	 [wW][hH][eE][rR][eE] parenthesized_expression _statements
 
-concatenation_expression ::=   (  ( _expression '//'  _expression )  )
+_block_where_statement ::=
+	 block_label_start_expression? [wW][hH][eE][rR][eE] parenthesized_expression _end_of_statement _statement* elsewhere_clause* end_where_statement
 
-math_expression ::=  (  (  ( _expression '+'  _expression )  )  |   (  ( _expression '-'  _expression )  )  |   (  ( _expression '*'  _expression )  )  |   (  ( _expression '/'  _expression )  )  |   (  ( _expression '**'  _expression )  )  |   (  ( '-'  _expression )  )  |   (  ( '+'  _expression )  )  )
+end_where_statement ::=
+	 ( [eE][nN][dD] [wW][hH][eE][rR][eE] | [eE][nN][dD][wW][hH][eE][rR][eE] ) _block_label?
 
-call_expression ::=   (  ( identifier argument_list )  )
+elsewhere_clause ::=
+	 ( [eE][lL][sS][eE] [wW][hH][eE][rR][eE] | [eE][lL][sS][eE][wW][hH][eE][rR][eE] ) parenthesized_expression? _block_label? _end_of_statement _statement*
 
-argument_list ::=   (  ( '('  ( ( ( keyword_argument |  extent_specifier |  assumed_size |  _expression )  (  ( ','  ( keyword_argument |  extent_specifier |  assumed_size |  _expression )  )  )*  )  )?  ')'  )  )
+forall_statement ::=
+	 _inline_forall_statement
+	| _block_forall_statement
 
-keyword_argument ::=   (  ( identifier '='  ( _expression |  assumed_size |  assumed_shape )  )  )
+triplet_spec ::=
+	 identifier '=' _expression ':' _expression ( ':' _expression )?
 
-extent_specifier ::=  ( ( _expression )?  ':'  ( _expression )?  ( ( ':'  _expression )  )?  )
+_forall_control_expression ::=
+	 [fF][oO][rR][aA][lL][lL] '(' triplet_spec ( ',' triplet_spec )* ( ',' ( logical_expression | relational_expression ) )? ')'
 
-assumed_size ::=  '*'
+_inline_forall_statement ::=
+	 _forall_control_expression _statements
 
-assumed_shape ::=  ':'
+_block_forall_statement ::=
+	 block_label_start_expression? _forall_control_expression _end_of_statement _statement* statement_label? end_forall_statement
 
-block_label_start_expression ::=  [a-zA-Z_][\w]* ':'
+end_forall_statement ::=
+	 ( [eE][nN][dD] [fF][oO][rR][aA][lL][lL] | [eE][nN][dD][fF][oO][rR][aA][lL][lL] ) _block_label?
 
-_block_label ::=  (  identifier )
+select_case_statement ::=
+	 block_label_start_expression? ( [sS][eE][lL][eE][cC][tT] [cC][aA][sS][eE] | [sS][eE][lL][eE][cC][tT][cC][aA][sS][eE] ) selector _end_of_statement case_statement+ statement_label? end_select_statement
 
-loop_control_expression ::=  ( identifier '='  _expression ','  _expression ( ( ','  _expression )  )?  )
+select_type_statement ::=
+	 block_label_start_expression? ( [sS][eE][lL][eE][cC][tT] [tT][yY][pP][eE] | [sS][eE][lL][eE][cC][tT][tT][yY][pP][eE] ) selector _end_of_statement type_statement+ statement_label? end_select_statement
 
-array_literal ::=  ( '(/'  ( _expression (  ( ','  _expression )  )*  )  '/)'  )
+select_rank_statement ::=
+	 block_label_start_expression? ( [sS][eE][lL][eE][cC][tT] [rR][aA][nN][kK] | [sS][eE][lL][eE][cC][tT][rR][aA][nN][kK] ) selector _end_of_statement rank_statement+ statement_label? end_select_statement
 
-number_literal ::=  (  ( [-+]?[0-9]*('.'[0-9]*)?([eEdD][-+]?[0-9]+)?([_\w]+)? |  [-+]?[bB]'[01]+' |  [-+]?'[01]+'[bB] |  [-+]?[bB]"[01]+" |  [-+]?"[01]+"[bB] |  [-+]?[oO]'[0-8]+' |  [-+]?'[0-8]+'[oO] |  [-+]?[oO]"[0-8]+" |  [-+]?"[0-8]+"[oO] |  [-+]?[zZ]'[0-9a-fA-F]+' |  [-+]?'[0-9a-fA-F]+'[zZ] |  [-+]?[zZ]"[0-9a-fA-F]+" |  [-+]?"[0-9a-fA-F]+"[zZ] )  )
+end_select_statement ::=
+	 ( [eE][nN][dD] [sS][eE][lL][eE][cC][tT] | [eE][nN][dD][sS][eE][lL][eE][cC][tT] ) _block_label?
 
-complex_literal ::=  ( '('  ( number_literal |  identifier )  ','  ( number_literal |  identifier )  ')'  )
+selector ::=
+	 '(' ( _expression | pointer_association_statement ) ')'
 
-string_literal ::=  ( _double_quoted_string |  _single_quoted_string )
+case_statement ::=
+	 [cC][aA][sS][eE] ( '(' case_value_range_list ')' | [dD][eE][fF][aA][uU][lL][tT] ) _block_label? _end_of_statement _statement*
 
-_double_quoted_string ::=  (  ( '"'  (  ( [^"\n] |  "". )  )*  '"'  )  )
+type_statement ::=
+	 ( ( ( [tT][yY][pP][eE] [iI][sS] | [tT][yY][pP][eE][iI][sS] ) | ( [cC][lL][aA][sS][sS] [iI][sS] | [cC][lL][aA][sS][sS][iI][sS] ) ) ( '(' ( _intrinsic_type | identifier ) ')' ) | _class_default ) _block_label? _end_of_statement _statement*
 
-_single_quoted_string ::=  (  ( "'"  (  ( [^'\n] |  ''. )  )*  "'"  )  )
+_class_default ::=
+	 [cC][lL][aA][sS][sS] [dD][eE][fF][aA][uU][lL][tT]
+	| [cC][lL][aA][sS][sS][dD][eE][fF][aA][uU][lL][tT]
 
-boolean_literal ::=  (  ( '.'[tT][rR][uU][eE]'.' |  '.'[fF][aA][lL][sS][eE]'.' )  )
+case_value_range_list ::=
+	 ( _expression | extent_specifier ) ( ',' ( _expression | extent_specifier ) )*
 
-identifier ::=  [a-zA-Z_][\w]*
+rank_statement ::=
+	 [rR][aA][nN][kK] ( '(' case_value_range_list ')' | [dD][eE][fF][aA][uU][lL][tT] ) _block_label? _end_of_statement _statement*
 
-comment ::=  (  ( '!'  .* )  )
+block_construct ::=
+	 block_label_start_expression? [bB][lL][oO][cC][kK] _end_of_statement _specification_part* _statement* end_block_construct_statement
 
-_semicolon ::=  ';'
+end_block_construct_statement ::=
+	 ( [eE][nN][dD] [bB][lL][oO][cC][kK] | [eE][nN][dD][bB][lL][oO][cC][kK] ) _block_label?
 
-_newline ::=  '\n'
+associate_statement ::=
+	 block_label_start_expression? [aA][sS][sS][oO][cC][iI][aA][tT][eE] '(' association ( ',' association )* ')' _end_of_statement _statement* end_associate_statement
 
-_end_of_statement ::=  ( _semicolon |  _newline )
+association ::=
+	 identifier '=>' _expression
+
+end_associate_statement ::=
+	 ( [eE][nN][dD] [aA][sS][sS][oO][cC][iI][aA][tT][eE] | [eE][nN][dD][aA][sS][sS][oO][cC][iI][aA][tT][eE] ) _block_label?
+
+format_statement ::=
+	 [fF][oO][rR][mM][aA][tT] '(' _transfer_items ')'
+
+_transfer_item ::=
+	 string_literal
+	| edit_descriptor
+	| hollerith_constant
+	| '(' _transfer_items ')'
+
+_transfer_items ::=
+	 _transfer_item ( ','? _transfer_item )*
+
+edit_descriptor ::=
+	 [a-gi-zA-GI-Z0-9/:.*$]+
+
+hollerith_constant ::=
+	 [0-9]+'H'[^/,)]+
+
+_io_arguments ::=
+	 '(' ( unit_identifier | unit_identifier ',' format_identifier | unit_identifier ',' format_identifier ',' keyword_argument ( ',' keyword_argument )* | unit_identifier ',' keyword_argument ( ',' keyword_argument )* | keyword_argument ( ',' keyword_argument )* ) ')'
+
+read_statement ::=
+	 _simple_read_statement | _parameterized_read_statement
+
+_simple_read_statement ::=
+	 [rR][eE][aA][dD] format_identifier ( ',' input_item_list )?
+
+_parameterized_read_statement ::=
+	 [rR][eE][aA][dD] _io_arguments input_item_list?
+
+print_statement ::=
+	 [pP][rR][iI][nN][tT] format_identifier ( ',' output_item_list )?
+
+open_statement ::=
+	 [oO][pP][eE][nN] _io_arguments output_item_list?
+
+close_statement ::=
+	 [cC][lL][oO][sS][eE] '(' ( unit_identifier | unit_identifier ',' keyword_argument ( ',' keyword_argument )* | keyword_argument ( ',' keyword_argument )* ) ')'
+
+write_statement ::=
+	 [wW][rR][iI][tT][eE] _io_arguments ','? output_item_list?
+
+inquire_statement ::=
+	 [iI][nN][qQ][uU][iI][rR][eE] _io_arguments output_item_list?
+
+enum ::=
+	 enum_statement enumerator_statement* end_enum_statement _end_of_statement
+
+enum_statement ::=
+	 [eE][nN][uU][mM] ',' language_binding
+
+enumerator_statement ::=
+	 [eE][nN][uU][mM][eE][rR][aA][tT][oO][rR] '::'? ( identifier | identifier '=' ( number_literal | unary_expression ) ) ( ',' ( identifier | identifier '=' ( number_literal | unary_expression ) ) )*
+
+end_enum_statement ::=
+	 ( [eE][nN][dD] [eE][nN][uU][mM] | [eE][nN][dD][eE][nN][uU][mM] )
+
+unit_identifier ::=
+	 number_literal | _io_expressions
+
+format_identifier ::=
+	 statement_label_reference
+	| _io_expressions
+
+_file_position_spec ::=
+	 unit_identifier
+	| '(' unit_identifier ',' keyword_argument ( ',' keyword_argument )* ')'
+	| '(' keyword_argument ( ',' keyword_argument )* ')'
+
+file_position_statement ::=
+	 [bB][aA][cC][kK][sS][pP][aA][cC][eE] _file_position_spec
+	| [eE][nN][dD][fF][iI][lL][eE] _file_position_spec
+	| [rR][eE][wW][iI][nN][dD] _file_position_spec
+	| [pP][aA][uU][sS][eE] string_literal?
+
+_io_expressions ::=
+	 '*' | string_literal | identifier | derived_type_member_expression | concatenation_expression | math_expression | parenthesized_expression | call_expression
+
+input_item_list ::=
+	 _expression ( ',' _expression )*
+
+output_item_list ::=
+	 _expression ( ',' _expression )*
+
+_expression ::=
+	 number_literal
+	| complex_literal
+	| string_literal
+	| boolean_literal
+	| array_literal
+	| null_literal
+	| identifier
+	| derived_type_member_expression
+	| logical_expression
+	| relational_expression
+	| concatenation_expression
+	| math_expression
+	| unary_expression
+	| parenthesized_expression
+	| call_expression
+	| implied_do_loop_expression
+
+parenthesized_expression ::=
+	 '(' _expression ')'
+
+derived_type_member_expression ::=
+	 _expression '%' identifier
+
+logical_expression ::=
+	 _expression '.'[oO][rR]'.' _expression
+	| _expression '.'[aA][nN][dD]'.' _expression
+	| _expression '.'[eE][qQ][vV]'.' _expression
+	| _expression '.'[nN][eE][qQ][vV]'.' _expression
+	| '.'[nN][oO][tT]'.' _expression
+
+relational_expression ::=
+	 _expression '<' _expression
+	| _expression '.'[lL][tT]'.' _expression
+	| _expression '>' _expression
+	| _expression '.'[gG][tT]'.' _expression
+	| _expression '<=' _expression
+	| _expression '.'[lL][eE]'.' _expression
+	| _expression '>=' _expression
+	| _expression '.'[gG][eE]'.' _expression
+	| _expression '==' _expression
+	| _expression '.'[eE][qQ]'.' _expression
+	| _expression '/=' _expression
+	| _expression '.'[nN][eE]'.' _expression
+
+concatenation_expression ::=
+	 _expression '//' _expression
+
+math_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '**' _expression
+	| _expression user_defined_operator _expression
+
+unary_expression ::=
+	 ( '-' | '+' | user_defined_operator ) _expression
+
+user_defined_operator ::=
+	 '.' [a-zA-Z]+ '.'
+
+call_expression ::=
+	 _expression argument_list+
+
+implied_do_loop_expression ::=
+	 '(' _expression ( ',' _expression )* ',' loop_control_expression ')'
+
+argument_list ::=
+	 '(' ( ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) ( ',' ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) )* )? ')'
+
+keyword_argument ::=
+	 identifier '=' ( _expression | assumed_size | assumed_shape )
+
+extent_specifier ::=
+	 _expression? ':' ( _expression | assumed_size )? ( ':' _expression )?
+
+assumed_size ::=
+	 '*'
+
+assumed_shape ::=
+	 ':'
+
+assumed_rank ::=
+	 '..'
+
+block_label_start_expression ::=
+	 identifier ':'
+
+_block_label ::=
+	 identifier
+
+loop_control_expression ::=
+	 identifier '=' _expression ',' _expression ( ',' _expression )?
+
+array_literal ::=
+	 _array_constructor_legacy
+	| _array_constructor_f2003
+
+_array_constructor_legacy ::=
+	 '(/' _ac_value_list '/)'
+
+_array_constructor_f2003 ::=
+	 '[' _ac_value_list ']'
+
+_type_spec ::=
+	 ( _intrinsic_type | derived_type ) '::'
+
+_ac_value_list ::=
+	 _type_spec
+	| _type_spec? _expression ( ',' _expression )*
+
+complex_literal ::=
+	 '(' ( number_literal | identifier | unary_expression ) ',' ( number_literal | identifier | unary_expression ) ')'
+
+number_literal ::=
+	 _integer_literal
+	| _float_literal
+	| _boz_literal
+
+boolean_literal ::=
+	 ( ( '.'[tT][rR][uU][eE]'.' | '.'[fF][aA][lL][sS][eE]'.' ) ( '_' [a-zA-Z_]+ )? )
+
+null_literal ::=
+	 [nN][uU][lL][lL] '(' ')'
+
+preproc_file_line ::=
+	 '#' [0-9]+ '"'[^"#x0A]*'"' [0-9]+? _newline
+
+identifier ::=
+	 [a-zA-Z_][a-zA-Z_]*
+	| [bB][lL][oO][cC][kK]
+	| [bB][yY][tT][eE]
+	| [cC][yY][cC][lL][eE]
+	| [dD][aA][tT][aA]
+	| [dD][oO][uU][bB][lL][eE]
+	| [eE][lL][sS][eE][iI][fF]
+	| [eE][nN][dD]
+	| [eE][nN][dD][iI][fF]
+	| [eE][rR][rR][oO][rR]
+	| [eE][xX][iI][tT]
+	| [fF][oO][rR][mM][aA][tT]
+	| [iI][fF]
+	| [iI][nN][qQ][uU][iI][rR][eE]
+	| [nN][uU][lL][lL]
+	| [rR][eE][aA][dD]
+	| [rR][eE][aA][lL]
+	| [sS][eE][lL][eE][cC][tT]
+	| [sS][tT][oO][pP]
+	| [tT][aA][rR][gG][eE][tT]
+	| [vV][aA][lL][uU][eE]
+	| [wW][rR][iI][tT][eE]
+
+comment ::=
+	 ( '!' '.'* )
+
+_line_continuation ::=
+	 '&'
+
+_semicolon ::=
+	 ';'
+
+_newline ::=
+	 '\n' 
 

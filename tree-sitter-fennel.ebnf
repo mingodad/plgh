@@ -1,111 +1,254 @@
-/*
-Grammar originally from https://github.com/TravonteD/tree-sitter-fennel
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-fennel/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-program ::=  (  ( _statement )  )*
+program ::=
+	 _sexp*
 
-_statement ::=  ( require |  function_call |  _function |  _expression |  _variable_declaration |  _iterator |  _conditional |  hash_function_definition |  do_statement |  comment )
+_sexp ::=
+	 _special_form
+	| symbol
+	| multi_symbol
+	| list
+	| sequential_table
+	| table
+	| _literal
 
-_function ::=  ( function_definition |  lambda_definition )
+_special_form ::=
+	 fn
+	| lambda
+	| hashfn
+	| match
+	| let
+	| global
+	| local
+	| var
+	| set
+	| each
+	| collect
+	| icollect
+	| accumulate
+	| for
+	| quote
 
-_variable_declaration ::=  ( let_definition |  local_definition |  var_definition |  global_definition |  set |  tset )
+each ::=
+	 '(' 'each' '[' iter_bindings ']' _sexp* ')'
 
-_iterator ::=  ( each |  for |  while )
+iter_bindings ::=
+	 _binding* _sexp ( ':until' _sexp )?
 
-_conditional ::=  ( if_statement |  when_statement |  match_statement )
+for ::=
+	 '(' 'for' for_clause _sexp* ')'
 
-require ::=  ( '('  'require'  (  ( field |  string )  )*  ')'  )
+for_clause ::=
+	 '[' symbol _sexp _sexp _sexp? ']'
 
-do_statement ::=  ( '('  'do'  (  _statement )*  ')'  )
+let ::=
+	 '(' 'let' let_clause _sexp* ')'
 
-when_statement ::=  ( '('  'when'  (  _statement )*  ')'  )
+let_clause ::=
+	 '[' ( _binding _sexp )* ']'
 
-if_statement ::=  ( '('  'if'  (  _statement )*  ')'  )
+global ::=
+	 '(' 'global' _binding _sexp ')'
 
-match_statement ::=  ( '('  'match'  (  _statement )*  ')'  )
+local ::=
+	 '(' 'local' _binding _sexp ')'
 
-each ::=  ( '('  'each'  each_clause (  _statement )*  ')'  )
+var ::=
+	 '(' 'var' _binding _sexp ')'
 
-each_clause ::=  ( '['  identifier identifier function_call ']'  )
+set ::=
+	 '(' 'set' _assignment _sexp ')'
 
-for ::=  ( '('  'for'  for_clause (  _statement )*  ')'  )
+_binding ::=
+	 multi_value_binding
+	| _non_multi_value_binding
 
-for_clause ::=  ( '['  identifier _statement _statement ( _statement )?  ']'  )
+multi_value_binding ::=
+	 '(' _non_multi_value_binding* ')'
 
-while ::=  ( '('  'while'  (  _statement )  (  _statement )*  ')'  )
+_non_multi_value_binding ::=
+	 binding
+	| sequential_table_binding
+	| table_binding
 
-let_definition ::=  ( '('  'let'  assignments (  _statement )*  ')'  )
+binding ::=
+	 symbol
 
-local_definition ::=  ( '('  'local'  ( assignment |  multi_value_assignment )  ')'  )
+sequential_table_binding ::=
+	 '[' _non_multi_value_binding* ( '&' binding )? ']'
 
-var_definition ::=  ( '('  'var'  ( assignment |  multi_value_assignment )  ')'  )
+table_binding ::=
+	 '{' ( ':' binding | '&as' binding | _sexp _non_multi_value_binding )* '}'
 
-global_definition ::=  ( '('  'global'  ( assignment |  multi_value_assignment )  ')'  )
+_assignment ::=
+	 multi_value_assignment
+	| _non_multi_value_assignment
 
-set ::=  ( '('  'set'  ( assignment |  multi_value_assignment )  ')'  )
+multi_value_assignment ::=
+	 '(' _non_multi_value_assignment* ')'
 
-tset ::=  ( '('  'tset'  ( ( table |  identifier )  )?  ( identifier |  field |  string )  ( _statement )  ')'  )
+_non_multi_value_assignment ::=
+	 assignment
+	| sequential_table_assignment
+	| table_assignment
 
-assignments ::=  ( '['  (  ( multi_value_assignment |  assignment )  )*  ']'  )
+assignment ::=
+	 symbol
+	| multi_symbol
 
-assignment ::=  ( ( identifier |  field_expression )  _statement )
+sequential_table_assignment ::=
+	 '[' _non_multi_value_assignment* ']'
 
-multi_value_assignment ::=  ( value_list _statement )
+table_assignment ::=
+	 '{' ( ':' assignment | _sexp _non_multi_value_assignment )* '}'
 
-value_list ::=  ( '('  (  ( identifier |  field_expression )  )*  ')'  )
+hashfn ::=
+	 '(' 'hashfn' _sexp* ')'
+	| '#' _sexp
 
-hash_function_definition ::=  ( ( '('  'hashfn'  (  _statement )*  ')'  )  |  ( '#'  ( function_call |  identifier |  sequential_table )  )  )
+fn ::=
+	 '(' 'fn' _function_body ')'
 
-function_definition ::=  ( '('  'fn'  _function_body ')'  )
+lambda ::=
+	 '(' ( 'lambda' | 'λ' ) _function_body ')'
 
-lambda_definition ::=  ( '('  ( 'lambda'  |  'λ'  )  _function_body ')'  )
+_function_body ::=
+	 ( symbol | multi_symbol )? parameters ( string? _sexp+ )?
 
-_function_body ::=  ( ( (  identifier )  )?  parameters (  (  _statement )*  )  )
+parameters ::=
+	 '[' ( _binding | vararg )* ']'
 
-parameters ::=  ( '['  (  _expression )*  ']'  )
+match ::=
+	 '(' 'match' _sexp ( _pattern _sexp )* ')'
 
-function_call ::=  ( '('  (  ( field_expression |  identifier |  (  _operator )  |  (  _keyword )  )  )  ( (  _statement )*  )?  ')'  )
+_pattern ::=
+	 _simple_pattern
+	| where_pattern
+	| guard_pattern
 
-sequential_table ::=  ( '['  (  _statement )*  ']'  )
+_simple_pattern ::=
+	 multi_value_pattern
+	| _non_multi_value_pattern
 
-table ::=  ( '{'  (  ( ( string |  field |  identifier )  _statement )  )*  '}'  )
+guard_pattern ::=
+	 '(' _simple_pattern '?' _sexp+ ')'
 
-_expression ::=  ( field_expression |  quoted_value |  unquoted_value |  number |  field |  identifier |  string |  table |  sequential_table |  boolean |  nil |  (  _keyword )  )
+where_pattern ::=
+	 '(' 'where' ( _simple_pattern | '(' 'or' _simple_pattern* ')' ) _sexp* ')'
 
-escape_character ::=  ('\n'|'\"')
+multi_value_pattern ::=
+	 '(' _non_multi_value_pattern* ')'
 
-string ::=  ( '"'  (  ('\"')|([.]) )*  '"'  )
+_non_multi_value_pattern ::=
+	 _literal
+	| symbol
+	| multi_symbol
+	| sequential_table_pattern
+	| table_pattern
 
-quoted_value ::=  ( ( "'"  |  '`'  )  _statement )
+sequential_table_pattern ::=
+	 '[' _non_multi_value_pattern* ']'
 
-unquoted_value ::=  ( ( ','  )  identifier )
+table_pattern ::=
+	 '{' ( ':' _simple_pattern | _sexp _non_multi_value_pattern )* '}'
 
-field_expression ::=   (  ( ( identifier |  (  _keyword )  )  ( ( ( '.'  identifier )  )+  )  )  )
+collect ::=
+	 '(' 'collect' '[' iter_bindings ']' _sexp* ')'
 
-_operator ::=  ( _arithmetic_operator |  _comparison_operator |  _boolean_operator |  _threading_macro |  _misc_operator |  (  colon )  )
+icollect ::=
+	 '(' 'icollect' '[' iter_bindings ']' _sexp* ')'
 
-_arithmetic_operator ::=  ( '+'  |  '-'  |  '*'  |  '%'  |  '/'  |  '//'  |  '^'  )
+accumulate ::=
+	 '(' 'accumulate' '[' _binding _sexp iter_bindings ']' _sexp* ')'
 
-_comparison_operator ::=  ( '>'  |  '<'  |  '>='  |  '<='  |  '='  |  'not='  )
+quote ::=
+	 '(' 'quote' _quoted_sexp ')'
+	| ( "'"  | '`' ) _quoted_sexp
 
-_threading_macro ::=  ( '->'  |  '->>'  |  '-?>'  |  '-?>>'  )
+unquote ::=
+	 ',' _sexp
 
-_boolean_operator ::=  ( 'and'  |  'or'  |  'not'  )
+_quoted_sexp ::=
+	 unquote
+	| symbol
+	| multi_symbol
+	| multi_symbol_method
+	| quoted_list
+	| quoted_sequential_table
+	| quoted_table
+	| _literal
 
-_misc_operator ::=  ( '..'  |  '.'  |  '...'  )
+quoted_list ::=
+	 '(' _quoted_sexp* ')'
 
-boolean ::=  ( 'true'  |  'false'  )
+quoted_sequential_table ::=
+	 '[' _quoted_sexp* ']'
 
-nil ::=  ( 'nil'  )
+quoted_table ::=
+	 '{' _quoted_sexp* '}'
 
-_keyword ::=  ( '_ENV'  |  '_G'  |  '_VERSION'  |  'arg'  |  'assert'  |  'collectgarbage'  |  'coroutine'  |  'debug'  |  'dofile'  |  'doto'  |  'error'  |  'eval-compiler'  |  'gensym'  |  'getmetatable'  |  'import-macros'  |  'in-scope?'  |  'include'  |  'ipairs'  |  'list'  |  'list?'  |  'load'  |  'loadfile'  |  'loadstring'  |  'macro'  |  'macrodebug'  |  'macroexpand'  |  'macros'  |  'multi-sym?'  |  'next'  |  'pairs'  |  'package'  |  'pcall'  |  'print'  |  'rawequal'  |  'rawget'  |  'rawlen'  |  'rawset'  |  'require-macros'  |  'select'  |  'sequence?'  |  'setmetatable'  |  'sym'  |  'sym?'  |  'table?'  |  'tonumber'  |  'tostring'  |  'type'  |  'unpack'  |  'varg?'  |  'xpcall'  |  'string'  |  'table'  )
+list ::=
+	 '(' ( _sexp | multi_symbol_method ) _sexp* ')'
 
-identifier ::=  ([_\?A-Za-z][_\?\-A-Za-z0-9\!]*)|('$'([1-9])?)
+sequential_table ::=
+	 '[' _sexp* ']'
 
-number ::=  ([-])?[0-9]+('.'[\d]+)?
+table_pair ::=
+	 ':' binding | string _sexp | ( symbol | multi_symbol ) _sexp
 
-comment ::=  ';'[^\n]*
+table ::=
+	 '{' table_pair* '}'
+
+_literal ::=
+	 string
+	| number
+	| boolean
+	| vararg
+	| nil
+	| nil_safe
+
+nil ::=
+	 'nil'
+
+nil_safe ::=
+	 '?.'
+
+vararg ::=
+	 '...'
+
+boolean ::=
+	 'true'
+	| 'false'
+
+string ::=
+	 ':'[^(){}#x5B#x5D"'~;,@` #x09#x0A#x0B#x0C#x0D]+
+	| '"'  ( [^"\]+ | escape_sequence )* '"' 
+
+escape_sequence ::=
+	 ( '\\'  ( [^xu0-9] | [0-9]'{1,3}' | 'x'[0-9a-fA-F]'{2}' | 'u{'[0-9a-fA-F]+'}' ) )
+
+number ::=
+	 ( ( '-' | '+' )? ( [0-9][_0-9]* | '.' [0-9][_0-9]* | [0-9][_0-9]* '.' [0-9][_0-9]*? ) ( ( 'e' | 'E' ) ( '-' | '+' )? [0-9][_0-9]* )? | ( '-' | '+' )? ( '0x' | '0X' ) ( [a-fA-F0-9][_a-fA-F0-9]* | '.' [a-fA-F0-9][_a-fA-F0-9]* | [a-fA-F0-9][_a-fA-F0-9]* '.' [a-fA-F0-9][_a-fA-F0-9]*? ) ( ( 'p' | 'P' ) ( '-' | '+' )? [a-fA-F0-9][_a-fA-F0-9]* )? )
+
+multi_symbol ::=
+	 symbol ( '.' symbol_immediate )+
+
+multi_symbol_method ::=
+	 ( symbol | multi_symbol ) ':' symbol_immediate
+
+symbol ::=
+	 ( ':' | '.' [^(){}#x5B#x5D"'~;,@` #x09#x0A#x0B#x0C#x0D]* | [^#x23(){}#x5B#x5D"'~;,@`.: #x09#x0A#x0B#x0C#x0D][^(){}#x5B#x5D"'~;,@`.: #x09#x0A#x0B#x0C#x0D]* )
+
+symbol_immediate ::=
+	 ( ':' | '.' [^(){}#x5B#x5D"'~;,@` #x09#x0A#x0B#x0C#x0D]* | [^#x23(){}#x5B#x5D"'~;,@`.: #x09#x0A#x0B#x0C#x0D][^(){}#x5B#x5D"'~;,@`.: #x09#x0A#x0B#x0C#x0D]* )
+
+comment ::=
+	 ( ';' '.'* )
 

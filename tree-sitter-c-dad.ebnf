@@ -1,0 +1,745 @@
+//
+// From tree-sitter-c-dad/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+translation_unit ::=
+	 _top_level_item*
+
+_top_level_item ::=
+	 function_definition
+	| _old_style_function_definition
+	| linkage_specification
+	| declaration
+	| _top_level_statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+
+_block_item ::=
+	 function_definition
+	| _old_style_function_definition
+	| linkage_specification
+	| declaration
+	| _statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+
+preproc_linemark ::=
+	 '# ' number_literal string_literal number_literal* '#x0D'?'#x0A'
+
+preproc_include ::=
+	 '#'[ #x09]*'include' ( string_literal | system_lib_string | identifier | preproc_call_expression ) '#x0D'?'#x0A'
+
+preproc_def ::=
+	 '#'[ #x09]*'define' identifier preproc_arg? '#x0D'?'#x0A'
+
+preproc_function_def ::=
+	 '#'[ #x09]*'define' identifier preproc_params preproc_arg? '#x0D'?'#x0A'
+
+preproc_params ::=
+	 '(' ( ( identifier ( ',' identifier )* )? ( ',' '...' )? | '...' ) ')'
+
+preproc_call ::=
+	 preproc_directive preproc_arg? '#x0D'?'#x0A'
+
+preproc_if ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  _block_item* ( preproc_else | preproc_elif )? '#'[ #x09]*'endif'
+
+preproc_ifdef ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier _block_item* ( preproc_else | preproc_elif | preproc_elifdef )? '#'[ #x09]*'endif'
+
+preproc_else ::=
+	 '#'[ #x09]*'else' _block_item*
+
+preproc_elif ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  _block_item* ( preproc_else | preproc_elif )?
+
+preproc_elifdef ::=
+	 ( '#'[ #x09]*'elifdef' | '#'[ #x09]*'elifndef' ) identifier _block_item* ( preproc_else | preproc_elif )?
+
+preproc_if_in_field_declaration_list ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )? '#'[ #x09]*'endif'
+
+preproc_ifdef_in_field_declaration_list ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list | preproc_elifdef_in_field_declaration_list )? '#'[ #x09]*'endif'
+
+preproc_else_in_field_declaration_list ::=
+	 '#'[ #x09]*'else' _field_declaration_list_item*
+
+preproc_elif_in_field_declaration_list ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )?
+
+preproc_elifdef_in_field_declaration_list ::=
+	 ( '#'[ #x09]*'elifdef' | '#'[ #x09]*'elifndef' ) identifier _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )?
+
+preproc_if_in_enumerator_list ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list | preproc_elif_in_enumerator_list )? '#'[ #x09]*'endif'
+
+preproc_ifdef_in_enumerator_list ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier ( enumerator ',' )* ( preproc_else_in_enumerator_list | preproc_elif_in_enumerator_list | preproc_elifdef_in_enumerator_list )? '#'[ #x09]*'endif'
+
+preproc_else_in_enumerator_list ::=
+	 '#'[ #x09]*'else' ( enumerator ',' )*
+
+preproc_elif_in_enumerator_list ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list | preproc_elif_in_enumerator_list )?
+
+preproc_elifdef_in_enumerator_list ::=
+	 ( '#'[ #x09]*'elifdef' | '#'[ #x09]*'elifndef' ) identifier ( enumerator ',' )* ( preproc_else_in_enumerator_list | preproc_elif_in_enumerator_list )?
+
+preproc_if_in_enumerator_list_no_comma ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma | preproc_elif_in_enumerator_list_no_comma )? '#'[ #x09]*'endif'
+
+preproc_ifdef_in_enumerator_list_no_comma ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier enumerator* ( preproc_else_in_enumerator_list_no_comma | preproc_elif_in_enumerator_list_no_comma | preproc_elifdef_in_enumerator_list_no_comma )? '#'[ #x09]*'endif'
+
+preproc_else_in_enumerator_list_no_comma ::=
+	 '#'[ #x09]*'else' enumerator*
+
+preproc_elif_in_enumerator_list_no_comma ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma | preproc_elif_in_enumerator_list_no_comma )?
+
+preproc_elifdef_in_enumerator_list_no_comma ::=
+	 ( '#'[ #x09]*'elifdef' | '#'[ #x09]*'elifndef' ) identifier enumerator* ( preproc_else_in_enumerator_list_no_comma | preproc_elif_in_enumerator_list_no_comma )?
+
+preproc_arg ::=
+	 '\S'([^\/#x0A]|'\/'[^*]|'\#x0D'?'#x0A')*
+
+preproc_directive ::=
+	 '#'[ #x09]*[a-zA-Z][a-zA-Z0-9][a-zA-Z_]*
+
+_preproc_expression ::=
+	 identifier
+	| preproc_call_expression
+	| number_literal
+	| char_literal
+	| preproc_defined
+	| preproc_unary_expression
+	| preproc_binary_expression
+	| preproc_parenthesized_expression
+
+preproc_parenthesized_expression ::=
+	 '(' _preproc_expression ')'
+
+preproc_defined ::=
+	 'defined' '(' identifier ')'
+	| 'defined' identifier
+
+preproc_unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _preproc_expression
+
+preproc_call_expression ::=
+	 identifier preproc_argument_list
+
+preproc_argument_list ::=
+	 '(' ( _preproc_expression ( ',' _preproc_expression )* )? ')'
+
+preproc_binary_expression ::=
+	 _preproc_expression '+' _preproc_expression
+	| _preproc_expression '-' _preproc_expression
+	| _preproc_expression '*' _preproc_expression
+	| _preproc_expression '/' _preproc_expression
+	| _preproc_expression '%' _preproc_expression
+	| _preproc_expression '||' _preproc_expression
+	| _preproc_expression '&&' _preproc_expression
+	| _preproc_expression '|' _preproc_expression
+	| _preproc_expression '^' _preproc_expression
+	| _preproc_expression '&' _preproc_expression
+	| _preproc_expression '==' _preproc_expression
+	| _preproc_expression '!=' _preproc_expression
+	| _preproc_expression '>' _preproc_expression
+	| _preproc_expression '>=' _preproc_expression
+	| _preproc_expression '<=' _preproc_expression
+	| _preproc_expression '<' _preproc_expression
+	| _preproc_expression '<<' _preproc_expression
+	| _preproc_expression '>>' _preproc_expression
+
+function_definition ::=
+	 ms_call_modifier? _declaration_specifiers _declarator compound_statement
+
+_old_style_function_definition ::=
+	 ms_call_modifier? _declaration_specifiers _old_style_function_declarator declaration* compound_statement
+
+declaration ::=
+	 _declaration_specifiers _declaration_declarator ';'
+
+_declaration_declarator ::=
+	 ( _declarator gnu_asm_expression? | init_declarator ) ( ',' ( _declarator gnu_asm_expression? | init_declarator ) )*
+
+type_definition ::=
+	 '__extension__'? 'typedef' _type_definition_type _type_definition_declarators attribute_specifier* ';'
+
+_type_definition_type ::=
+	 type_qualifier* _type_specifier type_qualifier*
+
+_type_definition_declarators ::=
+	 _type_declarator ( ',' _type_declarator )*
+
+_declaration_modifiers ::=
+	 storage_class_specifier
+	| type_qualifier
+	| attribute_specifier
+	| attribute_declaration
+	| ms_declspec_modifier
+
+_declaration_specifiers ::=
+	 _declaration_modifiers* _type_specifier _declaration_modifiers*
+
+linkage_specification ::=
+	 'extern' string_literal ( function_definition | declaration | declaration_list )
+
+attribute_specifier ::=
+	 '__attribute__' '(' argument_list ')'
+
+attribute ::=
+	 ( identifier '::' )? identifier argument_list?
+
+attribute_declaration ::=
+	 '[[' attribute ( ',' attribute )* ']]'
+
+ms_declspec_modifier ::=
+	 '__declspec' '(' identifier ')'
+
+ms_based_modifier ::=
+	 '__based' argument_list
+
+ms_call_modifier ::=
+	 '__cdecl'
+	| '__clrcall'
+	| '__stdcall'
+	| '__fastcall'
+	| '__thiscall'
+	| '__vectorcall'
+
+ms_restrict_modifier ::=
+	 '__restrict'
+
+ms_unsigned_ptr_modifier ::=
+	 '__uptr'
+
+ms_signed_ptr_modifier ::=
+	 '__sptr'
+
+ms_unaligned_ptr_modifier ::=
+	 '_unaligned'
+	| '__unaligned'
+
+ms_pointer_modifier ::=
+	 ms_unaligned_ptr_modifier
+	| ms_restrict_modifier
+	| ms_unsigned_ptr_modifier
+	| ms_signed_ptr_modifier
+
+declaration_list ::=
+	 '{' _block_item* '}'
+
+_declarator ::=
+	 attributed_declarator
+	| pointer_declarator
+	| function_declarator
+	| array_declarator
+	| parenthesized_declarator
+	| identifier
+
+_field_declarator ::=
+	 attributed_field_declarator
+	| pointer_field_declarator
+	| function_field_declarator
+	| array_field_declarator
+	| parenthesized_field_declarator
+	| _field_identifier
+
+_type_declarator ::=
+	 attributed_type_declarator
+	| pointer_type_declarator
+	| function_type_declarator
+	| array_type_declarator
+	| parenthesized_type_declarator
+	| _type_identifier
+	| ( 'signed' | 'unsigned' | 'long' | 'short' )
+	| primitive_type
+
+_abstract_declarator ::=
+	 abstract_pointer_declarator
+	| abstract_function_declarator
+	| abstract_array_declarator
+	| abstract_parenthesized_declarator
+
+parenthesized_declarator ::=
+	 '(' _declarator ')'
+
+parenthesized_field_declarator ::=
+	 '(' _field_declarator ')'
+
+parenthesized_type_declarator ::=
+	 '(' _type_declarator ')'
+
+abstract_parenthesized_declarator ::=
+	 '(' _abstract_declarator ')'
+
+attributed_declarator ::=
+	 _declarator attribute_declaration+
+
+attributed_field_declarator ::=
+	 _field_declarator attribute_declaration+
+
+attributed_type_declarator ::=
+	 _type_declarator attribute_declaration+
+
+pointer_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _declarator
+
+pointer_field_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _field_declarator
+
+pointer_type_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _type_declarator
+
+abstract_pointer_declarator ::=
+	 '*' ms_pointer_modifier* type_qualifier* _abstract_declarator?
+
+function_declarator ::=
+	 _declarator parameter_list gnu_asm_expression? attribute_specifier*
+
+function_field_declarator ::=
+	 _field_declarator parameter_list
+
+function_type_declarator ::=
+	 _type_declarator parameter_list
+
+abstract_function_declarator ::=
+	 _abstract_declarator? parameter_list
+
+_old_style_function_declarator ::=
+	 _declarator _old_style_parameter_list
+
+array_declarator ::=
+	 _declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+array_field_declarator ::=
+	 _field_declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+array_type_declarator ::=
+	 _type_declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+abstract_array_declarator ::=
+	 _abstract_declarator? '[' type_qualifier* ( _expression | '*' )? ']'
+
+init_declarator ::=
+	 _declarator '=' ( initializer_list | _expression )
+
+compound_statement ::=
+	 '{' _block_item* '}'
+
+storage_class_specifier ::=
+	 'extern'
+	| 'static'
+	| 'auto'
+	| 'register'
+	| 'inline'
+	| '__inline'
+	| '__inline__'
+	| '__forceinline'
+	| 'thread_local'
+	| '__thread'
+
+type_qualifier ::=
+	 'const'
+	| 'constexpr'
+	| 'volatile'
+	| 'restrict'
+	| '__restrict__'
+	| '__extension__'
+	| '_Atomic'
+	| '_Noreturn'
+	| 'noreturn'
+
+_type_specifier ::=
+	 struct_specifier
+	| union_specifier
+	| enum_specifier
+	| macro_type_specifier
+	| sized_type_specifier
+	| primitive_type
+	| _type_identifier
+
+sized_type_specifier ::=
+	 ( 'signed' | 'unsigned' | 'long' | 'short' )* ( _type_identifier | primitive_type )? ( 'signed' | 'unsigned' | 'long' | 'short' )+
+	| ( 'signed' | 'unsigned' | 'long' | 'short' )+ ( _type_identifier | primitive_type )? ( 'signed' | 'unsigned' | 'long' | 'short' )*
+
+primitive_type ::=
+	 ( 'bool' | 'char' | 'int' | 'float' | 'double' | 'void' | 'size_t' | 'ssize_t' | 'ptrdiff_t' | 'intptr_t' | 'uintptr_t' | 'charptr_t' | 'nullptr_t' | 'max_align_t' | 'int8_t' | 'int16_t' | 'int32_t' | 'int64_t' | 'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' | 'char8_t' | 'char16_t' | 'char32_t' | 'char64_t' )
+
+enum_specifier ::=
+	 'enum' ( _type_identifier ( ':' primitive_type )? enumerator_list? | enumerator_list ) attribute_specifier?
+
+enumerator_list ::=
+	 '{' ( enumerator ',' | preproc_if_in_enumerator_list | preproc_ifdef_in_enumerator_list | preproc_call ',' )* ( ( enumerator | preproc_if_in_enumerator_list_no_comma | preproc_ifdef_in_enumerator_list_no_comma | preproc_call ) )? '}'
+
+struct_specifier ::=
+	 'struct' attribute_specifier? ms_declspec_modifier? ( _type_identifier field_declaration_list? | field_declaration_list ) attribute_specifier?
+
+union_specifier ::=
+	 'union' ms_declspec_modifier? ( _type_identifier field_declaration_list? | field_declaration_list ) attribute_specifier?
+
+field_declaration_list ::=
+	 '{' _field_declaration_list_item* '}'
+
+_field_declaration_list_item ::=
+	 field_declaration
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| preproc_if_in_field_declaration_list
+	| preproc_ifdef_in_field_declaration_list
+
+field_declaration ::=
+	 _declaration_specifiers _field_declaration_declarator? attribute_specifier? ';'
+
+_field_declaration_declarator ::=
+	 _field_declarator bitfield_clause? ( ',' _field_declarator bitfield_clause? )*
+
+bitfield_clause ::=
+	 ':' _expression
+
+enumerator ::=
+	 identifier ( '=' _expression )?
+
+variadic_parameter ::=
+	 '...'
+
+parameter_list ::=
+	 '(' ( ( parameter_declaration ( ',' parameter_declaration )* )? ( ',' variadic_parameter )? | variadic_parameter ) ')'
+
+_old_style_parameter_list ::=
+	 '(' ( ( identifier ( ',' identifier )* )? ( ',' variadic_parameter )? | variadic_parameter ) ')'
+
+parameter_declaration ::=
+	 _declaration_specifiers ( _declarator | _abstract_declarator )?
+
+attributed_statement ::=
+	 attribute_declaration+ _statement
+
+_statement ::=
+	 case_statement
+	| _non_case_statement
+
+_non_case_statement ::=
+	 attributed_statement
+	| labeled_statement
+	| compound_statement
+	| expression_statement
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| fallthrough_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| seh_try_statement
+	| seh_leave_statement
+
+_top_level_statement ::=
+	 case_statement
+	| attributed_statement
+	| labeled_statement
+	| compound_statement
+	| _top_level_expression_statement
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+
+labeled_statement ::=
+	 _statement_identifier ':' _statement
+
+_top_level_expression_statement ::=
+	 _expression_not_binary ';'
+
+expression_statement ::=
+	 ( _expression | comma_expression )? ';'
+
+if_statement ::=
+	 'if' parenthesized_expression _statement else_clause?
+
+else_clause ::=
+	 'else' _statement
+
+switch_statement ::=
+	 'switch' parenthesized_expression compound_statement
+
+case_statement ::=
+	 ( 'case' _expression | 'default' ) ':' ( _non_case_statement | declaration | type_definition )*
+
+while_statement ::=
+	 'while' parenthesized_expression _statement
+
+do_statement ::=
+	 'do' _statement 'while' parenthesized_expression ';'
+
+for_statement ::=
+	 'for' '(' _for_statement_body ')' _statement
+
+_for_statement_body ::=
+	 ( declaration | ( _expression | comma_expression )? ';' ) ( _expression | comma_expression )? ';' ( _expression | comma_expression )?
+
+return_statement ::=
+	 'return' ( _expression | comma_expression )? ';'
+
+fallthrough_statement ::=
+	 '__attribute__((fallthrough))' ';'
+
+break_statement ::=
+	 'break' ';'
+
+continue_statement ::=
+	 'continue' ';'
+
+goto_statement ::=
+	 'goto' _statement_identifier ';'
+
+seh_try_statement ::=
+	 '__try' compound_statement ( seh_except_clause | seh_finally_clause )
+
+seh_except_clause ::=
+	 '__except' parenthesized_expression compound_statement
+
+seh_finally_clause ::=
+	 '__finally' compound_statement
+
+seh_leave_statement ::=
+	 '__leave' ';'
+
+_expression ::=
+	 _expression_not_binary
+	| binary_expression
+
+_expression_not_binary ::=
+	 conditional_expression
+	| assignment_expression
+	| unary_expression
+	| update_expression
+	| cast_expression
+	| pointer_expression
+	| sizeof_expression
+	| alignof_expression
+	| offsetof_expression
+	| va_arg_expression
+	| generic_expression
+	| subscript_expression
+	| call_expression
+	| field_expression
+	| compound_literal_expression
+	| identifier
+	| number_literal
+	| string_literal
+	| true
+	| false
+	| null
+	| concatenated_string
+	| char_literal
+	| parenthesized_expression
+	| gnu_asm_expression
+
+comma_expression ::=
+	 _expression ',' ( _expression | comma_expression )
+
+conditional_expression ::=
+	 _expression '?' ( _expression | comma_expression )? ':' _expression
+
+_assignment_left_expression ::=
+	 identifier
+	| call_expression
+	| field_expression
+	| pointer_expression
+	| subscript_expression
+	| parenthesized_expression
+
+assignment_expression ::=
+	 _assignment_left_expression ( '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ) _expression
+
+pointer_expression ::=
+	 ( '*' | '&' ) _expression
+
+unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _expression
+
+binary_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression '&' _expression
+	| _expression '==' _expression
+	| _expression '!=' _expression
+	| _expression '>' _expression
+	| _expression '>=' _expression
+	| _expression '<=' _expression
+	| _expression '<' _expression
+	| _expression '<<' _expression
+	| _expression '>>' _expression
+
+update_expression ::=
+	 ( '--' | '++' ) _expression | _expression ( '--' | '++' )
+
+cast_expression ::=
+	 '(' type_descriptor ')' _expression
+
+type_descriptor ::=
+	 type_qualifier* _type_specifier type_qualifier* _abstract_declarator?
+
+sizeof_expression ::=
+	 'sizeof' ( _expression | '(' type_descriptor ')' )
+
+alignof_expression ::=
+	 ( '__alignof__' | '__alignof' | '_alignof' | 'alignof' | '_Alignof' ) '(' type_descriptor ')'
+
+offsetof_expression ::=
+	 'offsetof' '(' type_descriptor ',' _field_identifier ')'
+
+va_arg_expression ::=
+	 ( 'va_arg' | '__builtin_va_arg' ) '(' _field_identifier ',' type_descriptor ')'
+
+generic_expression ::=
+	 '_Generic' '(' _expression ',' type_descriptor ':' _expression ( ',' type_descriptor ':' _expression )* ')'
+
+subscript_expression ::=
+	 _expression '[' _expression ']'
+
+call_expression ::=
+	 _expression argument_list
+
+gnu_asm_expression ::=
+	 ( 'asm' | '__asm__' ) gnu_asm_qualifier* '(' ( string_literal | concatenated_string ) ( gnu_asm_output_operand_list ( gnu_asm_input_operand_list ( gnu_asm_clobber_list gnu_asm_goto_list? )? )? )? ')'
+
+gnu_asm_qualifier ::=
+	 'volatile'
+	| 'inline'
+	| 'goto'
+
+gnu_asm_output_operand_list ::=
+	 ':' ( gnu_asm_output_operand ( ',' gnu_asm_output_operand )* )?
+
+gnu_asm_output_operand ::=
+	 ( '[' identifier ']' )? string_literal '(' identifier ')'
+
+gnu_asm_input_operand_list ::=
+	 ':' ( gnu_asm_input_operand ( ',' gnu_asm_input_operand )* )?
+
+gnu_asm_input_operand ::=
+	 ( '[' identifier ']' )? string_literal '(' _expression ')'
+
+gnu_asm_clobber_list ::=
+	 ':' ( string_literal ( ',' string_literal )* )?
+
+gnu_asm_goto_list ::=
+	 ':' ( identifier ( ',' identifier )* )?
+
+argument_list ::=
+	 '(' ( ( '__extension__'? _expression | compound_statement ) ( ',' ( '__extension__'? _expression | compound_statement ) )* )? ')'
+
+field_expression ::=
+	 _expression ( '.' | '->' ) _field_identifier
+
+compound_literal_expression ::=
+	 '(' type_descriptor ')' initializer_list
+
+parenthesized_expression ::=
+	 '(' ( _expression | comma_expression ) ')'
+
+initializer_list ::=
+	 '{' ( ( initializer_pair | _expression | initializer_list ) ( ',' ( initializer_pair | _expression | initializer_list ) )* )? ','? '}'
+
+initializer_pair ::=
+	 ( subscript_designator | field_designator | subscript_range_designator )+ '=' ( _expression | initializer_list )
+	| _field_identifier ':' ( _expression | initializer_list )
+
+subscript_designator ::=
+	 '[' _expression ']'
+
+subscript_range_designator ::=
+	 '[' _expression '...' _expression ']'
+
+field_designator ::=
+	 '.' _field_identifier
+
+number_literal ::=
+	 ( [-\+]? ( '0'[xX] | '0'[bB] )? ( ( [0-9]+ ( "'"  [0-9]+ )* | '0'[bB] [0-9]+ ( "'"  [0-9]+ )* | '0'[xX] [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* ) ( '.' ( [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* )? )? | '.' [0-9]+ ( "'"  [0-9]+ )* ) ( [eEpP] ( [-\+]? [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* )? )? [uUlLwWfFbBdD]* )
+
+char_literal ::=
+	 ( "L'" | "u'" | "U'" | "u8'" | "'"  ) ( escape_sequence | [^#x0A'] )+ "'" 
+
+concatenated_string ::=
+	 identifier string_literal ( string_literal | identifier )* | string_literal ( string_literal | identifier )+
+
+string_literal ::=
+	 ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( [^\"#x0A]+ | escape_sequence )* '"' 
+
+escape_sequence ::=
+	 '\\'  ( [^xuU] | [0-9]'{2,3}' | 'x'[0-9a-fA-F]'{2,}' | 'u'[0-9a-fA-F]'{4}' | 'U'[0-9a-fA-F]'{8}' )
+
+system_lib_string ::=
+	 ( '<' ( [^>#x0A] | '\>' )* '>' )
+
+true ::=
+	 ( 'TRUE' | 'true' )
+
+false ::=
+	 ( 'FALSE' | 'false' )
+
+null ::=
+	 'NULL'
+	| 'nullptr'
+
+identifier ::=
+	 ('\p{XID_Start}'|'\$'|'_'|'\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}')('\p{XID_Continue}'|'\$'|'\u'[0-9A-Fa-f]'{4}'|'\U'[0-9A-Fa-f]'{8}')*
+
+_type_identifier ::=
+	 identifier
+
+_field_identifier ::=
+	 identifier
+
+_statement_identifier ::=
+	 identifier
+
+_empty_declaration ::=
+	 _type_specifier ';'
+
+macro_type_specifier ::=
+	 identifier '(' type_descriptor ')'
+
+comment ::=
+	 ( '//' ('\'+('.'|'#x0D'?'#x0A')|[^\#x0A])* | '/*' [^*]*'\'*+([^\/*][^*]*'\'*+)* '/' )
+

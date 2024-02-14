@@ -1,97 +1,201 @@
-/*
-Grammar originally from https://github.com/cstrahan/tree-sitter-nix
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-nix/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-source_expression ::=  (  _expression )
+source_code ::=
+	 _expression
 
-_expression ::=  _expr_function
+_expression ::=
+	 _expr_function_expression
 
-identifier ::=  [a-zA-Z_][a-zA-Z0-9_\'\-]*
+keyword ::=
+	 'if'|'then'|'else'|'let'|'inherit'|'in'|'rec'|'with'|'assert'
 
-integer ::=  [0-9]+
+identifier ::=
+	 [a-zA-Z_][a-zA-Z0-9_\'#x2D-]*
 
-float ::=  (([1-9][0-9]*'.'[0-9]*)|('0'?'.'[0-9]+))([Ee][+-]?[0-9]+)?
+variable_expression ::=
+	 identifier
 
-path ::=  [a-zA-Z0-9\._\-\+]*('/'[a-zA-Z0-9\._\-\+]+)+'/'?
+integer_expression ::=
+	 [0-9]+
 
-hpath ::=  '~'('/'[a-zA-Z0-9\._\-\+]+)+'/'?
+float_expression ::=
+	 (([1-9][0-9]*'.'[0-9]*)|('0'?'.'[0-9]+))([Ee][+-]?[0-9]+)?
 
-spath ::=  '<'[a-zA-Z0-9\._\-\+]+('/'[a-zA-Z0-9\._\-\+]+)*'>'
+path_expression ::=
+	 _path_start ( path_fragment | _immediate_interpolation )*
 
-uri ::=  [a-zA-Z][a-zA-Z0-9\+\-\.]*':'[a-zA-Z0-9%\/\?:@\&=\+\$,\-_\.\!\~\*\']+
+_hpath_start ::=
+	 '\~\/'[a-zA-Z0-9._#x2D-\+\/]+
 
-_expr_function ::=  ( function |  assert |  with |  let |  _expr_if )
+hpath_expression ::=
+	 _hpath_start ( path_fragment | _immediate_interpolation )*
 
-function ::=  ( ( (  identifier )  ':'  (  _expr_function )  )  |  ( (  formals )  ':'  (  _expr_function )  )  |  ( (  formals )  '@'  (  identifier )  ':'  (  _expr_function )  )  |  ( (  identifier )  '@'  (  formals )  ':'  (  _expr_function )  )  )
+spath_expression ::=
+	 '<'[a-zA-Z0-9._#x2D-\+]+('\/'[a-zA-Z0-9._#x2D-\+]+)*'>'
 
-formals ::=  ( ( '{'  '}'  )  |  ( '{'  ( (  formal )  (  ( ','  (  formal )  )  )*  )  '}'  )  |  ( '{'  ( (  formal )  (  ( ','  (  formal )  )  )*  )  ','  (  ellipses )  '}'  )  |  ( '{'  (  ellipses )  '}'  )  )
+uri_expression ::=
+	 [a-zA-Z][a-zA-Z0-9\+#x2D-.]*':'[a-zA-Z0-9%\/\?:@\&=\+\$,#x2D-_.\!\~\*\']+
 
-formal ::=  ( (  identifier )  ( ( '?'  (  _expression )  )  )?  )
+_expr_function_expression ::=
+	 function_expression
+	| assert_expression
+	| with_expression
+	| let_expression
+	| _expr_if
 
-ellipses ::=  '...'
+function_expression ::=
+	 identifier ':' _expr_function_expression
+	| formals ':' _expr_function_expression
+	| formals '@' identifier ':' _expr_function_expression
+	| identifier '@' formals ':' _expr_function_expression
 
-assert ::=  ( 'assert'  (  _expression )  ';'  (  _expr_function )  )
+formals ::=
+	 '{' '}'
+	| '{' formal ( ',' formal )* '}'
+	| '{' formal ( ',' formal )* ',' ellipses '}'
+	| '{' ellipses '}'
 
-with ::=  ( 'with'  (  _expression )  ';'  (  _expr_function )  )
+formal ::=
+	 identifier ( '?' _expression )?
 
-let ::=  ( 'let'  ( _binds )?  'in'  (  _expr_function )  )
+ellipses ::=
+	 '...'
 
-_expr_if ::=  ( if |  _expr_op )
+assert_expression ::=
+	 'assert' _expression ';' _expr_function_expression
 
-if ::=  ( 'if'  (  _expression )  'then'  (  _expression )  'else'  (  _expression )  )
+with_expression ::=
+	 'with' _expression ';' _expr_function_expression
 
-_expr_op ::=  ( unary |  binary |  _expr_app )
+let_expression ::=
+	 'let' binding_set? 'in' _expr_function_expression
 
-unary ::=  (  (  ( (  '!'  )  (  _expr_op )  )  )  |   (  ( (  '-'  )  (  _expr_op )  )  )  )
+_expr_if ::=
+	 if_expression
+	| _expr_op
 
-binary ::=  (  (  ( (  _expr_op )  (  '=='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '!='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '<'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '<='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '>'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '>='  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '&&'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '||'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '?'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '+'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '-'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '*'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '/'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '->'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '//'  )  (  _expr_op )  )  )  |   (  ( (  _expr_op )  (  '++'  )  (  _expr_op )  )  )  )
+if_expression ::=
+	 'if' _expression 'then' _expression 'else' _expression
 
-_expr_app ::=  ( app |  _expr_select )
+_expr_op ::=
+	 has_attr_expression
+	| unary_expression
+	| binary_expression
+	| _expr_apply_expression
 
-app ::=  ( (  _expr_app )  (  _expr_select )  )
+has_attr_expression ::=
+	 _expr_op '?' attrpath
 
-_expr_select ::=  ( select |  _expr_simple )
+unary_expression ::=
+	 '!' _expr_op
+	| '-' _expr_op
 
-select ::=  ( ( (  _expr_simple )  '.'  (  attrpath )  )  |  ( (  _expr_simple )  '.'  (  attrpath )  'or'  (  _expr_select )  )  )
+binary_expression ::=
+	 _expr_op '==' _expr_op
+	| _expr_op '!=' _expr_op
+	| _expr_op '<' _expr_op
+	| _expr_op '<=' _expr_op
+	| _expr_op '>' _expr_op
+	| _expr_op '>=' _expr_op
+	| _expr_op '&&' _expr_op
+	| _expr_op '||' _expr_op
+	| _expr_op '+' _expr_op
+	| _expr_op '-' _expr_op
+	| _expr_op '*' _expr_op
+	| _expr_op '/' _expr_op
+	| _expr_op '->' _expr_op
+	| _expr_op '//' _expr_op
+	| _expr_op '++' _expr_op
 
-_expr_simple ::=  ( identifier |  integer |  float |  string |  indented_string |  path |  hpath |  spath |  uri |  parenthesized |  attrset |  let_attrset |  rec_attrset |  list )
+_expr_apply_expression ::=
+	 apply_expression
+	| _expr_select_expression
 
-parenthesized ::=  ( '('  (  _expression )  ')'  )
+apply_expression ::=
+	 _expr_apply_expression _expr_select_expression
 
-attrset ::=  ( '{'  ( _binds )?  '}'  )
+_expr_select_expression ::=
+	 select_expression
+	| _expr_simple
 
-let_attrset ::=  ( 'let'  '{'  ( _binds )?  '}'  )
+select_expression ::=
+	 _expr_simple '.' attrpath
+	| _expr_simple '.' attrpath 'or' _expr_select_expression
 
-rec_attrset ::=  ( 'rec'  '{'  ( _binds )?  '}'  )
+_expr_simple ::=
+	 variable_expression
+	| integer_expression
+	| float_expression
+	| string_expression
+	| indented_string_expression
+	| path_expression
+	| hpath_expression
+	| spath_expression
+	| uri_expression
+	| parenthesized_expression
+	| attrset_expression
+	| let_attrset_expression
+	| rec_attrset_expression
+	| list_expression
 
-string ::=  ( '"'  ( _string_parts )?  '"'  )
+parenthesized_expression ::=
+	 '(' _expression ')'
 
-indented_string ::=  ( "''"  ( _ind_string_parts )?  "''"  )
+attrset_expression ::=
+	 '{' binding_set? '}'
 
-_string_parts ::=  ( ( _str_content |  interpolation |  escape_sequence )  )+
+let_attrset_expression ::=
+	 'let' '{' binding_set? '}'
 
-_ind_string_parts ::=  ( ( _ind_str_content |  interpolation |  (  ind_escape_sequence )  )  )+
+rec_attrset_expression ::=
+	 'rec' '{' binding_set? '}'
 
-_binds ::=  ( (  ( bind |  inherit |  inherit_from )  )  )+
+string_expression ::=
+	 '"'  ( string_fragment | interpolation | escape_sequence | dollar_escape '$' )* '"' 
 
-bind ::=  ( (  attrpath )  '='  (  _expression )  ';'  )
+escape_sequence ::=
+	 '\'([^$]|[ #x09#x0A#x0B#x0C#x0D])
 
-inherit ::=  ( 'inherit'  (  attrs_inherited )  ';'  )
+indented_string_expression ::=
+	 "''" ( _indented_string_fragment | interpolation | _indented_escape_sequence | _indented_dollar_escape '$' )* "''"
 
-inherit_from ::=  ( 'inherit'  '('  (  _expression )  ')'  (  attrs_inherited_from )  ';'  )
+_indented_escape_sequence ::=
+	 "'''"|"''\"([^$]|[ #x09#x0A#x0B#x0C#x0D])
 
-attrpath ::=  ( (  ( (  identifier )  |  string |  interpolation )  )  (  ( '.'  (  ( (  identifier )  |  string |  interpolation )  )  )  )*  )
+binding_set ::=
+	 ( binding | inherit | inherit_from )+
 
-attrs_inherited ::=  ( (  ( identifier |  string |  interpolation )  )  )+
+binding ::=
+	 attrpath '=' _expression ';'
 
-attrs_inherited_from ::=  ( (  ( (  identifier )  |  string |  interpolation )  )  )+
+inherit ::=
+	 'inherit' inherited_attrs ';'
 
-interpolation ::=  ( '${'  (  _expression )  '}'  )
+inherit_from ::=
+	 'inherit' '(' _expression ')' inherited_attrs ';'
 
-list ::=  ( '['  (  (  _expr_select )  )*  ']'  )
+attrpath ::=
+	 ( identifier | string_expression | interpolation ) ( '.' ( identifier | string_expression | interpolation ) )*
 
-comment ::=  (  ( ( '#'  [^\n]* )  |  ( '/*'  (  ( [^*] |  '*'[^/] )  )*  '*/'  )  )  )
+inherited_attrs ::=
+	 ( identifier | string_expression | interpolation )+
+
+_immediate_interpolation ::=
+	 '${' _expression '}'
+
+interpolation ::=
+	 '${' _expression '}'
+
+list_expression ::=
+	 '[' _expr_select_expression* ']'
+
+comment ::=
+	 ( '#' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
 

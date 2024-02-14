@@ -1,0 +1,142 @@
+//
+// From tree-sitter-beancount2/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _definition*
+
+_definition ::=
+	 _entry_definition
+	| option_definition
+	| plugin_definition
+	| include_definition
+	| pushtag_definition
+	| poptag_definition
+
+option_definition ::=
+	 'option' text text
+
+plugin_definition ::=
+	 'plugin' text text?
+
+include_definition ::=
+	 'include' filepath
+
+pushtag_definition ::=
+	 'pushtag' tag
+
+poptag_definition ::=
+	 'poptag' tag
+
+_entry_definition ::=
+	 date ( open_definition | close_definition | commodity_definition | transaction_definition | note_definition | document_definition | event_definition | balance_definition | price_definition | pad_definition | custom_definition ) metadata_definition*
+
+open_definition ::=
+	 'open' account ( commodity ( ',' commodity )* )?
+
+close_definition ::=
+	 'close' account
+
+commodity_definition ::=
+	 'commodity' commodity
+
+transaction_definition ::=
+	 txn ( text text | text )? ( tag | link )* ( post_definition | metadata_definition )*
+
+post_definition ::=
+	 account ( amount commodity cost? price? )?
+
+price ::=
+	 '@{1,2}' unsigned_amount commodity
+
+cost ::=
+	 '{' unsigned_amount commodity '}'
+
+tag ::=
+	 '#'('-'|[a-zA-Z_])+
+
+link ::=
+	 '\^'('-'|[a-zA-Z_])+
+
+note_definition ::=
+	 'note' account note
+
+document_definition ::=
+	 'document' account filepath
+
+filepath ::=
+	 '".'+'"'
+
+event_definition ::=
+	 'event' text text
+
+balance_definition ::=
+	 'balance' account amount commodity
+
+price_definition ::=
+	 'price' commodity amount commodity
+
+pad_definition ::=
+	 'pad' account account
+
+custom_definition ::=
+	 'custom' text uncheck*
+
+uncheck ::=
+	 text
+	| '\S'+
+
+account ::=
+	 ( 'Assets' | 'Liabilities' | 'Equity' | 'Income' | 'Expenses' ) ( ':' _account_component )*
+
+metadata_definition ::=
+	 metadata_key ':' metadata_value?
+
+metadata_key ::=
+	 [a-z][a-zA-Z0-9-_]*
+
+metadata_value ::=
+	 text
+	| account
+	| commodity
+	| date
+	| tag
+	| amount
+
+_account_component ::=
+	 [A-Z0-9][a-zA-Z0-9-]*
+
+_booking_method ::=
+	 'STRICT'
+	| 'NONE'
+
+date ::=
+	 [0-9][0-9][0-9][0-9][-/]('0'[1-9]|'1'[0-2])[-/]([012][0-9]|'3'[0-1])
+
+note ::=
+	 '".'*'"'
+
+text ::=
+	 '"'  '.'* '"' 
+
+unsigned_amount ::=
+	 [0-9]+('.'[0-9]+)?
+
+amount ::=
+	 '-'?[0-9]+('.'[0-9]+)?
+
+txn ::=
+	 '*'
+	| '!'
+
+commodity ::=
+	 [A-Z]+
+
+comment ::=
+	 ';' '.'*
+

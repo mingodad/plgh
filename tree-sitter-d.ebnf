@@ -1,0 +1,1327 @@
+//
+// From tree-sitter-d/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 ( _bom | shebang )? ( module_def | _declaration* )
+
+_bom ::=
+	 '﻿'
+
+identifier ::=
+	 [_\p{XID_Start}][\p{XID_Continue}]*
+
+token_string ::=
+	 'q{' _token_string_tokens? '}'
+
+_token_string_tokens ::=
+	 _token_string_token+
+
+_token_string_token ::=
+	 '{' _token_string_tokens? '}'
+	| _token_no_braces
+
+_token_no_braces ::=
+	 identifier
+	| string_literal
+	| char_literal
+	| int_literal
+	| float_literal
+	| keyword
+	| '/'
+	| '/='
+	| '.'
+	| '..'
+	| '...'
+	| '&'
+	| '&='
+	| '&&'
+	| '|'
+	| '|='
+	| '||'
+	| '-'
+	| '-='
+	| '--'
+	| '+'
+	| '+='
+	| '++'
+	| '<'
+	| '<='
+	| '<<'
+	| '<<='
+	| '>'
+	| '>='
+	| '>>='
+	| '>>>='
+	| '>>'
+	| '>>>'
+	| '!'
+	| '!='
+	| '('
+	| ')'
+	| '['
+	| ']'
+	| '?'
+	| ','
+	| ';'
+	| ':'
+	| '$'
+	| '='
+	| '=='
+	| '*'
+	| '*='
+	| '%'
+	| '%='
+	| '^'
+	| '^='
+	| '^^'
+	| '^^='
+	| '~'
+	| '~='
+	| '@'
+	| '=>'
+	| '#'
+
+keyword ::=
+	 abstract
+	| alias
+	| align
+	| asm
+	| assert
+	| auto
+	| break
+	| case
+	| cast
+	| catch
+	| class
+	| continue
+	| debug
+	| default
+	| delegate
+	| delete
+	| deprecated
+	| do
+	| else
+	| enum
+	| export
+	| extern
+	| final
+	| finally
+	| for
+	| foreach
+	| foreach_reverse
+	| function
+	| goto
+	| if
+	| import
+	| in
+	| interface
+	| invariant
+	| is
+	| lazy
+	| mixin
+	| module
+	| new
+	| nothrow
+	| out
+	| override
+	| package
+	| pragma
+	| private
+	| protected
+	| public
+	| pure
+	| ref
+	| return
+	| scope
+	| static
+	| struct
+	| super
+	| switch
+	| synchronized
+	| template
+	| this
+	| throw
+	| try
+	| typeid
+	| typeof
+	| union
+	| unittest
+	| version
+	| while
+	| with
+	| gshared
+	| traits
+	| vector
+	| parameters_
+	| special_keyword
+	| false
+	| true
+	| null
+	| _builtin_type
+	| void
+	| type_ctor
+
+bool ::=
+	 'bool'
+
+byte ::=
+	 'byte'
+
+ubyte ::=
+	 'ubyte'
+
+char ::=
+	 'char'
+
+short ::=
+	 'short'
+
+ushort ::=
+	 'ushort'
+
+int ::=
+	 'int'
+
+uint ::=
+	 'uint'
+
+long ::=
+	 'long'
+
+ulong ::=
+	 'ulong'
+
+cent ::=
+	 'cent'
+
+ucent ::=
+	 'ucent'
+
+wchar ::=
+	 'wchar'
+
+dchar ::=
+	 'dchar'
+
+float ::=
+	 'float'
+
+double ::=
+	 'double'
+
+real ::=
+	 'real'
+
+ifloat ::=
+	 'ifloat'
+
+idouble ::=
+	 'idouble'
+
+ireal ::=
+	 'ireal'
+
+cfloat ::=
+	 'cfloat'
+
+cdouble ::=
+	 'cdouble'
+
+creal ::=
+	 'creal'
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+null ::=
+	 'null'
+
+dollar ::=
+	 '$'
+
+super ::=
+	 'super'
+
+this ::=
+	 'this'
+
+abstract ::=
+	 'abstract'
+
+alias ::=
+	 'alias'
+
+align ::=
+	 'align'
+
+asm ::=
+	 'asm'
+
+assert ::=
+	 'assert'
+
+auto ::=
+	 'auto'
+
+break ::=
+	 'break'
+
+case ::=
+	 'case'
+
+cast ::=
+	 'cast'
+
+catch ::=
+	 'catch'
+
+class ::=
+	 'class'
+
+const ::=
+	 'const'
+
+continue ::=
+	 'continue'
+
+debug ::=
+	 'debug'
+
+default ::=
+	 'default'
+
+delegate ::=
+	 'delegate'
+
+delete ::=
+	 'delete'
+
+deprecated ::=
+	 'deprecated'
+
+do ::=
+	 'do'
+
+else ::=
+	 'else'
+
+enum ::=
+	 'enum'
+
+export ::=
+	 'export'
+
+extern ::=
+	 'extern'
+
+final ::=
+	 'final'
+
+finally ::=
+	 'finally'
+
+for ::=
+	 'for'
+
+foreach ::=
+	 'foreach'
+
+foreach_reverse ::=
+	 'foreach_reverse'
+
+function ::=
+	 'function'
+
+goto ::=
+	 'goto'
+
+if ::=
+	 'if'
+
+immutable ::=
+	 'immutable'
+
+import ::=
+	 'import'
+
+in ::=
+	 'in'
+
+inout ::=
+	 'inout'
+
+interface ::=
+	 'interface'
+
+invariant ::=
+	 'invariant'
+
+is ::=
+	 'is'
+
+lazy ::=
+	 'lazy'
+
+mixin ::=
+	 'mixin'
+
+module ::=
+	 'module'
+
+new ::=
+	 'new'
+
+nothrow ::=
+	 'nothrow'
+
+out ::=
+	 'out'
+
+override ::=
+	 'override'
+
+package ::=
+	 'package'
+
+pragma ::=
+	 'pragma'
+
+private ::=
+	 'private'
+
+protected ::=
+	 'protected'
+
+public ::=
+	 'public'
+
+pure ::=
+	 'pure'
+
+ref ::=
+	 'ref'
+
+return ::=
+	 'return'
+
+scope ::=
+	 'scope'
+
+shared ::=
+	 'shared'
+
+static ::=
+	 'static'
+
+struct ::=
+	 'struct'
+
+switch ::=
+	 'switch'
+
+synchronized ::=
+	 'synchronized'
+
+template ::=
+	 'template'
+
+throw ::=
+	 'throw'
+
+try ::=
+	 'try'
+
+typeid ::=
+	 'typeid'
+
+typeof ::=
+	 'typeof'
+
+union ::=
+	 'union'
+
+unittest ::=
+	 'unittest'
+
+version ::=
+	 'version'
+
+while ::=
+	 'while'
+
+with ::=
+	 'with'
+
+parameters_ ::=
+	 '__parameters'
+
+gshared ::=
+	 '__gshared'
+
+traits ::=
+	 '__traits'
+
+vector ::=
+	 '__vector'
+
+module_def ::=
+	 module_declaration _declaration*
+
+module_declaration ::=
+	 at_attribute* ( deprecated_attribute at_attribute* )? module module_fqn ';'
+
+module_fqn ::=
+	 identifier ( '.' identifier )*
+
+import_declaration ::=
+	 import _import_list ';'
+
+_import_list ::=
+	 imported ( ',' _import_list )?
+	| imported ':' import_bind ( ',' import_bind )*
+
+imported ::=
+	 module_fqn
+	| identifier '=' module_fqn
+
+import_bind ::=
+	 identifier ( '=' identifier )?
+
+mixin_declaration ::=
+	 mixin_expression ';'
+
+_declaration ::=
+	 _declaration2
+	| _attribute+ _declaration2
+	| _attribute+ '{' _declaration* '}'
+
+_declaration2 ::=
+	 alias_declaration | alias_this | anonymous_enum_declaration | attribute_declaration | class_declaration | conditional_declaration | constructor | debug_specification | destructor | postblit | function_declaration | enum_declaration | import_declaration | interface_declaration | invariant_declaration | mixin_declaration | mixin_template_declaration | pragma_declaration | struct_declaration | template_declaration | template_mixin | union_declaration | unittest_declaration | variable_declaration | manifest_constant | version_specification | static_assert | auto_declaration | static_foreach_declaration | alias_reassign | ';'
+
+variable_declaration ::=
+	 storage_class* type ( declarator | bitfield_declarator ) ( ',' ( declarator | bitfield_declarator ) )* ';'
+
+_declarator_identifier_list ::=
+	 identifier ( ',' identifier )*
+
+declarator ::=
+	 identifier ( template_parameters? '=' _initializer )?
+
+bitfield_declarator ::=
+	 ':' _expr | identifier ':' _expr ( '=' _initializer )?
+
+manifest_constant ::=
+	 storage_class* enum storage_class* type? manifest_declarator ( ',' manifest_declarator )* ';'
+
+manifest_declarator ::=
+	 identifier '=' _initializer
+	| identifier template_parameters '=' _initializer
+
+storage_class ::=
+	 linkage_attribute
+	| align_attribute
+	| at_attribute
+	| type_ctor
+	| deprecated
+	| static
+	| extern
+	| abstract
+	| final
+	| override
+	| synchronized
+	| auto
+	| scope
+	| gshared
+	| ref
+	| _function_attribute_kwd
+
+_initializer ::=
+	 _non_void_initializer | void
+
+_non_void_initializer ::=
+	 _expr
+	| aggregate_initializer
+
+auto_declaration ::=
+	 storage_class+ _auto_assignment ( ',' _auto_assignment )* ';'
+
+_auto_assignment ::=
+	 identifier template_parameters? '=' _initializer
+
+alias_declaration ::=
+	 alias alias_initializer ( ',' alias_initializer )* ';'
+	| alias storage_class* type _declarator_identifier_list ';'
+	| alias storage_class* type identifier template_parameters? parameters member_function_attribute* ';'
+
+alias_initializer ::=
+	 identifier template_parameters? '=' storage_class* type
+	| identifier template_parameters? '=' storage_class* function_literal
+	| identifier template_parameters? '=' storage_class* type parameters member_function_attribute*
+
+alias_assign ::=
+	 identifier '=' type
+
+alias_reassign ::=
+	 identifier '=' storage_class* type ';' | identifier '=' function_literal ';' | identifier '=' storage_class* type parameters member_function_attribute* ';'
+
+type ::=
+	 type_ctor* _type2 _type_suffix*
+
+type_ctor ::=
+	 const
+	| immutable
+	| inout
+	| shared
+
+_type2 ::=
+	 void | _builtin_type | _qualified_id | '.' _qualified_id | typeof_expression | typeof_expression '.' _qualified_id | type_ctor '(' type ')' | vector_type | traits_expression | mixin_expression
+
+vector_type ::=
+	 vector '(' type ')'
+
+_builtin_type ::=
+	 bool
+	| byte
+	| ubyte
+	| char
+	| short
+	| ushort
+	| int
+	| uint
+	| long
+	| ulong
+	| cent
+	| ucent
+	| wchar
+	| dchar
+	| float
+	| double
+	| real
+	| ifloat
+	| idouble
+	| ireal
+	| cfloat
+	| cdouble
+	| creal
+
+void ::=
+	 'void'
+
+_type_suffix ::=
+	 '*' | '[' ']' | '[' expression ']' | '[' expression '..' expression ']' | '[' type ']' | delegate parameters member_function_attribute* | function parameters _function_attribute*
+
+_identifier_or_template_instance ::=
+	 identifier
+	| template_instance
+
+_qualified_id ::=
+	 identifier | identifier '.' _qualified_id | identifier '[' ']' | identifier '[' expression '..' expression ']' | identifier '[' type ']' | identifier '[' expression ']' | identifier '[' expression ']' '.' _qualified_id | template_instance | template_instance '.' _qualified_id
+
+typeof_expression ::=
+	 typeof '(' ( expression | return ) ')'
+
+attribute_declaration ::=
+	 _attribute ':'
+
+align_attribute ::=
+	 align ( '(' expression ')' )?
+
+deprecated_attribute ::=
+	 deprecated ( '(' expression ')' )?
+
+_attribute ::=
+	 linkage_attribute | align_attribute | deprecated_attribute | pragma_expression | type_ctor | private | package | package '(' module_fqn ')' | protected | public | export | static | extern | abstract | final | override | synchronized | auto | scope | gshared | at_attribute | _function_attribute_kwd | ref | return
+
+at_attribute ::=
+	 '@' identifier | '@' identifier arguments | '@' template_instance | '@' template_instance arguments | '@' '(' _argument_list ')'
+
+_function_attribute_kwd ::=
+	 nothrow
+	| pure
+
+linkage_attribute ::=
+	 extern '(' ( 'C' | 'D' | 'Windows' | 'System' | 'Objective' '-' 'C' | 'C' '++' | 'C' '++' ',' _argument_list? | 'C' '++' ',' class | 'C' '++' ',' struct ) ')'
+
+_argument_list ::=
+	 expression ( ',' expression )* ','?
+
+arguments ::=
+	 '(' _argument_list? ')'
+
+pragma_declaration ::=
+	 pragma_expression ';'
+	| pragma_expression _declaration
+	| pragma_expression '{' _declaration* '}'
+
+pragma_statement ::=
+	 pragma_expression _statement
+	| pragma_expression ';'
+
+pragma_expression ::=
+	 pragma '(' identifier ')'
+	| pragma '(' identifier ',' _argument_list ')'
+
+expression_list ::=
+	 _expr ( ',' _expr )*
+
+expression ::=
+	 _expr
+
+_expr ::=
+	 assignment_expression | ternary_expression | binary_expression | ternary_expression | _unary_expr
+
+ternary_expression ::=
+	 _expr '?' expression_list ':' _expr
+
+call_expression ::=
+	 _unary_expr arguments | type arguments
+
+primary_expression ::=
+	 '(' type ')' '.' identifier
+	| '(' type ')' '.' template_instance
+	| _builtin_type '.' identifier
+	| void '.' identifier
+	| '(' expression_list ')'
+	| type_ctor '(' type ')' '.' identifier
+	| vector_type '.' identifier
+
+_primary_expr ::=
+	 _identifier_or_template_instance
+	| '.' _identifier_or_template_instance
+	| primary_expression
+	| typeof_expression
+	| typeid_expression
+	| array_literal
+	| is_expression
+	| function_literal
+	| traits_expression
+	| mixin_expression
+	| import_expression
+	| dollar
+	| this
+	| super
+	| null
+	| true
+	| false
+	| special_keyword
+	| int_literal
+	| float_literal
+	| char_literal
+	| string_literal
+
+index_expression ::=
+	 _unary_expr '[' ']'
+	| _unary_expr '[' index ( ',' index )* ','? ']'
+
+index ::=
+	 expression ( '..' expression )?
+
+assignment_expression ::=
+	 _expr ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '~=' | '<<=' | '>>=' | '>>>=' | '^^=' ) _expr
+
+binary_expression ::=
+	 logical_or_expression
+	| logical_and_expression
+	| or_expression
+	| xor_expression
+	| and_expression
+	| equal_expression
+	| rel_expression
+	| identity_expression
+	| add_expression
+	| mul_expression
+	| shift_expression
+	| power_expression
+
+logical_or_expression ::=
+	 _expr '||' _expr
+
+logical_and_expression ::=
+	 _expr '&&' _expr
+
+or_expression ::=
+	 _expr '|' _expr
+
+xor_expression ::=
+	 _expr '^' _expr
+
+and_expression ::=
+	 _expr '&' _expr
+
+equal_expression ::=
+	 _expr ( '==' | '!=' ) _expr
+
+rel_expression ::=
+	 _expr ( '<=' | '<' | '>' | '>=' ) _expr
+
+identity_expression ::=
+	 _expr ( not_is | not_in | in | is ) _expr
+
+add_expression ::=
+	 _expr ( '+' | '-' | '~' ) _expr
+
+mul_expression ::=
+	 _expr ( '*' | '/' | '%' ) _expr
+
+shift_expression ::=
+	 _expr ( '<<' | '>>' | '>>>' ) _expr
+
+power_expression ::=
+	 _expr '^^' _unary_expr
+
+postfix_expression ::=
+	 _unary_expr ( '++' | '--' )
+
+unary_expression ::=
+	 ( '~' | '+' | '-' | '!' | '*' | '&' | '++' | '--' ) _unary_expr
+
+_unary_expr ::=
+	 _primary_expr
+	| unary_expression
+	| new_expression
+	| delete_expression
+	| assert_expression
+	| cast_expression
+	| throw_expression
+	| call_expression
+	| index_expression
+	| postfix_expression
+	| property_expression
+
+property_expression ::=
+	 '(' type ')' '.' _identifier_or_template_instance
+	| _unary_expr '.' _identifier_or_template_instance
+	| _unary_expr '.' new_expression
+
+cast_expression ::=
+	 cast '(' ')' _unary_expr | cast '(' type ')' _unary_expr | cast '(' cast_qualifier ')' _unary_expr
+
+cast_qualifier ::=
+	 const
+	| const shared
+	| immutable
+	| inout
+	| inout shared
+	| shared
+	| shared const
+	| shared inout
+
+delete_expression ::=
+	 delete _unary_expr
+
+throw_expression ::=
+	 throw _unary_expr
+
+assert_expression ::=
+	 assert '(' assert_arguments ')'
+
+assert_arguments ::=
+	 expression ( ',' expression ( ',' expression )* )? ','?
+
+mixin_expression ::=
+	 mixin '(' _argument_list ')'
+
+import_expression ::=
+	 import '(' expression ')'
+
+new_expression ::=
+	 new type | new type '[' expression ']' | new type arguments | new class arguments? _base_class_list? aggregate_body
+
+typeid_expression ::=
+	 typeid '(' ( type | expression ) ')'
+
+is_expression ::=
+	 is '(' type identifier? ( ( '==' | ':' ) type_specialization ( ',' _template_parameter_list )? )? ')'
+
+type_specialization ::=
+	 type
+	| struct
+	| union
+	| class
+	| interface
+	| enum
+	| vector
+	| function
+	| delegate
+	| super
+	| const
+	| immutable
+	| inout
+	| shared
+	| return
+	| parameters_
+	| module
+	| package
+
+string_literal ::=
+	 _string
+	| token_string
+
+array_literal ::=
+	 '[' ( _array_member_init ( ',' _array_member_init )* ','? )? ']'
+
+_array_member_init ::=
+	 ( expression ':' )? _non_void_initializer
+
+function_literal ::=
+	 function ( auto? ref )? type? _parameter_with_attributes? _specified_function_body | function ( auto? ref )? type? _parameter_with_attributes '=>' _expr | delegate ( auto? ref )? type? _parameter_with_member_attributes? _specified_function_body | delegate ( auto? ref )? type? _parameter_with_member_attributes '=>' _expr | ( auto? ref )? _parameter_with_member_attributes _specified_function_body | ( auto? ref )? _parameter_with_member_attributes '=>' _expr | _specified_function_body | identifier '=>' _expr
+
+_parameter_with_attributes ::=
+	 parameters _function_attribute*
+
+_parameter_with_member_attributes ::=
+	 _parameters member_function_attribute*
+
+special_keyword ::=
+	 '__DATE__'
+	| '__FILE__'
+	| '__FILE_FULL_PATH__'
+	| '__FUNCTION__'
+	| '__LINE__'
+	| '__MODULE__'
+	| '__PRETTY_FUNCTION__'
+	| '__TIME__'
+	| '__TIMESTAMP__'
+	| '__VENDOR__'
+	| '__VERSION__'
+
+_statement ::=
+	 _statement_no_case_no_default
+	| case_statement
+
+_declarations_and_statements ::=
+	 _declaration_or_statement+
+
+_declaration_or_statement ::=
+	 _declaration
+	| _statement
+
+scope_statement ::=
+	 _declaration_or_statement
+
+body ::=
+	 scope_statement
+
+consequence ::=
+	 scope_statement
+
+alternative ::=
+	 scope_statement
+
+_statement_no_case_no_default ::=
+	 labeled_statement
+	| expression_statement
+	| block_statement
+	| if_statement
+	| while_statement
+	| do_statement
+	| for_statement
+	| foreach_statement
+	| switch_statement
+	| final_switch_statement
+	| continue_statement
+	| break_statement
+	| return_statement
+	| goto_statement
+	| with_statement
+	| synchronized_statement
+	| try_statement
+	| scope_guard_statement
+	| pragma_statement
+	| asm_statement
+	| conditional_statement
+	| static_assert
+	| static_foreach_statement
+	| version_specification
+	| debug_specification
+
+labeled_statement ::=
+	 label body
+
+label ::=
+	 identifier ':'
+
+block_statement ::=
+	 '{' _declarations_and_statements? label? '}'
+
+expression_statement ::=
+	 expression_list ';'
+
+if_statement ::=
+	 if if_condition consequence ( else alternative )?
+
+if_condition ::=
+	 '(' ( _expr | auto identifier '=' expression | scope identifier '=' expression | type_ctor+ identifier '=' expression | type identifier '=' expression ) ')'
+
+while_statement ::=
+	 while if_condition body
+
+do_statement ::=
+	 do body while '(' expression ')'
+
+for_statement ::=
+	 for '(' _for1 _for2? ( ';' _for3? )? ')' body
+
+_for1 ::=
+	 _declaration2
+	| _statement_no_case_no_default
+	| ';'
+
+_for2 ::=
+	 expression
+
+_for3 ::=
+	 expression_list
+
+_foreach ::=
+	 foreach
+	| foreach_reverse
+
+foreach_statement ::=
+	 _foreach '(' foreach_type ( ',' foreach_type )* ';' expression ')' body
+	| _foreach '(' foreach_type ';' expression '..' expression ')' body
+
+foreach_type ::=
+	 ( ref | alias | enum | scope | type_ctor )* type? identifier
+
+switch_statement ::=
+	 switch '(' expression ')' body
+
+case_statement ::=
+	 case expression_list ','? ':' ( _declaration | _statement_no_case_no_default )* | case expression ':' '..' case expression ':' ( _declaration | _statement_no_case_no_default )* | default ':' ( _declaration | _statement_no_case_no_default )*
+
+final_switch_statement ::=
+	 final switch_statement
+
+continue_statement ::=
+	 continue identifier? ';'
+
+break_statement ::=
+	 break identifier? ';'
+
+return_statement ::=
+	 return expression? ';'
+
+goto_statement ::=
+	 goto identifier ';'
+	| goto default ';'
+	| goto case ';'
+	| goto case expression ';'
+
+with_statement ::=
+	 with '(' expression ')' scope_statement
+
+synchronized_statement ::=
+	 synchronized ( '(' expression ')' )? scope_statement
+
+try_statement ::=
+	 try body catch_statement* finally_statement?
+
+catch_statement ::=
+	 catch '(' type identifier? ')' body
+
+finally_statement ::=
+	 finally body
+
+scope_guard_statement ::=
+	 scope '(' ( 'exit' | 'success' | 'failure' ) ')' body
+
+asm_statement ::=
+	 asm _function_attribute* '{' asm_inline? '}'
+
+asm_inline ::=
+	 _token_no_braces+
+
+mixin_statement ::=
+	 mixin '(' _argument_list ')' ';'
+
+struct_declaration ::=
+	 struct aggregate_body
+	| struct identifier ';'
+	| struct identifier aggregate_body
+	| struct identifier template_parameters constraint? ';'
+	| struct identifier template_parameters constraint? aggregate_body
+
+union_declaration ::=
+	 union aggregate_body
+	| union identifier ';'
+	| union identifier aggregate_body
+	| union identifier template_parameters constraint? ';'
+	| union identifier template_parameters constraint? aggregate_body
+
+aggregate_body ::=
+	 '{' _declaration* '}'
+
+aggregate_initializer ::=
+	 '{' ( member_initializer ( ',' member_initializer )* ','? )? '}'
+
+member_initializer ::=
+	 ( identifier ':' )? _initializer
+
+postblit ::=
+	 this '(' this ')' member_function_attribute* function_body
+
+invariant_declaration ::=
+	 invariant '(' ')' block_statement
+	| invariant block_statement
+	| invariant '(' assert_arguments ')' ';'
+
+class_declaration ::=
+	 class identifier template_parameters? ';'
+	| class identifier aggregate_body
+	| class identifier ':' _base_class_list aggregate_body
+	| class identifier template_parameters constraint? aggregate_body
+	| class identifier template_parameters constraint? ':' _base_class_list constraint? aggregate_body
+	| class identifier template_parameters ':' _base_class_list constraint aggregate_body
+
+_base_class_list ::=
+	 base_class ( ',' base_class )*
+
+base_class ::=
+	 _type2
+
+constructor ::=
+	 this parameters member_function_attribute* function_body
+	| this template_parameters parameters member_function_attribute* constraint? function_body
+	| shared? static this '(' ')' member_function_attribute* function_body
+
+destructor ::=
+	 ( shared? static )? '~' this '(' ')' member_function_attribute* function_body
+
+alias_this ::=
+	 alias identifier this ';'
+
+interface_declaration ::=
+	 interface identifier ';'
+	| interface identifier aggregate_body
+	| interface identifier ':' _base_class_list aggregate_body
+	| interface identifier template_parameters aggregate_body
+	| interface identifier template_parameters ':' _base_class_list aggregate_body
+	| interface identifier template_parameters ':' _base_class_list constraint aggregate_body
+	| interface identifier template_parameters constraint aggregate_body
+	| interface identifier template_parameters constraint ':' _base_class_list aggregate_body
+
+enum_declaration ::=
+	 enum identifier ';'
+	| enum identifier _enum_body
+	| enum identifier ':' type ';'
+	| enum identifier ':' type _enum_body
+
+_enum_body ::=
+	 '{' enum_member ( ',' enum_member )* ','? '}'
+
+_enum_member_attribute ::=
+	 deprecated_attribute
+	| at_attribute
+
+enum_member ::=
+	 _enum_member_attribute* identifier ( '=' _expr )?
+
+anonymous_enum_declaration ::=
+	 enum ( ':' type )? '{' ( anonymous_enum_member | enum_member ) ( ',' ( anonymous_enum_member | enum_member ) )* ','? '}'
+
+anonymous_enum_member ::=
+	 type identifier '=' _expr
+
+function_declaration ::=
+	 type identifier parameters member_function_attribute* function_body | type identifier template_parameters parameters member_function_attribute* constraint? function_body | ( storage_class | enum )+ identifier parameters member_function_attribute* function_body | ( storage_class | enum )+ identifier template_parameters parameters member_function_attribute* constraint? function_body
+
+parameters ::=
+	 '(' ')' | '(' parameter ( ',' parameter )* ','? ')' | '(' parameter ( ',' parameter )* ',' ellipses ')' | '(' parameter ( ',' parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')'
+
+_parameters ::=
+	 '(' ')' | '(' _parameter ( ',' _parameter )* ','? ')' | '(' _parameter ( ',' _parameter )* ',' ellipses ')' | '(' _parameter ( ',' _parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')'
+
+parameter ::=
+	 _parameter
+
+_parameter ::=
+	 parameter_attribute* type | parameter_attribute* type ellipses | parameter_attribute* type '=' _expr ellipses? | parameter_attribute* type identifier | parameter_attribute* type identifier ellipses | parameter_attribute* type identifier '=' _expr ellipses?
+
+parameter_attribute ::=
+	 at_attribute
+	| type_ctor
+	| final
+	| in
+	| lazy
+	| out
+	| ref
+	| scope
+	| auto
+	| return
+
+ellipses ::=
+	 '...'
+
+_variadic_arguments_attributes ::=
+	 variadic_arguments_attribute+
+
+variadic_arguments_attribute ::=
+	 const
+	| immutable
+	| return
+	| scope
+	| shared
+
+_function_attribute ::=
+	 _function_attribute_kwd
+	| at_attribute
+
+member_function_attribute ::=
+	 const
+	| immutable
+	| inout
+	| return
+	| scope
+	| shared
+	| _function_attribute
+
+function_body ::=
+	 _in_out_contract_expressions? '=>' _expr ';'
+	| _function_contract* do? block_statement
+	| _function_contract* ';'
+	| _function_contract* _in_out_statement
+
+_specified_function_body ::=
+	 _function_contract* do? block_statement
+
+_function_contract ::=
+	 _in_out_contract_expression
+	| _in_out_statement
+
+_in_out_contract_expressions ::=
+	 _in_out_contract_expression+
+
+_in_out_contract_expression ::=
+	 in_contract_expression
+	| out_contract_expression
+
+_in_out_statement ::=
+	 in_statement
+	| out_statement
+
+in_contract_expression ::=
+	 in '(' assert_arguments ')'
+
+out_contract_expression ::=
+	 out '(' identifier? ';' assert_arguments ')'
+
+in_statement ::=
+	 in block_statement
+
+out_statement ::=
+	 out ( '(' identifier ')' )? block_statement
+
+template_declaration ::=
+	 template identifier template_parameters constraint? '{' _declaration* '}'
+
+template_instance ::=
+	 identifier template_arguments
+
+template_arguments ::=
+	 '!' ( '(' _template_argument_list? ')' | _template_single_arg )
+
+template_argument ::=
+	 type
+	| _expr
+
+_template_argument_list ::=
+	 template_argument ( ',' template_argument )* ','?
+
+_template_single_arg ::=
+	 identifier
+	| void
+	| _builtin_type
+	| char_literal
+	| string_literal
+	| int_literal
+	| float_literal
+	| true
+	| false
+	| null
+	| this
+	| special_keyword
+
+template_parameter ::=
+	 _template_type_parameter | _template_value_parameter | _template_alias_parameter | _template_sequence_parameter
+
+template_parameters ::=
+	 '(' _template_parameter_list? ')'
+
+_template_parameter_list ::=
+	 template_parameter ( ',' template_parameter )* ','?
+
+_template_type_parameter ::=
+	 this? identifier ( ':' type )? ( '=' type )?
+
+_template_value_parameter ::=
+	 type identifier ( ':' _expr )? ( '=' _expr )?
+
+_template_sequence_parameter ::=
+	 identifier '...'
+
+_template_alias_parameter ::=
+	 alias type? identifier ( ':' ( type | _expr ) )? ( '=' ( type | _expr ) )?
+
+constraint ::=
+	 if '(' expression ')'
+
+mixin_template_declaration ::=
+	 mixin template_declaration
+
+template_mixin ::=
+	 mixin ( typeof_expression? '.' )? _identifier_or_template_instance ( '.' _identifier_or_template_instance )* template_arguments? identifier? ';'
+
+conditional_declaration ::=
+	 condition _declaration | condition _declaration else ':' _declaration* | condition _declaration else _declaration | condition _declaration else '{' _declaration* '}' | condition '{' _declaration* '}' | condition '{' _declaration* '}' else ':' _declaration* | condition '{' _declaration* '}' else _declaration | condition '{' _declaration* '}' else '{' _declaration* '}' | condition ':' _declaration+
+
+conditional_statement ::=
+	 condition consequence ( else alternative )?
+
+condition ::=
+	 version_condition
+	| debug_condition
+	| static_if_condition
+
+version_condition ::=
+	 version '(' ( int_literal | identifier | unittest | assert ) ')'
+
+version_specification ::=
+	 version '=' ( int_literal | identifier ) ';'
+
+debug_condition ::=
+	 debug ( '(' ( int_literal | identifier ) ')' )?
+
+debug_specification ::=
+	 debug '=' ( int_literal | identifier ) ';'
+
+static_if_condition ::=
+	 static if '(' expression ')'
+
+static_foreach_statement ::=
+	 static foreach_statement
+
+static_foreach_declaration ::=
+	 static _foreach '(' foreach_type ( ',' foreach_type )* ';' expression ')' '{' _declaration* '}'
+	| static _foreach '(' foreach_type ( ',' foreach_type )* ';' expression ')' _declaration
+	| static _foreach '(' foreach_type ';' expression '..' expression ')' '{' _declaration* '}'
+	| static _foreach '(' foreach_type ';' expression '..' expression ')' _declaration
+
+static_assert ::=
+	 static assert_expression ';'
+
+traits_expression ::=
+	 traits '(' identifier ( ',' _template_argument_list )? ')'
+
+unittest_declaration ::=
+	 unittest block_statement
+

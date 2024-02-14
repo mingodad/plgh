@@ -1,89 +1,233 @@
-/*
-Grammar originally from https://github.com/cbarrete/tree-sitter-ledger
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-ledger/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-source_file ::=  (  ( journal_item |  '\n'  )  )*
+source_file ::=
+	 ( journal_item | '\n'  )*
 
-journal_item ::=  ( comment |  directive |  xact )
+journal_item ::=
+	 comment
+	| block_comment
+	| test
+	| directive
+	| xact
 
-comment ::=  ( ( ';'  |  '*'  )  [^\n]*'\n' )
+comment ::=
+	 ( ( ';' | '#' | '%' | '|' | '*' ) '.'*'#x0A' )
 
-indented_line ::=  ( whitespace [^\n]+'\n' )
+block_comment ::=
+	 'comment' ( whitespace '.'* )? '\n'  ( ( whitespace? '.'* )? '\n'  )* ( 'end' | 'end comment' | 'end' '.'* )
 
-directive ::=  ( account_directive |  commodity_directive |  word_directive |  char_directive )
+test ::=
+	 'test' ( whitespace '.'* )? '\n'  ( ( whitespace? '.'* )? '\n'  )* ( 'end' | 'end test' | 'end' '.'* )
 
-account_directive ::=  ( ( 'account'  whitespace account '\n'  )  (  account_subdirective )*  )
+option ::=
+	 ( '-' | '--' ) [^ =#x0A]+ ( ( whitespace | '=' ) option_value )? '\n' 
 
-account_subdirective ::=  ( alias_subdirective |  assert_subdirective |  check_subdirective |  default_subdirective |  eval_subdirective |  note_subdirective |  payee_subdirective )
+option_value ::=
+	 '.'+
 
-commodity_directive ::=  ( ( 'commodity'  whitespace commodity '\n'  )  (  commodity_subdirective )*  )
+indented_line ::=
+	 whitespace [^#x0A]+'#x0A'
 
-commodity_subdirective ::=  ( alias_subdirective |  default_subdirective |  format_subdirective |  note_subdirective |  nomarket_subdirective )
+directive ::=
+	 option
+	| account_directive
+	| commodity_directive
+	| tag_directive
+	| word_directive '\n' 
+	| char_directive '\n' 
 
-word_directive ::=  ( ( 'include'  [^\n]+ )  |  'end'  |  ( 'alias'  [^=]+ '='  [^\n]+ )  |  ( 'def'  [^\n]+ )  |  ( 'year'  [0-9]+/*{4}*/ )  |  ( 'bucket'  account )  )
+account_directive ::=
+	 'account' whitespace account '\n'  account_subdirective*
 
-char_directive ::=  ( check_in |  check_out |  ( 'A'  account )  |  ( 'Y'  [0-9]+/*{4}*/ )  |  ( 'N'  commodity )  |  ( 'D'  amount )  |  ( 'C'  ( commodity '='  amount )  )  |  ( 'P'  ( date commodity amount )  )  )
+account_subdirective ::=
+	 alias_subdirective
+	| default_subdirective
+	| note_subdirective
+	| assert_subdirective
+	| check_subdirective
+	| whitespace 'eval' whitespace '.'+'#x0A'
+	| whitespace 'payee' whitespace '.'+'#x0A'
 
-alias_subdirective ::=  ( whitespace 'alias'  whitespace [^\n]+'\n' )
+commodity_directive ::=
+	 'commodity' whitespace commodity '\n'  commodity_subdirective*
 
-assert_subdirective ::=  ( whitespace 'assert'  whitespace [^\n]+'\n' )
+commodity_subdirective ::=
+	 alias_subdirective
+	| default_subdirective
+	| format_subdirective
+	| note_subdirective
+	| whitespace 'nomarket' '\n' 
 
-check_subdirective ::=  ( whitespace 'check'  whitespace [^\n]+'\n' )
+tag_directive ::=
+	 'tag' whitespace '\p{L}'+'#x0A' ( assert_subdirective | check_subdirective )*
 
-default_subdirective ::=  ( whitespace 'default'  '\n' )
+word_directive ::=
+	 'include' whitespace filename
+	| 'end'
+	| 'alias' whitespace [^=]+ '=' '.'+
+	| 'def' whitespace '.'+
+	| 'year' whitespace [0-9]'{4}'
+	| 'bucket' whitespace account
 
-eval_subdirective ::=  ( whitespace 'eval'  whitespace [^\n]+'\n' )
+filename ::=
+	 '.'+
 
-format_subdirective ::=  ( whitespace 'format'  whitespace amount )
+char_directive ::=
+	 check_in
+	| check_out
+	| 'A' whitespace account
+	| 'Y' whitespace [0-9]'{4}'
+	| 'N' whitespace commodity
+	| 'D' whitespace amount
+	| 'C' whitespace commodity whitespace? '=' whitespace? amount
+	| 'P' whitespace date whitespace commodity whitespace? amount
 
-nomarket_subdirective ::=  ( whitespace 'nomarket'  '\n' )
+alias_subdirective ::=
+	 whitespace 'alias' whitespace '.'+'#x0A'
 
-note_subdirective ::=  ( whitespace 'note'  whitespace [^\n]+'\n' )
+default_subdirective ::=
+	 whitespace 'default' '\n' 
 
-payee_subdirective ::=  ( whitespace 'payee'  whitespace [^\n]+'\n' )
+format_subdirective ::=
+	 whitespace 'format' whitespace amount
 
-check_in ::=  ( ( 'i'  |  'I'  )  date time account ( ( spacer payee )  )?  )
+note_subdirective ::=
+	 whitespace 'note' whitespace '.'+'#x0A'
 
-check_out ::=  ( ( 'o'  |  'O'  )  date time )
+assert_subdirective ::=
+	 whitespace 'assert' whitespace '.'+'#x0A'
 
-xact ::=  ( plain_xact )
+check_subdirective ::=
+	 whitespace 'check' whitespace '.'+'#x0A'
 
-plain_xact ::=  ( ( date ( ( whitespace status )  )?  ( ( whitespace payee )  )?  '\n'  )  ( ( posting |  ( whitespace note '\n'  )  )  )+  )
+check_in ::=
+	 ( 'i' | 'I' ) whitespace? date whitespace? time whitespace? account ( spacer whitespace? payee )?
 
-date ::=  ( single_date ( ( '='  single_date )  )?  )
+check_out ::=
+	 ( 'o' | 'O' ) whitespace? date whitespace? time
 
-single_date ::=  [0-9]+/*{4}*/[-\.\/][\d]+/*{2}*/[-\.\/][\d]+/*{2}*/
+xact ::=
+	 plain_xact
+	| periodic_xact
+	| automated_xact
 
-time ::=  [0-9]+/*{2}*/':'[\d]+/*{2}*/':'[\d]+/*{2}*/
+plain_xact ::=
+	 _xact_date ( whitespace status )? ( whitespace code )? ( whitespace payee )? ( note | '\n'  ) ( posting | whitespace note '\n'  )+
 
-status ::=  ( '*'  |  '!'  )
+periodic_xact ::=
+	 '~' whitespace interval ( note | '\n'  ) ( posting | whitespace note '\n'  )+
 
-payee ::=  [^*!\n]+
+interval ::=
+	 [eE][vV][eE][rR][yY][  ][dD][aA][yY]
+	| [eE][vV][eE][rR][yY][  ][wW][eE][eE][kK]
+	| [eE][vV][eE][rR][yY][  ][mM][oO][nN][tT][hH]
+	| [eE][vV][eE][rR][yY][  ][qQ][uU][aA][rR][tT][eE][rR]
+	| [eE][vV][eE][rR][yY][  ][yY][eE][aA][rR]
+	| [eE][vV][eE][rR][yY]' '[0-9]+' '[dD][aA][yY][sS]
+	| [eE][vV][eE][rR][yY]' '[0-9]+' '[wW][eE][eE][kK][sS]
+	| [eE][vV][eE][rR][yY]' '[0-9]+' '[mM][oO][nN][tT][hH][sS]
+	| [eE][vV][eE][rR][yY]' '[0-9]+' '[qQ][uU][aA][rR][tT][eE][rR][sS]
+	| [eE][vV][eE][rR][yY]' '[0-9]+' '[yY][eE][aA][rR][sS]
+	| [dD][aA][iI][lL][yY]
+	| [wW][eE][eE][kK][lL][yY]
+	| [bB][iI][wW][eE][eE][kK][lL][yY]
+	| [mM][oO][nN][tT][hH][lL][yY]
+	| [bB][iI][mM][oO][nN][tT][hH][lL][yY]
+	| [qQ][uU][aA][rR][tT][eE][rR][lL][yY]
+	| [yY][eE][aA][rR][lL][yY]
 
-note ::=  ( ';'  [^\n]* )
+automated_xact ::=
+	 '=' whitespace query ( note | '\n'  ) ( posting | whitespace note '\n'  )+
 
-posting ::=  ( whitespace ( status )?  account ( values )?  ( note )?  '\n'  )
+_xact_date ::=
+	 date effective_date?
 
-account ::=  (  ( account_name |  ( '('  account_name ')'  )  |  ( '['  account_name ']'  )  )  )
+date ::=
+	 _single_date
 
-account_name ::=  ('p{L}' 'p{L}'|'p{L}' ':'?)+
+effective_date ::=
+	 '=' _single_date
 
-values ::=  ( spacer amount ( price )?  ( balance_assertion )?  )
+_dsep ::=
+	 [-.\/]
 
-amount ::=  ( ( quantity commodity )  |  ( commodity quantity )  )
+_2d ::=
+	 [0-9]'{1,2}'
 
-quantity ::=  ( ( '-'  )?  [0-9]([\d., ]*[\d])? )
+_4d ::=
+	 [0-9]'{4}'
 
-commodity ::=  ( 'p{L}'+ |  '"'[^"\n]*'"' )
+_single_date ::=
+	 _4d _dsep _2d _dsep _2d
+	| _2d _dsep _2d _dsep _2d
+	| _2d _dsep _2d
 
-price ::=  ( ( '@'  |  '@@'  )  amount )
+time ::=
+	 [0-9]'{2}:'[0-9]'{2}:'[0-9]'{2}'
 
-balance_assertion ::=  ( '='  ( amount )  )
+status ::=
+	 '*'
+	| '!'
 
-whitespace ::=  ( ( ' '  |  '\t'  )  )+
+code ::=
+	 '(' [^)]* ')'
 
-spacer ::=  ( '  '  |  '\t'  |  ' \t'  )
+payee ::=
+	 [^(*!#x0A][^*!#x0A]*
+
+query ::=
+	 [^#x0A]+
+
+note ::=
+	 ';' whitespace ( '[' effective_date ']' | [^#x5B][^=#x0A]* )
+
+posting ::=
+	 whitespace ( status whitespace? )? account ( spacer ( whitespace? amount )? ( whitespace? price )? ( whitespace? balance_assertion )? ( whitespace? note )? )? '\n' 
+
+account ::=
+	 ( account_name | '(' account_name ')' | '[' account_name ']' )
+
+account_name ::=
+	 [^ ;]('\S \S'|'\S')*
+
+amount ::=
+	 quantity
+	| negative_quantity
+	| ( quantity | negative_quantity ) whitespace? commodity
+	| commodity whitespace? ( quantity | negative_quantity )
+
+_quantity ::=
+	 [0-9]([0-9., ]*[0-9])?
+
+quantity ::=
+	 '+'? _quantity
+
+negative_quantity ::=
+	 '-' _quantity
+
+commodity ::=
+	 '\p{L}'+
+	| '\p{Sc}'
+	| '"'[^"#x0A]*'"'
+
+price ::=
+	 ( '@' | '@@' ) whitespace? amount
+
+balance_assertion ::=
+	 '=' whitespace? ( amount )
+
+whitespace ::=
+	 ( ' ' | '\t'  )+
+
+spacer ::=
+	 '  '
+	| '\t' 
+	| ' \t'
 

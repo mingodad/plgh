@@ -1,0 +1,273 @@
+//
+// From tree-sitter-quakec/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _top_level*
+
+_top_level ::=
+	 function_declaration
+	| variable_definition
+	| field_definition
+	| function_definition
+	| enum_definition
+	| modelgen_pragma
+	| _preprocessor_top_level
+
+function_declaration ::=
+	 simple_type ( identifier parameter_list | parameter_list identifier ) ';'
+
+function_definition ::=
+	 simple_type ( parameter_list identifier | identifier parameter_list ) '='? _frame_specifier? ( builtin_literal | _statement ) ';'?
+
+enum_definition ::=
+	 'enum' ( 'class' identifier )? ( ':' simple_type )? '{' ( _enum_constant_specifier ( ',' _enum_constant_specifier )* )* '}' ';'?
+
+_enum_constant_specifier ::=
+	 identifier ( '=' _expression )?
+
+_frame_specifier ::=
+	 '[' ( frame_identifier | integer_frame_literal ) ',' identifier ']'
+
+variable_definition ::=
+	 _type_modifier*? simple_type ( _variable_name_specifier ( '=' _expression )? ) ( ',' ( _variable_name_specifier ( '=' _expression )? ) )* ';'
+
+_variable_name_specifier ::=
+	 identifier _array_declarator?
+
+_variable_def_type ::=
+	 simple_type
+	| function_ref_type
+
+_array_declarator ::=
+	 '[' _expression? ']'
+
+field_definition ::=
+	 '.' ( _field_variable_definition | _field_function_definition ) ';'
+
+_field_variable_definition ::=
+	 simple_type identifier ( ',' identifier )*
+
+_field_function_definition ::=
+	 simple_type parameter_list identifier ( ',' identifier )*
+
+parameter_list ::=
+	 '(' ( parameter ( ',' parameter )* )? ( ','? '...' )? ')'
+
+parameter ::=
+	 ( simple_type | field_ptr_type | function_ref_type ) identifier ( '=' _parameter_initializer )?
+
+_parameter_initializer ::=
+	 _literal
+	| identifier
+
+modelgen_pragma ::=
+	 '$' ( 'flags' | 'base' | 'cd' | 'frame' | 'modelname' | 'origin' | 'scale' | 'skin' | 'spritename' | 'type' | 'load' ) [^#x0A]+
+
+_preprocessor_top_level ::=
+	 preproc_ifdef_top_level
+	| preproc_def
+	| preproc_undef
+
+_preprocessor_local ::=
+	 preproc_ifdef_local
+	| preproc_def
+	| preproc_undef
+
+preproc_ifdef_top_level ::=
+	 ( '#ifdef' | '#ifndef' ) identifier '#x0D'?'#x0A' _top_level* ( '#else' '#x0D'?'#x0A' _top_level* )? '#endif' '#x0D'?'#x0A'
+
+preproc_ifdef_local ::=
+	 ( '#ifdef' | '#ifndef' ) identifier '#x0D'?'#x0A' _simple_statement* ( '#else' '#x0D'?'#x0A' _simple_statement* )? '#endif' '#x0D'?'#x0A'
+
+preproc_def ::=
+	 '#define' identifier _preproc_arg? '#x0D'?'#x0A'
+
+preproc_undef ::=
+	 '#undef' identifier '#x0D'?'#x0A'
+
+_preproc_arg ::=
+	 '\S'([^/#x0A]|'\/'[^*]|'\#x0D'?'#x0A')*
+
+_statement ::=
+	 case_statement
+	| _non_case_statement
+
+_non_case_statement ::=
+	 compound_statement
+	| _simple_statement
+
+compound_statement ::=
+	 '{' _statement* '}'
+
+_simple_statement ::=
+	 switch_statement
+	| break_statement
+	| continue_statement
+	| if_statement
+	| for_statement
+	| while_statement
+	| do_while_statement
+	| return_statement
+	| _variable_definition_statement
+	| _expression_statement
+	| _preprocessor_local
+
+switch_statement ::=
+	 'switch' _parenthesized_expression compound_statement
+
+case_statement ::=
+	 ( 'case' _expression | 'default' ) ':' _non_case_statement*
+
+break_statement ::=
+	 'break' ';'
+
+continue_statement ::=
+	 'continue' ';'
+
+for_statement ::=
+	 'for' '(' _expression ';' _expression ';' _expression ')' _statement
+
+if_statement ::=
+	 'if' _parenthesized_expression _statement ( 'else' _statement )?
+
+while_statement ::=
+	 'while' _parenthesized_expression _statement
+
+do_while_statement ::=
+	 'do' _statement 'while' _parenthesized_expression ';'
+
+return_statement ::=
+	 'return' _expression? ';'
+
+_variable_definition_statement ::=
+	 variable_definition
+
+_expression_statement ::=
+	 _expression ';'
+
+_expression ::=
+	 identifier
+	| frame_identifier
+	| _literal
+	| unary_expression
+	| update_expression
+	| binary_expression
+	| conditional_expression
+	| assignment_expression
+	| field_expression
+	| funcall_expression
+	| subscript_expression
+	| _parenthesized_expression
+
+update_expression ::=
+	 ( '--' | '++' ) _expression | _expression ( '--' | '++' )
+
+unary_expression ::=
+	 ( '-' | '+' | '~' | '!' ) _expression
+
+binary_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '&' _expression
+	| _expression '==' _expression
+	| _expression '!=' _expression
+	| _expression '>' _expression
+	| _expression '>=' _expression
+	| _expression '<=' _expression
+	| _expression '<' _expression
+
+conditional_expression ::=
+	 _expression '?' _expression? ':' _expression
+
+assignment_expression ::=
+	 ( identifier | field_expression ) ( '=' | '+=' | '-=' | '*=' | '/=' | '|=' | '&=' | '&~=' | '%=' | '(-)' | '(+)' | '^=' ) _expression
+
+subscript_expression ::=
+	 _expression '[' _expression ']'
+
+field_expression ::=
+	 _expression ( '.' | '->' ) identifier
+
+funcall_expression ::=
+	 _expression '(' ( _expression ( ',' _expression )* )? ')'
+
+_parenthesized_expression ::=
+	 '(' _expression ')'
+
+_type_modifier ::=
+	 'var'
+	| 'const'
+	| 'static'
+	| 'nosave'
+	| 'local'
+
+simple_type ::=
+	 'void'
+	| 'entity'
+	| 'float'
+	| 'vector'
+	| 'string'
+	| 'int'
+	| 'integer'
+
+field_ptr_type ::=
+	 '.' simple_type
+
+function_ref_type ::=
+	 simple_type parameter_list
+
+identifier ::=
+	 [a-zA-Z_][a-zA-Z0-9_]*
+
+frame_identifier ::=
+	 '$' [a-zA-Z_][a-zA-Z0-9_.]*
+
+_literal ::=
+	 numeric_literal
+	| vector_literal
+	| array_literal
+	| string_literal
+
+numeric_literal ::=
+	 _integer_literal
+	| _float_literal
+
+_integer_literal ::=
+	 '-'?[0-9]+'i'?
+
+_float_literal ::=
+	 '-'?([0-9]+)?'.'([0-9]+'f'?)?
+
+vector_literal ::=
+	 "'"  numeric_literal numeric_literal numeric_literal "'" 
+
+array_literal ::=
+	 '{' _expression ( ',' _expression )* '}'
+
+string_literal ::=
+	 '"'  ( [^\"#x0A]+ | _escape_sequence )* [^"]* '"' 
+
+_escape_sequence ::=
+	 '\\'  ( 'n' | 'r' | '"'  | "'"  | '\\'  | [0-9] )
+
+builtin_literal ::=
+	 '#'[0-9]+(':'[a-zA-Z_][a-zA-Z0-9_]*)?
+
+integer_frame_literal ::=
+	 _integer_literal
+
+comment ::=
+	 ( '//' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+

@@ -1,0 +1,1102 @@
+//
+// From tree-sitter-ada/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+compilation ::=
+	 compilation_unit*
+
+identifier ::=
+	 [a-zA-Z\u{80}-\u{10FFFF}][0-9a-zA-Z_\u{80}-\u{10FFFF}]*
+
+gnatprep_identifier ::=
+	 '\$'[a-zA-Z\u{80}-\u{10FFFF}][0-9a-zA-Z_\u{80}-\u{10FFFF}]*
+
+comment ::=
+	 ( '--' '.'* )
+
+string_literal ::=
+	 '"'('""'|[^"])*'"'
+
+character_literal ::=
+	 "'.'"
+
+numeric_literal ::=
+	 ( [0-9][0-9_]*('.'[0-9_]+)?([eE][+-]?[0-9_]+)? | [0-9]+'#'[0-9a-fA-F._-]+'#'([eE][+-]?[0-9_]+)? )
+
+git_conflict_mark ::=
+	 ( [<<][<<][<<][<<][<<][<<][<<] '.'* )
+	| ( [>>][>>][>>][>>][>>][>>][>>] '.'* )
+	| ( [==][==][==][==][==][==][==] '.'* )
+
+relational_operator ::=
+	 '='
+	| '/='
+	| '<'
+	| '<='
+	| '>'
+	| '>='
+
+binary_adding_operator ::=
+	 '+'
+	| '-'
+	| '&'
+
+unary_adding_operator ::=
+	 '+'
+	| '-'
+
+multiplying_operator ::=
+	 '*'
+	| '/'
+	| 'mod'
+	| 'rem'
+
+tick ::=
+	 "'" 
+
+_name_not_function_call ::=
+	 identifier
+	| gnatprep_identifier
+	| selected_component
+	| _attribute_reference
+	| qualified_expression
+	| target_name
+	| slice
+	| character_literal
+	| string_literal
+
+_name ::=
+	 _name_not_function_call
+	| function_call
+
+_name_for_component_choice ::=
+	 identifier
+	| string_literal
+
+selected_component ::=
+	 _name '.' ( identifier | character_literal | string_literal )
+
+target_name ::=
+	 '@'
+
+_name_list ::=
+	 _name ( ',' _name )*
+
+_defining_identifier_list ::=
+	 identifier ( ',' identifier )*
+
+slice ::=
+	 _name '(' range_g ')'
+
+_attribute_reference ::=
+	 _name tick attribute_designator
+	| _reduction_attribute_reference
+
+_reduction_attribute_reference ::=
+	 value_sequence tick reduction_attribute_designator
+
+reduction_attribute_designator ::=
+	 identifier '(' reduction_specification ')'
+
+reduction_specification ::=
+	 _name ',' expression
+
+value_sequence ::=
+	 '[' ( [pP][aA][rR][aA][lL][lL][eE][lL] ( '(' chunk_specification ')' )? )? iterated_element_association ']'
+
+chunk_specification ::=
+	 _simple_expression
+	| identifier [iI][nN] _discrete_subtype_definition
+
+iterated_element_association ::=
+	 [fF][oO][rR] ( loop_parameter_specification | iterator_specification ) ( [uU][sS][eE] expression )? '=>' expression
+
+_discrete_subtype_definition ::=
+	 _subtype_indication
+	| range_g
+
+loop_parameter_specification ::=
+	 identifier [iI][nN] [rR][eE][vV][eE][rR][sS][eE]? _discrete_subtype_definition iterator_filter?
+
+_loop_parameter_subtype_indication ::=
+	 _subtype_indication
+	| access_definition
+
+iterator_filter ::=
+	 [wW][hH][eE][nN] expression
+
+iterator_specification ::=
+	 identifier ( ':' _loop_parameter_subtype_indication )? ( [iI][nN] | [oO][fF] ) [rR][eE][vV][eE][rR][sS][eE]? _name iterator_filter?
+
+attribute_designator ::=
+	 identifier
+	| [aA][cC][cC][eE][sS][sS]
+	| [dD][eE][lL][tT][aA]
+	| [dD][iI][gG][iI][tT][sS]
+	| [mM][oO][dD]
+
+qualified_expression ::=
+	 _name tick ( _aggregate | _parenthesized_expression )
+
+compilation_unit ::=
+	 with_clause
+	| [pP][rR][iI][vV][aA][tT][eE]? _declarative_item
+	| _statement
+	| subunit
+	| entry_declaration
+
+_declarative_item ::=
+	 _basic_declarative_item
+	| _proper_body
+	| body_stub
+
+_basic_declarative_item ::=
+	 _basic_declaration
+	| _aspect_clause
+	| use_clause
+
+_basic_declaration ::=
+	 _type_declaration
+	| subtype_declaration
+	| object_declaration
+	| number_declaration
+	| subprogram_declaration
+	| expression_function_declaration
+	| null_procedure_declaration
+	| package_declaration
+	| _renaming_declaration
+	| exception_declaration
+	| _generic_declaration
+	| generic_instantiation
+
+package_declaration ::=
+	 _package_specification ';'
+
+_package_specification ::=
+	 [pP][aA][cC][kK][aA][gG][eE] _name aspect_specification? [iI][sS] _basic_declarative_item_pragma* ( [pP][rR][iI][vV][aA][tT][eE] _basic_declarative_item_pragma* )? [eE][nN][dD] _name?
+
+with_clause ::=
+	 [lL][iI][mM][iI][tT][eE][dD]? [pP][rR][iI][vV][aA][tT][eE]? [wW][iI][tT][hH] _name_list ';'
+
+use_clause ::=
+	 [uU][sS][eE] ( [aA][lL][lL]? [tT][yY][pP][eE] )? _name_list ';'
+
+subunit ::=
+	 [sS][eE][pP][aA][rR][aA][tT][eE] '(' _name ')' _proper_body
+
+_proper_body ::=
+	 subprogram_body
+	| package_body
+	| task_body
+	| protected_body
+
+subprogram_body ::=
+	 overriding_indicator? _subprogram_specification aspect_specification? [iI][sS] non_empty_declarative_part? [bB][eE][gG][iI][nN] handled_sequence_of_statements [eE][nN][dD] _name? ';'
+
+package_body ::=
+	 [pP][aA][cC][kK][aA][gG][eE] [bB][oO][dD][yY] _name aspect_specification? [iI][sS] non_empty_declarative_part? ( [bB][eE][gG][iI][nN] handled_sequence_of_statements )? [eE][nN][dD] _name? ';'
+
+_subtype_indication ::=
+	 null_exclusion? _name_not_function_call _constraint?
+
+discriminant_constraint ::=
+	 _parenthesized_expression
+	| '(' discriminant_association ( ',' discriminant_association )* ')'
+
+discriminant_association ::=
+	 ( _name_for_component_choice ( '|' _name_for_component_choice )* '=>' )? expression
+
+_constraint ::=
+	 _scalar_constraint
+	| index_constraint
+	| discriminant_constraint
+
+_scalar_constraint ::=
+	 range_constraint
+	| digits_constraint
+	| delta_constraint
+
+range_g ::=
+	 ( _name tick range_attribute_designator )
+	| _simple_expression '..' _simple_expression
+
+range_attribute_designator ::=
+	 [rR][aA][nN][gG][eE] ( '(' expression ')' )?
+
+range_constraint ::=
+	 [rR][aA][nN][gG][eE] range_g
+
+expression ::=
+	 _relation ( [aA][nN][dD] [tT][hH][eE][nN]? _relation )*
+	| _relation ( [oO][rR] [eE][lL][sS][eE]? _relation )*
+	| _relation ( [xX][oO][rR] _relation )*
+
+_relation ::=
+	 _simple_expression ( relational_operator _simple_expression )?
+	| relation_membership
+	| raise_expression
+
+relation_membership ::=
+	 _simple_expression [nN][oO][tT]? [iI][nN] membership_choice_list
+
+raise_expression ::=
+	 [rR][aA][iI][sS][eE] _name ( [wW][iI][tT][hH] _simple_expression )?
+
+membership_choice_list ::=
+	 _membership_choice ( '|' _membership_choice )*
+
+_membership_choice ::=
+	 _simple_expression
+	| range_g
+
+_simple_expression ::=
+	 unary_adding_operator? term ( binary_adding_operator term )*
+
+term ::=
+	 _factor ( multiplying_operator _factor )*
+
+_factor ::=
+	 _primary
+	| factor_power
+	| factor_abs
+	| factor_not
+
+factor_power ::=
+	 _primary '**' _primary
+
+factor_abs ::=
+	 [aA][bB][sS] _primary
+
+factor_not ::=
+	 [nN][oO][tT] _primary
+
+_parenthesized_expression ::=
+	 '(' ( expression | _conditional_expression | quantified_expression | declare_expression ) ')'
+
+_primary ::=
+	 numeric_literal | primary_null | _aggregate | _name | allocator | _parenthesized_expression
+
+primary_null ::=
+	 [nN][uU][lL][lL]
+
+allocator ::=
+	 [nN][eE][wW] subpool_specification? _subtype_indication_paren_constraint
+
+_subtype_indication_paren_constraint ::=
+	 null_exclusion? _name index_constraint?
+
+subpool_specification ::=
+	 '(' _name ')'
+
+_access_type_definition ::=
+	 null_exclusion? ( access_to_object_definition | access_to_subprogram_definition )
+
+access_to_subprogram_definition ::=
+	 [aA][cC][cC][eE][sS][sS] [pP][rR][oO][tT][eE][cC][tT][eE][dD]? ( [pP][rR][oO][cC][eE][dD][uU][rR][eE] formal_part? | [fF][uU][nN][cC][tT][iI][oO][nN] _parameter_and_result_profile )
+
+access_to_object_definition ::=
+	 [aA][cC][cC][eE][sS][sS] general_access_modifier? _subtype_indication
+
+general_access_modifier ::=
+	 [aA][lL][lL]
+	| [cC][oO][nN][sS][tT][aA][nN][tT]
+
+access_definition ::=
+	 null_exclusion? [aA][cC][cC][eE][sS][sS] ( [cC][oO][nN][sS][tT][aA][nN][tT]? _name | [pP][rR][oO][tT][eE][cC][tT][eE][dD]? [pP][rR][oO][cC][eE][dD][uU][rR][eE] formal_part? | [pP][rR][oO][tT][eE][cC][tT][eE][dD]? [fF][uU][nN][cC][tT][iI][oO][nN] _parameter_and_result_profile )
+
+actual_parameter_part ::=
+	 '(' ( parameter_association ( ',' parameter_association )* | _conditional_expression | quantified_expression | declare_expression ) ')'
+
+parameter_association ::=
+	 component_choice_list '=>' ( expression | '<>' )
+	| expression
+	| '<>'
+
+_conditional_expression ::=
+	 if_expression
+	| case_expression
+
+_conditional_quantified_declare_expression ::=
+	 _conditional_expression
+	| quantified_expression
+	| declare_expression
+
+quantified_expression ::=
+	 [fF][oO][rR] quantifier ( loop_parameter_specification | iterator_specification ) '=>' expression
+
+declare_expression ::=
+	 [dD][eE][cC][lL][aA][rR][eE] _declare_item* [bB][eE][gG][iI][nN] expression
+
+_declare_item ::=
+	 object_declaration
+	| object_renaming_declaration
+	| pragma_g
+
+quantifier ::=
+	 [aA][lL][lL]
+	| [sS][oO][mM][eE]
+
+case_expression ::=
+	 [cC][aA][sS][eE] expression [iI][sS] case_expression_alternative ( ',' case_expression_alternative )*
+
+case_expression_alternative ::=
+	 [wW][hH][eE][nN] discrete_choice_list '=>' expression
+
+component_choice_list ::=
+	 [oO][tT][hH][eE][rR][sS]
+	| _name_for_component_choice ( '|' _name_for_component_choice )*
+
+_aggregate ::=
+	 record_aggregate
+	| extension_aggregate
+	| _array_aggregate
+	| _delta_aggregate
+
+_delta_aggregate ::=
+	 record_delta_aggregate
+	| array_delta_aggregate
+
+extension_aggregate ::=
+	 '(' expression [wW][iI][tT][hH] _record_component_association_list_or_expression ')'
+
+record_delta_aggregate ::=
+	 '(' expression [wW][iI][tT][hH] [dD][eE][lL][tT][aA] _record_component_association_list_or_expression ')'
+
+array_delta_aggregate ::=
+	 '(' expression [wW][iI][tT][hH] [dD][eE][lL][tT][aA] _array_component_association_list ')'
+	| '[' expression [wW][iI][tT][hH] [dD][eE][lL][tT][aA] _array_component_association_list ']'
+
+record_aggregate ::=
+	 '(' record_component_association_list ')'
+
+record_component_association_list ::=
+	 [nN][uU][lL][lL] [rR][eE][cC][oO][rR][dD]
+	| expression ',' ( expression | _named_record_component_association ) ( ',' ( expression | _named_record_component_association ) )*
+	| _named_record_component_association ( ',' _named_record_component_association )*
+
+_record_component_association_list_or_expression ::=
+	 record_component_association_list
+	| expression
+
+_named_record_component_association ::=
+	 component_choice_list '=>' ( expression | '<>' )
+
+null_exclusion ::=
+	 [nN][oO][tT] [nN][uU][lL][lL]
+
+index_constraint ::=
+	 '(' _discrete_range ( ',' _discrete_range )* ')'
+
+digits_constraint ::=
+	 [dD][iI][gG][iI][tT][sS] _simple_expression range_constraint?
+
+delta_constraint ::=
+	 [dD][eE][lL][tT][aA] _simple_expression range_constraint?
+
+_basic_declarative_item_pragma ::=
+	 _basic_declarative_item
+	| pragma_g
+
+_type_declaration ::=
+	 full_type_declaration
+	| incomplete_type_declaration
+	| private_type_declaration
+	| private_extension_declaration
+
+full_type_declaration ::=
+	 [tT][yY][pP][eE] identifier known_discriminant_part? [iI][sS] _type_definition aspect_specification? ';'
+	| task_type_declaration
+	| protected_type_declaration
+
+private_type_declaration ::=
+	 [tT][yY][pP][eE] identifier _discriminant_part? [iI][sS] ( [aA][bB][sS][tT][rR][aA][cC][tT]? [tT][aA][gG][gG][eE][dD] )? [lL][iI][mM][iI][tT][eE][dD]? [pP][rR][iI][vV][aA][tT][eE] aspect_specification? ';'
+
+private_extension_declaration ::=
+	 [tT][yY][pP][eE] identifier _discriminant_part? [iI][sS] [aA][bB][sS][tT][rR][aA][cC][tT]? ( [lL][iI][mM][iI][tT][eE][dD] | [sS][yY][nN][cC][hH][rR][oO][nN][iI][zZ][eE][dD] )? [nN][eE][wW] _subtype_indication ( [aA][nN][dD] _interface_list )? [wW][iI][tT][hH] [pP][rR][iI][vV][aA][tT][eE] aspect_specification? ';'
+
+_discriminant_part ::=
+	 known_discriminant_part
+	| unknown_discriminant_part
+
+unknown_discriminant_part ::=
+	 '(' '<>' ')'
+
+known_discriminant_part ::=
+	 '(' discriminant_specification_list ')'
+
+incomplete_type_declaration ::=
+	 [tT][yY][pP][eE] identifier _discriminant_part? ( [iI][sS] [tT][aA][gG][gG][eE][dD] )? ';'
+
+discriminant_specification_list ::=
+	 discriminant_specification ( ';' discriminant_specification )*
+
+discriminant_specification ::=
+	 _defining_identifier_list ':' ( null_exclusion? _name | access_definition ) _assign_value? aspect_specification?
+
+_type_definition ::=
+	 enumeration_type_definition
+	| _integer_type_definition
+	| _real_type_definition
+	| array_type_definition
+	| record_type_definition
+	| _access_type_definition
+	| derived_type_definition
+	| interface_type_definition
+
+array_type_definition ::=
+	 [aA][rR][rR][aA][yY] '(' ( _discrete_subtype_definition_list | _index_subtype_definition_list ) ')' [oO][fF] component_definition
+
+_discrete_subtype_definition_list ::=
+	 _discrete_subtype_definition ( ',' _discrete_subtype_definition )*
+
+_discrete_range ::=
+	 _subtype_indication
+	| range_g
+
+_index_subtype_definition_list ::=
+	 index_subtype_definition ( ',' index_subtype_definition )*
+
+index_subtype_definition ::=
+	 _name [rR][aA][nN][gG][eE] '<>'
+
+enumeration_type_definition ::=
+	 '(' _enumeration_literal_list ')'
+
+_enumeration_literal_list ::=
+	 _enumeration_literal_specification ( ',' _enumeration_literal_specification )*
+
+_enumeration_literal_specification ::=
+	 identifier
+	| character_literal
+
+_integer_type_definition ::=
+	 signed_integer_type_definition
+	| modular_type_definition
+
+modular_type_definition ::=
+	 [mM][oO][dD] expression
+
+_real_type_definition ::=
+	 floating_point_definition
+	| _fixed_point_definition
+
+floating_point_definition ::=
+	 [dD][iI][gG][iI][tT][sS] expression real_range_specification?
+
+real_range_specification ::=
+	 [rR][aA][nN][gG][eE] _simple_expression '..' _simple_expression
+
+_fixed_point_definition ::=
+	 ordinary_fixed_point_definition
+	| decimal_fixed_point_definition
+
+decimal_fixed_point_definition ::=
+	 [dD][eE][lL][tT][aA] expression [dD][iI][gG][iI][tT][sS] expression real_range_specification?
+
+ordinary_fixed_point_definition ::=
+	 [dD][eE][lL][tT][aA] expression real_range_specification
+
+signed_integer_type_definition ::=
+	 [rR][aA][nN][gG][eE] _simple_expression '..' _simple_expression
+
+derived_type_definition ::=
+	 [aA][bB][sS][tT][rR][aA][cC][tT]? [lL][iI][mM][iI][tT][eE][dD]? [nN][eE][wW] _subtype_indication ( ( [aA][nN][dD] _interface_list )? record_extension_part )?
+
+interface_type_definition ::=
+	 ( [lL][iI][mM][iI][tT][eE][dD] | [tT][aA][sS][kK] | [pP][rR][oO][tT][eE][cC][tT][eE][dD] | [sS][yY][nN][cC][hH][rR][oO][nN][iI][zZ][eE][dD] )? [iI][nN][tT][eE][rR][fF][aA][cC][eE] ( [aA][nN][dD] _interface_list )?
+
+_interface_list ::=
+	 _name ( [aA][nN][dD] _name )*
+
+record_extension_part ::=
+	 [wW][iI][tT][hH] record_definition
+
+record_type_definition ::=
+	 ( [aA][bB][sS][tT][rR][aA][cC][tT]? [tT][aA][gG][gG][eE][dD] )? [lL][iI][mM][iI][tT][eE][dD]? record_definition
+
+record_definition ::=
+	 [rR][eE][cC][oO][rR][dD] component_list [eE][nN][dD] [rR][eE][cC][oO][rR][dD] identifier?
+	| [nN][uU][lL][lL] [rR][eE][cC][oO][rR][dD]
+
+component_list ::=
+	 _component_item+
+	| _component_item* variant_part
+	| [nN][uU][lL][lL] [;;]
+
+_component_item ::=
+	 component_declaration
+	| _aspect_clause
+	| pragma_g
+
+component_declaration ::=
+	 _defining_identifier_list ':' component_definition _assign_value? aspect_specification? ';'
+
+component_definition ::=
+	 [aA][lL][iI][aA][sS][eE][dD]? ( _subtype_indication | access_definition )
+
+_array_aggregate ::=
+	 positional_array_aggregate
+	| null_array_aggregate
+	| named_array_aggregate
+
+positional_array_aggregate ::=
+	 '(' expression ',' expression ( ',' expression )* ')'
+	| '(' expression ( ',' expression )* ',' [oO][tT][hH][eE][rR][sS] '=>' ( expression | '<>' ) ')'
+	| '[' expression ( ',' expression )* ( ',' [oO][tT][hH][eE][rR][sS] '=>' ( expression | '<>' ) )? ']'
+
+null_array_aggregate ::=
+	 '[' ']'
+
+named_array_aggregate ::=
+	 '(' _array_component_association_list ')'
+	| '[' _array_component_association_list ']'
+
+_array_component_association_list ::=
+	 array_component_association ( ',' array_component_association )*
+
+array_component_association ::=
+	 discrete_choice_list '=>' ( expression | '<>' )
+	| iterated_element_association
+
+discrete_choice_list ::=
+	 discrete_choice ( '|' discrete_choice )*
+
+discrete_choice ::=
+	 expression
+	| _subtype_indication
+	| range_g
+	| [oO][tT][hH][eE][rR][sS]
+
+aspect_association ::=
+	 _aspect_mark ( '=>' _aspect_definition )?
+
+_aspect_clause ::=
+	 attribute_definition_clause
+	| enumeration_representation_clause
+	| record_representation_clause
+	| at_clause
+
+_aspect_definition ::=
+	 expression
+	| global_aspect_definition
+
+_aspect_mark ::=
+	 identifier ( tick [CC][lL][aA][sS][sS] )?
+
+aspect_mark_list ::=
+	 aspect_association ( ',' aspect_association )*
+
+aspect_specification ::=
+	 [wW][iI][tT][hH] aspect_mark_list
+
+_assign_value ::=
+	 ':=' expression
+
+at_clause ::=
+	 [fF][oO][rR] identifier [uU][sS][eE] [aA][tT] expression ';'
+
+attribute_definition_clause ::=
+	 [fF][oO][rR] _name tick attribute_designator [uU][sS][eE] expression ';'
+
+body_stub ::=
+	 subprogram_body_stub
+	| package_body_stub
+	| task_body_stub
+	| protected_body_stub
+
+subprogram_body_stub ::=
+	 overriding_indicator? _subprogram_specification [iI][sS] [sS][eE][pP][aA][rR][aA][tT][eE] aspect_specification? ';'
+
+package_body_stub ::=
+	 [pP][aA][cC][kK][aA][gG][eE] [bB][oO][dD][yY] identifier [iI][sS] [sS][eE][pP][aA][rR][aA][tT][eE] aspect_specification? ';'
+
+task_body ::=
+	 [tT][aA][sS][kK] [bB][oO][dD][yY] identifier aspect_specification? [iI][sS] non_empty_declarative_part? [bB][eE][gG][iI][nN] handled_sequence_of_statements [eE][nN][dD] identifier? ';'
+
+task_body_stub ::=
+	 [tT][aA][sS][kK] [bB][oO][dD][yY] identifier [iI][sS] [sS][eE][pP][aA][rR][aA][tT][eE] aspect_specification? ';'
+
+_protected_operation_declaration ::=
+	 subprogram_declaration
+	| pragma_g
+	| entry_declaration
+	| _aspect_clause
+
+_protected_element_declaration ::=
+	 _protected_operation_declaration
+	| component_declaration
+
+_protected_operation_item ::=
+	 subprogram_declaration
+	| subprogram_body
+	| null_procedure_declaration
+	| expression_function_declaration
+	| entry_body
+	| _aspect_clause
+
+protected_definition ::=
+	 _protected_operation_declaration* ( [pP][rR][iI][vV][aA][tT][eE] _protected_element_declaration* )? [eE][nN][dD] identifier?
+
+protected_type_declaration ::=
+	 [pP][rR][oO][tT][eE][cC][tT][eE][dD] [tT][yY][pP][eE] identifier known_discriminant_part? aspect_specification? [iI][sS] ( [nN][eE][wW] _interface_list [wW][iI][tT][hH] )? protected_definition ';'
+
+single_protected_declaration ::=
+	 [pP][rR][oO][tT][eE][cC][tT][eE][dD] identifier aspect_specification? [iI][sS] ( [nN][eE][wW] _interface_list [wW][iI][tT][hH] )? protected_definition ';'
+
+protected_body ::=
+	 [pP][rR][oO][tT][eE][cC][tT][eE][dD] [bB][oO][dD][yY] identifier aspect_specification? [iI][sS] _protected_operation_item* [eE][nN][dD] identifier? ';'
+
+protected_body_stub ::=
+	 [pP][rR][oO][tT][eE][cC][tT][eE][dD] [bB][oO][dD][yY] identifier [iI][sS] [sS][eE][pP][aA][rR][aA][tT][eE] aspect_specification? ';'
+
+choice_parameter_specification ::=
+	 identifier
+
+component_clause ::=
+	 _name [aA][tT] expression [rR][aA][nN][gG][eE] _simple_expression '..' _simple_expression ';'
+
+_declarative_item_pragma ::=
+	 _declarative_item
+	| pragma_g
+	| gnatprep_declarative_if_statement
+
+non_empty_declarative_part ::=
+	 _declarative_item_pragma+
+
+entry_declaration ::=
+	 overriding_indicator? [eE][nN][tT][rR][yY] identifier ( '(' _discrete_subtype_definition ')' )? formal_part? aspect_specification? ';'
+
+entry_body ::=
+	 [eE][nN][tT][rR][yY] identifier ( '(' entry_index_specification ')' )? formal_part? aspect_specification? entry_barrier [iI][sS] non_empty_declarative_part? [bB][eE][gG][iI][nN] handled_sequence_of_statements [eE][nN][dD] identifier? ';'
+
+entry_barrier ::=
+	 [wW][hH][eE][nN] expression
+
+entry_index_specification ::=
+	 [fF][oO][rR] identifier [iI][nN] _discrete_subtype_definition aspect_specification?
+
+enumeration_aggregate ::=
+	 _array_aggregate
+
+enumeration_representation_clause ::=
+	 [fF][oO][rR] _name [uU][sS][eE] enumeration_aggregate ';'
+
+exception_choice_list ::=
+	 exception_choice ( '|' exception_choice )*
+
+exception_choice ::=
+	 _name
+	| [oO][tT][hH][eE][rR][sS]
+
+exception_declaration ::=
+	 _defining_identifier_list ':' [eE][xX][cC][eE][pP][tT][iI][oO][nN] aspect_specification? ';'
+
+exception_handler ::=
+	 [wW][hH][eE][nN] ( choice_parameter_specification ':' )? exception_choice_list '=>' _sequence_of_statements
+
+formal_part ::=
+	 '(' _parameter_specification_list ')'
+
+function_specification ::=
+	 [fF][uU][nN][cC][tT][iI][oO][nN] _name _parameter_and_result_profile
+
+_generic_declaration ::=
+	 generic_subprogram_declaration
+	| generic_package_declaration
+
+generic_formal_part ::=
+	 [gG][eE][nN][eE][rR][iI][cC] _generic_formal_parameter_declaration*
+
+_generic_formal_parameter_declaration ::=
+	 formal_object_declaration
+	| _formal_type_declaration
+	| formal_subprogram_declaration
+	| formal_package_declaration
+	| use_clause
+	| pragma_g
+
+generic_subprogram_declaration ::=
+	 generic_formal_part _subprogram_specification aspect_specification? ';'
+
+generic_package_declaration ::=
+	 generic_formal_part package_declaration
+
+generic_instantiation ::=
+	 ( [pP][aA][cC][kK][aA][gG][eE] _name | overriding_indicator? ( [pP][rR][oO][cC][eE][dD][uU][rR][eE] _name | [fF][uU][nN][cC][tT][iI][oO][nN] _name ) ) [iI][sS] [nN][eE][wW] _name aspect_specification? ';'
+
+formal_object_declaration ::=
+	 _defining_identifier_list ':' non_empty_mode? null_exclusion? _name _assign_value? aspect_specification? ';'
+	| _defining_identifier_list ':' non_empty_mode? access_definition _assign_value? aspect_specification? ';'
+
+_formal_type_declaration ::=
+	 formal_complete_type_declaration
+	| formal_incomplete_type_declaration
+
+formal_complete_type_declaration ::=
+	 [tT][yY][pP][eE] identifier _discriminant_part? [iI][sS] _formal_type_definition ( [oO][rR] [uU][sS][eE] _name )? aspect_specification? ';'
+
+formal_incomplete_type_declaration ::=
+	 [tT][yY][pP][eE] identifier _discriminant_part? ( [iI][sS] [tT][aA][gG][gG][eE][dD] )? ( [oO][rR] [uU][sS][eE] _name )? ';'
+
+_formal_type_definition ::=
+	 formal_private_type_definition
+	| formal_derived_type_definition
+	| formal_discrete_type_definition
+	| formal_signed_integer_type_definition
+	| formal_modular_type_definition
+	| formal_floating_point_definition
+	| formal_ordinary_fixed_point_definition
+	| formal_decimal_fixed_point_definition
+	| formal_array_type_definition
+	| formal_access_type_definition
+	| formal_interface_type_definition
+
+formal_private_type_definition ::=
+	 ( [aA][bB][sS][tT][rR][aA][cC][tT]? [tT][aA][gG][gG][eE][dD] )? [lL][iI][mM][iI][tT][eE][dD]? [pP][rR][iI][vV][aA][tT][eE]
+
+formal_derived_type_definition ::=
+	 [aA][bB][sS][tT][rR][aA][cC][tT]? ( [lL][iI][mM][iI][tT][eE][dD] | [sS][yY][nN][cC][hH][rR][oO][nN][iI][zZ][eE][dD] )? [nN][eE][wW] _name ( ( [aA][nN][dD] _interface_list )? [wW][iI][tT][hH] [pP][rR][iI][vV][aA][tT][eE] )?
+
+formal_discrete_type_definition ::=
+	 '(' '<>' ')'
+
+formal_signed_integer_type_definition ::=
+	 [rR][aA][nN][gG][eE] '<>'
+
+formal_modular_type_definition ::=
+	 [mM][oO][dD] '<>'
+
+formal_floating_point_definition ::=
+	 [dD][iI][gG][iI][tT][sS] '<>'
+
+formal_ordinary_fixed_point_definition ::=
+	 [dD][eE][lL][tT][aA] '<>'
+
+formal_decimal_fixed_point_definition ::=
+	 [dD][eE][lL][tT][aA] '<>' [dD][iI][gG][iI][tT][sS] '<>'
+
+formal_array_type_definition ::=
+	 array_type_definition
+
+formal_access_type_definition ::=
+	 _access_type_definition
+
+formal_interface_type_definition ::=
+	 interface_type_definition
+
+formal_subprogram_declaration ::=
+	 formal_concrete_subprogram_declaration
+	| formal_abstract_subprogram_declaration
+
+formal_concrete_subprogram_declaration ::=
+	 [wW][iI][tT][hH] _subprogram_specification ( [iI][sS] subprogram_default )? aspect_specification? ';'
+
+formal_abstract_subprogram_declaration ::=
+	 [wW][iI][tT][hH] _subprogram_specification [iI][sS] [aA][bB][sS][tT][rR][aA][cC][tT] subprogram_default? aspect_specification? ';'
+
+subprogram_default ::=
+	 _name
+	| '<>'
+	| [nN][uU][lL][lL]
+
+formal_package_declaration ::=
+	 [wW][iI][tT][hH] [pP][aA][cC][kK][aA][gG][eE] identifier [iI][sS] [nN][eE][wW] _name aspect_specification? ';'
+
+formal_group_designator ::=
+	 'null'
+	| 'all'
+
+extended_global_aspect_element ::=
+	 [uU][sS][eE] ( formal_group_designator | _name ( ',' _name )* )
+
+global_aspect_definition ::=
+	 global_mode
+	| '(' global_aspect_element ( ',' global_aspect_element )* ')'
+
+global_aspect_element ::=
+	 global_mode _name_list
+
+global_mode ::=
+	 non_empty_mode
+	| [oO][vV][eE][rR][rR][iI][dD][iI][nN][gG]
+
+handled_sequence_of_statements ::=
+	 _sequence_of_statements ( [eE][xX][cC][eE][pP][tT][iI][oO][nN] exception_handler+ )?
+
+loop_label ::=
+	 identifier ':'
+
+label ::=
+	 '<<' identifier '>>'
+
+mod_clause ::=
+	 [aA][tT] [mM][oO][dD] expression ';'
+
+non_empty_mode ::=
+	 [iI][nN]
+	| [iI][nN] [oO][uU][tT]
+	| [oO][uU][tT]
+
+null_procedure_declaration ::=
+	 overriding_indicator? procedure_specification [iI][sS] [nN][uU][lL][lL] aspect_specification? ';'
+
+null_statement ::=
+	 [nN][uU][lL][lL] ';'
+
+number_declaration ::=
+	 _defining_identifier_list ':' [cC][oO][nN][sS][tT][aA][nN][tT] _assign_value ';'
+
+object_declaration ::=
+	 _defining_identifier_list ':' [aA][lL][iI][aA][sS][eE][dD]? [cC][oO][nN][sS][tT][aA][nN][tT]? ( _subtype_indication | access_definition | array_type_definition ) _assign_value? aspect_specification? ';'
+	| single_task_declaration
+	| single_protected_declaration
+
+single_task_declaration ::=
+	 [tT][aA][sS][kK] identifier aspect_specification? ( [iI][sS] ( [nN][eE][wW] _interface_list [wW][iI][tT][hH] )? task_definition )? ';'
+
+task_type_declaration ::=
+	 [tT][aA][sS][kK] [tT][yY][pP][eE] identifier known_discriminant_part? aspect_specification? ( [iI][sS] ( [nN][eE][wW] _interface_list [wW][iI][tT][hH] )? task_definition )? ';'
+
+_task_item ::=
+	 entry_declaration
+	| _aspect_clause
+	| pragma_g
+
+task_definition ::=
+	 _task_item* ( [pP][rR][iI][vV][aA][tT][eE] _task_item* )? [eE][nN][dD] identifier?
+
+overriding_indicator ::=
+	 [nN][oO][tT]? [oO][vV][eE][rR][rR][iI][dD][iI][nN][gG]
+
+_parameter_and_result_profile ::=
+	 formal_part? result_profile
+
+parameter_specification ::=
+	 _defining_identifier_list ':' ( [aA][lL][iI][aA][sS][eE][dD]? non_empty_mode? null_exclusion? _name | access_definition ) _assign_value? aspect_specification?
+
+_parameter_specification_list ::=
+	 parameter_specification ( ';' parameter_specification )*
+
+pragma_g ::=
+	 [pP][rR][aA][gG][mM][aA] identifier ( '(' ( pragma_argument_association ( ',' pragma_argument_association )* | _conditional_quantified_declare_expression ) ')' )? ';'
+
+pragma_argument_association ::=
+	 ( _aspect_mark '=>' )? expression
+
+if_expression ::=
+	 [iI][fF] expression [tT][hH][eE][nN] expression elsif_expression_item* ( [eE][lL][sS][eE] expression )?
+
+elsif_expression_item ::=
+	 [eE][lL][sS][iI][fF] expression [tT][hH][eE][nN] expression
+
+procedure_specification ::=
+	 [pP][rR][oO][cC][eE][dD][uU][rR][eE] _name formal_part?
+
+record_representation_clause ::=
+	 [fF][oO][rR] _name [uU][sS][eE] [rR][eE][cC][oO][rR][dD] mod_clause? component_clause* [eE][nN][dD] [rR][eE][cC][oO][rR][dD] _name? ';'
+
+_renaming_declaration ::=
+	 object_renaming_declaration
+	| exception_renaming_declaration
+	| package_renaming_declaration
+	| subprogram_renaming_declaration
+	| generic_renaming_declaration
+
+object_renaming_declaration ::=
+	 identifier ( ':' null_exclusion? _name )? [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+	| identifier ':' access_definition [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+
+exception_renaming_declaration ::=
+	 identifier ':' [eE][xX][cC][eE][pP][tT][iI][oO][nN] [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+
+package_renaming_declaration ::=
+	 [pP][aA][cC][kK][aA][gG][eE] _name [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+
+subprogram_renaming_declaration ::=
+	 overriding_indicator? _subprogram_specification [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+
+generic_renaming_declaration ::=
+	 [gG][eE][nN][eE][rR][iI][cC] [pP][aA][cC][kK][aA][gG][eE] _name [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+	| [gG][eE][nN][eE][rR][iI][cC] [pP][rR][oO][cC][eE][dD][uU][rR][eE] _name [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+	| [gG][eE][nN][eE][rR][iI][cC] [fF][uU][nN][cC][tT][iI][oO][nN] _name [rR][eE][nN][aA][mM][eE][sS] _name aspect_specification? ';'
+
+result_profile ::=
+	 [rR][eE][tT][uU][rR][nN] ( null_exclusion? _name | access_definition )
+
+_sequence_of_statements ::=
+	 _statement+ label*
+
+_simple_statement ::=
+	 null_statement
+	| assignment_statement
+	| exit_statement
+	| goto_statement
+	| procedure_call_statement
+	| simple_return_statement
+	| requeue_statement
+	| _delay_statement
+	| abort_statement
+	| raise_statement
+	| pragma_g
+
+_statement ::=
+	 label* ( _simple_statement | _compound_statement )
+
+_compound_statement ::=
+	 if_statement
+	| gnatprep_if_statement
+	| case_statement
+	| loop_statement
+	| block_statement
+	| extended_return_statement
+	| accept_statement
+	| _select_statement
+
+_select_statement ::=
+	 selective_accept
+	| timed_entry_call
+	| conditional_entry_call
+	| asynchronous_select
+
+entry_call_alternative ::=
+	 procedure_call_statement _sequence_of_statements?
+
+asynchronous_select ::=
+	 [sS][eE][lL][eE][cC][tT] triggering_alternative [tT][hH][eE][nN] [aA][bB][oO][rR][tT] _sequence_of_statements [eE][nN][dD] [sS][eE][lL][eE][cC][tT] ';'
+
+triggering_alternative ::=
+	 procedure_call_statement _sequence_of_statements?
+	| _delay_statement _sequence_of_statements?
+
+conditional_entry_call ::=
+	 [sS][eE][lL][eE][cC][tT] entry_call_alternative [eE][lL][sS][eE] _sequence_of_statements [eE][nN][dD] [sS][eE][lL][eE][cC][tT] ';'
+
+delay_alternative ::=
+	 _delay_statement _sequence_of_statements?
+
+timed_entry_call ::=
+	 [sS][eE][lL][eE][cC][tT] entry_call_alternative [oO][rR] delay_alternative [eE][nN][dD] [sS][eE][lL][eE][cC][tT] ';'
+
+guard ::=
+	 [wW][hH][eE][nN] expression '=>'
+
+select_alternative ::=
+	 accept_alternative
+	| delay_alternative
+	| terminate_alternative
+
+accept_alternative ::=
+	 accept_statement _sequence_of_statements?
+
+terminate_alternative ::=
+	 [tT][eE][rR][mM][iI][nN][aA][tT][eE] ';'
+
+selective_accept ::=
+	 [sS][eE][lL][eE][cC][tT] guard? select_alternative ( [oO][rR] guard? select_alternative )* ( [eE][lL][sS][eE] _sequence_of_statements )? [eE][nN][dD] [sS][eE][lL][eE][cC][tT] ';'
+
+abort_statement ::=
+	 [aA][bB][oO][rR][tT] _name ( ',' _name )* ';'
+
+requeue_statement ::=
+	 [rR][eE][qQ][uU][eE][uU][eE] _name ( [wW][iI][tT][hH] [aA][bB][oO][rR][tT] )? ';'
+
+accept_statement ::=
+	 [aA][cC][cC][eE][pP][tT] identifier ( '(' expression ')' )? formal_part? ( [dD][oO] handled_sequence_of_statements [eE][nN][dD] identifier? )? ';'
+
+case_statement_alternative ::=
+	 [wW][hH][eE][nN] discrete_choice_list '=>' _sequence_of_statements
+
+case_statement ::=
+	 [cC][aA][sS][eE] expression [iI][sS] case_statement_alternative+ [eE][nN][dD] [cC][aA][sS][eE] ';'
+
+block_statement ::=
+	 loop_label? ( [dD][eE][cC][lL][aA][rR][eE] non_empty_declarative_part? )? [bB][eE][gG][iI][nN] handled_sequence_of_statements [eE][nN][dD] identifier? ';'
+
+if_statement ::=
+	 [iI][fF] expression [tT][hH][eE][nN] _sequence_of_statements elsif_statement_item* ( [eE][lL][sS][eE] _sequence_of_statements )? [eE][nN][dD] [iI][fF] ';'
+
+elsif_statement_item ::=
+	 [eE][lL][sS][iI][fF] expression [tT][hH][eE][nN] _sequence_of_statements
+
+gnatprep_declarative_if_statement ::=
+	 [#x23#x23][iI][fF] expression [tT][hH][eE][nN] _declarative_item_pragma* ( [#x23#x23][eE][lL][sS][iI][fF] expression [tT][hH][eE][nN] _declarative_item_pragma* )* ( [#x23#x23][eE][lL][sS][eE] _declarative_item_pragma* )? [#x23#x23][eE][nN][dD] [iI][fF] ';'
+
+gnatprep_if_statement ::=
+	 [#x23#x23][iI][fF] expression [tT][hH][eE][nN] _statement* ( [#x23#x23][eE][lL][sS][iI][fF] expression [tT][hH][eE][nN] _statement* )* ( [#x23#x23][eE][lL][sS][eE] _statement* )? [#x23#x23][eE][nN][dD] [iI][fF] ';'
+
+exit_statement ::=
+	 [eE][xX][iI][tT] _name? ( [wW][hH][eE][nN] expression )? ';'
+
+goto_statement ::=
+	 [gG][oO][tT][oO] _name ';'
+
+_delay_statement ::=
+	 delay_until_statement
+	| delay_relative_statement
+
+delay_until_statement ::=
+	 [dD][eE][lL][aA][yY] [uU][nN][tT][iI][lL] expression ';'
+
+delay_relative_statement ::=
+	 [dD][eE][lL][aA][yY] expression ';'
+
+simple_return_statement ::=
+	 [rR][eE][tT][uU][rR][nN] expression? ';'
+
+extended_return_statement ::=
+	 [rR][eE][tT][uU][rR][nN] extended_return_object_declaration ( [dD][oO] handled_sequence_of_statements [eE][nN][dD] [rR][eE][tT][uU][rR][nN] )? ';'
+
+extended_return_object_declaration ::=
+	 identifier ':' [aA][lL][iI][aA][sS][eE][dD]? [cC][oO][nN][sS][tT][aA][nN][tT]? _return_subtype_indication _assign_value? aspect_specification?
+
+_return_subtype_indication ::=
+	 _subtype_indication
+	| access_definition
+
+procedure_call_statement ::=
+	 _name_not_function_call ';'
+	| _name actual_parameter_part ';'
+
+function_call ::=
+	 _name actual_parameter_part
+
+raise_statement ::=
+	 [rR][aA][iI][sS][eE] ( _name ( [wW][iI][tT][hH] expression )? )? ';'
+
+loop_statement ::=
+	 loop_label? iteration_scheme? [lL][oO][oO][pP] _sequence_of_statements [eE][nN][dD] [lL][oO][oO][pP] identifier? ';'
+
+iteration_scheme ::=
+	 [wW][hH][iI][lL][eE] expression
+	| [fF][oO][rR] ( loop_parameter_specification | iterator_specification )
+
+assignment_statement ::=
+	 _name _assign_value ';'
+
+subprogram_declaration ::=
+	 overriding_indicator? _subprogram_specification ( [iI][sS] [aA][bB][sS][tT][rR][aA][cC][tT] )? aspect_specification? ';'
+
+expression_function_declaration ::=
+	 overriding_indicator? function_specification [iI][sS] ( _aggregate | _parenthesized_expression ) aspect_specification? ';'
+
+_subprogram_specification ::=
+	 procedure_specification
+	| function_specification
+
+subtype_declaration ::=
+	 [sS][uU][bB][tT][yY][pP][eE] identifier [iI][sS] _subtype_indication aspect_specification? ';'
+
+variant_part ::=
+	 [cC][aA][sS][eE] identifier [iI][sS] variant_list [eE][nN][dD] [cC][aA][sS][eE] ';'
+
+variant_list ::=
+	 variant+
+
+variant ::=
+	 [wW][hH][eE][nN] discrete_choice_list '=>' component_list
+

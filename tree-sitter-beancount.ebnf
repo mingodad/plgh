@@ -1,113 +1,200 @@
-/*
-Grammar originally from https://github.com/yagebu/tree-sitter-beancount
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-beancount/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-beancount_file ::=  (  ( _dated_directives |  _undated_directives |  _skipped_lines )  )
+beancount_file ::=
+	 ( _skipped_lines | _dated_directives | _undated_directives )*
 
-_skipped_lines ::=  ( ( [!&?%PSTCURM*#] [^\n]* '\n' )  |  ( ':'  [^\n]* '\n' )  |  '\n' |  ( ';'[^\n]* '\n' )  )
+_skipped_lines ::=
+	 [!&?%PSTCURM*#x23] '.'* '#x0A'([ #x0D#x09]+'#x0A')?
+	| ':' '.'* '#x0A'([ #x0D#x09]+'#x0A')?
+	| '#x0A'([ #x0D#x09]+'#x0A')?
+	| ';.'* '#x0A'([ #x0D#x09]+'#x0A')?
 
-_key_value_value ::=  ( string |  account |  date |  currency |  tag |  bool |  _num_expr |  amount )
+_undated_directives ::=
+	 include
+	| option
+	| plugin
+	| popmeta
+	| poptag
+	| pushmeta
+	| pushtag
 
-key_value ::=  ( key ( _key_value_value )?  )
+include ::=
+	 'include' string '#x0A'([ #x0D#x09]+'#x0A')?
 
-metadata ::=  ( ( [\n][ \r\t]+ key_value )  )+
+option ::=
+	 'option' string string '#x0A'([ #x0D#x09]+'#x0A')?
 
-_undated_directives ::=  ( include |  option |  plugin |  popmeta |  poptag |  pushmeta |  pushtag )
+plugin ::=
+	 'plugin' string string? '#x0A'([ #x0D#x09]+'#x0A')?
 
-include ::=  ( 'include'  string '\n' )
+pushtag ::=
+	 'pushtag' tag '#x0A'([ #x0D#x09]+'#x0A')?
 
-option ::=  ( 'option'  (  string )  (  string )  '\n' )
+poptag ::=
+	 'poptag' tag '#x0A'([ #x0D#x09]+'#x0A')?
 
-plugin ::=  ( 'plugin'  (  string )  (  ( string )?  )  '\n' )
+pushmeta ::=
+	 'pushmeta' key_value '#x0A'([ #x0D#x09]+'#x0A')?
 
-pushtag ::=  ( 'pushtag'  (  tag )  '\n' )
+popmeta ::=
+	 'popmeta' key '#x0A'([ #x0D#x09]+'#x0A')?
 
-poptag ::=  ( 'poptag'  (  tag )  '\n' )
+_dated_directives ::=
+	 balance
+	| close
+	| commodity
+	| custom
+	| document
+	| event
+	| note
+	| open
+	| pad
+	| price
+	| transaction
+	| query
 
-pushmeta ::=  ( 'pushmeta'  (  key_value )  '\n' )
+balance ::=
+	 date 'balance' account ( amount | amount_with_tolerance ) metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-popmeta ::=  ( 'popmeta'  (  key )  '\n' )
+close ::=
+	 date 'close' account metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-_dated_directives ::=  ( balance |  close |  commodity |  custom |  document |  event |  note |  open |  pad |  price |  transaction |  query )
+commodity ::=
+	 date 'commodity' currency metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-cost_spec ::=  ( ( '{'  (  ( cost_comp_list )?  )  '}'  )  |  ( '{{'  (  ( cost_comp_list )?  )  '}}'  )  )
+custom ::=
+	 date 'custom' string ( string | date | account | bool | amount | _num_expr )* metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-cost_comp_list ::=  ( cost_comp (  ( ','  cost_comp )  )*  )
+document ::=
+	 date 'document' account string tags_and_links? metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-cost_comp ::=  ( compound_amount |  date |  string |  '*'  )
+event ::=
+	 date 'event' string string metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-compound_amount ::=  ( ( (  ( _num_expr )?  )  (  currency )  )  |  ( (  _num_expr )  (  ( currency )?  )  )  |  ( (  ( _num_expr )?  )  '#'  (  ( _num_expr )?  )  (  currency )  )  )
+note ::=
+	 date 'note' account string metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-incomplete_amount ::=  ( ( _num_expr currency )  |  ( _num_expr )  |  ( currency )  )
+open ::=
+	 date 'open' account currency_list? string? metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-price_annotation ::=  ( ( '@@'  ( incomplete_amount )?  )  |  ( '@'  ( incomplete_amount )?  )  )
+pad ::=
+	 date 'pad' account account metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-posting ::=  ( '\n'[ \r\t]+ (  ( flag )?  )  (  account )  (  ( incomplete_amount )?  )  (  ( cost_spec )?  )  (  ( price_annotation )?  )  ( ';'[.]* )?  (  ( metadata )?  )  )
+price ::=
+	 date 'price' currency amount metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-postings ::=  ( ( posting |  ( '\n'[ \r\t]+ ';'[^\n]* )  )  )+
+transaction ::=
+	 date flag ( string string | string )? tags_and_links? metadata? postings '#x0A'([ #x0D#x09]+'#x0A')?
 
-tags_and_links ::=  ( ( ( '\n'[ \r\t]+ )?  ( tag |  link )  )  )+
+query ::=
+	 date 'query' string string metadata? '#x0A'([ #x0D#x09]+'#x0A')?
 
-txn_strings ::=  ( string ( string )?  )
+cost ::=
+	 '{' _cost_comp_list? '}'
 
-transaction ::=  ( (  date )  (  flag )  (  ( txn_strings )?  )  (  ( tags_and_links )?  )  (  ( metadata )?  )  (  postings )  '\n' )
+total_cost ::=
+	 '{{' _cost_comp_list? '}}'
 
-balance ::=  ( (  date )  'balance'  (  account )  (  ( amount |  amount_with_tolerance )  )  (  ( metadata )?  )  '\n' )
+_cost_comp_list ::=
+	 _cost_comp ( ',' _cost_comp )*
 
-close ::=  ( (  date )  'close'  (  account )  (  ( metadata )?  )  '\n' )
+_cost_comp ::=
+	 '*'
+	| date
+	| string
+	| compound_amount
 
-commodity ::=  ( (  date )  'commodity'  (  currency )  (  ( metadata )?  )  '\n' )
+compound_amount ::=
+	 _num_expr? currency
+	| _num_expr currency?
+	| _num_expr? '#' _num_expr? currency
 
-custom ::=  ( (  date )  'custom'  (  string )  (  ( string |  date |  account |  bool |  amount |  _num_expr )  )*  (  ( metadata )?  )  '\n' )
+incomplete_amount ::=
+	 _num_expr
+	| currency
 
-document ::=  ( (  date )  'document'  (  account )  (  string )  (  ( tags_and_links )?  )  (  ( metadata )?  )  '\n' )
+price_annotation ::=
+	 '@' ( amount | incomplete_amount )?
 
-event ::=  ( (  date )  'event'  (  string )  (  string )  (  ( metadata )?  )  '\n' )
+total_price_annotation ::=
+	 '@@' ( amount | incomplete_amount )?
 
-note ::=  ( (  date )  'note'  (  account )  (  string )  (  ( metadata )?  )  '\n' )
+posting ::=
+	 '#x0A'[ #x0D#x09]+ flag? account ( amount | incomplete_amount )? ( cost | total_cost )? ( price_annotation | total_price_annotation )? ';.'*? metadata?
 
-open ::=  ( (  date )  'open'  (  account )  (  ( currency_list )?  )  (  ( string )?  )  (  ( metadata )?  )  '\n' )
+postings ::=
+	 ( posting | '#x0A'[ #x0D#x09]+ ';.'* )+
 
-pad ::=  ( (  date )  'pad'  (  account )  (  account )  (  ( metadata )?  )  '\n' )
+tags_and_links ::=
+	 ( '#x0A'[ #x0D#x09]+? ( tag | link ) )+
 
-price ::=  ( (  date )  'price'  (  currency )  (  amount )  (  ( metadata )?  )  '\n' )
+currency_list ::=
+	 currency ( ',' currency )*
 
-query ::=  ( (  date )  'query'  (  string )  (  string )  (  ( metadata )?  )  '\n' )
+metadata ::=
+	 ( '#x0A'[ #x0D#x09]+ key_value )+
 
-currency_list ::=  ( currency (  ( ','  currency )  )*  )
+key_value ::=
+	 key ( string | account | date | currency | tag | bool | _num_expr | amount )?
 
-amount ::=  ( _num_expr currency )
+amount ::=
+	 _num_expr currency
 
-amount_with_tolerance ::=  ( _num_expr '~'  _num_expr currency )
+amount_with_tolerance ::=
+	 _num_expr '~' _num_expr currency
 
-_num_expr ::=  ( number |  _paren_num_expr |  unary_num_expr |  binary_num_expr )
+_num_expr ::=
+	 number
+	| paren_num_expr
+	| unary_num_expr
+	| binary_num_expr
 
-_paren_num_expr ::=  ( '('  _num_expr ')'  )
+paren_num_expr ::=
+	 '(' _num_expr ')'
 
-unary_num_expr ::=   (  ( ( '-'  _num_expr )  |  ( '+'  _num_expr )  )  )
+unary_num_expr ::=
+	 '-' _num_expr | '+' _num_expr
 
-binary_num_expr ::=  (  (  ( _num_expr '*'  _num_expr )  )  |   (  ( _num_expr '/'  _num_expr )  )  |   (  ( _num_expr '+'  _num_expr )  )  |   (  ( _num_expr '-'  _num_expr )  )  )
+binary_num_expr ::=
+	 _num_expr '*' _num_expr
+	| _num_expr '/' _num_expr
+	| _num_expr '+' _num_expr
+	| _num_expr '-' _num_expr
 
-bool ::=  (  TRUE|FALSE )
+bool ::=
+	 'TRUE'|'FALSE'
 
-date ::=  (  [0-9]+/*{4,}*/[\-/][0-9]+[\-/][0-9]+ )
+date ::=
+	 [0-9][0-9][0-9][0-9][#x2D-/][0-9][0-9][#x2D-/][0-9][0-9]
 
-key ::=  (  [a-z][a-zA-Z0-9\-_]+':' )
+key ::=
+	 [a-z][a-zA-Z0-9#x2D-_]+':'
 
-tag ::=  (  '#'[A-Za-z0-9\-_/.]+ )
+tag ::=
+	 '#'[A-Za-z0-9#x2D-_/.]+
 
-link ::=  (  '^'[A-Za-z0-9\-_/.]+ )
+link ::=
+	 '\^'[A-Za-z0-9#x2D-_/.]+
 
-string ::=  (  '"'[^"]*'"' )
+string ::=
+	 '"'[^"]*'"'
 
-currency ::=  (  [A-Z][A-Z0-9\'\._\-]+/*{0,22}*/[A-Z0-9] )
+currency ::=
+	 [A-Z][A-Z0-9\'._#x2D-]"{0,22}"[A-Z0-9]
 
-number ::=  (  ([0-9]+|[0-9][0-9,]+[0-9])(.[0-9]*)? )
+number ::=
+	 ([0-9]+|[0-9][0-9,]+[0-9])('.'[0-9]*)?
 
-flag ::=  (  [!&?%PSTCURM*#] )
+flag ::=
+	 [!&?%PSTCURM*#x23]
 
-account ::=  (  ( [A-Z]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  ( ( ':'  [A-Z0-9]|[^\x00-\x7F] (  [A-Za-z0-9\-]|[^\x00-\x7F] )*  )  )+  )  )
+account ::=
+	 ( [A-Z]|[^\x00-\x7F] [A-Za-z0-9#x2D-]|[^\x00-\x7F]* ( ':' [A-Z0-9]|[^\x00-\x7F] [A-Za-z0-9#x2D-]|[^\x00-\x7F]* )+ )
 

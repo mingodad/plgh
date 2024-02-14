@@ -1,317 +1,571 @@
-/*
-Grammar originally from https://github.com/stonebuddha/tree-sitter-sml
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-sml/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 ( _exp | _sdec* ) ( ';' ( _exp | _sdec* ) )*
+
+_sdec ::=
+	 structure_dec
+	| signature_dec
+	| funsig_dec
+	| functor_dec
+	| local_dec
+	| _ldec
+
+structure_dec ::=
+	 'structure' strb ( 'and' strb )*
+
+strb ::=
+	 ident _sigconstraint_op? '=' _str
+
+_sigconstraint_op ::=
+	 transparent_sigconstraint_op
+	| opaque_sigconstraint_op
 
-source_file ::=  ( ( _exp |  (  _sdec )*  )  (  ( ';'  ( _exp |  (  _sdec )*  )  )  )*  )
+transparent_sigconstraint_op ::=
+	 ':' _sign
 
-_sdec ::=  ( structure_dec |  signature_dec |  funsig_dec |  functor_dec |  local_dec |  _ldec )
+opaque_sigconstraint_op ::=
+	 ':>' _sign
 
-structure_dec ::=  ( 'structure'  strb (  ( 'and'  strb )  )*  )
+_str ::=
+	 var_struct
+	| base_struct
+	| app_struct
+	| let_struct
+	| constraint_struct
 
-strb ::=  ( ident ( _sigconstraint_op )?  '='  _str )
+var_struct ::=
+	 qident
 
-_sigconstraint_op ::=  ( transparent_sigconstraint_op |  opaque_sigconstraint_op )
+base_struct ::=
+	 'struct' ( ';' | _strdec )* 'end'
 
-transparent_sigconstraint_op ::=  ( ':'  _sign )
+_strdec ::=
+	 structure_dec_strdec
+	| functor_dec_strdec
+	| local_dec_strdec
+	| _ldec
 
-opaque_sigconstraint_op ::=  ( ':>'  _sign )
+structure_dec_strdec ::=
+	 'structure' strb ( 'and' strb )*
 
-_str ::=  ( var_struct |  base_struct |  app_struct |  let_struct |  constraint_struct )
+functor_dec_strdec ::=
+	 'functor' fctb ( 'and' fctb )*
 
-var_struct ::=  qident
+local_dec_strdec ::=
+	 'local' ( ';' | _strdec )* 'in' ( ';' | _strdec )* 'end'
 
-base_struct ::=  ( 'struct'  (  ( ';'  |  _strdec )  )*  'end'  )
+app_struct ::=
+	 qident arg_fct+
 
-_strdec ::=  ( structure_dec_strdec |  functor_dec_strdec |  local_dec_strdec |  _ldec )
+let_struct ::=
+	 'let' ( ';' | _strdec )* 'in' _str 'end'
 
-structure_dec_strdec ::=  ( 'structure'  strb (  ( 'and'  strb )  )*  )
+constraint_struct ::=
+	 _str ( ':' | ':>' ) _sign
 
-functor_dec_strdec ::=  ( 'functor'  fctb (  ( 'and'  fctb )  )*  )
+signature_dec ::=
+	 'signature' sigb ( 'and' sigb )*
 
-local_dec_strdec ::=  ( 'local'  (  ( ';'  |  _strdec )  )*  'in'  (  ( ';'  |  _strdec )  )*  'end'  )
+sigb ::=
+	 ident '=' _sign
 
-app_struct ::=  ( qident ( arg_fct )+  )
+_sign ::=
+	 var_sign
+	| base_sign
+	| aug_sign
 
-let_struct ::=  ( 'let'  (  ( ';'  |  _strdec )  )*  'in'  _str 'end'  )
+var_sign ::=
+	 ident
 
-constraint_struct ::=  ( _str ( ':'  |  ':>'  )  _sign )
+base_sign ::=
+	 'sig' ( ';' | _spec )* 'end'
 
-signature_dec ::=  ( 'signature'  sigb (  ( 'and'  sigb )  )*  )
+aug_sign ::=
+	 _sign 'where' _whspec ( 'and' _whspec )*
 
-sigb ::=  ( ident '='  _sign )
+_spec ::=
+	 str_spec
+	| functor_spec
+	| datatype_repl_spec
+	| datatype_spec
+	| type_spec
+	| eqtype_spec
+	| val_spec
+	| exception_spec
+	| sharing_spec
+	| include_spec
 
-_sign ::=  ( var_sign |  base_sign |  aug_sign )
+str_spec ::=
+	 'structure' strspec ( 'and' strspec )*
 
-var_sign ::=  ident
+strspec ::=
+	 ident ':' _sign ( '=' qident )?
 
-base_sign ::=  ( 'sig'  (  ( ';'  |  _spec )  )*  'end'  )
+functor_spec ::=
+	 'functor' fctspec ( 'and' fctspec )*
 
-aug_sign ::=   (  ( _sign 'where'  _whspec (  ( 'and'  _whspec )  )*  )  )
+fctspec ::=
+	 ident _fsig
 
-_spec ::=  ( str_spec |  functor_spec |  datatype_repl_spec |  datatype_spec |  type_spec |  eqtype_spec |  val_spec |  exception_spec |  sharing_spec |  include_spec )
+datatype_repl_spec ::=
+	 'datatype' dtrepl
 
-str_spec ::=  ( 'structure'  strspec (  ( 'and'  strspec )  )*  )
+dtrepl ::=
+	 _full_ident '=' 'datatype' con_ty
 
-strspec ::=  ( ident ':'  _sign ( ( '='  qident )  )?  )
+datatype_spec ::=
+	 'datatype' db ( 'and' db )* ( 'withtype' tb ( 'and' tb )* )?
 
-functor_spec ::=  ( 'functor'  fctspec (  ( 'and'  fctspec )  )*  )
+type_spec ::=
+	 'type' tyspec ( 'and' tyspec )*
 
-fctspec ::=  ( ident _fsig )
+tyspec ::=
+	 tyvar_seq? _full_ident ( '=' _ty )?
 
-datatype_repl_spec ::=  ( 'datatype'  dtrepl )
+eqtype_spec ::=
+	 'eqtype' tyspec ( 'and' tyspec )*
 
-dtrepl ::=  ( _full_ident '='  'datatype'  con_ty )
+val_spec ::=
+	 'val' valspec ( 'and' valspec )*
 
-datatype_spec ::=  ( 'datatype'  db (  ( 'and'  db )  )*  ( ( 'withtype'  tb (  ( 'and'  tb )  )*  )  )?  )
+valspec ::=
+	 'op'? _full_ident ':' _ty
 
-type_spec ::=  ( 'type'  tyspec (  ( 'and'  tyspec )  )*  )
+exception_spec ::=
+	 'exception' exnspec ( 'and' exnspec )*
 
-tyspec ::=  ( ( tyvar_seq )?  _full_ident ( ( '='  _ty )  )?  )
+exnspec ::=
+	 _full_ident ( 'of' _ty )?
 
-eqtype_spec ::=  ( 'eqtype'  tyspec (  ( 'and'  tyspec )  )*  )
+sharing_spec ::=
+	 'sharing' sharespec ( 'and' sharespec )*
 
-val_spec ::=  ( 'val'  valspec (  ( 'and'  valspec )  )*  )
+sharespec ::=
+	 'type'? qident ( '=' qident )+
 
-valspec ::=  ( ( 'op'  )?  _full_ident ':'  _ty )
+include_spec ::=
+	 'include' ( _sign | ident ident+ )
 
-exception_spec ::=  ( 'exception'  exnspec (  ( 'and'  exnspec )  )*  )
+_whspec ::=
+	 type_whspec
+	| struct_whsepc
 
-exnspec ::=  ( _full_ident ( ( 'of'  _ty )  )?  )
+type_whspec ::=
+	 'type' tyvar_seq? qident '=' _ty
 
-sharing_spec ::=  ( 'sharing'  sharespec (  ( 'and'  sharespec )  )*  )
+struct_whsepc ::=
+	 qident '=' qident
 
-sharespec ::=  ( ( 'type'  )?  qident ( ( '='  qident )  )+  )
+funsig_dec ::=
+	 'funsig' fsigb ( 'and' fsigb )*
 
-include_spec ::=  ( 'include'  ( _sign |  ( ident ( ident )+  )  )  )
+fsigb ::=
+	 ident fparam+ '=' _sign
 
-_whspec ::=  ( type_whspec |  struct_whsepc )
+_fsig ::=
+	 var_fsig
+	| base_fsig
 
-type_whspec ::=  ( 'type'  ( tyvar_seq )?  qident '='  _ty )
+var_fsig ::=
+	 ':' ident
 
-struct_whsepc ::=  ( qident '='  qident )
+base_fsig ::=
+	 fparam+ ':' _sign
 
-funsig_dec ::=  ( 'funsig'  fsigb (  ( 'and'  fsigb )  )*  )
+functor_dec ::=
+	 'functor' fctb ( 'and' fctb )*
 
-fsigb ::=  ( ident ( fparam )+  '='  _sign )
+fctb ::=
+	 ident fparam+ _sigconstraint_op? '=' _str
+	| ident _fsigconstraint_op? '=' _fct_exp
 
-_fsig ::=  ( var_fsig |  base_fsig )
+fparam ::=
+	 '(' ident ':' _sign ')'
+	| '(' ( ';' | _spec )* ')'
 
-var_fsig ::=  ( ':'  ident )
+_fsigconstraint_op ::=
+	 transparent_fsigconstraint_op
+	| opaque_fsigconstraint_op
 
-base_fsig ::=  ( ( fparam )+  ':'  _sign )
+transparent_fsigconstraint_op ::=
+	 ':' ident
 
-functor_dec ::=  ( 'functor'  fctb (  ( 'and'  fctb )  )*  )
+opaque_fsigconstraint_op ::=
+	 ':>' ident
 
-fctb ::=  ( ( ident ( fparam )+  ( _sigconstraint_op )?  '='  _str )  |  ( ident ( _fsigconstraint_op )?  '='  _fct_exp )  )
+_fct_exp ::=
+	 var_fct_exp
+	| app_fct_exp
+	| let_fct_exp
 
-fparam ::=  ( ( '('  ident ':'  _sign ')'  )  |  ( '('  (  ( ';'  |  _spec )  )*  ')'  )  )
+var_fct_exp ::=
+	 qident
 
-_fsigconstraint_op ::=  ( transparent_fsigconstraint_op |  opaque_fsigconstraint_op )
+app_fct_exp ::=
+	 qident arg_fct+
 
-transparent_fsigconstraint_op ::=  ( ':'  ident )
+arg_fct ::=
+	 '(' ( ';' | _strdec )* ')'
+	| '(' _str ')'
 
-opaque_fsigconstraint_op ::=  ( ':>'  ident )
+let_fct_exp ::=
+	 'let' ( ';' | _strdec )* 'in' _fct_exp 'end'
 
-_fct_exp ::=  ( var_fct_exp |  app_fct_exp |  let_fct_exp )
+local_dec ::=
+	 'local' ( ';' | _sdec )* 'in' ( ';' | _sdec )* 'end'
 
-var_fct_exp ::=  qident
+_ldec ::=
+	 val_ldec
+	| fun_ldec
+	| type_ldec
+	| datatype_repl_ldec
+	| datatype_ldec
+	| abstype_ldec
+	| exception_ldec
+	| open_ldec
+	| fixity_ldec
+	| overload_ldec
 
-app_fct_exp ::=  ( qident ( arg_fct )+  )
+val_ldec ::=
+	 'val' tyvar_seq? 'rec'? vb ( 'and' vb )*
 
-arg_fct ::=  ( ( '('  (  ( ';'  |  _strdec )  )*  ')'  )  |  ( '('  _str ')'  )  )
+vb ::=
+	 _pat '=' _exp
 
-let_fct_exp ::=  ( 'let'  (  ( ';'  |  _strdec )  )*  'in'  _fct_exp 'end'  )
+fun_ldec ::=
+	 'fun' tyvar_seq? fb ( 'and' fb )*
 
-local_dec ::=  ( 'local'  (  ( ';'  |  _sdec )  )*  'in'  (  ( ';'  |  _sdec )  )*  'end'  )
+fb ::=
+	 clause ( '|' clause )*
 
-_ldec ::=  ( val_ldec |  fun_ldec |  type_ldec |  datatype_repl_ldec |  datatype_ldec |  abstype_ldec |  exception_ldec |  open_ldec |  fixity_ldec |  overload_ldec )
+clause ::=
+	 _apat+ constraint? '=' _exp
 
-val_ldec ::=  ( 'val'  ( tyvar_seq )?  ( 'rec'  )?  vb (  ( 'and'  vb )  )*  )
+constraint ::=
+	 ':' _ty
 
-vb ::=  ( _pat '='  _exp )
+type_ldec ::=
+	 'type' tb ( 'and' tb )*
 
-fun_ldec ::=  ( 'fun'  ( tyvar_seq )?  fb (  ( 'and'  fb )  )*  )
+tb ::=
+	 tyvar_seq? _full_ident '=' _ty
 
-fb ::=  ( clause (  ( '|'  clause )  )*  )
+datatype_repl_ldec ::=
+	 'datatype' dtrepl
 
-clause ::=  ( ( _apat )+  ( constraint )?  '='  _exp )
+datatype_ldec ::=
+	 'datatype' db ( 'and' db )* ( 'withtype' tb ( 'and' tb )* )?
 
-constraint ::=  ( ':'  _ty )
+db ::=
+	 tyvar_seq? _full_ident '=' constr ( '|' constr )*
 
-type_ldec ::=  ( 'type'  tb (  ( 'and'  tb )  )*  )
+constr ::=
+	 'op'? _full_ident ( 'of' _ty )?
 
-tb ::=  ( ( tyvar_seq )?  _full_ident '='  _ty )
+abstype_ldec ::=
+	 'abstype' db ( 'and' db )* ( 'withtype' tb ( 'and' tb )* )? 'with' ( ';' | _ldec | local_dec_let )* 'end'
 
-datatype_repl_ldec ::=  ( 'datatype'  dtrepl )
+exception_ldec ::=
+	 'exception' eb ( 'and' eb )*
 
-datatype_ldec ::=  ( 'datatype'  db (  ( 'and'  db )  )*  ( ( 'withtype'  tb (  ( 'and'  tb )  )*  )  )?  )
+eb ::=
+	 'op'? _full_ident ( exn_gen | exn_def )?
 
-db ::=  ( ( tyvar_seq )?  _full_ident '='  constr (  ( '|'  constr )  )*  )
+exn_gen ::=
+	 'of' _ty
 
-constr ::=  ( ( 'op'  )?  _full_ident ( ( 'of'  _ty )  )?  )
+exn_def ::=
+	 '=' qident
 
-abstype_ldec ::=  ( 'abstype'  db (  ( 'and'  db )  )*  ( ( 'withtype'  tb (  ( 'and'  tb )  )*  )  )?  'with'  (  ( ';'  |  _ldec |  local_dec_let )  )*  'end'  )
+open_ldec ::=
+	 'open' qident+
 
-exception_ldec ::=  ( 'exception'  eb (  ( 'and'  eb )  )*  )
+fixity_ldec ::=
+	 ( ( 'infix' | 'infixr' ) int_constant? | 'nonfix' ) _full_ident+
 
-eb ::=  ( ( 'op'  )?  _full_ident ( ( exn_gen |  exn_def )  )?  )
+overload_ldec ::=
+	 'overload' _full_ident ':' _ty 'as' _exp ( 'and' _exp )*
 
-exn_gen ::=  ( 'of'  _ty )
+_pat ::=
+	 as_pat
+	| constraint_pat
+	| app_pat
 
-exn_def ::=  ( '='  qident )
+as_pat ::=
+	 _pat 'as' _pat
 
-open_ldec ::=  ( 'open'  ( qident )+  )
+constraint_pat ::=
+	 _pat ':' _ty
 
-fixity_ldec ::=  ( ( ( ( 'infix'  |  'infixr'  )  ( int_constant )?  )  |  'nonfix'  )  ( _full_ident )+  )
+app_pat ::=
+	 _apat+
 
-overload_ldec ::=  ( 'overload'  _full_ident ':'  _ty 'as'  _exp (  ( 'and'  _exp )  )*  )
+_apat ::=
+	 _apat_
+	| paren_pat
+	| var_pat
+	| tuple_unit_pat
+	| tuple_pat
+	| or_pat
 
-_pat ::=  ( as_pat |  constraint_pat |  app_pat )
+paren_pat ::=
+	 '(' _pat ')'
 
-as_pat ::=   (  ( _pat 'as'  _pat )  )
+var_pat ::=
+	 _full_ident
 
-constraint_pat ::=  ( _pat ':'  _ty )
+tuple_unit_pat ::=
+	 '(' ')'
 
-app_pat ::=  ( _apat )+
+tuple_pat ::=
+	 '(' _pat ( ',' _pat )+ ')'
 
-_apat ::=  ( _apat_ |  paren_pat |  var_pat |  tuple_unit_pat |  tuple_pat |  or_pat )
+or_pat ::=
+	 '(' _pat ( '|' _pat )+ ')'
 
-paren_pat ::=  ( '('  _pat ')'  )
+_apat_ ::=
+	 op_pat
+	| access_pat
+	| constant_pat
+	| wild_pat
+	| list_pat
+	| vector_pat
+	| rec_unit_pat
+	| rec_pat
 
-var_pat ::=  _full_ident
+op_pat ::=
+	 'op' _full_ident
 
-tuple_unit_pat ::=  ( '('  ')'  )
+access_pat ::=
+	 'op'? ident '.' qident
 
-tuple_pat ::=  ( '('  _pat ( ( ','  _pat )  )+  ')'  )
+constant_pat ::=
+	 _constant
 
-or_pat ::=  ( '('  _pat ( ( '|'  _pat )  )+  ')'  )
+wild_pat ::=
+	 '_'
 
-_apat_ ::=  ( op_pat |  access_pat |  constant_pat |  wild_pat |  list_pat |  vector_pat |  rec_unit_pat |  rec_pat )
+list_pat ::=
+	 '[' ']'
+	| '[' _pat ( ',' _pat )* ']'
 
-op_pat ::=  ( 'op'  _full_ident )
+vector_pat ::=
+	 '#[' ']'
+	| '#[' _pat ( ',' _pat )* ']'
 
-access_pat ::=  ( ( 'op'  )?  ident '.'  qident )
+rec_unit_pat ::=
+	 '{' '}'
 
-constant_pat ::=  _constant
+rec_pat ::=
+	 '{' plabels '}'
 
-wild_pat ::=  '_'
+plabels ::=
+	 plabel ( ',' plabel )* ( ',' '...' )?
+	| '...'
 
-list_pat ::=  ( ( '['  ']'  )  |  ( '['  _pat (  ( ','  _pat )  )*  ']'  )  )
+plabel ::=
+	 selector '=' _pat
+	| _full_ident ( ':' _ty )? ( 'as' _pat )?
 
-vector_pat ::=  ( ( '#['  ']'  )  |  ( '#['  _pat (  ( ','  _pat )  )*  ']'  )  )
+match ::=
+	 rule ( '|' rule )*
 
-rec_unit_pat ::=  ( '{'  '}'  )
+rule ::=
+	 _pat '=>' _exp
 
-rec_pat ::=  ( '{'  plabels '}'  )
+_exp ::=
+	 handle_exp
+	| orelse_exp
+	| andalso_exp
+	| constraint_exp
+	| app_exp
+	| fn_exp
+	| case_exp
+	| while_exp
+	| if_exp
+	| raise_exp
 
-plabels ::=  ( ( plabel (  ( ','  plabel )  )*  ( ( ','  '...'  )  )?  )  |  '...'  )
+handle_exp ::=
+	 _exp 'handle' match
 
-plabel ::=  ( ( selector '='  _pat )  |  ( _full_ident ( ( ':'  _ty )  )?  ( ( 'as'  _pat )  )?  )  )
+orelse_exp ::=
+	 _exp 'orelse' _exp
 
-match ::=   (  ( rule (  ( '|'  rule )  )*  )  )
+andalso_exp ::=
+	 _exp 'andalso' _exp
 
-rule ::=   (  ( _pat '=>'  _exp )  )
+constraint_exp ::=
+	 _exp ':' _ty
 
-_exp ::=  ( handle_exp |  orelse_exp |  andalso_exp |  constraint_exp |  app_exp |  fn_exp |  case_exp |  while_exp |  if_exp |  raise_exp )
+app_exp ::=
+	 ( _aexp | var_exp )+
 
-handle_exp ::=   (  ( _exp 'handle'  match )  )
+fn_exp ::=
+	 'fn' match
 
-orelse_exp ::=   (  ( _exp 'orelse'  _exp )  )
+case_exp ::=
+	 'case' _exp 'of' match
 
-andalso_exp ::=   (  ( _exp 'andalso'  _exp )  )
+while_exp ::=
+	 'while' _exp 'do' _exp
 
-constraint_exp ::=  ( _exp ':'  _ty )
+if_exp ::=
+	 'if' _exp 'then' _exp 'else' _exp
 
-app_exp ::=  ( ( _aexp |  var_exp )  )+
+raise_exp ::=
+	 'raise' _exp
 
-fn_exp ::=  ( 'fn'  match )
+var_exp ::=
+	 _full_ident
 
-case_exp ::=  ( 'case'  _exp 'of'  match )
+_aexp ::=
+	 op_exp
+	| access_exp
+	| constant_exp
+	| selector_exp
+	| rec_exp
+	| rec_unit_exp
+	| tuple_unit_exp
+	| seq_exp
+	| tuple_exp
+	| list_exp
+	| vector_exp
+	| let_exp
 
-while_exp ::=   (  ( 'while'  _exp 'do'  _exp )  )
+op_exp ::=
+	 'op' _full_ident
 
-if_exp ::=   (  ( 'if'  _exp 'then'  _exp 'else'  _exp )  )
+access_exp ::=
+	 'op'? ident '.' qident
 
-raise_exp ::=   (  ( 'raise'  _exp )  )
+constant_exp ::=
+	 _constant
 
-var_exp ::=  _full_ident
+selector_exp ::=
+	 '#' selector
 
-_aexp ::=  ( op_exp |  access_exp |  constant_exp |  selector_exp |  rec_exp |  rec_unit_exp |  tuple_unit_exp |  seq_exp |  tuple_exp |  list_exp |  vector_exp |  let_exp )
+rec_exp ::=
+	 '{' elabel ( ',' elabel )* '}'
 
-op_exp ::=  ( 'op'  _full_ident )
+elabel ::=
+	 selector '=' _exp
 
-access_exp ::=  ( ( 'op'  )?  ident '.'  qident )
+rec_unit_exp ::=
+	 '{' '}'
 
-constant_exp ::=  _constant
+tuple_unit_exp ::=
+	 '(' ')'
 
-selector_exp ::=  ( '#'  selector )
+seq_exp ::=
+	 '(' _exp ( ';' _exp )* ')'
 
-rec_exp ::=  ( '{'  elabel (  ( ','  elabel )  )*  '}'  )
+tuple_exp ::=
+	 '(' _exp ( ',' _exp )+ ')'
 
-elabel ::=  ( selector '='  _exp )
+list_exp ::=
+	 '[' ']'
+	| '[' _exp ( ',' _exp )* ']'
 
-rec_unit_exp ::=  ( '{'  '}'  )
+vector_exp ::=
+	 '#[' ']'
+	| '#[' _exp ( ',' _exp )* ']'
 
-tuple_unit_exp ::=  ( '('  ')'  )
+let_exp ::=
+	 'let' ( _ldec | ';' | local_dec_let )* 'in' _exp ( ';' _exp )* 'end'
 
-seq_exp ::=  ( '('  _exp (  ( ';'  _exp )  )*  ')'  )
+local_dec_let ::=
+	 'local' ( _ldec | ';' | local_dec_let )* 'in' ( _ldec | ';' | local_dec_let )* 'end'
 
-tuple_exp ::=  ( '('  _exp ( ( ','  _exp )  )+  ')'  )
+_constant ::=
+	 int_constant
+	| word_constant
+	| float_constant
+	| char_constant
+	| string_constant
 
-list_exp ::=  ( ( '['  ']'  )  |  ( '['  _exp (  ( ','  _exp )  )*  ']'  )  )
+int_constant ::=
+	 '~'?[0-9]+|'~'?'0x'[0-9A-Fa-f]+
 
-vector_exp ::=  ( ( '#['  ']'  )  |  ( '#['  _exp (  ( ','  _exp )  )*  ']'  )  )
+word_constant ::=
+	 '0w'[0-9]+|'0wx'[0-9A-Fa-f]+
 
-let_exp ::=  ( 'let'  (  ( _ldec |  ';'  |  local_dec_let )  )*  'in'  _exp (  ( ';'  _exp )  )*  'end'  )
+float_constant ::=
+	 '~'?[0-9]+'.'[0-9]+([Ee]'~'?[0-9]+)?
 
-local_dec_let ::=  ( 'local'  (  ( _ldec |  ';'  |  local_dec_let )  )*  'in'  (  ( _ldec |  ';'  |  local_dec_let )  )*  'end'  )
+char_constant ::=
+	 character
 
-_constant ::=  ( int_constant |  word_constant |  float_constant |  char_constant |  string_constant )
+string_constant ::=
+	 string
 
-int_constant ::=  (  '~'?[0-9]+|'~'?'0x'[0-9A-Fa-f]+ )
+_ty ::=
+	 tuple_ty
+	| arrow_ty
+	| _ty_
 
-word_constant ::=  (  '0w'[0-9]+|'0wx'[0-9A-Fa-f]+ )
+tuple_ty ::=
+	 _ty_ ( '*' _ty_ )+
 
-float_constant ::=  (  '~'?[0-9]+'.'[\d]+([Ee]'~'?[\d]+)? )
+arrow_ty ::=
+	 _ty '->' _ty
 
-char_constant ::=  character
+_ty_ ::=
+	 var_ty
+	| rec_ty
+	| mark_ty
+	| paren_ty
 
-string_constant ::=  string
+var_ty ::=
+	 tyvar
 
-_ty ::=  ( tuple_ty |  arrow_ty |  _ty_ )
+rec_ty ::=
+	 '{' '}'
+	| '{' tlabel ( ',' tlabel )* '}'
 
-tuple_ty ::=  ( _ty_ ( ( '*'  _ty_ )  )+  )
+tlabel ::=
+	 selector ':' _ty
 
-arrow_ty ::=   (  ( _ty '->'  _ty )  )
+mark_ty ::=
+	 ( _ty_ | '(' _ty ( ',' _ty )+ ')' )? con_ty
 
-_ty_ ::=  ( var_ty |  rec_ty |  mark_ty |  paren_ty )
+con_ty ::=
+	 qident
 
-var_ty ::=  tyvar
+paren_ty ::=
+	 '(' _ty ')'
 
-rec_ty ::=  ( ( '{'  '}'  )  |  ( '{'  tlabel (  ( ','  tlabel )  )*  '}'  )  )
+tyvar_seq ::=
+	 tyvar
+	| '(' tyvar ( ',' tyvar )+ ')'
 
-tlabel ::=  ( selector ':'  _ty )
+selector ::=
+	 _full_ident
+	| [0-9]+
 
-mark_ty ::=  ( ( ( _ty_ |  ( '('  _ty ( ( ','  _ty )  )+  ')'  )  )  )?  con_ty )
+tyvar ::=
+	 "'"[A-Za-z0-9_']+
 
-con_ty ::=  qident
+ident ::=
+	 [A-Za-z][A-Za-z0-9_']*
 
-paren_ty ::=  ( '('  _ty ')'  )
+symbolic ::=
+	 [!%&$#x23+#x2D-/:<=>?@\~`^|*][!%&$#x23+#x2D-/:<=>?@\~`^|*][!%&$#x23+#x2D-/:<=>?@\~`^|*]+
+	| [!%&$#x23+/<>?@\~`^|*][!%&$#x23+#x2D-/:<=>?@\~`^|*]
+	| [#x2D-:=][!%&$#x23+#x2D-/:<=?@\~`^|*]
+	| [!%&$+#x2D-/<=>?@\~`^*]
 
-tyvar_seq ::=  ( tyvar |  ( '('  tyvar ( ( ','  tyvar )  )+  ')'  )  )
+_full_ident ::=
+	 ident
+	| symbolic
 
-selector ::=  ( _full_ident |  [0-9]+ )
-
-tyvar ::=  "'"[A-Za-z0-9_']+
-
-ident ::=  [A-Za-z][A-Za-z0-9_']*
-
-symbolic ::=  ( [!%&$#+\-/:<=>?@\\~`^|*][!%&$#+\-/:<=>?@\\~`^|*][!%&$#+\-/:<=>?@\\~`^|*]+ |  [!%&$#+/<>?@\\~`^|*][!%&$#+\-/:<=>?@\\~`^|*] |  [\-:=][!%&$#+\-/:<=?@\\~`^|*] |  [!%&$+\-/<=>?@\\~`^*] )
-
-_full_ident ::=  ( ident |  symbolic )
-
-qident ::=  ( (  ( ident '.'  )  )*  _full_ident )
+qident ::=
+	 ( ident '.' )* _full_ident
 

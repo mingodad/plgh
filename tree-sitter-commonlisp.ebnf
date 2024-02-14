@@ -1,0 +1,249 @@
+//
+// From tree-sitter-commonlisp/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source ::=
+	 ( _form | _gap )*
+
+_gap ::=
+	 _ws
+	| comment
+	| dis_expr
+
+_ws ::=
+	 [#x0C#x0A#x0D#x09 \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+
+
+comment ::=
+	 (';'|'#!')'.'*'#x0A'?
+
+dis_expr ::=
+	 '#_' _gap* _form
+
+_form ::=
+	 '#'? ( num_lit | fancy_literal | vec_lit | kwd_lit | ( '#' [0-9]+[aA]? list_lit ) | str_lit | self_referential_reader_macro | char_lit | nil_lit | path_lit | sym_lit | package_lit | list_lit | set_lit | read_cond_lit | splicing_read_cond_lit | var_quoting_lit | quoting_lit | syn_quoting_lit | unquote_splicing_lit | unquoting_lit | include_reader_macro | complex_num_lit | '.' )
+
+num_lit ::=
+	 ( [+-]? ( ( '#x' | '#X' ) [+-]? [0-9a-fA-F]+ | ( '#o' | '#O' ) [+-]? [0-7]+ | '#' [0-9]+ [rR] [0-9a-zA-Z]+ | ( '#b' | '#B' ) [+-]? [0-1]+ | [0-9]+ '/' [0-9]+ | [0-9]+ ( '.' [0-9]* )? ( [eEsSfFdDlL] [+-]? [0-9]+ )? | [0-9]+ [MN]? ) ) [sSfFdDlL]?
+
+kwd_lit ::=
+	 ( ':' | '::' ) kwd_symbol
+
+str_lit ::=
+	 '"'  ( [^\~"]+ | ( '\.' ) | format_specifier )* '~'? '"' 
+
+char_lit ::=
+	 '#' '\'([^#x0C#x0A#x0D#x09 ()]+|[()])
+
+nil_lit ::=
+	 'nil'
+
+bool_lit ::=
+	 ( 'false' | 'true' )
+
+sym_lit ::=
+	 ( [^:#x0C#x0A#x0D#x09 ()#x5B#x5D{}"^;`\,#x23'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000] ( [^:#x0C#x0A#x0D#x09 ()#x5B#x5D{}"^;`\,#x23'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000] | [#x23'] )* )
+
+_metadata_lit ::=
+	 ( meta_lit | old_meta_lit ) _gap*?
+
+meta_lit ::=
+	 '^' _gap* ( read_cond_lit | map_lit | str_lit | kwd_lit | sym_lit )
+
+old_meta_lit ::=
+	 '#^' _gap* ( read_cond_lit | map_lit | str_lit | kwd_lit | sym_lit )
+
+list_lit ::=
+	 _metadata_lit* _bare_list_lit
+
+_bare_list_lit ::=
+	 defun
+	| loop_macro
+	| '(' ( _form | _gap )* ')'
+
+map_lit ::=
+	 _metadata_lit* _bare_map_lit
+
+_bare_map_lit ::=
+	 '{' ( _form | _gap )* '}'
+
+vec_lit ::=
+	 ( '#0A' | '#0a' ) ( num_lit | complex_num_lit ) | '#' array_dimension? list_lit
+
+_bare_vec_lit ::=
+	 '[' ( _form | _gap )* ']'
+
+set_lit ::=
+	 _metadata_lit* _bare_set_lit
+
+_bare_set_lit ::=
+	 '#' '{' ( _form | _gap )* '}'
+
+anon_fn_lit ::=
+	 _metadata_lit* '#' _bare_list_lit
+
+regex_lit ::=
+	 '#' ( '"'  [^"\]* ( '\\'  '.' [^"\]* )* '"'  )
+
+read_cond_lit ::=
+	 _metadata_lit* '#?' _ws* _bare_list_lit
+
+splicing_read_cond_lit ::=
+	 _metadata_lit* '#?@' _ws* _bare_list_lit
+
+auto_res_mark ::=
+	 '::'
+
+ns_map_lit ::=
+	 _metadata_lit* '#' ( auto_res_mark | kwd_lit ) _gap* _bare_map_lit
+
+var_quoting_lit ::=
+	 _metadata_lit* "#'" _gap* _form
+
+sym_val_lit ::=
+	 '##' _gap* sym_lit
+
+evaling_lit ::=
+	 _metadata_lit* '#=' _gap* ( list_lit | read_cond_lit | sym_lit )
+
+tagged_or_ctor_lit ::=
+	 _metadata_lit* '#' _gap* sym_lit _gap* _form
+
+derefing_lit ::=
+	 _metadata_lit* '@' _gap* _form
+
+quoting_lit ::=
+	 _metadata_lit* "'"  _gap* _form
+
+syn_quoting_lit ::=
+	 '`' _gap* _form
+
+unquote_splicing_lit ::=
+	 _metadata_lit* ',@' _gap* _form
+
+unquoting_lit ::=
+	 ',' _gap* _form
+
+block_comment ::=
+	 ( '#|' ( [^|] | '\'|[^#x23] )* '|#' )
+
+fancy_literal ::=
+	 ( '|' [^|]* '|' )
+
+defun ::=
+	 '(' _gap? defun_header _gap? ( _form | _gap )* ')'
+
+_format_token ::=
+	 ( [+-]? ( ( '#x' | '#X' ) [+-]? [0-9a-fA-F]+ | ( '#o' | '#O' ) [+-]? [0-7]+ | '#' [0-9]+ [rR] [0-9a-zA-Z]+ | ( '#b' | '#B' ) [+-]? [0-1]+ | [0-9]+ '/' [0-9]+ | [0-9]+ ( '.' [0-9]* )? ( [eEsSfFdDlL] [+-]? [0-9]+ )? | [0-9]+ [MN]? ) )
+	| "'"  '.'
+
+format_prefix_parameters ::=
+	 'v'
+	| 'V'
+	| '#'
+
+format_modifiers ::=
+	 ( _format_token | ',' )* ( '@' | '@:' | ':' | ':@' )
+
+format_directive_type ::=
+	 _format_token? ( '~' | '%' | '&' | '|' )
+	| [cC]
+	| '\^'
+	| '\n' 
+	| '\r' 
+	| [pP]
+	| [iI]
+	| [wW]
+	| [aA]
+	| '_'
+	| [()]
+	| [{}]
+	| [#x5B#x5D]
+	| [<>]
+	| ';'
+	| _format_token '*'
+	| '/' ( _package_lit_without_slash | _sym_lit_without_slash ) '/'
+	| '?'
+	| 'Newline'
+	| ( _format_token | ',' )* [$rRbBdDgGxXeEoOsStTfF]
+
+format_specifier ::=
+	 '~' format_prefix_parameters? format_modifiers? format_directive_type
+
+for_clause_word ::=
+	 ( 'cl'? ':' )? ( 'in' | 'across' | 'being' | 'using' | 'being '('the'|'each')' '('hash-key'[s]?|'hash-value'[s]?|'present-symbol'[s]?)' '('in'|'of') | 'below' | 'above' | 'from' | 'to' | 'upto' | 'upfrom' | 'downto' | 'downfrom' | 'on' | 'by' | 'then' | '=' )
+
+_for_part ::=
+	 _gap* for_clause_word _gap* _form
+
+accumulation_verb ::=
+	 ( 'cl'? ':' )? ('maximize'|'minimize'|('collect'|'append'|'nconc'|'count')('ing')?|'sum'('ming')?|'maximizing'|'minimizing')
+
+for_clause ::=
+	 ( ( 'cl'? ':' )? 'for' | ( 'cl'? ':' )? 'and' | ( 'cl'? ':' )? 'as' ) _gap* _form ( _gap* _form )? _for_part+
+	| ( 'cl'? ':' )? 'and'
+
+with_clause ::=
+	 ( 'cl'? ':' )? 'with' _gap* ( _form | _form _gap* _form ) _gap* ( ( 'cl'? ':' )? '=' _gap* )? ( _form _gap* )?
+
+do_clause ::=
+	 ( 'cl'? ':' )? 'do' _gap* _form _gap*+
+
+while_clause ::=
+	 ( ( 'cl'? ':' )? 'while' | ( 'cl'? ':' )? 'until' ) _gap* _form
+
+repeat_clause ::=
+	 ( 'cl'? ':' )? 'repeat' _gap* _form
+
+condition_clause ::=
+	 ( ( 'cl'? ':' )? 'when' | ( 'cl'? ':' )? 'if' | ( 'cl'? ':' )? 'unless' | ( 'cl'? ':' )? 'always' | ( 'cl'? ':' )? 'thereis' | ( 'cl'? ':' )? 'never' ) _gap* _form | ( 'cl'? ':' )? 'else'
+
+accumulation_clause ::=
+	 accumulation_verb _gap* _form ( _gap* ( 'cl'? ':' )? 'into' _gap* _form )?
+
+termination_clause ::=
+	 ( ( 'cl'? ':' )? 'finally' | ( 'cl'? ':' )? 'return' | ( 'cl'? ':' )? 'initially' ) _gap* _form
+
+loop_clause ::=
+	 ( for_clause | do_clause | list_lit | while_clause | repeat_clause | accumulation_clause | condition_clause | with_clause | termination_clause | while_clause )
+
+loop_macro ::=
+	 '(' _gap? ( 'cl' ':' )? 'loop' ( loop_clause | _gap )* ')'
+
+defun_keyword ::=
+	 ( 'cl' ':' )? ( 'defun' | 'defmacro' | 'defgeneric' | 'defmethod' )
+
+defun_header ::=
+	 defun_keyword _gap* ( unquoting_lit | unquote_splicing_lit ) | defun_keyword _gap* _form ( _gap* ( kwd_lit | sym_lit ) )? _gap* ( list_lit | unquoting_lit ) | 'lambda' _gap* ( list_lit | unquoting_lit )
+
+array_dimension ::=
+	 [0-9]+[aA]
+
+path_lit ::=
+	 ( '#P' | '#p' ) ( '"'  [^"\]* ( '\\'  '.' [^"\]* )* '"'  )
+
+package_lit ::=
+	 ( sym_lit | 'cl' ) ( ':' | '::' ) sym_lit | 'cl'
+
+_package_lit_without_slash ::=
+	 ( _sym_lit_without_slash | 'cl' ) ( ':' | '::' ) _sym_lit_without_slash
+
+_sym_lit_without_slash ::=
+	 [^:#x0C#x0A#x0D#x09 ()#x5B#x5D{}"^;/`\,#x23'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]+
+
+kwd_symbol ::=
+	 ( [^:#x0C#x0A#x0D#x09 ()#x5B#x5D{}"^;`\,#x23'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000] ( [^:#x0C#x0A#x0D#x09 ()#x5B#x5D{}"^;`\,#x23'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000] | [#x23'] )* )
+
+self_referential_reader_macro ::=
+	 '#'[0-9]+[=#x23]
+
+include_reader_macro ::=
+	 _metadata_lit* ( '#+' | '#-' ) _gap* _form _gap* _form
+
+complex_num_lit ::=
+	 _metadata_lit* ( '#C' | '#c' ) _gap* '(' _gap* num_lit _gap* num_lit _gap* ')'
+

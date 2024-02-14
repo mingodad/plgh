@@ -1,106 +1,219 @@
-stylesheet ::=  (  _top_level_item )*
+//
+// From tree-sitter-css/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-_top_level_item ::=  ( declaration |  rule_set |  import_statement |  media_statement |  charset_statement |  namespace_statement |  keyframes_statement |  supports_statement |  at_rule )
+stylesheet ::=
+	 _top_level_item*
 
-import_statement ::=  ( '@import'  _value ( ( _query (  ( ','  _query )  )*  )  )?  ';'  )
+_top_level_item ::=
+	 declaration
+	| rule_set
+	| import_statement
+	| media_statement
+	| charset_statement
+	| namespace_statement
+	| keyframes_statement
+	| supports_statement
+	| at_rule
 
-media_statement ::=  ( '@media'  ( _query (  ( ','  _query )  )*  )  block )
+import_statement ::=
+	 '@import' _value ( _query ( ',' _query )* )? ';'
 
-charset_statement ::=  ( '@charset'  _value ';'  )
+media_statement ::=
+	 '@media' _query ( ',' _query )* block
 
-namespace_statement ::=  ( '@namespace'  ( (  identifier )  )?  ( string_value |  call_expression )  ';'  )
+charset_statement ::=
+	 '@charset' _value ';'
 
-keyframes_statement ::=  ( ( '@keyframes'  |  (  '@'[-a-z]+keyframes )  )  (  identifier )  keyframe_block_list )
+namespace_statement ::=
+	 '@namespace' identifier? ( string_value | call_expression ) ';'
 
-keyframe_block_list ::=  ( '{'  (  keyframe_block )*  '}'  )
+keyframes_statement ::=
+	 ( '@keyframes' | '@'[-a-z]+'keyframes' ) identifier keyframe_block_list
 
-keyframe_block ::=  ( ( from |  to |  integer_value )  block )
+keyframe_block_list ::=
+	 '{' keyframe_block* '}'
 
-from ::=  'from'
+keyframe_block ::=
+	 ( from | to | integer_value ) block
 
-to ::=  'to'
+from ::=
+	 'from'
 
-supports_statement ::=  ( '@supports'  _query block )
+to ::=
+	 'to'
 
-at_rule ::=  ( at_keyword ( ( _query (  ( ','  _query )  )*  )  )?  ( ';'  |  block )  )
+supports_statement ::=
+	 '@supports' _query block
 
-rule_set ::=  ( selectors block )
+postcss_statement ::=
+	 at_keyword _value* ';'
 
-selectors ::=  ( _selector (  ( ','  _selector )  )*  )
+at_rule ::=
+	 at_keyword ( _query ( ',' _query )* )? ( ';' | block )
 
-block ::=  ( '{'  (  _block_item )*  ( (  last_declaration )  )?  '}'  )
+rule_set ::=
+	 selectors block
 
-_block_item ::=  ( declaration |  rule_set |  import_statement |  media_statement |  charset_statement |  namespace_statement |  keyframes_statement |  supports_statement |  at_rule )
+selectors ::=
+	 _selector ( ',' _selector )*
 
-_selector ::=  ( universal_selector |  (  identifier )  |  class_selector |  nesting_selector |  pseudo_class_selector |  pseudo_element_selector |  id_selector |  attribute_selector |  string_value |  child_selector |  descendant_selector |  sibling_selector |  adjacent_sibling_selector )
+block ::=
+	 '{' _block_item* last_declaration? '}'
 
-nesting_selector ::=  '&'
+_block_item ::=
+	 declaration
+	| rule_set
+	| import_statement
+	| media_statement
+	| charset_statement
+	| namespace_statement
+	| keyframes_statement
+	| supports_statement
+	| postcss_statement
+	| at_rule
 
-universal_selector ::=  '*'
+_selector ::=
+	 universal_selector
+	| identifier
+	| class_selector
+	| nesting_selector
+	| pseudo_class_selector
+	| pseudo_element_selector
+	| id_selector
+	| attribute_selector
+	| string_value
+	| child_selector
+	| descendant_selector
+	| sibling_selector
+	| adjacent_sibling_selector
+	| namespace_selector
 
-class_selector ::=   (  ( ( _selector )?  '.'  (  identifier )  )  )
+nesting_selector ::=
+	 '&'
 
-pseudo_class_selector ::=  ( ( _selector )?  ':'  (  identifier )  ( (  pseudo_class_arguments )  )?  )
+universal_selector ::=
+	 '*'
 
-pseudo_element_selector ::=  ( ( _selector )?  '::'  (  identifier )  )
+class_selector ::=
+	 _selector? '.' identifier
 
-id_selector ::=  ( ( _selector )?  '#'  (  identifier )  )
+pseudo_class_selector ::=
+	 _selector? _pseudo_class_selector_colon identifier pseudo_class_arguments?
 
-attribute_selector ::=  ( ( _selector )?  '['  (  identifier )  ( ( ( '='  |  '~='  |  '^='  |  '|='  |  '*='  |  '$='  )  _value )  )?  ']'  )
+pseudo_element_selector ::=
+	 _selector? '::' identifier pseudo_element_arguments?
 
-child_selector ::=   (  ( _selector '>'  _selector )  )
+id_selector ::=
+	 _selector? '#' identifier
 
-descendant_selector ::=   (  ( _selector _descendant_operator _selector )  )
+attribute_selector ::=
+	 _selector? '[' ( identifier | namespace_selector ) ( ( '=' | '~=' | '^=' | '|=' | '*=' | '$=' ) _value )? ']'
 
-sibling_selector ::=   (  ( _selector '~'  _selector )  )
+child_selector ::=
+	 _selector '>' _selector
 
-adjacent_sibling_selector ::=   (  ( _selector '+'  _selector )  )
+descendant_selector ::=
+	 _selector _descendant_operator _selector
 
-pseudo_class_arguments ::=  ( (  '('  )  ( ( ( _selector |  ( _value )+  )  (  ( ','  ( _selector |  ( _value )+  )  )  )*  )  )?  ')'  )
+sibling_selector ::=
+	 _selector '~' _selector
 
-declaration ::=  ( (  identifier )  ':'  _value (  ( ( ','  )?  _value )  )*  ( important )?  ';'  )
+adjacent_sibling_selector ::=
+	 _selector '+' _selector
 
-last_declaration ::=   (  ( (  identifier )  ':'  _value (  ( ( ','  )?  _value )  )*  ( important )?  )  )
+namespace_selector ::=
+	 _selector '|' _selector
 
-important ::=  '!important'
+pseudo_class_arguments ::=
+	 '(' ( ( _selector | _value+ ) ( ',' ( _selector | _value+ ) )* )? ')'
 
-_query ::=  ( (  identifier )  |  feature_query |  binary_query |  unary_query |  selector_query |  parenthesized_query )
+pseudo_element_arguments ::=
+	 '(' ( ( _selector | _value+ ) ( ',' ( _selector | _value+ ) )* )? ')'
 
-feature_query ::=  ( '('  (  identifier )  ':'  ( _value )+  ')'  )
+declaration ::=
+	 identifier ':' _value ( ','? _value )* important? ';'
 
-parenthesized_query ::=  ( '('  _query ')'  )
+last_declaration ::=
+	 identifier ':' _value ( ','? _value )* important?
 
-binary_query ::=   (  ( _query ( 'and'  |  'or'  )  _query )  )
+important ::=
+	 '!important'
 
-unary_query ::=   (  ( ( 'not'  |  'only'  )  _query )  )
+_query ::=
+	 identifier
+	| feature_query
+	| binary_query
+	| unary_query
+	| selector_query
+	| parenthesized_query
 
-selector_query ::=  ( 'selector'  '('  _selector ')'  )
+feature_query ::=
+	 '(' identifier ':' _value+ ')'
 
-_value ::=   (  ( (  identifier )  |  plain_value |  color_value |  integer_value |  float_value |  string_value |  binary_expression |  parenthesized_value |  call_expression )  )
+parenthesized_query ::=
+	 '(' _query ')'
 
-parenthesized_value ::=  ( '('  _value ')'  )
+binary_query ::=
+	 _query ( 'and' | 'or' ) _query
 
-color_value ::=  ( '#'  (  [0-9a-fA-F]+/*{3,8}*/ )  )
+unary_query ::=
+	 ( 'not' | 'only' ) _query
 
-string_value ::=  (  ( ( "'"  ([^'\n]|'\\'('.'|'\n'))* "'"  )  |  ( '"'  ([^"\n]|'\\'('.'|'\n'))* '"'  )  )  )
+selector_query ::=
+	 'selector' '(' _selector ')'
 
-integer_value ::=  ( (  ( ( ( '+'  |  '-'  )  )?  [0-9]+ )  )  ( unit )?  )
+_value ::=
+	 identifier | plain_value | color_value | integer_value | float_value | string_value | grid_value | binary_expression | parenthesized_value | call_expression | important
 
-float_value ::=  ( (  ( ( ( '+'  |  '-'  )  )?  [0-9]* ( ( '.'  [0-9]+ )  |  ( [eE] ( '-'  )?  [0-9]+ )  |  ( '.'  [0-9]+ [eE] ( '-'  )?  [0-9]+ )  )  )  )  ( unit )?  )
+parenthesized_value ::=
+	 '(' _value ')'
 
-unit ::=  (  [a-zA-Z%]+ )
+color_value ::=
+	 '#' [0-9a-fA-F]'{3,8}'
 
-call_expression ::=  ( (  identifier )  arguments )
+string_value ::=
+	 "'"  ([^'#x0A]|"\"("."|"#x0A"))* "'" 
+	| '"'  ([^"#x0A]|'\'('.'|'#x0A'))* '"' 
 
-binary_expression ::=   (  ( _value ( '+'  |  '-'  |  '*'  |  '/'  )  _value )  )
+integer_value ::=
+	 ( ( '+' | '-' )? [0-9]+ ) unit?
 
-arguments ::=  ( (  '('  )  ( ( ( _value )+  (  ( ( ','  |  ';'  )  ( _value )+  )  )*  )  )?  ')'  )
+float_value ::=
+	 ( ( '+' | '-' )? [0-9]* ( '.' [0-9]+ | [eE] '-'? [0-9]+ | '.' [0-9]+ [eE] '-'? [0-9]+ ) ) unit?
 
-identifier ::=  ('--'|'-'?[a-zA-Z_])[a-zA-Z0-9-_]*
+unit ::=
+	 [a-zA-Z%]+
 
-at_keyword ::=  '@'[a-zA-Z-_]+
+grid_value ::=
+	 '[' _value ( ',' _value )* ']'
 
-comment ::=  (  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )
+call_expression ::=
+	 identifier arguments
 
-plain_value ::=  (  ( (  ( [-_] |  '/'[^\*\s,;!{}()\[#x5d] )  )*  [a-zA-Z] (  ( [^/\s,;!{}()\[#x5d] |  '/'[^\*\s,;!{}()\[#x5d] )  )*  )  )
+binary_expression ::=
+	 _value ( '+' | '-' | '*' | '/' ) _value
+
+arguments ::=
+	 '(' ( _value+ ( ( ',' | ';' ) _value+ )* )? ')'
+
+identifier ::=
+	 ('--'|'-'?[a-zA-Z_])[a-zA-Z0-9-_]*
+
+at_keyword ::=
+	 '@'[a-zA-Z-_]+
+
+js_comment ::=
+	 '//' '.'*
+
+comment ::=
+	 ( '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+plain_value ::=
+	 ( ( [-_] | '\/'[^\* #x09#x0A#x0B#x0C#x0D,;!{}()#x5B#x5D] )* [a-zA-Z] ( [^/ #x09#x0A#x0B#x0C#x0D,;!{}()#x5B#x5D] | '\/'[^\* #x09#x0A#x0B#x0C#x0D,;!{}()#x5B#x5D] )* )
 

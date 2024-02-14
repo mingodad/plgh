@@ -1,585 +1,1238 @@
-/*
-Grammar originally from https://github.com/UserNobody14/tree-sitter-dart
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-dart/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+program ::=
+	 script_tag? library_name? import_or_export* part_directive* part_of_directive* _top_level_definition*
+
+_top_level_definition ::=
+	 class_definition
+	| mixin_declaration
+	| extension_declaration
+	| enum_declaration
+	| type_alias
+	| _metadata? _external_builtin? function_signature _semicolon
+	| _metadata? _external_builtin? getter_signature _semicolon
+	| _metadata? _external_builtin? setter_signature _semicolon
+	| _metadata? getter_signature function_body
+	| _metadata? setter_signature function_body
+	| _metadata? function_signature function_body
+	| _metadata? ( final_builtin | const_builtin ) _type? static_final_declaration_list _semicolon
+	| _metadata? _late_builtin final_builtin _type? initialized_identifier_list _semicolon
+	| _metadata? _late_builtin? ( _type | inferred_type ) initialized_identifier_list _semicolon
+
+_bool_literal ::=
+	 true
+	| false
+
+_numeric_literal ::=
+	 decimal_integer_literal
+	| decimal_floating_point_literal
+	| hex_integer_literal
 
-program ::=  ( ( script_tag )?  ( library_name )?  (  import_or_export )*  (  part_directive )*  (  part_of_directive )*  (   (  ( ( _metadata )?  _top_level_definition )  )  )*  (  _statement )*  )
+_literal ::=
+	 null_literal
+	| _bool_literal
+	| _numeric_literal
+	| string_literal
+	| symbol_literal
+	| set_or_map_literal
+	| list_literal
+	| record_literal
+
+symbol_literal ::=
+	 '#' identifier
+
+decimal_integer_literal ::=
+	 ( [0-9]+ ( '_'+ [0-9]+ )* )
 
-_top_level_definition ::=  ( class_definition |  enum_declaration |  extension_declaration |  mixin_declaration |  type_alias |  ( ( _external_builtin )?  function_signature _semicolon )  |  ( ( _external_builtin )?  getter_signature _semicolon )  |  ( ( _external_builtin )?  setter_signature _semicolon )  |  ( function_signature function_body )  |  ( getter_signature function_body )  |  ( setter_signature function_body )  |  ( ( final_builtin |  const_builtin )  ( _type )?  static_final_declaration_list _semicolon )  |  ( _late_builtin final_builtin ( _type )?  initialized_identifier_list _semicolon )  |  ( ( _late_builtin )?  ( _type |  inferred_type )  initialized_identifier_list _semicolon )  )
+hex_integer_literal ::=
+	 ( ( '0x' | '0X' ) ( [A-Fa-f0-9]+ ( '_' [A-Fa-f0-9]+ )* ) )
+
+decimal_floating_point_literal ::=
+	 ( ( [0-9]+ ( '_'+ [0-9]+ )* ) '.' ( [0-9]+ ( '_'+ [0-9]+ )* ) ( [eE] ( '-' | '+' )? ( [0-9]+ ( '_'+ [0-9]+ )* ) )? | '.' ( [0-9]+ ( '_'+ [0-9]+ )* ) ( [eE] ( '-' | '+' )? ( [0-9]+ ( '_'+ [0-9]+ )* ) )? | ( [0-9]+ ( '_'+ [0-9]+ )* ) [eE] ( '-' | '+' )? ( [0-9]+ ( '_'+ [0-9]+ )* ) | ( [0-9]+ ( '_'+ [0-9]+ )* ) ( [eE] ( '-' | '+' )? ( [0-9]+ ( '_'+ [0-9]+ )* ) )? )
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+string_literal ::=
+	 ( _string_literal_double_quotes | _string_literal_single_quotes | _string_literal_double_quotes_multiple | _string_literal_single_quotes_multiple | _raw_string_literal_double_quotes | _raw_string_literal_single_quotes | _raw_string_literal_double_quotes_multiple | _raw_string_literal_single_quotes_multiple )+
+
+_string_literal_double_quotes ::=
+	 '"'  ( _template_chars_double_single | "'"  | escape_sequence | _sub_string_test | template_substitution )* '"' 
+
+_string_literal_single_quotes ::=
+	 "'"  ( _template_chars_single_single | '"'  | escape_sequence | _sub_string_test | template_substitution )* "'" 
+
+_string_literal_double_quotes_multiple ::=
+	 '"""' ( _template_chars_double | "'"  | '"'  | escape_sequence | _sub_string_test | template_substitution )* '"""'
+
+_string_literal_single_quotes_multiple ::=
+	 "'''" ( _template_chars_single | '"'  | "'"  | escape_sequence | _sub_string_test | template_substitution )* "'''"
+
+_raw_string_literal_double_quotes ::=
+	 'r"' ( _template_chars_double_single | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* '"' 
+
+_raw_string_literal_single_quotes ::=
+	 "r'" ( _template_chars_single_single | '"'  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'" 
+
+_raw_string_literal_double_quotes_multiple ::=
+	 'r"""' ( _template_chars_double | "'"  | _template_chars_raw_slash | '"'  | _unused_escape_sequence | _sub_string_test | '$' )* '"""'
+
+_raw_string_literal_single_quotes_multiple ::=
+	 "r'''" ( _template_chars_single | '"'  | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'''"
+
+_triple_quote_end ::=
+	 "'''"
+
+_triple_double_quote_end ::=
+	 '"""'
+
+template_substitution ::=
+	 '$' ( '{' _expression '}' | identifier_dollar_escaped )
+
+_sub_string_test ::=
+	 '$' [^a-zA-Z_{]
+
+_string_interp ::=
+	 '\$'(([a-zA-Z_]+)|'\{'([^{}]+)'\}')
+
+_unused_escape_sequence ::=
+	 ( '\\'  ( [^xu0-7] | [0-7]'{1,3}' | 'x'[0-9a-fA-F]'{2}' | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F]+'}' ) )
+
+escape_sequence ::=
+	 _unused_escape_sequence
+
+list_literal ::=
+	 const_builtin? type_arguments? '[' ( _element ( ',' _element )* ','? )? ']'
+
+set_or_map_literal ::=
+	 const_builtin? type_arguments? '{' ( _element ( ',' _element )* ','? )? '}'
+
+pair ::=
+	 _expression ':' _expression
+
+_element ::=
+	 _expression
+	| pair
+	| spread_element
+	| if_element
+	| for_element
+
+null_literal ::=
+	 'null'
+
+record_literal ::=
+	 const_builtin? _record_literal_no_const
+
+_record_literal_no_const ::=
+	 '(' ( label _expression | _expression ',' | record_field ( ',' record_field )+ ','? ) ')'
+
+record_field ::=
+	 label? _expression
+
+_expression ::=
+	 pattern_assignment
+	| assignment_expression
+	| throw_expression
+	| _real_expression cascade_section*
+
+_expression_without_cascade ::=
+	 assignment_expression_without_cascade
+	| _real_expression
+	| throw_expression_without_cascade
+
+_real_expression ::=
+	 conditional_expression
+	| logical_or_expression
+	| if_null_expression
+	| additive_expression
+	| multiplicative_expression
+	| relational_expression
+	| equality_expression
+	| logical_and_expression
+	| bitwise_and_expression
+	| bitwise_or_expression
+	| bitwise_xor_expression
+	| shift_expression
+	| type_cast_expression
+	| type_test_expression
+	| _unary_expression
 
-_literal ::=  ( decimal_integer_literal |  hex_integer_literal |  decimal_floating_point_literal |  true |  false |  string_literal |  null_literal |  symbol_literal |  list_literal |  set_or_map_literal )
+throw_expression ::=
+	 'throw' _expression
 
-symbol_literal ::=  ( '#'  identifier )
+throw_expression_without_cascade ::=
+	 'throw' _expression_without_cascade
 
-decimal_integer_literal ::=  (  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )
+assignment_expression ::=
+	 assignable_expression _assignment_operator _expression
 
-hex_integer_literal ::=  (  ( ( '0x'  |  '0X'  )  (  ( [A-Fa-f0-9]+ (  ( '_'  [A-Fa-f0-9]+ )  )*  )  )  )  )
+assignment_expression_without_cascade ::=
+	 assignable_expression _assignment_operator _expression_without_cascade
 
-decimal_floating_point_literal ::=  (  ( ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  |  ( '.'  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  |  ( (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  ( ( [eE] ( ( '-'  |  '+'  )  )?  (  ( [0-9]+ (  ( _+ [0-9]+ )  )*  )  )  )  )?  )  )  )
+assignable_expression ::=
+	 _primary _assignable_selector_part
+	| super unconditional_assignable_selector
+	| constructor_invocation _assignable_selector_part
+	| identifier
 
-true ::=   (  'true'  )
+_assignable_selector_part ::=
+	 selector* _assignable_selector
 
-false ::=   (  'false'  )
+_assignment_operator ::=
+	 '='
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '%='
+	| '~/='
+	| '<<='
+	| '>>='
+	| '>>>='
+	| '&='
+	| '^='
+	| '|='
+	| '??='
 
-string_literal ::=  ( ( _string_literal_double_quotes |  _string_literal_single_quotes |  _string_literal_double_quotes_multiple |  _string_literal_single_quotes_multiple |  _raw_string_literal_double_quotes |  _raw_string_literal_single_quotes |  _raw_string_literal_double_quotes_multiple |  _raw_string_literal_single_quotes_multiple )  )+
+lambda_expression ::=
+	 function_signature function_body
 
-_string_literal_double_quotes ::=  ( '"'  (  ( _template_chars_double_single |  "'"  |  escape_sequence |  _sub_string_test |  template_substitution )  )*  '"'  )
+function_expression ::=
+	 _formal_parameter_part function_expression_body
 
-_string_literal_single_quotes ::=  ( "'"  (  ( _template_chars_single_single |  '"'  |  escape_sequence |  _sub_string_test |  template_substitution )  )*  "'"  )
+inferred_parameters ::=
+	 '(' identifier ( ',' identifier )* ')'
 
-_string_literal_double_quotes_multiple ::=   (  ( '"""'  (  ( _template_chars_double |  "'"  |  '"'  |  escape_sequence |  _sub_string_test |  template_substitution )  )*  '"""'  )  )
+if_null_expression ::=
+	 _real_expression _if_null_expression
 
-_string_literal_single_quotes_multiple ::=   (  ( "'''"  (  ( _template_chars_single |  '"'  |  "'"  |  escape_sequence |  _sub_string_test |  template_substitution )  )*  "'''"  )  )
+_if_null_expression ::=
+	 ( '??' _real_expression )+
 
-_raw_string_literal_double_quotes ::=  ( 'r"'  (  ( _template_chars_double_single |  "'"  |  _template_chars_raw_slash |  _unused_escape_sequence |  _sub_string_test |  '$'  )  )*  '"'  )
+conditional_expression ::=
+	 _real_expression '?' _expression_without_cascade ':' _expression_without_cascade
 
-_raw_string_literal_single_quotes ::=  ( "r'"  (  ( _template_chars_single_single |  '"'  |  _template_chars_raw_slash |  _unused_escape_sequence |  _sub_string_test |  '$'  )  )*  "'"  )
+logical_or_expression ::=
+	 _real_expression ( logical_or_operator _real_expression )+
 
-_raw_string_literal_double_quotes_multiple ::=   (  ( 'r"""'  (  ( _template_chars_double |  "'"  |  _template_chars_raw_slash |  '"'  |  _unused_escape_sequence |  _sub_string_test |  '$'  )  )*  '"""'  )  )
+logical_and_expression ::=
+	 _real_expression ( logical_and_operator _real_expression )+
 
-_raw_string_literal_single_quotes_multiple ::=   (  ( "r'''"  (  ( _template_chars_single |  '"'  |  "'"  |  _template_chars_raw_slash |  _unused_escape_sequence |  _sub_string_test |  '$'  )  )*  "'''"  )  )
+equality_expression ::=
+	 _real_expression equality_operator _real_expression | super equality_operator _real_expression
 
-_triple_quote_end ::=  (  "'''"  )
+equality_operator ::=
+	 ( '==' | '!=' )
 
-_triple_double_quote_end ::=  (  '"""'  )
+type_cast_expression ::=
+	 _real_expression type_cast
 
-template_substitution ::=  ( '$'  ( ( '{'  _expression '}'  )  |  identifier_dollar_escaped )  )
+type_test_expression ::=
+	 _real_expression type_test
 
-_sub_string_test ::=  ( '$'  [^a-zA-Z_{] )
+relational_expression ::=
+	 _real_expression relational_operator _real_expression | super relational_operator _real_expression
 
-_string_interp ::=  '$'(([\w]+)|'{'([^{}]+)'}')
+relational_operator ::=
+	 '<'
+	| '>'
+	| '<='
+	| '>='
 
-_unused_escape_sequence ::=  (  ( '\\'  ( [^xu0-7] |  [0-7]+/*{1,3}*/ |  'x'[0-9a-fA-F]+/*{2}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' )  )  )
+bitwise_or_expression ::=
+	 _real_expression ( '|' _real_expression )+ | super ( '|' _real_expression )+
 
-escape_sequence ::=  _unused_escape_sequence
+bitwise_xor_expression ::=
+	 _real_expression ( '^' _real_expression )+ | super ( '^' _real_expression )+
 
-list_literal ::=  ( ( const_builtin )?  ( type_arguments )?  '['  ( ( _element (  ( ','  _element )  )*  ( ','  )?  )  )?  ']'  )
+bitwise_and_expression ::=
+	 _real_expression ( '&' _real_expression )+ | super ( '&' _real_expression )+
 
-set_or_map_literal ::=  ( ( const_builtin )?  ( type_arguments )?  '{'  ( ( _element (  ( ','  _element )  )*  ( ','  )?  )  )?  '}'  )
+shift_expression ::=
+	 _real_expression ( shift_operator _real_expression )+ | super ( shift_operator _real_expression )+
 
-pair ::=  ( (  _expression )  ':'  (  _expression )  )
+additive_expression ::=
+	 _real_expression ( additive_operator _real_expression )+ | super ( additive_operator _real_expression )+
 
-_element ::=  ( _expression |  pair |  spread_element |  if_element |  for_element )
+multiplicative_expression ::=
+	 _unary_expression ( multiplicative_operator _unary_expression )+ | super ( multiplicative_operator _unary_expression )+
 
-null_literal ::=   (  'null'  )
+bitwise_operator ::=
+	 _bitwise_operator
 
-_expression ::=  ( assignment_expression |  throw_expression |  ( _real_expression (  cascade_section )*  )  )
+_bitwise_operator ::=
+	 '&'
+	| '^'
+	| '|'
 
-_expression_without_cascade ::=  ( assignment_expression_without_cascade |  _real_expression |  throw_expression_without_cascade )
+shift_operator ::=
+	 _shift_operator
 
-_real_expression ::=  ( conditional_expression |  logical_or_expression |  if_null_expression |  additive_expression |  multiplicative_expression |  relational_expression |  equality_expression |  logical_and_expression |  bitwise_and_expression |  bitwise_or_expression |  bitwise_xor_expression |  shift_expression |  type_cast_expression |  type_test_expression |  _unary_expression )
+_shift_operator ::=
+	 '<<'
+	| '>>'
+	| '>>>'
 
-throw_expression ::=  ( 'throw'  _expression )
+additive_operator ::=
+	 _additive_operator
 
-throw_expression_without_cascade ::=  ( 'throw'  _expression_without_cascade )
+_additive_operator ::=
+	 ( '+' | '-' )
 
-assignment_expression ::=   (  ( (  assignable_expression )  (  _assignment_operator )  (  _expression )  )  )
+multiplicative_operator ::=
+	 _multiplicative_operator
 
-assignment_expression_without_cascade ::=   (  ( (  assignable_expression )  (  _assignment_operator )  (  _expression_without_cascade )  )  )
+_multiplicative_operator ::=
+	 '*'
+	| '/'
+	| '%'
+	| '~/'
 
-assignable_expression ::=  ( ( _primary assignable_selector_part )  |  ( super unconditional_assignable_selector )  |  ( constructor_invocation assignable_selector_part )  |  identifier )
+_unary_expression ::=
+	 _postfix_expression | unary_expression
 
-assignable_selector_part ::=  ( (  selector )*  assignable_selector )
+unary_expression ::=
+	 prefix_operator _unary_expression | await_expression | ( minus_operator | tilde_operator ) super | increment_operator assignable_expression
 
-_assignment_operator ::=  ( '='  |  ( ( _multiplicative_operator |  _shift_operator |  _bitwise_operator |  _additive_operator |  '??'  )  '='  )  )
+_postfix_expression ::=
+	 _primary selector*
+	| postfix_expression
 
-lambda_expression ::=  ( (  function_signature )  (  function_body )  )
+postfix_expression ::=
+	 assignable_expression postfix_operator | constructor_invocation selector*
 
-function_expression ::=  ( (  _formal_parameter_part )  (  function_expression_body )  )
+postfix_operator ::=
+	 increment_operator
 
-inferred_parameters ::=  ( '('  ( identifier (  ( ','  identifier )  )*  )  ')'  )
+increment_operator ::=
+	 ( '++' | '--' )
 
-if_null_expression ::=   (  ( (  _real_expression )  _if_null_expression )  )
+spread_element ::=
+	 '...' '?'? _expression
 
-_if_null_expression ::=  ( ( '??'  (  _real_expression )  )  )+
+selector ::=
+	 _exclamation_operator | _assignable_selector | argument_part | type_arguments
 
-conditional_expression ::=   (  ( _real_expression ( '?'  (  _expression_without_cascade )  ':'  (  _expression_without_cascade )  )  )  )
+prefix_operator ::=
+	 minus_operator
+	| negation_operator
+	| tilde_operator
 
-logical_or_expression ::=   (  ( _real_expression ( ( '||'  _real_expression )  )+  )  )
+minus_operator ::=
+	 '-'
 
-logical_and_expression ::=   (  ( _real_expression ( ( '&&'  _real_expression )  )+  )  )
+negation_operator ::=
+	 _exclamation_operator
 
-equality_expression ::=   (  ( ( _real_expression equality_operator _real_expression )  |  ( super equality_operator _real_expression )  )  )
+_exclamation_operator ::=
+	 '!'
 
-equality_operator ::=  (  ( '=='  |  '!='  )  )
+tilde_operator ::=
+	 '~'
 
-type_cast_expression ::=   (  ( _real_expression type_cast )  )
+await_expression ::=
+	 'await' _unary_expression
 
-type_test_expression ::=   (  ( _real_expression type_test )  )
+type_test ::=
+	 is_operator _type_not_void
 
-relational_expression ::=   (  ( ( _real_expression relational_operator _real_expression )  |  ( super relational_operator _real_expression )  )  )
+is_operator ::=
+	 'is' _exclamation_operator?
 
-relational_operator ::=  ( '<'  |  '>'  |  '<='  |  '>='  )
+type_cast ::=
+	 as_operator _type_not_void
 
-bitwise_or_expression ::=   (  ( ( _real_expression ( ( '|'  _real_expression )  )+  )  |  ( super ( ( '|'  _real_expression )  )+  )  )  )
+as_operator ::=
+	 'as'
 
-bitwise_xor_expression ::=   (  ( ( _real_expression ( ( '^'  _real_expression )  )+  )  |  ( super ( ( '^'  _real_expression )  )+  )  )  )
+new_expression ::=
+	 _new_builtin _type_not_void _dot_identifier? arguments
 
-bitwise_and_expression ::=   (  ( ( _real_expression ( ( '&'  _real_expression )  )+  )  |  ( super ( ( '&'  _real_expression )  )+  )  )  )
+_dot_identifier ::=
+	 '.' identifier
 
-shift_expression ::=   (  ( ( _real_expression ( ( shift_operator _real_expression )  )+  )  |  ( super ( ( shift_operator _real_expression )  )+  )  )  )
+const_object_expression ::=
+	 const_builtin _type_not_void _dot_identifier? arguments
 
-additive_expression ::=   (  ( ( _real_expression ( ( additive_operator _real_expression )  )+  )  |  ( super ( ( additive_operator _real_expression )  )+  )  )  )
+_primary ::=
+	 _literal
+	| identifier
+	| function_expression
+	| new_expression
+	| const_object_expression
+	| parenthesized_expression
+	| this
+	| super unconditional_assignable_selector
+	| constructor_tearoff
+	| switch_expression
 
-multiplicative_expression ::=   (  ( ( _unary_expression ( ( multiplicative_operator _unary_expression )  )+  )  |  ( super ( ( multiplicative_operator _unary_expression )  )+  )  )  )
+parenthesized_expression ::=
+	 '(' _expression ')'
 
-bitwise_operator ::=  _bitwise_operator
+_compound_access ::=
+	 '.'
+	| '?.'
 
-_bitwise_operator ::=  ( '&'  |  '^'  |  '|'  )
+constructor_invocation ::=
+	 _type_name type_arguments '.' identifier arguments | _type_name '.' _new_builtin arguments
 
-shift_operator ::=  _shift_operator
+constructor_tearoff ::=
+	 _type_name type_arguments? '.' _new_builtin
 
-_shift_operator ::=  ( '<<'  |  '>>'  |  '>>>'  )
+arguments ::=
+	 '(' _argument_list? ')'
 
-additive_operator ::=  _additive_operator
+_argument_list ::=
+	 _any_argument ( ',' _any_argument )* ','?
 
-_additive_operator ::=  (  ( '+'  |  '-'  )  )
+_any_argument ::=
+	 argument
+	| named_argument
 
-multiplicative_operator ::=  _multiplicative_operator
+argument ::=
+	 _expression
 
-_multiplicative_operator ::=  ( '*'  |  '/'  |  '%'  |  '~/'  )
+named_argument ::=
+	 label _expression
 
-_unary_expression ::=   (  ( _postfix_expression |  unary_expression )  )
+cascade_section ::=
+	 ( '..' | '?..' ) cascade_selector argument_part* _cascade_subsection* _cascade_assignment_section?
 
-unary_expression ::=   (  ( ( prefix_operator _unary_expression )  |  await_expression |  ( ( minus_operator |  tilde_operator )  super )  |  ( increment_operator assignable_expression )  )  )
+_cascade_subsection ::=
+	 _assignable_selector argument_part*
 
-_postfix_expression ::=  ( ( _primary (  selector )*  )  |  postfix_expression )
+_cascade_assignment_section ::=
+	 _assignment_operator _expression_without_cascade
 
-postfix_expression ::=  ( ( assignable_expression postfix_operator )  |  ( constructor_invocation (  selector )*  )  )
+index_selector ::=
+	 '[' _expression ']'
 
-postfix_operator ::=  increment_operator
+cascade_selector ::=
+	 nullable_selector? index_selector
+	| identifier
 
-increment_operator ::=  (  ( '++'  |  '--'  )  )
+argument_part ::=
+	 type_arguments? arguments
 
-spread_element ::=  ( '...'  ( '?'  )?  _expression )
+unconditional_assignable_selector ::=
+	 index_selector
+	| '.' identifier
 
-selector ::=  ( _exclamation_operator |  assignable_selector |  argument_part )
+conditional_assignable_selector ::=
+	 '?.' identifier
+	| '?' index_selector
 
-prefix_operator ::=  ( minus_operator |  negation_operator |  tilde_operator )
+_assignable_selector ::=
+	 unconditional_assignable_selector
+	| conditional_assignable_selector
 
-minus_operator ::=  '-'
+type_arguments ::=
+	 '<' ( _type ( ',' _type )* )? '>'
 
-negation_operator ::=  _exclamation_operator
+wildcard ::=
+	 _metadata? '?' _wildcard_bounds?
 
-_exclamation_operator ::=  '!'
+_wildcard_bounds ::=
+	 'extends' _type
+	| super _type
 
-tilde_operator ::=  '~'
+dimensions ::=
+	 ( _metadata? '[' ']' )+
 
-await_expression ::=  ( 'await'  _unary_expression )
+_statement ::=
+	 block
+	| local_function_declaration
+	| local_variable_declaration
+	| for_statement
+	| while_statement
+	| do_statement
+	| switch_statement
+	| if_statement
+	| try_statement
+	| break_statement
+	| continue_statement
+	| return_statement
+	| yield_statement
+	| yield_each_statement
+	| expression_statement
+	| assert_statement
 
-type_test ::=  ( is_operator _type_not_void )
+local_function_declaration ::=
+	 _metadata? lambda_expression
 
-is_operator ::=  ( (  'is'  )  ( _exclamation_operator )?  )
+block ::=
+	 '{' _statement* '}'
 
-type_cast ::=  ( as_operator _type_not_void )
+expression_statement ::=
+	 _expression _semicolon
 
-as_operator ::=  (  'as'  )
+labeled_statement ::=
+	 identifier ':' _statement
 
-new_expression ::=  ( _new_builtin _type_not_void ( _dot_identifier )?  arguments )
+assert_statement ::=
+	 assertion ';'
 
-_dot_identifier ::=   (  ( '.'  identifier )  )
+assertion ::=
+	 _assert_builtin assertion_arguments
 
-const_object_expression ::=  ( const_builtin _type_not_void ( _dot_identifier )?  arguments )
+assertion_arguments ::=
+	 '(' _expression ( ',' _expression )? ','? ')'
 
-_primary ::=  ( _literal |  function_expression |  identifier |  new_expression |  const_object_expression |  ( '('  _expression ')'  )  |  this |  ( super unconditional_assignable_selector )  )
+switch_statement ::=
+	 'switch' parenthesized_expression switch_block
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+switch_expression ::=
+	 'switch' parenthesized_expression ( '{' switch_expression_case ( ',' switch_expression_case )* ','? '}' )
 
-_compound_access ::=  ( '.'  |  '?.'  )
+switch_expression_case ::=
+	 _guarded_pattern '=>' _expression
 
-constructor_invocation ::=  ( _type_name type_arguments '.'  identifier arguments )
+_guarded_pattern ::=
+	 _pattern ( 'when' _expression )?
 
-arguments ::=  ( '('  ( ( _argument_list ( ','  )?  )  )?  ')'  )
+_pattern ::=
+	 _logical_or_pattern
 
-_argument_list ::=  ( ( named_argument (  ( ','  named_argument )  )*  )  |  ( ( _expression (  ( ','  _expression )  )*  )  (  ( ','  ( named_argument (  ( ','  named_argument )  )*  )  )  )*  )  )
+_logical_or_pattern ::=
+	 _logical_and_pattern ( logical_or_operator _logical_and_pattern )*
 
-named_argument ::=  ( label _expression )
+_logical_and_pattern ::=
+	 _relational_pattern ( logical_and_operator _relational_pattern )*
 
-cascade_section ::=   (  ( '..'  cascade_selector (  argument_part )*  (  _cascade_subsection )*  ( _cascade_assignment_section )?  )  )
+_relational_pattern ::=
+	 ( relational_operator | equality_operator ) _real_expression | _unary_pattern
 
-_cascade_subsection ::=  ( assignable_selector (  argument_part )*  )
+_unary_pattern ::=
+	 cast_pattern
+	| null_check_pattern
+	| null_assert_pattern
+	| _primary_pattern
 
-_cascade_assignment_section ::=  ( _assignment_operator _expression_without_cascade )
+_primary_pattern ::=
+	 constant_pattern
+	| variable_pattern
+	| _parenthesized_pattern
+	| list_pattern
+	| map_pattern
+	| record_pattern
+	| object_pattern
 
-cascade_selector ::=  ( ( ( _nullable_type )?  '['  _expression ']'  )  |  identifier )
+cast_pattern ::=
+	 _primary_pattern 'as' _type
 
-argument_part ::=  ( ( type_arguments )?  arguments )
+null_check_pattern ::=
+	 _primary_pattern '?'
 
-unconditional_assignable_selector ::=  ( ( ( _nullable_type )?  '['  _expression ']'  )  |  ( '.'  identifier )  )
+null_assert_pattern ::=
+	 _primary_pattern '!'
 
-assignable_selector ::=  ( unconditional_assignable_selector |  ( '?.'  identifier )  )
+constant_pattern ::=
+	 _bool_literal
+	| null_literal
+	| minus_operator? _numeric_literal
+	| string_literal
+	| symbol_literal
+	| identifier
+	| qualified
+	| const_object_expression
+	| const_builtin type_arguments? '[' _element ( ',' _element )* ','? ']'
+	| const_builtin type_arguments? '{' _element ( ',' _element )* ','? '}'
+	| const_builtin '(' _expression ')'
 
-type_arguments ::=  ( ( '<'  ( ( _type (  ( ','  _type )  )*  )  )?  '>'  )  )
+variable_pattern ::=
+	 _final_var_or_type identifier
 
-wildcard ::=  ( ( _metadata )?  '?'  ( _wildcard_bounds )?  )
+_parenthesized_pattern ::=
+	 '(' _pattern ')'
 
-_wildcard_bounds ::=  ( ( 'extends'  _type )  |  ( super _type )  )
+list_pattern ::=
+	 type_arguments? '[' ( _list_pattern_element ( ',' _list_pattern_element )* ','? )? ']'
 
-dimensions ::=   (  ( ( ( _metadata )?  '['  ']'  )  )+  )
+_list_pattern_element ::=
+	 _pattern
+	| rest_pattern
 
-_statement ::=  ( block |  local_variable_declaration |  for_statement |  while_statement |  do_statement |  switch_statement |  if_statement |  try_statement |  break_statement |  continue_statement |  return_statement |  yield_statement |  yield_each_statement |  expression_statement |  assert_statement |  labeled_statement |  lambda_expression )
+rest_pattern ::=
+	 '...' _pattern?
 
-block ::=  ( '{'  (  _statement )*  '}'  )
+map_pattern ::=
+	 type_arguments? '{' ( _map_pattern_entry ( ',' _map_pattern_entry )* ','? )? '}'
 
-expression_statement ::=  ( _expression _semicolon )
+_map_pattern_entry ::=
+	 _expression ':' _pattern
+	| '...'
 
-labeled_statement ::=  ( identifier ':'  _statement )
+record_pattern ::=
+	 '(' _pattern_field ( ',' _pattern_field )* ','? ')'
 
-assert_statement ::=  ( assertion ';'  )
+_pattern_field ::=
+	 ( identifier? ':' )? _pattern
 
-assertion ::=  ( _assert_builtin '('  _expression ( ( ','  _expression ( ','  )?  )  )?  ')'  )
+object_pattern ::=
+	 _type_name type_arguments? '(' _pattern_field ( ',' _pattern_field )* ','? ')'
 
-switch_statement ::=  ( 'switch'  (  parenthesized_expression )  (  switch_block )  )
+pattern_variable_declaration ::=
+	 ( final_builtin | inferred_type ) _outer_pattern '=' _expression
 
-switch_block ::=  ( '{'  (  ( switch_label |  _statement )  )*  '}'  )
+_outer_pattern ::=
+	 _parenthesized_pattern
+	| list_pattern
+	| map_pattern
+	| record_pattern
+	| object_pattern
 
-switch_label ::=  ( ( case_builtin _expression ':'  )  |  ( 'default'  ':'  )  )
+pattern_assignment ::=
+	 _outer_pattern '=' _expression
 
-do_statement ::=  ( 'do'  (  _statement )  'while'  (  parenthesized_expression )  _semicolon )
+switch_block ::=
+	 '{' switch_statement_case* switch_statement_default? '}'
 
-break_statement ::=  ( _break_builtin ( identifier )?  _semicolon )
+switch_statement_case ::=
+	 label* case_builtin _guarded_pattern ':' _statement*
 
-continue_statement ::=  ( 'continue'  ( identifier )?  _semicolon )
+switch_statement_default ::=
+	 label* 'default' ':' _statement*
 
-yield_statement ::=  ( 'yield'  _expression _semicolon )
+switch_case ::=
+	 label* case_builtin _guarded_pattern ':' _statement+
 
-yield_each_statement ::=  ( 'yield'  '*'  _expression _semicolon )
+default_case ::=
+	 label* 'default' ':' _statement+
 
-return_statement ::=  ( 'return'  ( _expression )?  _semicolon )
+switch_label ::=
+	 label* ( case_builtin _expression ':' | 'default' ':' )
 
-throw_statement ::=  ( 'throw'  _expression _semicolon )
+do_statement ::=
+	 'do' _statement 'while' parenthesized_expression _semicolon
 
-try_statement ::=  ( _try_head ( finally_clause |  ( ( _on_part )+  ( finally_clause )?  )  )  )
+break_statement ::=
+	 _break_builtin identifier? _semicolon
 
-_on_part ::=  ( ( catch_clause block )  |  ( 'on'  _type_not_void ( catch_clause )?  block )  )
+continue_statement ::=
+	 'continue' identifier? _semicolon
 
-_try_head ::=  ( 'try'  (  block )  )
+yield_statement ::=
+	 'yield' _expression _semicolon
 
-catch_clause ::=  ( 'catch'  '('  identifier ( ( ','  identifier )  )?  ')'  )
+yield_each_statement ::=
+	 'yield' '*' _expression _semicolon
 
-catch_type ::=  ( _type (  ( '|'  _type )  )*  )
+return_statement ::=
+	 'return' _expression? _semicolon
 
-finally_clause ::=  ( 'finally'  block )
+throw_statement ::=
+	 'throw' _expression _semicolon
 
-if_element ::=   (  ( 'if'  (  parenthesized_expression )  (  _element )  ( ( 'else'  (  _element )  )  )?  )  )
+try_statement ::=
+	 _try_head ( finally_clause | _on_part+ finally_clause? )?
 
-if_statement ::=   (  ( 'if'  (  parenthesized_expression )  (  _statement )  ( ( 'else'  (  _statement )  )  )?  )  )
+_on_part ::=
+	 catch_clause block
+	| 'on' _type_not_void catch_clause? block
 
-while_statement ::=  ( 'while'  (  parenthesized_expression )  (  _statement )  )
+_try_head ::=
+	 'try' block
 
-for_statement ::=  ( ( 'await'  )?  'for'  '('  _for_loop_parts ')'  (  _statement )  )
+catch_clause ::=
+	 'catch' catch_parameters
 
-_for_loop_parts ::=  ( ( ( _declared_identifier |  identifier )  'in'  (  _expression )  )  |  ( ( ( (  local_variable_declaration )  |  ( ( ( (  _expression )  (  ( ','  (  _expression )  )  )*  )  )?  _semicolon )  )  )?  (  ( _expression )?  )  _semicolon ( ( (  _expression )  (  ( ','  (  _expression )  )  )*  )  )?  )  )
+catch_parameters ::=
+	 '(' identifier ( ',' identifier )? ')'
 
-for_element ::=  ( ( 'await'  )?  'for'  '('  _for_loop_parts ')'  (  _element )  )
+catch_type ::=
+	 _type ( '|' _type )*
 
-_annotation ::=  ( marker_annotation |  annotation )
+finally_clause ::=
+	 'finally' block
 
-marker_annotation ::=  ( '@'  (  ( identifier |  scoped_identifier )  )  )
+if_element ::=
+	 'if' '(' _expression ( 'case' _guarded_pattern )? ')' _element ( 'else' _element )?
 
-annotation ::=  ( '@'  (  ( identifier |  scoped_identifier )  )  (  arguments )  )
+if_statement ::=
+	 'if' '(' _expression ( 'case' _guarded_pattern )? ')' _statement ( 'else' _statement )?
 
-_declaration ::=   (  ( import_specification |  class_definition |  enum_declaration )  )
+while_statement ::=
+	 'while' parenthesized_expression _statement
 
-requires_modifier ::=  ( 'transitive'  |  _static )
+for_statement ::=
+	 'await'? 'for' for_loop_parts _statement
 
-module_name ::=  ( identifier |  ( module_name '.'  identifier )  )
+for_loop_parts ::=
+	 '(' _for_loop_parts ')'
 
-import_or_export ::=   (  ( library_import |  library_export )  )
+_for_loop_parts ::=
+	 ( _declared_identifier | identifier ) 'in' _expression
+	| ( local_variable_declaration | ( _expression ( ',' _expression )* )? _semicolon )? _expression? _semicolon ( _expression ( ',' _expression )* )?
+	| ( final_builtin | inferred_type ) _outer_pattern 'in' _expression
 
-library_import ::=  ( ( _metadata )?  import_specification )
+for_element ::=
+	 'await'? 'for' for_loop_parts _element
 
-library_export ::=  ( ( _metadata )?  _export configurable_uri (  combinator )*  _semicolon )
+annotation ::=
+	 '@' ( identifier | scoped_identifier ) ( type_arguments arguments | arguments )
 
-import_specification ::=  ( ( _import configurable_uri ( ( _as identifier )  )?  (  combinator )*  _semicolon )  |  ( _import uri _deferred _as identifier (  combinator )*  _semicolon )  )
+_declaration ::=
+	 import_specification | class_definition | enum_declaration
 
-part_directive ::=  ( ( _metadata )?  'part'  uri _semicolon )
+import_or_export ::=
+	 library_import | library_export
 
-part_of_directive ::=  ( ( _metadata )?  'part'  'of'  ( dotted_identifier_list |  uri )  _semicolon )
+library_import ::=
+	 _metadata? import_specification
 
-uri ::=  string_literal
+library_export ::=
+	 _metadata? _export configurable_uri combinator* _semicolon
 
-configurable_uri ::=  ( uri (  configuration_uri )*  )
+import_specification ::=
+	 _import configurable_uri ( _as identifier )? combinator* _semicolon
+	| _import uri _deferred _as identifier combinator* _semicolon
 
-configuration_uri ::=  ( 'if'  '('  uri_test ')'  uri )
+part_directive ::=
+	 _metadata? 'part' uri _semicolon
 
-uri_test ::=  ( dotted_identifier_list ( ( '=='  string_literal )  )?  )
+part_of_directive ::=
+	 _metadata? 'part' 'of' ( dotted_identifier_list | uri ) _semicolon
 
-combinator ::=  ( ( 'show'  _identifier_list )  |  ( 'hide'  _identifier_list )  )
+uri ::=
+	 string_literal
 
-_identifier_list ::=  ( identifier (  ( ','  identifier )  )*  )
+configurable_uri ::=
+	 uri configuration_uri*
 
-asterisk ::=  '*'
+configuration_uri ::=
+	 'if' configuration_uri_condition uri
 
-enum_declaration ::=  ( 'enum'  (  identifier )  (  enum_body )  )
+configuration_uri_condition ::=
+	 '(' uri_test ')'
 
-enum_body ::=  ( '{'  ( enum_constant (  ( ','  enum_constant )  )*  ( ','  )?  )  '}'  )
+uri_test ::=
+	 dotted_identifier_list ( '==' string_literal )?
 
-enum_constant ::=  ( ( _metadata )?  (  identifier )  )
+combinator ::=
+	 'show' _identifier_list
+	| 'hide' _identifier_list
 
-type_alias ::=  ( ( _typedef _type_name ( type_parameters )?  '='  function_type ';'  )  |  ( _typedef ( _type )?  _type_name _formal_parameter_part ';'  )  )
+_identifier_list ::=
+	 identifier ( ',' identifier )*
 
-class_definition ::=  ( ( ( 'abstract'  )?  'class'  (  identifier )  ( (  type_parameters )  )?  ( (  superclass )  )?  ( (  interfaces )  )?  (  class_body )  )  |  ( ( _metadata )?  ( 'abstract'  )?  'class'  mixin_application_class )  )
+asterisk ::=
+	 '*'
 
-extension_declaration ::=  ( ( 'extension'  ( (  identifier )  )?  ( (  type_parameters )  )?  'on'  (  _type )  (  extension_body )  )  )
+enum_declaration ::=
+	 _metadata? 'enum' identifier type_parameters? mixins? interfaces? enum_body
 
-_metadata ::=   (  ( _annotation )+  )
+enum_body ::=
+	 '{' enum_constant ( ',' enum_constant )* ','? ( ';' ( _metadata? _class_member_definition )* )? '}'
 
-type_parameters ::=  ( '<'  ( type_parameter (  ( ','  type_parameter )  )*  )  '>'  )
+enum_constant ::=
+	 _metadata? identifier argument_part?
+	| _metadata? identifier type_arguments? '.' ( identifier | _new_builtin ) arguments
 
-type_parameter ::=  ( ( _metadata )?  (  identifier )  ( _nullable_type )?  ( type_bound )?  )
+type_alias ::=
+	 _metadata? _typedef _type? _type_name _formal_parameter_part ';'
+	| _metadata? _typedef _type_name type_parameters? '=' _type ';'
 
-type_bound ::=  ( 'extends'  _type_not_void )
+_class_modifiers ::=
+	 ( sealed | abstract? ( base | interface | 'final' | 'inline' )? ) 'class'
 
-superclass ::=  ( ( 'extends'  _type_not_void ( mixins )?  )  |  mixins )
+_mixin_class_modifiers ::=
+	 abstract? base? mixin 'class'
 
-mixins ::=  ( 'with'  _type_not_void_list )
+class_definition ::=
+	 _metadata? ( _class_modifiers | _mixin_class_modifiers ) identifier type_parameters? superclass? interfaces? class_body
+	| _metadata? _class_modifiers mixin_application_class
 
-mixin_application_class ::=  ( identifier ( type_parameters )?  '='  mixin_application _semicolon )
+extension_declaration ::=
+	 _metadata? 'extension' identifier? type_parameters? 'on' _type extension_body
 
-mixin_application ::=  ( _type_not_void mixins ( interfaces )?  )
+_metadata ::=
+	 annotation+
 
-mixin_declaration ::=  ( _mixin identifier ( type_parameters )?  ( ( 'on'  _type_not_void_list )  )?  ( interfaces )?  class_body )
+type_parameters ::=
+	 '<' type_parameter ( ',' type_parameter )* '>'
 
-interfaces ::=  ( _implements _type_not_void_list )
+type_parameter ::=
+	 _metadata? ( identifier | nullable_type ) nullable_type? type_bound?
 
-interface_type_list ::=  ( _type (  ( ','  _type )  )*  )
+type_bound ::=
+	 'extends' _type_not_void
 
-class_body ::=  ( '{'  (  ( ( _metadata )?  _class_member_definition )  )*  '}'  )
+superclass ::=
+	 'extends' _type_not_void mixins?
+	| mixins
 
-extension_body ::=  ( '{'  (  ( ( ( _metadata )?  declaration _semicolon )  |  ( ( _metadata )?  ( method_signature function_body )  )  )  )*  '}'  )
+mixins ::=
+	 'with' _type_not_void_list
 
-_class_member_definition ::=  ( ( declaration _semicolon )  |  ( method_signature function_body )  )
+mixin_application_class ::=
+	 identifier type_parameters? '=' mixin_application _semicolon
 
-getter_signature ::=  ( ( _type )?  _get (  identifier )  ( _native )?  )
+mixin_application ::=
+	 _type_not_void mixins interfaces?
 
-setter_signature ::=  ( ( _type )?  _set (  identifier )  _formal_parameter_part ( _native )?  )
+mixin_declaration ::=
+	 _metadata? base? mixin identifier type_parameters? ( 'on' _type_not_void_list )? interfaces? class_body
 
-method_signature ::=  ( ( constructor_signature ( initializers )?  )  |  factory_constructor_signature |  ( ( _static )?  ( function_signature |  getter_signature |  setter_signature )  )  |  operator_signature )
+interfaces ::=
+	 _implements _type_not_void_list
 
-declaration ::=  ( ( constant_constructor_signature ( ( redirection |  initializers )  )?  )  |  ( constructor_signature ( ( redirection |  initializers )  )?  )  |  ( _external ( const_builtin )?  factory_constructor_signature )  |  ( ( const_builtin )?  factory_constructor_signature _native )  |  ( _external constant_constructor_signature )  |  redirecting_factory_constructor_signature |  ( _external constructor_signature )  |  ( ( _external_builtin )?  ( _static )?  getter_signature )  |  ( ( _external_and_static )?  setter_signature )  |  ( ( _external )?  operator_signature )  |  ( ( _external_and_static )?  function_signature )  |  ( _static function_signature )  |  ( _static _final_or_const ( _type )?  static_final_declaration_list )  |  ( ( _late_builtin )?  final_builtin ( _type )?  initialized_identifier_list )  |  ( ( _static_or_covariant )?  ( _late_builtin )?  ( _type |  inferred_type )  initialized_identifier_list )  )
+interface_type_list ::=
+	 _type ( ',' _type )*
 
-initialized_identifier_list ::=  ( initialized_identifier (  ( ','  initialized_identifier )  )*  )
+class_body ::=
+	 '{' ( _metadata? _class_member_definition )* '}'
 
-initialized_identifier ::=  ( identifier ( ( '='  _expression )  )?  )
+extension_body ::=
+	 '{' ( _metadata? declaration _semicolon | _metadata? method_signature function_body )* '}'
 
-static_final_declaration_list ::=  ( static_final_declaration (  ( ','  static_final_declaration )  )*  )
+_class_member_definition ::=
+	 declaration _semicolon
+	| method_signature function_body
 
-binary_operator ::=  ( multiplicative_operator |  additive_operator |  shift_operator |  relational_operator |  '=='  |  bitwise_operator )
+getter_signature ::=
+	 _type? _get identifier _native?
 
-operator_signature ::=  ( ( _type )?  _operator ( '~'  |  binary_operator |  '[]'  |  '[]='  )  formal_parameter_list ( _native )?  )
+setter_signature ::=
+	 _type? _set identifier _formal_parameter_part _native?
 
-static_final_declaration ::=  ( identifier '='  _expression )
+method_signature ::=
+	 constructor_signature initializers?
+	| factory_constructor_signature
+	| _static? ( function_signature | getter_signature | setter_signature )
+	| operator_signature
 
-_external_and_static ::=  ( _external ( _static )?  )
+declaration ::=
+	 constant_constructor_signature ( redirection | initializers )?
+	| constructor_signature ( redirection | initializers )?
+	| _external const_builtin? factory_constructor_signature
+	| const_builtin? factory_constructor_signature _native
+	| _external constant_constructor_signature
+	| redirecting_factory_constructor_signature
+	| _external constructor_signature
+	| _external_builtin? _static? getter_signature
+	| _external_and_static? setter_signature
+	| _external? operator_signature
+	| _external_and_static? function_signature
+	| _static function_signature
+	| _static ( _final_or_const _type? static_final_declaration_list | _late_builtin ( final_builtin _type? initialized_identifier_list | ( _type | inferred_type ) initialized_identifier_list ) | ( _type | inferred_type ) initialized_identifier_list )
+	| _covariant ( _late_builtin ( final_builtin _type? identifier_list | ( _type | inferred_type ) initialized_identifier_list ) | ( _type | inferred_type ) initialized_identifier_list )
+	| _late_builtin? final_builtin _type? initialized_identifier_list
+	| _late_builtin? _var_or_type initialized_identifier_list
 
-_static_or_covariant ::=  ( _covariant |  _static )
+identifier_list ::=
+	 identifier ( ',' identifier )*
 
-_final_or_const ::=  ( final_builtin |  const_builtin )
+initialized_identifier_list ::=
+	 initialized_identifier ( ',' initialized_identifier )*
 
-static_initializer ::=  ( _static block )
+initialized_identifier ::=
+	 identifier ( '=' _expression )?
 
-initializers ::=  ( ':'  ( initializer_list_entry (  ( ','  initializer_list_entry )  )*  )  )
+static_final_declaration_list ::=
+	 static_final_declaration ( ',' static_final_declaration )*
 
-initializer_list_entry ::=  ( ( 'super'  ( ( '.'  qualified )  )?  arguments )  |  ( 'super'  arguments )  |  field_initializer |  assertion )
+binary_operator ::=
+	 multiplicative_operator
+	| additive_operator
+	| shift_operator
+	| relational_operator
+	| '=='
+	| bitwise_operator
 
-field_initializer ::=  ( ( ( this '.'  )  )?  identifier '='  _real_expression (  cascade_section )*  )
+operator_signature ::=
+	 _type? _operator ( '~' | binary_operator | '[]' | '[]=' ) formal_parameter_list _native?
 
-factory_constructor_signature ::=  ( _factory ( identifier (  ( '.'  identifier )  )*  )  formal_parameter_list )
+static_final_declaration ::=
+	 identifier '=' _expression
 
-redirecting_factory_constructor_signature ::=  ( ( const_builtin )?  _factory ( identifier (  ( '.'  identifier )  )*  )  formal_parameter_list '='  _type_not_void ( ( '.'  identifier )  )?  )
+_external_and_static ::=
+	 _external _static?
 
-redirection ::=  ( ':'  this ( ( '.'  identifier )  )?  arguments )
+_static_or_covariant ::=
+	 _covariant
+	| _static
 
-constructor_signature ::=  ( (  ( identifier ( ( '.'  identifier )  )?  )  )  (  formal_parameter_list )  )
+_final_or_const ::=
+	 final_builtin
+	| const_builtin
 
-constant_constructor_signature ::=  ( const_builtin qualified formal_parameter_list )
+static_initializer ::=
+	 _static block
 
-constructor_body ::=  ( '{'  ( explicit_constructor_invocation )?  (  _statement )*  '}'  )
+initializers ::=
+	 ':' initializer_list_entry ( ',' initializer_list_entry )*
 
-explicit_constructor_invocation ::=  ( ( ( (  ( type_arguments )?  )  (  ( this |  super )  )  )  |  ( (  ( _ambiguous_name |  _primary )  )  '.'  (  ( type_arguments )?  )  (  super )  )  )  (  arguments )  _semicolon )
+initializer_list_entry ::=
+	 super arguments
+	| super '.' ( identifier | _new_builtin ) arguments
+	| field_initializer
+	| assertion
 
-_ambiguous_name ::=  ( identifier |  scoped_identifier )
+field_initializer ::=
+	 ( this '.' )? identifier '=' _real_expression cascade_section*
 
-scoped_identifier ::=  ( (  ( identifier |  scoped_identifier )  )  '.'  (  identifier )  )
+factory_constructor_signature ::=
+	 _factory identifier ( '.' identifier )* formal_parameter_list
 
-variable_declaration ::=  ( _declared_identifier ( ( ','  ( identifier (  ( ','  identifier )  )*  )  )  )?  )
+redirecting_factory_constructor_signature ::=
+	 const_builtin? _factory identifier ( '.' identifier )* formal_parameter_list '=' _type_not_void ( '.' identifier )?
 
-initialized_variable_definition ::=  ( _declared_identifier ( (  (  '='  )  (  _expression )  )  )?  (  ( ','  initialized_identifier )  )*  )
+redirection ::=
+	 ':' this ( '.' _identifier_or_new )? arguments
 
-_declared_identifier ::=  ( ( _metadata )?  ( _covariant )?  _final_const_var_or_type (  identifier )  )
+constructor_signature ::=
+	 ( identifier ( '.' _identifier_or_new )? ) formal_parameter_list
 
-_final_const_var_or_type ::=  ( ( ( _late_builtin )?  final_builtin ( _type )?  )  |  ( const_builtin ( _type )?  )  |  ( ( _late_builtin )?  ( inferred_type |  _type )  )  )
+constant_constructor_signature ::=
+	 const_builtin identifier ( '.' _identifier_or_new )? formal_parameter_list
 
-_type ::=  ( ( function_type ( _nullable_type )?  )  |  _type_not_function )
+constructor_body ::=
+	 '{' explicit_constructor_invocation? _statement* '}'
 
-_type_not_function ::=  ( _type_not_void_not_function |  void_type )
+explicit_constructor_invocation ::=
+	 ( type_arguments? ( this | super ) | ( _ambiguous_name | _primary ) '.' type_arguments? super ) arguments _semicolon
 
-_type_not_void_not_function ::=  ( ( _type_name ( type_arguments )?  ( _nullable_type )?  )  |  ( _function_builtin_identifier ( _nullable_type )?  )  )
+_ambiguous_name ::=
+	 identifier
+	| scoped_identifier
 
-function_type ::=  ( _function_type_tails |  ( _type_not_function _function_type_tails )  )
+scoped_identifier ::=
+	 ( identifier | scoped_identifier ) '.' identifier
 
-_function_type_tails ::=  ( _function_type_tail )+
+variable_declaration ::=
+	 _declared_identifier ( ',' identifier ( ',' identifier )* )?
 
-_function_type_tail ::=  ( _function_builtin_identifier ( type_parameters )?  ( _nullable_type )?  ( parameter_type_list )?  ( _nullable_type )?  )
+initialized_variable_definition ::=
+	 _declared_identifier ( '=' _expression )? ( ',' initialized_identifier )*
 
-parameter_type_list ::=  ( '('  ( ( ( normal_parameter_type (  ( ','  normal_parameter_type )  )*  ( ','  )?  )  |  ( ( normal_parameter_type (  ( ','  normal_parameter_type )  )*  )  ','  optional_parameter_types )  |  optional_parameter_types )  )?  ')'  )
+_declared_identifier ::=
+	 _metadata? _covariant? _final_const_var_or_type identifier
 
-normal_parameter_type ::=  ( typed_identifier |  _type )
+_final_const_var_or_type ::=
+	 _late_builtin? final_builtin _type?
+	| const_builtin _type?
+	| _late_builtin? _var_or_type
 
-optional_parameter_types ::=  ( optional_positional_parameter_types |  named_parameter_types )
+_type ::=
+	 function_type nullable_type?
+	| _type_not_function
 
-optional_positional_parameter_types ::=  ( '['  ( normal_parameter_type (  ( ','  normal_parameter_type )  )*  ( ','  )?  )  ']'  )
+_type_not_function ::=
+	 _type_not_void_not_function
+	| record_type nullable_type?
+	| void_type
 
-named_parameter_types ::=  ( '{'  ( typed_identifier (  ( ','  typed_identifier )  )*  ( ','  )?  )  '}'  )
+_type_not_void_not_function ::=
+	 _type_name type_arguments? nullable_type?
+	| _function_builtin_identifier nullable_type?
 
-_type_not_void ::=  ( ( function_type ( _nullable_type )?  )  |  _type_not_void_not_function )
+function_type ::=
+	 _function_type_tails
+	| _type_not_function _function_type_tails
 
-_type_not_void_list ::=  ( _type_not_void (  ( ','  _type_not_void )  )*  )
+_function_type_tails ::=
+	 _function_type_tail+
 
-_type_name ::=  ( (  identifier )  ( _type_dot_identifier )?  )
+_function_type_tail ::=
+	 _function_builtin_identifier type_parameters? nullable_type? parameter_type_list? nullable_type?
 
-_type_dot_identifier ::=   (  ( '.'  (  identifier )  )  )
+parameter_type_list ::=
+	 '(' ( normal_parameter_type ( ',' normal_parameter_type )* ','? | normal_parameter_type ( ',' normal_parameter_type )* ',' optional_parameter_types | optional_parameter_types )? ')'
 
-typed_identifier ::=  ( ( _metadata )?  _type identifier )
+normal_parameter_type ::=
+	 _metadata? ( typed_identifier | _type )
 
-_nullable_type ::=   (  '?'  )
+optional_parameter_types ::=
+	 optional_positional_parameter_types
+	| named_parameter_types
 
-floating_point_type ::=  (  'double'  )
+optional_positional_parameter_types ::=
+	 '[' normal_parameter_type ( ',' normal_parameter_type )* ','? ']'
 
-boolean_type ::=   (  'bool'  )
+named_parameter_types ::=
+	 '{' _named_parameter_type ( ',' _named_parameter_type )* ','? '}'
 
-void_type ::=  (  'void'  )
+_named_parameter_type ::=
+	 _metadata? _required? typed_identifier
 
-inferred_type ::=   (  'var'  )
+_type_not_void ::=
+	 function_type nullable_type?
+	| record_type nullable_type?
+	| _type_not_void_not_function
 
-_method_header ::=  ( ( ( (  type_parameters )  ( _metadata )?  )  )?  (  _type )  _method_declarator ( throws )?  )
+record_type ::=
+	 '(' ')'
+	| '(' record_type_field ( ',' record_type_field )* ',' '{' record_type_named_field ( ',' record_type_named_field )* ','? '}' ')'
+	| '(' record_type_field ( ',' record_type_field )* ','? ')'
+	| '(' '{' record_type_named_field ( ',' record_type_named_field )* ','? '}' ')'
 
-_method_declarator ::=  ( (  identifier )  (  formal_parameter_list )  (  ( dimensions )?  )  )
+record_type_field ::=
+	 _metadata? _type identifier?
 
-function_body ::=  ( ( ( 'async'  )?  '=>'  _expression _semicolon )  |  ( ( ( 'async'  |  'async*'  |  'sync*'  )  )?  block )  )
+record_type_named_field ::=
+	 _metadata? typed_identifier
 
-function_expression_body ::=  ( ( ( 'async'  )?  '=>'  _expression )  |  ( ( ( 'async'  |  'async*'  |  'sync*'  )  )?  block )  )
+_type_not_void_list ::=
+	 _type_not_void ( ',' _type_not_void )*
 
-function_signature ::=  ( ( _type )?  (  ( (  _get )  |  (  _set )  |  identifier )  )  _formal_parameter_part ( _native )?  )
+_type_name ::=
+	 identifier _type_dot_identifier?
 
-_formal_parameter_part ::=  ( ( type_parameters )?  formal_parameter_list )
+_type_dot_identifier ::=
+	 '.' identifier
 
-formal_parameter_list ::=  _strict_formal_parameter_list
+typed_identifier ::=
+	 _type identifier
 
-_strict_formal_parameter_list ::=  ( ( '('  ')'  )  |  ( '('  _normal_formal_parameters ( ','  )?  ')'  )  |  ( '('  _normal_formal_parameters ','  optional_formal_parameters ')'  )  |  ( '('  optional_formal_parameters ')'  )  )
+nullable_type ::=
+	 '?'
 
-_normal_formal_parameters ::=  ( formal_parameter (  ( ','  formal_parameter )  )*  )
+nullable_selector ::=
+	 '?'
 
-optional_formal_parameters ::=  ( _optional_postional_formal_parameters |  _named_formal_parameters )
+floating_point_type ::=
+	 'double'
 
-positional_parameters ::=  ( '['  ( _default_formal_parameter (  ( ','  _default_formal_parameter )  )*  )  ']'  )
+boolean_type ::=
+	 'bool'
 
-_optional_postional_formal_parameters ::=  ( '['  ( _default_formal_parameter (  ( ','  _default_formal_parameter )  )*  ( ','  )?  )  ']'  )
+void_type ::=
+	 'void'
 
-_named_formal_parameters ::=  ( '{'  ( _default_named_parameter (  ( ','  _default_named_parameter )  )*  ( ','  )?  )  '}'  )
+_var_or_type ::=
+	 _type
+	| inferred_type _type?
 
-formal_parameter ::=  _normal_formal_parameter
+_final_var_or_type ::=
+	 inferred_type
+	| final_builtin
+	| final_builtin? _type
 
-_default_formal_parameter ::=  ( formal_parameter ( ( '='  _expression )  )?  )
+inferred_type ::=
+	 'var'
 
-_default_named_parameter ::=  ( ( ( 'required'  )?  formal_parameter ( ( '='  _expression )  )?  )  |  ( ( 'required'  )?  formal_parameter ( ( ':'  _expression )  )?  )  )
+function_body ::=
+	 'async'? '=>' _expression _semicolon
+	| ( 'async' | 'async*' | 'sync*' )? block
 
-_normal_formal_parameter ::=  ( ( _metadata )?  ( _function_formal_parameter |  _simple_formal_parameter |  constructor_param )  )
+function_expression_body ::=
+	 'async'? '=>' _expression
+	| ( 'async' | 'async*' | 'sync*' )? block
 
-_function_formal_parameter ::=  ( ( _covariant )?  ( _type )?  identifier _formal_parameter_part ( _nullable_type )?  )
+function_signature ::=
+	 _type? ( _get | _set | identifier ) _formal_parameter_part _native?
 
-_simple_formal_parameter ::=  ( _declared_identifier |  ( ( _covariant )?  identifier )  )
+_formal_parameter_part ::=
+	 type_parameters? formal_parameter_list
 
-constructor_param ::=  ( ( _final_const_var_or_type )?  this '.'  identifier ( _formal_parameter_part )?  )
+formal_parameter_list ::=
+	 _strict_formal_parameter_list
 
-receiver_parameter ::=  ( ( _metadata )?  _type ( ( identifier '.'  )  )?  this )
+_strict_formal_parameter_list ::=
+	 '(' ')'
+	| '(' _normal_formal_parameters ','? ')'
+	| '(' _normal_formal_parameters ',' optional_formal_parameters ')'
+	| '(' optional_formal_parameters ')'
 
-spread_parameter ::=  ( ( _metadata )?  _type '...'  _declared_identifier )
+_normal_formal_parameters ::=
+	 formal_parameter ( ',' formal_parameter )*
 
-throws ::=  ( 'throws'  ( _type (  ( ','  _type )  )*  )  )
+optional_formal_parameters ::=
+	 _optional_postional_formal_parameters
+	| _named_formal_parameters
 
-local_variable_declaration ::=  ( initialized_variable_definition _semicolon )
+positional_parameters ::=
+	 '[' _default_formal_parameter ( ',' _default_formal_parameter )* ']'
 
-script_tag ::=  ( '#!'  [^\n]+ '\n'  )
+_optional_postional_formal_parameters ::=
+	 '[' _default_formal_parameter ( ',' _default_formal_parameter )* ','? ']'
 
-library_name ::=  ( ( _metadata )?  'library'  dotted_identifier_list _semicolon )
+_named_formal_parameters ::=
+	 '{' _default_named_parameter ( ',' _default_named_parameter )* ','? '}'
 
-dotted_identifier_list ::=  ( identifier (  ( '.'  identifier )  )*  )
+formal_parameter ::=
+	 _normal_formal_parameter
 
-qualified ::=  ( identifier ( ( '.'  identifier )  )?  )
+_default_formal_parameter ::=
+	 formal_parameter ( '=' _expression )?
 
-_as ::=   (  'as'  )
+_default_named_parameter ::=
+	 _metadata? _required? formal_parameter ( '=' _expression )?
+	| _metadata? _required? formal_parameter ( ':' _expression )?
 
-_break_builtin ::=  (  'break'  )
+_normal_formal_parameter ::=
+	 _metadata? ( _function_formal_parameter | _simple_formal_parameter | constructor_param | super_formal_parameter )
 
-_assert_builtin ::=  (  'assert'  )
+_function_formal_parameter ::=
+	 _covariant? _type? identifier _formal_parameter_part nullable_type?
 
-case_builtin ::=  (  'case'  )
+_simple_formal_parameter ::=
+	 _declared_identifier
+	| _covariant? identifier
 
-_covariant ::=   (  'covariant'  )
+super_formal_parameter ::=
+	 _final_const_var_or_type? super '.' identifier _formal_parameter_part?
 
-_deferred ::=   (  'deferred'  )
+constructor_param ::=
+	 _final_const_var_or_type? this '.' identifier _formal_parameter_part?
 
-_dynamic ::=   (  'dynamic'  )
+local_variable_declaration ::=
+	 _metadata? initialized_variable_definition _semicolon
+	| _metadata? pattern_variable_declaration _semicolon
 
-_export ::=   (  'export'  )
+script_tag ::=
+	 '#!' '.'+ '\n' 
 
-_external ::=  _external_builtin
+library_name ::=
+	 _metadata? 'library' dotted_identifier_list _semicolon
 
-_factory ::=   (  'factory'  )
+dotted_identifier_list ::=
+	 identifier ( '.' identifier )*
 
-_function_builtin_identifier ::=   (  'Function'  )
+_identifier_or_new ::=
+	 identifier
+	| _new_builtin
 
-_get ::=   (  'get'  )
+qualified ::=
+	 _type_name '.' _identifier_or_new
+	| _type_name '.' _type_name '.' _identifier_or_new
 
-_native ::=  ( 'native'  ( string_literal )?  )
+_as ::=
+	 'as'
 
-_implements ::=   (  'implements'  )
+_break_builtin ::=
+	 'break'
 
-_import ::=   (  'import'  )
+_assert_builtin ::=
+	 'assert'
 
-_interface ::=   (  'interface'  )
+case_builtin ::=
+	 'case'
 
-_library ::=   (  'library'  )
+_covariant ::=
+	 'covariant'
 
-_operator ::=   (  'operator'  )
+_deferred ::=
+	 'deferred'
 
-_mixin ::=   (  'mixin'  )
+_dynamic ::=
+	 'dynamic'
 
-_part ::=   (  'part'  )
+_export ::=
+	 'export'
 
-_set ::=   (  'set'  )
+_external ::=
+	 _external_builtin
 
-_static ::=   (  'static'  )
+_factory ::=
+	 'factory'
 
-_typedef ::=   (  'typedef'  )
+_function_builtin_identifier ::=
+	 'Function'
 
-_new_builtin ::=   (  'new'  )
+_get ::=
+	 'get'
 
-const_builtin ::=  (  'const'  )
+_native ::=
+	 'native' string_literal?
 
-final_builtin ::=  (  'final'  )
+_implements ::=
+	 'implements'
 
-_late_builtin ::=   (  'late'  )
+_import ::=
+	 'import'
 
-_external_builtin ::=   (  'external'  )
+interface ::=
+	 'interface'
 
-this ::=   (  'this'  )
+base ::=
+	 'base'
 
-super ::=   (  'super'  )
+abstract ::=
+	 'abstract'
 
-label ::=  ( identifier ':'  )
+sealed ::=
+	 'sealed'
 
-_semicolon ::=  ( ';'  ( _automatic_semicolon )?  )
+_library ::=
+	 'library'
 
-identifier ::=  [a-zA-Z_$][\w$]*
+_operator ::=
+	 'operator'
 
-identifier_dollar_escaped ::=  ([a-zA-Z_]|('\\\$'))([\w]|('\\\$'))*
+mixin ::=
+	 'mixin'
 
-comment ::=  (  ( ( '//'  [^/][^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+_part ::=
+	 'part'
 
-documentation_comment ::=  (  ( ( '///'  [^\n]* )  )  )
+_required ::=
+	 'required'
+
+_set ::=
+	 'set'
+
+_static ::=
+	 'static'
+
+_typedef ::=
+	 'typedef'
+
+_new_builtin ::=
+	 'new'
+
+logical_and_operator ::=
+	 '&&'
+
+logical_or_operator ::=
+	 '||'
+
+const_builtin ::=
+	 'const'
+
+final_builtin ::=
+	 'final'
+
+_late_builtin ::=
+	 'late'
+
+_external_builtin ::=
+	 'external'
+
+this ::=
+	 'this'
+
+super ::=
+	 'super'
+
+label ::=
+	 identifier ':'
+
+_semicolon ::=
+	 ';'
+
+identifier ::=
+	 [a-zA-Z_$][a-zA-Z_$]*
+
+identifier_dollar_escaped ::=
+	 ([a-zA-Z_]|('\\$'))([a-zA-Z_]|('\\$'))*
+
+comment ::=
+	 _block_comment
+	| '//' ([^/#x0A]'.'*)?
+	| '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/'
+
+documentation_comment ::=
+	 _documentation_block_comment
+	| '///' '.'*
 

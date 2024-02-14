@@ -1,0 +1,322 @@
+//
+// From tree-sitter-ld/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+script_file ::=
+	 ifile_p1*
+
+extern_name_list ::=
+	 NAME ( ','? NAME )*
+
+filename ::=
+	 NAME
+
+ifile_p1 ::=
+	 memory
+	| sections
+	| phdrs
+	| startup
+	| high_level_library
+	| low_level_library
+	| floating_point_support
+	| statement_anywhere
+	| version
+	| ';'
+	| 'TARGET' '(' NAME ')'
+	| 'SEARCH_DIR' '(' filename ')'
+	| 'OUTPUT' '(' filename ')'
+	| 'OUTPUT_FORMAT' '(' NAME ')'
+	| 'OUTPUT_FORMAT' '(' NAME ',' NAME ',' NAME ')'
+	| 'OUTPUT_ARCH' '(' NAME ')'
+	| 'FORCE_COMMON_ALLOCATION'
+	| 'FORCE_GROUP_ALLOCATION'
+	| 'INHIBIT_COMMON_ALLOCATION'
+	| 'INPUT' '(' input_list ')'
+	| 'GROUP' '(' input_list ')'
+	| 'MAP' '(' filename ')'
+	| 'INCLUDE' filename
+	| 'NOCROSSREFS' '(' nocrossref_list? ')'
+	| 'NOCROSSREFS_TO' '(' nocrossref_list? ')'
+	| 'EXTERN' '(' extern_name_list ')'
+	| 'INSERT' 'AFTER' NAME
+	| 'INSERT' 'BEFORE' NAME
+	| 'REGION_ALIAS' '(' NAME ',' NAME ')'
+	| 'LD_FEATURE' '(' NAME ')'
+
+input_list ::=
+	 ( NAME | LNAME | 'AS_NEEDED' '(' input_list ')' ) ( ','? ( NAME | LNAME | 'AS_NEEDED' '(' input_list ')' ) )*
+
+sections ::=
+	 'SECTIONS' '{' sec_or_group_p1? '}'
+
+sec_or_group_p1 ::=
+	 ( section | statement_anywhere )+
+
+statement_anywhere ::=
+	 'ENTRY' '(' NAME ')'
+	| assignment separator
+	| 'ASSERT' '(' exp ',' NAME ')'
+
+section_name_spec ::=
+	 wildcard_maybe_reverse
+	| ( 'SORT_BY_NAME' | 'SORT' | 'SORT_BY_ALIGNMENT' | 'SORT_NONE' | 'SORT_BY_INIT_PRIORITY' ) '(' wildcard_maybe_reverse ')'
+	| ( 'SORT_BY_NAME' | 'SORT' ) '(' ( 'SORT_BY_ALIGNMENT' | 'SORT_BY_NAME' | 'SORT' ) '(' wildcard_maybe_reverse ')' ')'
+	| 'SORT_BY_ALIGNMENT' '(' ( 'SORT_BY_NAME' | 'SORT' | 'SORT_BY_ALIGNMENT' ) '(' wildcard_maybe_reverse ')' ')'
+	| 'REVERSE' '(' ( 'SORT_BY_NAME' | 'SORT' | 'SORT_BY_INIT_PRIORITY' ) '(' wildcard_maybe_exclude ')' ')'
+
+wildcard_maybe_exclude ::=
+	 ( 'EXCLUDE_FILE' '(' exclude_name_list ')' )? wildcard_name
+
+wildcard_maybe_reverse ::=
+	 wildcard_maybe_exclude
+	| 'REVERSE' '(' wildcard_maybe_exclude ')'
+
+filename_spec ::=
+	 wildcard_maybe_reverse
+	| ( 'SORT_BY_NAME' | 'SORT' | 'SORT_NONE' ) '(' wildcard_maybe_reverse ')'
+	| 'REVERSE' '(' ( 'SORT_BY_NAME' | 'SORT' ) '(' wildcard_maybe_exclude ')' ')'
+
+sect_flag_list ::=
+	 NAME ( '&' NAME )*
+
+sect_flags ::=
+	 'INPUT_SECTION_FLAGS' '(' sect_flag_list ')'
+
+exclude_name_list ::=
+	 wildcard_name+
+
+section_name_list ::=
+	 section_name_spec ( ','? section_name_spec )*
+
+input_section_spec_no_keep ::=
+	 NAME
+	| sect_flags NAME
+	| sect_flags? '[' section_name_list ']'
+	| sect_flags? filename_spec '(' section_name_list ')'
+
+input_section_spec ::=
+	 input_section_spec_no_keep
+	| 'KEEP' '(' input_section_spec_no_keep ')'
+
+statement ::=
+	 ';'
+	| assignment separator
+	| 'CREATE_OBJECT_SYMBOLS'
+	| 'CONSTRUCTORS'
+	| ( 'SORT_BY_NAME' | 'SORT' ) '(' 'CONSTRUCTORS' ')'
+	| input_section_spec
+	| length '(' mustbe_exp ')'
+	| 'ASCIZ' NAME
+	| 'FILL' '(' fill_exp ')'
+	| 'LINKER_VERSION'
+	| 'ASSERT' '(' exp ',' NAME ')' separator
+	| 'INCLUDE' filename
+
+statement_list ::=
+	 statement+
+
+length ::=
+	 'QUAD'
+	| 'SQUAD'
+	| 'LONG'
+	| 'SHORT'
+	| 'BYTE'
+
+fill_exp ::=
+	 mustbe_exp
+
+assign_op ::=
+	 '+='
+	| '-='
+	| '*='
+	| '/='
+	| '<<='
+	| '>>='
+	| '&='
+	| '|='
+	| '^='
+
+separator ::=
+	 ';'
+	| ','
+
+assignment ::=
+	 NAME '=' mustbe_exp
+	| NAME assign_op mustbe_exp
+	| ( 'HIDDEN' | 'PROVIDE' | 'PROVIDE_HIDDEN' ) '(' NAME '=' mustbe_exp ')'
+
+memory ::=
+	 'MEMORY' '{' memory_spec_list? '}'
+
+memory_spec_list ::=
+	 memory_spec ( ','? memory_spec )*
+
+memory_spec ::=
+	 NAME attributes? ':' origin_spec ','? length_spec
+	| 'INCLUDE' filename
+
+origin_spec ::=
+	 'ORIGIN' '=' mustbe_exp
+
+length_spec ::=
+	 ( 'LENGTH' | 'l' | 'len' ) '=' mustbe_exp
+
+attributes ::=
+	 '(' attributes_list ')'
+
+attributes_list ::=
+	 attributes_string+
+
+attributes_string ::=
+	 '!'? NAME
+
+startup ::=
+	 'STARTUP' '(' filename ')'
+
+high_level_library ::=
+	 'HLL' '(' high_level_library_NAME_list? ')'
+
+high_level_library_NAME_list ::=
+	 filename ( ','? filename )*
+
+low_level_library ::=
+	 'SYSLIB' '(' low_level_library_NAME_list? ')'
+
+low_level_library_NAME_list ::=
+	 ','? filename+ ( ',' filename+ )*
+
+floating_point_support ::=
+	 'FLOAT'
+	| 'NOFLOAT'
+
+nocrossref_list ::=
+	 NAME ( ','? NAME )* ','?
+
+paren_script_name ::=
+	 '(' NAME ')'
+
+mustbe_exp ::=
+	 exp
+
+exp ::=
+	 ( '-' | '!' | '+' | '~' ) exp | '(' exp ')' | ( 'NEXT' | 'ABSOLUTE' | 'DATA_SEGMENT_END' | 'BLOCK' | 'LOG2CEIL' ) '(' exp ')' | exp ( '*' | '/' | '%' | '+' | '-' | '<<' | '>>' | '==' | '!=' | '<=' | '>=' | '<' | '>' | '&' | '^' | '|' | '&&' | '||' ) exp | exp '?' exp ':' exp | ( 'DEFINED' | 'CONSTANT' ) '(' NAME ')' | INT | 'SIZEOF_HEADERS' | ( 'ALIGNOF' | 'SIZEOF' | 'ADDR' | 'LOADADDR' | 'ORIGIN' | 'LENGTH' ) paren_script_name | 'ALIGN' '(' exp ( ',' exp )? ')' | ( 'DATA_SEGMENT_ALIGN' | 'DATA_SEGMENT_RELRO_END' | 'MAX' | 'MIN' ) '(' exp ',' exp ')' | 'SEGMENT_START' '(' NAME ',' exp ')' | NAME | 'ASSERT' '(' exp ',' NAME ')'
+
+memspec_at ::=
+	 'AT' '>' NAME
+
+at ::=
+	 'AT' '(' exp ')'
+
+align ::=
+	 'ALIGN' '(' exp ')'
+
+subalign ::=
+	 'SUBALIGN' '(' exp ')'
+
+sect_constraint ::=
+	 'ONLY_IF_RO'
+	| 'ONLY_IF_RW'
+	| 'SPECIAL'
+
+section ::=
+	 NAME opt_exp_with_type at? align? 'ALIGN_WITH_INPUT'? subalign? sect_constraint? '{' statement_list? '}' memspec? memspec_at? phdr_opt? ( '=' fill_exp )? ','?
+	| 'OVERLAY' opt_exp_without_type 'NOCROSSREFS'? at? subalign? '{' overlay_section? '}' memspec? memspec_at? phdr_opt? ( '=' fill_exp )? ','?
+	| 'GROUP' opt_exp_with_type '{' sec_or_group_p1? '}'
+	| 'INCLUDE' filename
+
+type ::=
+	 'NOLOAD'
+	| 'DSECT'
+	| 'COPY'
+	| 'INFO'
+	| 'OVERLAY'
+	| 'READONLY' '(' 'TYPE' '=' exp ')'
+	| 'READONLY'
+	| 'TYPE' '=' exp
+
+atype ::=
+	 '(' type? ')'
+
+opt_exp_with_type ::=
+	 ( exp | 'BIND' '(' exp ')' ( 'BLOCK' '(' exp ')' )? )? atype? ':'
+
+opt_exp_without_type ::=
+	 exp? ':'
+
+memspec ::=
+	 '>' NAME
+
+phdr_opt ::=
+	 phdr_opt? ':' NAME
+
+phdrs ::=
+	 'PHDRS' '{' phdr_list? '}'
+
+phdr_list ::=
+	 phdr+
+
+phdr ::=
+	 NAME phdr_type phdr_qualifiers? ';'
+
+phdr_type ::=
+	 exp
+
+phdr_qualifiers ::=
+	 ( NAME phdr_val? | 'AT' '(' exp ')' ) phdr_qualifiers
+
+phdr_val ::=
+	 '(' exp ')'
+
+overlay_section ::=
+	 ( NAME '{' statement_list? '}' phdr_opt? ( '=' fill_exp )? ','? )+
+
+version ::=
+	 'VERSION' '{' vers_nodes '}'
+
+vers_nodes ::=
+	 vers_node+
+
+vers_node ::=
+	 '{' vers_tag? '}' ';'
+	| VERS_TAG '{' vers_tag? '}' verdep? ';'
+
+verdep ::=
+	 VERS_TAG+
+
+vers_tag ::=
+	 vers_defns ';'
+	| 'global' ':' vers_defns ';'
+	| 'local' ':' vers_defns ';'
+	| 'global' ':' vers_defns ';' 'local' ':' vers_defns ';'
+
+vers_defns ::=
+	 ( VERS_IDENTIFIER | NAME | 'extern' ( NAME '{' vers_defns ';'? '}' )? | 'global' | 'local' ) ( ',' ( VERS_IDENTIFIER | NAME | 'extern' ( NAME '{' vers_defns ';'? '}' )? | 'global' | 'local' ) )*
+
+NAME ::=
+	 '='?[_a-zA-Z\/.\$~][_a-zA-Z0-9\/.\$~#x2D-+:#x5B#x5D,=]*|[_a-zA-Z.\$][_a-zA-Z0-9\/.\$~]*|'\/DISCARD\/'|'"'[^"]*'"'
+
+LNAME ::=
+	 '-l'[_a-zA-Z0-9\/.\$~#x2D-+:#x5B#x5D,=]+
+
+wildcard_name ::=
+	 [_a-zA-Z0-9\/.\$~#x2D-+:#x5B#x5D,=?*^!]+
+
+INT ::=
+	 '\$'[0-9A-Fa-f]+
+	| [0-9A-Fa-f]+[HhXxBbOoDd]
+	| (('\$'|'0'[xX])[0-9A-Fa-f]+|[0-9]+)[MKmk]?
+
+VERS_TAG ::=
+	 [.$_a-zA-Z][._a-zA-Z0-9]*
+
+VERS_IDENTIFIER ::=
+	 [*?.$_a-zA-Z#x5B#x5D#x2D-!^\]([*?.$_a-zA-Z0-9#x5B#x5D#x2D-!^\]|'::')*
+
+comment ::=
+	 '\/\'*([^*]|'\'*[^\/])*'\'*'\/'
+

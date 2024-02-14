@@ -1,205 +1,660 @@
-/*
-Grammar originally from https://github.com/Julian/tree-sitter-lean
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-lean/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+module ::=
+	 prelude? import* _command*
+
+prelude ::=
+	 'prelude'
+
+import ::=
+	 'import' identifier
+
+parameters ::=
+	 ( identifier | hole | _bracketed_binder | anonymous_constructor )+
+
+_expression ::=
+	 apply
+	| comparison
+	| let
+	| tactics
+	| binary_expression
+	| neg
+	| quoted_tactic
+	| fun
+	| _term
+	| do
+	| unless
+
+let ::=
+	 'let' identifier parameters? ( ':' _expression )? ':=' _expression ( _newline | ';' ) _expression?
+
+_do_seq ::=
+	 _do_element ( _newline _do_element )* _newline?
+
+do ::=
+	 'do' _do_seq
+
+conditional_when ::=
+	 'if' _expression 'then' _do_element
+
+for_in ::=
+	 'for' ( identifier | anonymous_constructor ) 'in' _expression do
+
+assign ::=
+	 identifier ':=' _expression
+
+let_mut ::=
+	 'let' 'mut' parameters ( _left_arrow | ':=' ) _expression
+
+let_bind ::=
+	 'let' identifier _left_arrow _expression
+
+unless ::=
+	 'unless' _expression do
+
+try ::=
+	 'try' _do_element ( _newline _do_element )* _newline? ( catch finally? | finally )
+
+catch ::=
+	 'catch' _expression '=>' _do_element ( _newline _do_element )* _newline?
+
+finally ::=
+	 'finally' _do_element ( _newline _do_element )* _newline?
+
+fun ::=
+	 ( 'fun' | 'λ' ) ( parameters '=>' _expression | ( '|' ( _expression ( ',' _expression )* ) '=>' _expression )* )
+
+apply ::=
+	 _apply
+	| _dollar
+
+_apply ::=
+	 ( identifier | number | float | string | char | hole | synthetic_hole | sorry | cdot | parenthesized | anonymous_constructor | structure_instance | explicit | forall | true | false | borrowed | quoted_name | double_quoted_name | have | proj | arrow | _do_term | _command_term | _notation_term | _notation_extra_term | array | subarray | range | interpolated_string ) _argument+
+
+_dollar ::=
+	 _expression '$' _expression
+
+neg ::=
+	 '-' _expression
+
+binary_expression ::=
+	 _expression '^' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '∘' _expression
+	| _expression '∧' _expression
+	| _expression '∨' _expression
+	| _expression '/\' _expression
+	| _expression '\/' _expression
+	| _expression '↔' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '==' _expression
+	| _expression '++' _expression
+	| _expression '::' _expression
+	| _expression '|>' _expression
+	| _expression '|>.' _expression
+	| _expression '<|' _expression
+	| _expression '<|>' _expression
+	| _expression '>>' _expression
+	| _expression '>>=' _expression
+	| _expression '<*>' _expression
+	| _expression '<*' _expression
+	| _expression '*>' _expression
+	| _expression '<$>' _expression
+	| _expression '=' _expression
+	| _expression '≠' _expression
 
-module ::=  (  _command )*
+comparison ::=
+	 _expression ( '<' | '>' | '≤' | '≥' | '<=' | '>=' ) _expression
 
-_command ::=  ( prelude |  hash_command |  import |  open |  namespace |  notation |  section |  example |  def |  attribute |  structure_definition |  class |  inductive_type |  instance |  export |  theorem |  variable_declaration |  constant |  universe )
+comment ::=
+	 ( '--' '.'* | '/-' ( [^-] | '-'[^/] )* '-/' )
 
-prelude ::=  'prelude'
+_identifier ::=
+	 [_a-zA-ZͰ-ϿĀ-ſ\U0001D400-\U0001D7FF][_`'`a-zA-Z0-9Ͱ-ϿĀ-ſ∇!?\u2070-\u209F\U0001D400-\U0001D7FF]*
 
-import ::=  ( 'import'  (  _dotted_name )  )
+_escaped_identifier ::=
+	 '«'[^»]*'»'
 
-open ::=  ( 'open'  ( (  _dotted_name )  )+  ( ( 'in'  _command )  )?  )
+_attribute ::=
+	 _simple_attribute
+	| _extern_attribute
 
-hash_command ::=  ( ( '#check'  |  '#check_failure'  |  '#eval'  |  '#print'  |  '#reduce'  )  _expression )
+_simple_attribute ::=
+	 ( identifier identifier? )
 
-notation ::=  ( 'notation'  _expression '=>'  _expression )
+_extern_entry ::=
+	 identifier? 'inline'? string
 
-constructor ::=  ( '|'  ( (  _dotted_name )  )?  ( (  ( ( _parameter )+  )  )  )?  ( ( ':'  (  _expression )  )  )?  )
+_extern_attribute ::=
+	 'extern' number? _extern_entry*
 
-instance_field ::=  ( (  identifier )  ( (  parameters )  )?  ( ( ':'  (  _expression )  )  )?  (  ( ( ':='  _expression )  |  ( pattern )+  )  )  )
+_visibility ::=
+	 'private'
+	| 'protected'
 
-export ::=  ( 'export'  (  identifier )  '('  ( identifier )+  ')'  )
+_decl_modifiers ::=
+	 ( attributes ( 'noncomputable' | 'partial' | _visibility | 'unsafe' )+? | attributes? ( 'noncomputable' | 'partial' | _visibility | 'unsafe' )+ )
 
-namespace ::=  ( 'namespace'  (  identifier )  (  (  _command )*  )  'end'  identifier )
+_decl_id ::=
+	 identifier
 
-section ::=  ( 'section'  ( (  identifier )  )?  (  (  _command )*  )  'end'  ( identifier )?  )
+_decl_sig ::=
+	 _simple_binder_without_type | _bracketed_binder* _type_spec
 
-variable_declaration ::=  ( 'variable'  ( _parameter )+  )
+_opt_decl_sig ::=
+	 _simple_binder_without_type | _bracketed_binder+ _type_spec? | _simple_binder_without_type | _bracketed_binder+? _type_spec
 
-universe ::=  ( ( 'universe'  |  'universes'  )  ( identifier )+  )
+_decl_val_simple ::=
+	 ':=' _expression
 
-function_type ::=   (  ( _expression ( ( _right_arrow _expression )  )+  )  )
+_decl_val_equations ::=
+	 _match_alts_where_decls
 
-product_type ::=   (  ( _expression ( ( '×'  _expression )  )+  )  )
+_decl_val ::=
+	 ( _decl_val_simple | _decl_val_equations | _where_decls )
 
-inductive_type ::=  ( (  ( 'private'  |  'protected'  |  'unsafe'  )  )*  'inductive'  (  _dotted_name )  ( (  parameters )  )?  ( ( ':'  (  _atom )  )  )?  ( 'where'  )?  ( (  ( constructor )+  )  )?  )
+abbrev ::=
+	 'abbrev' _decl_id _opt_decl_sig? _decl_val
 
-def ::=  ( ( (  _attributes )  )?  (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'def'  (  _dotted_name )  ( (  parameters )  )?  ( ( ':'  (  _expression )  )  )?  (  ( ( ':='  _expression )  |  (  pattern )*  )  )  )
+def ::=
+	 'def' _decl_id _opt_decl_sig? _decl_val
 
-structure_definition ::=  ( (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'structure'  (  _dotted_name )  ( (  parameters )  )?  ( (  ( 'extends'  ( _expression (  ( ','  _expression )  )*  )  )  )  )?  'where'  (  ( field )+  )  )
+theorem ::=
+	 'theorem' _decl_id _decl_sig _decl_val
 
-class ::=  ( (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'class'  (  _dotted_name )  ( (  parameters )  )?  ( (  ( 'extends'  ( _expression (  ( ','  _expression )  )*  )  )  )  )?  'where'  (  ( field )+  )  )
+constant ::=
+	 'constant' _decl_id _decl_sig _decl_val_simple?
 
-instance ::=  ( ( (  _attributes )  )?  (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'instance'  ( (  _dotted_name )  )?  ( (  ( ( _parameter )+  )  )  )?  ':'  (  _expression )  (  ( ( 'where'  (  ( instance_field )+  )  )  |  ( ':='  _expression )  )  )  )
+instance ::=
+	 'instance' _decl_id? _decl_sig _decl_val
 
-theorem ::=  ( ( (  _attributes )  )?  (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'theorem'  (  _dotted_name )  ( (  parameters )  )?  ':'  (  _expression )  ':='  (  _expression )  )
+axiom ::=
+	 'axiom' _decl_id _decl_sig
 
-example ::=  ( (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'example'  ( (  parameters )  )?  ':'  (  _expression )  ':='  (  _expression )  )
+example ::=
+	 'example' _decl_sig _decl_val
 
-constant ::=  ( ( (  _attributes )  )?  (  ( 'noncomputable'  |  'partial'  |  'private'  |  'protected'  |  'unsafe'  )  )*  'constant'  (  identifier )  ':'  (  _expression )  )
+constructor ::=
+	 '|' identifier _opt_decl_sig?
 
-_attributes ::=  ( '@['  ( identifier (  ( ','  identifier )  )*  )  ']'  )
+_deriving ::=
+	 ( 'deriving' identifier ( ',' identifier )* )
 
-parameters ::=  ( ( ( (  identifier )  |  _parameter |  inductive_constructor )  )+  )
+inductive ::=
+	 'inductive' _decl_id _opt_decl_sig? ( ':=' | 'where' )? constructor+? _deriving?
 
-_parameter ::=  ( _explicit_parameter |  implicit_parameter |  typeclass_resolved_parameter )
+class_inductive ::=
+	 'class' 'inductive' _decl_id _opt_decl_sig? ( ':=' | 'where' )? constructor+? _deriving?
 
-_explicit_parameter ::=  ( '('  (  ( identifier )+  )  (  ( ( ':'  _expression )  )?  )  ')'  )
+_struct_explicit_binder ::=
+	 '(' identifier+ _opt_decl_sig? _binder_default? ')'
 
-implicit_parameter ::=  ( '{'  (  ( identifier )+  )  (  ( ( ':'  _expression )  )?  )  '}'  )
+_struct_implicit_binder ::=
+	 '{' identifier+ _decl_sig '}'
 
-typeclass_resolved_parameter ::=  ( '['  (  ( ( ( identifier )+  ':'  )  )?  )  (  _expression )  ']'  )
+_struct_instance_binder ::=
+	 '[' identifier+ _decl_sig ']'
 
-field ::=  ( _maybe_annotated ( ( ':='  (  _expression )  )  )?  _newline )
+_struct_simple_binder ::=
+	 identifier _opt_decl_sig? _binder_default?
 
-_expression ::=  ( _primary_expression |  apply |  comparison |  do |  let |  unless )
+_struct_field ::=
+	 ( _struct_explicit_binder | _struct_implicit_binder | _struct_instance_binder | _struct_simple_binder )
 
-_atom ::=  ( _parenthesized_expression |  identifier |  float |  number |  unary_expression )
+_struct_constructor ::=
+	 identifier '::'
 
-_primary_expression ::=  ( sorry |  coe |  _atom |  explicit |  function_type |  product_type |  product |  index |  conditional |  field_of |  match |  quantified |  lambda |  tactics |  binary_expression |  char |  string |  interpolated_string |  inductive_constructor |  structure_literal |  list |  range |  array |  true |  false )
+_extends ::=
+	 ( 'extends' _expression ( ',' _expression )* )
 
-_parenthesized_expression ::=   (  ( '('  _expression ')'  )  )
+structure ::=
+	 ( 'structure' | 'class' ) _decl_id _bracketed_binder* _extends? _type_spec? ( ( ':=' | 'where' ) _struct_constructor? _struct_field* )? _deriving?
 
-product ::=  ( '('  ( _expression ( ( ','  _expression )  )+  )  ')'  )
+declaration ::=
+	 _decl_modifiers? ( abbrev | def | theorem | constant | instance | axiom | example | inductive | class_inductive | structure )
 
-conditional ::=   (  ( 'if'  _expression 'then'  _expression 'else'  _expression )  )
+section ::=
+	 'section' identifier? _command* 'end' identifier?
 
-index ::=   (  ( (  _expression )  (  '['  )  ( (  _expression )  |  ( ( (  _expression )  )?  ':'  (  _expression )  )  |  ( (  _expression )  ':'  ( (  _expression )  )?  )  )  ']'  )  )
+namespace ::=
+	 'namespace' identifier _command* 'end' identifier
 
-let ::=   (  ( 'let'  (  _dotted_name )  ( (  parameters )  )?  ( ( ':'  (  _expression )  )  )?  ':='  (  _expression )  ( _newline |  ';'  )  ( (  _expression )  )?  )  )
+variable ::=
+	 'variable' _bracketed_binder+
 
-sorry ::=  'sorry'
+universe ::=
+	 'universe' identifier+
 
-tactics ::=   (  ( 'by'  ( ( _tactics_command (  ( _newline _tactics_command )  )*  )  ( _newline )?  )  )  )
+hash_command ::=
+	 ( '#check' | '#check_failure' | '#eval' | '#print' | '#reduce' ) _expression
 
-rewrite ::=  ( 'rewrite'  _expression )
+attribute ::=
+	 'attribute' '[' ( _attribute | '-' _attribute ) ( ',' ( _attribute | '-' _attribute ) )* ']' identifier
 
-term ::=  ( 'exact'  _expression )
+export ::=
+	 'export' identifier '(' identifier+ ')'
 
-simp ::=   (  ( 'simp'  ( (  list )  )?  )  )
+open ::=
+	 'open' identifier+ ( 'in' _command )?
 
-_tactics_command ::=  ( rewrite |  simp |  term )
+quoted ::=
+	 '`(' ( _term | _command+ ) ')'
 
-_do_command ::=  ( ( _expression |  for_in |  assign |  let_bind |  let_mut |  try |  finally |  throw |  conditional_when |  return )  )
+_command_term ::=
+	 quoted
 
-do ::=   (  ( 'do'  ( ( _do_command (  ( _newline _do_command )  )*  )  ( _newline )?  )  )  )
+builtin_initialize ::=
+	 _visibility? 'builtin_initialize' ( identifier _type_spec _left_arrow )? _do_seq
 
-mutable_specifier ::=  'mut'
+_command ::=
+	 declaration
+	| section
+	| namespace
+	| variable
+	| universe
+	| hash_command
+	| attribute
+	| export
+	| open
+	| builtin_initialize
+	| mixfix
+	| notation
+	| macro_rules
+	| syntax
+	| macro
+	| elab
 
-conditional_when ::=   (  ( 'if'  _expression 'then'  _do_command )  )
+_precedence ::=
+	 ':' ( number | 'max' | 'arg' | 'lead' | 'min' | 'min1' )
 
-for_in ::=  ( 'for'  ( identifier |  inductive_constructor )  'in'  (  _expression )  (  do )  )
+_syntax_cat ::=
+	 identifier
 
-assign ::=  ( (  identifier )  ':='  (  _expression )  )
+_syntax_atom ::=
+	 string
 
-let_mut ::=  ( 'let'  'mut'  (  _maybe_annotated )  ( _left_arrow |  ':='  )  (  _expression )  )
+_syntax ::=
+	 _syntax_cat
+	| _syntax_atom
 
-let_bind ::=  ( 'let'  (  identifier )  _left_arrow (  _expression )  )
+mixfix ::=
+	 _attr_kind? ( 'prefix' | 'infix' | 'infixl' | 'infixr' | 'postfix' ) _precedence string '=>' _term
 
-throw ::=  ( 'throw'  _expression )
+notation ::=
+	 _attr_kind? 'notation' _expression '=>' _expression
 
-unless ::=  ( 'unless'  _expression do )
+macro_rules ::=
+	 _attr_kind? 'macro_rules' _match_alts
 
-try ::=   (  ( 'try'  ( ( _do_command (  ( _newline _do_command )  )*  )  ( _newline )?  )  ( ( catch ( finally )?  )  |  finally )  )  )
+syntax ::=
+	 _attr_kind? 'syntax' _syntax+ ':' identifier
 
-catch ::=   (  ( 'catch'  _expression '=>'  ( ( _do_command (  ( _newline _do_command )  )*  )  ( _newline )?  )  )  )
+_macro_arg ::=
+	 ( identifier ':' )? _syntax
 
-finally ::=   (  ( 'finally'  ( ( _do_command (  ( _newline _do_command )  )*  )  ( _newline )?  )  )  )
+_macro_tail_tactic ::=
+	 ' : ' 'tactic' '=>' '`(' _tactic+ ')'
 
-return ::=   (  ( 'return'  (  ( _expression )?  )  )  )
+_macro_tail_command ::=
+	 ' : ' 'command' '=>' '`(' _command+ ')'
 
-match ::=   (  ( 'match'  (  ( _expression (  ( ','  _expression )  )*  )  )  'with'  (  ( pattern )+  )  )  )
+_macro_tail_default ::=
+	 ' : ' identifier '=>' '`(' ( _tactic | _command )+ ')'
 
-pattern ::=  ( '|'  (  ( _expression (  ( ','  _expression )  )*  )  )  '=>'  _expression )
+_macro_tail ::=
+	 _macro_tail_tactic
+	| _macro_tail_command
 
-lambda ::=   (  ( ( 'fun'  |  'λ'  )  ( ( parameters '=>'  _expression )  |  (  pattern )*  )  )  )
+macro ::=
+	 _attr_kind? 'macro' _precedence? _macro_arg+ _macro_tail
 
-attribute ::=  ( 'attribute'  '['  ( (  _atom )  (  ( ','  (  _atom )  )  )*  )  ']'  (  _expression )  )
+_elab_arg ::=
+	 _macro_arg
 
-_argument ::=  ( _expression |  named_argument )
+_elab_tail ::=
+	 ':' identifier ( '<=' identifier )? '=>' _expression
 
-named_argument ::=  ( '('  identifier ':='  _expression ')'  )
+elab ::=
+	 _attr_kind? 'elab' _precedence? _elab_arg+ _elab_tail
 
-apply ::=  ( _apply |  _dollar )
+tactics ::=
+	 'by' _tactic ( ';'? _newline _tactic )* ( ';'? _newline )?
 
-_apply ::=   (  ( (  _primary_expression )  (  ( _argument )+  )  )  )
+apply_tactic ::=
+	 'apply' _expression
 
-_dollar ::=   (  ( (  _expression )  '$'  (  _expression )  )  )
+rewrite ::=
+	 ( 'rewrite' | 'rw' ) _expression
 
-field_of ::=   (  ( (  _expression )  '.'  (  ( identifier |  number )  )  )  )
+term ::=
+	 'exact' _expression
 
-unary_expression ::=   (  ( ( '¬'  _expression )  |  ( '-'  _atom )  |  ( '!'  _expression )  )  )
+simp ::=
+	 'simp' list?
 
-binary_expression ::=  (  (  ( _expression '^'  _expression )  )  |   (  ( _expression '*'  _expression )  )  |   (  ( _expression '/'  _expression )  )  |   (  ( _expression '%'  _expression )  )  |   (  ( _expression '+'  _expression )  )  |   (  ( _expression '-'  _expression )  )  |   (  ( _expression '∘'  _expression )  )  |   (  ( _expression '∧'  _expression )  )  |   (  ( _expression '∨'  _expression )  )  |   (  ( _expression '↔'  _expression )  )  |   (  ( _expression '++'  _expression )  )  |   (  ( _expression '::'  _expression )  )  |   (  ( _expression '||'  _expression )  )  |   (  ( _expression '&&'  _expression )  )  |   (  ( _expression '=='  _expression )  )  |   (  ( _expression '|>'  _expression )  )  |   (  ( _expression '|>.'  _expression )  )  |   (  ( _expression '<|'  _expression )  )  |   (  ( _expression '<|>'  _expression )  )  |   (  ( _expression '='  _expression )  )  |   (  ( _expression '≠'  _expression )  )  )
+trivial ::=
+	 'trivial'
 
-comparison ::=   (  ( _expression ( '<'  |  '>'  |  '≤'  |  '≥'  |  '<='  |  '>='  )  _expression )  )
+intro ::=
+	 'intro' _expression*
 
-structure_literal ::=  ( '{'  ( (  ( _expression 'with'  )  )  )?  ( ( ( _structure_literal_field (  ( ','  _structure_literal_field )  )*  )  ( ','  )?  )  )?  (  ( ( ':'  _expression )  )?  )  '}'  )
+rfl ::=
+	 'rfl'
 
-_structure_literal_field ::=  ( (  identifier )  ':='  (  _expression )  )
+_user_tactic ::=
+	 _expression
 
-inductive_constructor ::=  ( '⟨'  ( ( _expression (  ( ','  _expression )  )*  )  )?  '⟩'  )
+_tactic ::=
+	 apply_tactic
+	| rewrite
+	| simp
+	| term
+	| trivial
+	| intro
+	| rfl
+	| _user_tactic
 
-quantified ::=   (  ( ( '∀'  |  '∃'  )  (  parameters )  ','  (  _expression )  )  )
+quoted_char ::=
+	 ( '\\'  ( 'u'[a-fA-F0-9]'{4}' | 'x'[a-fA-F0-9]'{2}' | [\"'rnt] ) )
 
-list ::=  ( '['  ( ( _expression (  ( ','  _expression )  )*  )  )?  ']'  )
+_left_arrow ::=
+	 '<-'
+	| '←'
 
-range ::=  ( '['  ( (  _expression )  )?  ':'  (  _expression )  ( ( ':'  (  _expression )  )  )?  ']'  )
+do_return ::=
+	 'return' _expression?
 
-array ::=  ( '#['  ( ( _expression (  ( ','  _expression )  )*  )  )?  ']'  )
+_do_expression ::=
+	 _expression
 
-char ::=  ( "'"  ( escape_sequence |  [^'] )  "'"  )
+_do_element ::=
+	 _do_expression
+	| assign
+	| for_in
+	| let_bind
+	| let_mut
+	| do_return
 
-string ::=  ( '"'  (  ( escape_sequence |  [^"] )  )*  '"'  )
+identifier ::=
+	 _identifier ( '.' _identifier )*
+	| _identifier
+	| _escaped_identifier
 
-interpolated_string ::=  ( 's!"'  (  ( [^"] |  escape_sequence |  interpolation )  )*  '"'  )
+number ::=
+	 [0-9]+
 
-interpolation ::=  ( '{'  _expression '}'  )
+float ::=
+	 [0-9]+'.'[0-9]*
 
-coe ::=  ( '('  (  _expression )  ':'  (  _expression )  ')'  )
+string ::=
+	 '"'  ( quoted_char | [^"#x0A\]+ )* '"' 
 
-_dotted_name ::=   (  ( identifier (  ( '.'  identifier )  )*  )  )
+char ::=
+	 "'"  ( quoted_char | [^'] ) "'" 
 
-_left_arrow ::=  ( '<-'  |  '←'  )
+hole ::=
+	 '_'
 
-_right_arrow ::=  ( '->'  |  '→'  )
+synthetic_hole ::=
+	 '?' ( identifier | hole )
 
-escape_sequence ::=  (  ( '\\'  ( 'u'[a-fA-F0-9]+/*{4}*/ |  'x'[a-fA-F0-9]+/*{2}*/ |  ['"rnt\\] )  )  )
+sorry ::=
+	 'sorry'
 
-comment ::=  (  ( ( '--'  .* )  |  ( '/-'  (  ( [^-] |  '-'[^/] )  )*  '-/'  )  )  )
+cdot ::=
+	 '.'
+	| '·'
 
-explicit ::=  ( '@'  _dotted_name )
+type_ascription ::=
+	 ':' _expression
 
-identifier ::=  ( _lambda_magic_identifier |  _identifier |  _escaped_identifier )
+tuple_tail ::=
+	 ',' _expression ( ',' _expression )*
 
-_identifier ::=  [_a-zA-ZͰ-ϿĀ-ſ∇][_`'`a-zA-Z0-9Ͱ-ϿĀ-ſ∇!?\u2070-\u209F]*
+parenthesized ::=
+	 '(' ( _expression ( tuple_tail | type_ascription )? )? ')'
 
-_escaped_identifier ::=  '«'[^»]*'»'
+anonymous_constructor ::=
+	 '⟨' ( _expression ( ',' _expression )* )? '⟩'
 
-_lambda_magic_identifier ::=  ( '.'  |  '·'  )
+_structure_instance_field ::=
+	 identifier ':=' _expression
 
-_maybe_annotated ::=  ( (  identifier )  (  ( ( ':'  _expression )  )?  )  )
+structure_instance ::=
+	 '{' ( _expression 'with' )? ( _structure_instance_field ( ',' _structure_instance_field )* ','? )? _type_spec? '}'
 
-number ::=  [0-9]+
+_type_spec ::=
+	 ( ':' _expression )
 
-float ::=  [0-9]+'.'[\d]*
+explicit ::=
+	 '@' _term
 
-true ::=  'true'
+_binder_ident ::=
+	 identifier
+	| hole
 
-false ::=  'false'
+_binder_default ::=
+	 ( ':=' _expression )
+
+explicit_binder ::=
+	 '(' _binder_ident+ _type_spec? ( _binder_default )? ')'
+
+implicit_binder ::=
+	 '{' _binder_ident+ _type_spec? '}'
+
+instance_binder ::=
+	 '[' ( identifier ':' )? _expression ']'
+
+_bracketed_binder ::=
+	 explicit_binder
+	| implicit_binder
+	| instance_binder
+
+proj ::=
+	 _term '.' ( identifier | number )
+
+arrow ::=
+	 _term ( '->' | '→' ) _expression
+
+forall ::=
+	 '∀' ( _simple_binder | _bracketed_binder )+ ',' _expression
+
+_simple_binder ::=
+	 _binder_ident+ _type_spec?
+
+match_alt ::=
+	 '|' ( _expression ( ',' _expression )* ) '=>' _expression
+
+_match_alts ::=
+	 match_alt+
+
+_match_discr ::=
+	 ( identifier ':' )? _expression
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+match ::=
+	 'match' ( _match_discr ( ', ' _match_discr )* ) _type_spec? 'with' _match_alts
+
+borrowed ::=
+	 '@&' _term
+
+quoted_name ::=
+	 '`' identifier
+
+double_quoted_name ::=
+	 '``' identifier
+
+_simple_binder_without_type ::=
+	 _binder_ident+
+
+_let_id_lhs ::=
+	 identifier ( _simple_binder_without_type | _bracketed_binder )* _type_spec?
+
+_let_id_decl ::=
+	 _let_id_lhs ':=' _expression
+
+_let_pattern_decl ::=
+	 _term _type_spec? ':=' _expression
+
+_let_equations_decl ::=
+	 _let_id_lhs _match_alts
+
+_let_decl ::=
+	 _let_id_decl
+	| _let_pattern_decl
+	| _let_equations_decl
+
+_have_id_lhs ::=
+	 identifier ( _simple_binder_without_type | _bracketed_binder )* _type_spec?
+	| ( identifier ( _simple_binder_without_type | _bracketed_binder )* )? _type_spec
+
+_have_id_decl ::=
+	 _have_id_lhs? ':=' _term
+
+_have_eqns_decl ::=
+	 _have_id_lhs? _match_alts
+
+_have_decl ::=
+	 _have_id_decl
+	| _let_pattern_decl
+	| _have_eqns_decl
+
+have ::=
+	 'have' _have_decl ';'? _term
+
+_attr_kind ::=
+	 'scoped'
+	| 'local'
+
+_attr_instance ::=
+	 _attr_kind? _attribute
+
+attributes ::=
+	 '@[' _attr_instance ( ',' _attr_instance )* ']'
+
+_let_rec_decl ::=
+	 _let_decl
+
+_where_decls ::=
+	 'where' ( _let_rec_decl )+
+
+_match_alts_where_decls ::=
+	 _match_alts _where_decls?
+
+named_argument ::=
+	 '(' identifier ':=' _expression ')'
+
+ellipsis ::=
+	 '..'
+
+_argument ::=
+	 named_argument
+	| ellipsis
+	| _expression
+
+quoted_tactic ::=
+	 '`(tactic|' _tactic ')'
+
+_term ::=
+	 identifier
+	| number
+	| float
+	| string
+	| char
+	| hole
+	| synthetic_hole
+	| sorry
+	| cdot
+	| parenthesized
+	| anonymous_constructor
+	| structure_instance
+	| explicit
+	| forall
+	| true
+	| false
+	| match
+	| borrowed
+	| quoted_name
+	| double_quoted_name
+	| have
+	| proj
+	| arrow
+	| _do_term
+	| _command_term
+	| _notation_term
+	| _notation_extra_term
+	| array
+	| subarray
+	| range
+	| interpolated_string
+
+lift_method ::=
+	 _left_arrow _term
+
+_do_term ::=
+	 lift_method
+
+product ::=
+	 _term '×' _term
+
+unary_expression ::=
+	 ( '¬' | '!' ) _term
+
+subtype ::=
+	 '{' identifier ( ':' _term )? '//' _expression '}'
+
+list ::=
+	 '[' ( _expression ( ',' _expression )* )? ']'
+
+assumption_literal ::=
+	 '‹' _term '›'
+
+if_then_else ::=
+	 'if' _expression 'then' _expression 'else' _expression
+
+_notation_term ::=
+	 product
+	| unary_expression
+	| subtype
+	| if_then_else
+	| list
+	| assumption_literal
+
+exists ::=
+	 '∃' ( _simple_binder | _bracketed_binder )+ ',' _expression
+
+_notation_extra_term ::=
+	 exists
+
+array ::=
+	 '#[' ( _expression ( ',' _expression )* )? ']'
+
+subarray ::=
+	 _expression '[' ( _expression | _expression? ':' _expression | _expression ':' _expression? ) ']'
+
+range ::=
+	 '[' _expression? ':' _expression ( ':' _expression )? ']'
+
+interpolated_string ::=
+	 's!"' ( [^"] | quoted_char | interpolation )* '"' 
+
+interpolation ::=
+	 '{' _expression '}'
 

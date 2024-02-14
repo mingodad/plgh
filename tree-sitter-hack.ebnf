@@ -1,0 +1,694 @@
+//
+// From tree-sitter-hack/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+script ::=
+	 '<\'?[hH][hH]? _statement*
+
+identifier ::=
+	 [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
+
+variable ::=
+	 ( '$' [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]* )
+
+pipe_variable ::=
+	 '$$'
+
+_keyword ::=
+	 'type'
+	| 'newtype'
+	| 'shape'
+	| 'tuple'
+	| 'clone'
+	| 'new'
+	| 'print'
+	| 'namespace'
+	| 'include'
+	| 'include_once'
+	| 'require'
+	| 'require_once'
+	| _primitive_type
+	| _collection_type
+
+qualified_identifier ::=
+	 ( identifier | 'namespace' )? ( '\\'  identifier )+
+	| identifier
+
+scoped_identifier ::=
+	 ( qualified_identifier | variable | scope_identifier | _xhp_identifier | pipe_variable ) '::' ( identifier | variable )
+
+scope_identifier ::=
+	 'self'
+	| 'parent'
+	| 'static'
+
+_variablish ::=
+	 variable
+	| pipe_variable
+	| list_expression
+	| subscript_expression
+	| qualified_identifier
+	| parenthesized_expression
+	| call_expression
+	| scoped_identifier
+	| scope_identifier
+	| selection_expression
+	| _xhp_identifier
+
+_statement ::=
+	 _declaration
+	| module_attribute
+	| compound_statement
+	| empty_statement
+	| expression_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| throw_statement
+	| echo_statement
+	| unset_statement
+	| use_statement
+	| if_statement
+	| while_statement
+	| do_statement
+	| for_statement
+	| switch_statement
+	| foreach_statement
+	| try_statement
+	| concurrent_statement
+	| using_statement
+
+_declaration ::=
+	 function_declaration
+	| class_declaration
+	| interface_declaration
+	| trait_declaration
+	| alias_declaration
+	| enum_declaration
+	| abstract_enum_class_declaration
+	| enum_class_declaration
+	| namespace_declaration
+	| const_declaration
+
+module_attribute ::=
+	 '<<' identifier ':' qualified_identifier arguments? ( ',' qualified_identifier arguments? )* ','? '>>'
+
+heredoc ::=
+	 '<<<' _heredoc_start _heredoc_start_newline? ( _heredoc_body | variable | embedded_braced_expression )* _heredoc_end_newline? _heredoc_end
+
+embedded_braced_expression ::=
+	 _embedded_opening_brace ( variable | call_expression | subscript_expression | selection_expression ) '}'
+
+braced_expression ::=
+	 '{' _expression '}'
+
+_expression ::=
+	 heredoc
+	| array
+	| tuple
+	| shape
+	| collection
+	| _literal
+	| _variablish
+	| expression_tree
+	| prefixed_string
+	| parenthesized_expression
+	| binary_expression
+	| prefix_unary_expression
+	| postfix_unary_expression
+	| is_expression
+	| as_expression
+	| awaitable_expression
+	| yield_expression
+	| cast_expression
+	| ternary_expression
+	| lambda_expression
+	| call_expression
+	| selection_expression
+	| new_expression
+	| include_expression
+	| require_expression
+	| anonymous_function_expression
+	| xhp_expression
+	| function_pointer
+	| enum_class_label
+
+empty_statement ::=
+	 ';'
+
+expression_statement ::=
+	 _expression ';'
+
+compound_statement ::=
+	 '{' _statement* '}'
+
+return_statement ::=
+	 'return' _expression? ';'
+
+break_statement ::=
+	 'break' _expression? ';'
+
+continue_statement ::=
+	 'continue' _expression? ';'
+
+throw_statement ::=
+	 'throw' _expression ';'
+
+echo_statement ::=
+	 'echo' _expression ( ',' _expression )* ';'
+
+unset_statement ::=
+	 'unset' '(' ( _variablish ( ',' _variablish )* )? ')' ';'
+
+concurrent_statement ::=
+	 'concurrent' compound_statement
+
+use_statement ::=
+	 'use' ( use_clause ( ',' use_clause )* ','? | use_type? _namespace_identifier '{' use_clause ( ',' use_clause )* ','? '}' ) ';'
+
+use_type ::=
+	 'namespace'
+	| 'function'
+	| 'type'
+	| 'const'
+
+use_clause ::=
+	 use_type? _namespace_identifier ( 'as' identifier )?
+
+_namespace_identifier ::=
+	 qualified_identifier '\\' ?
+	| '\\' 
+
+if_statement ::=
+	 'if' parenthesized_expression _statement ( ( 'elseif' | 'else' 'if' ) parenthesized_expression _statement )* ( 'else' _statement )?
+
+switch_statement ::=
+	 'switch' parenthesized_expression '{' ( switch_case | switch_default )* '}'
+
+switch_case ::=
+	 'case' _expression ':' _statement*
+
+switch_default ::=
+	 'default' ':' _statement*
+
+foreach_statement ::=
+	 'foreach' '(' _expression await_modifier? 'as' ( _variablish '=>' )? _variablish ')' _statement
+
+while_statement ::=
+	 'while' parenthesized_expression _statement
+
+do_statement ::=
+	 'do' _statement 'while' parenthesized_expression ';'
+
+for_statement ::=
+	 'for' '(' ( _expression ( ',' _expression )* )? ';' ( _expression ( ',' _expression )* )? ';' ( _expression ( ',' _expression )* )? ')' _statement
+
+try_statement ::=
+	 'try' compound_statement catch_clause* ( catch_clause | finally_clause )
+
+catch_clause ::=
+	 'catch' '(' _type variable ')' compound_statement
+
+finally_clause ::=
+	 'finally' compound_statement
+
+using_statement ::=
+	 await_modifier? 'using' ( expression_statement | '(' _expression ( ',' _expression )* ')' ( compound_statement | ';' ) )
+
+_literal ::=
+	 string
+	| integer
+	| float
+	| true
+	| false
+	| null
+
+float ::=
+	 ( [0-9]+'.'[0-9]*([eE][+-]?[0-9]+)? | [0-9]*'.'[0-9]+([eE][+-]?[0-9]+)? | [0-9]+[eE][+-]?[0-9]+ )
+
+integer ::=
+	 ( [1-9][0-9]* | '0'[0-7]* | '0'[xX][0-9a-fA-F]+ | '0'[bB][01]+ )
+
+true ::=
+	 'true'
+	| 'True'
+	| 'TRUE'
+
+false ::=
+	 'false'
+	| 'False'
+	| 'FALSE'
+
+null ::=
+	 'null'
+	| 'Null'
+	| 'NULL'
+
+string ::=
+	 ( "'"("\'"|"\\"|"\"?[^'\])*"'" | '"'('\"'|'\\'|'\'?[^"\])*'"' )
+
+expression_tree ::=
+	 identifier '`'[^`]*'`'
+
+prefixed_string ::=
+	 identifier string
+
+_type ::=
+	 type_specifier
+	| type_constant
+	| shape_type_specifier
+	| function_type_specifier
+	| tuple_type_specifier
+
+type_specifier ::=
+	 _type_modifier* ( _primitive_type | qualified_identifier | _collection_type | _xhp_identifier ) type_arguments?
+
+_type_modifier ::=
+	 '@'
+	| '?'
+	| '~'
+
+tuple_type_specifier ::=
+	 _type_modifier* '(' _type ( ',' _type )* ','? ')'
+
+function_type_specifier ::=
+	 _type_modifier* '(' 'function' [ #x09#x0A#x0B#x0C#x0D]* '(' ( inout_modifier? _type variadic_modifier? ( ',' inout_modifier? _type variadic_modifier? )* ','? )? ')' capability_list? ':' _type ')'
+
+shape_type_specifier ::=
+	 _type_modifier* 'shape' '(' ( ( field_specifier | '...' ) ( ',' ( field_specifier | '...' ) )* ','? )? ')'
+
+field_specifier ::=
+	 '?'? _expression '=>' _type
+
+type_constant ::=
+	 _type_modifier* _type_constant
+
+_type_constant ::=
+	 ( qualified_identifier | _type_constant ) '::' identifier
+
+_collection_type ::=
+	 'array'
+	| 'varray'
+	| 'darray'
+	| 'vec'
+	| 'dict'
+	| 'keyset'
+
+_primitive_type ::=
+	 'bool'
+	| 'float'
+	| 'int'
+	| 'num'
+	| 'string'
+	| 'arraykey'
+	| 'void'
+	| 'nonnull'
+	| null
+	| 'mixed'
+	| 'dynamic'
+	| 'noreturn'
+	| 'nothing'
+	| 'resource'
+
+type_arguments ::=
+	 '<' ( _type ( ',' _type )* ','? )? '>'
+
+type_parameters ::=
+	 '<' type_parameter ( ',' type_parameter )* ','? '>'
+
+type_parameter ::=
+	 attribute_modifier? ( '+' | '-' | 'reify' )? identifier ( ( 'as' | 'super' ) _type )*
+
+where_clause ::=
+	 'where' ( where_constraint ','? )+
+
+where_constraint ::=
+	 _type ( 'as' | 'super' | '=' ) _type
+
+array ::=
+	 _collection_type type_arguments? '[' ( ( _expression | element_initializer ) ( ',' ( _expression | element_initializer ) )* ','? )? ']'
+
+element_initializer ::=
+	 _expression '=>' _expression
+
+tuple ::=
+	 'tuple' '(' ( _expression ( ',' _expression )* ','? )? ')'
+
+shape ::=
+	 'shape' '(' ( field_initializer ( ',' field_initializer )* ','? )? ')'
+
+field_initializer ::=
+	 ( string | scoped_identifier ) '=>' _expression
+
+collection ::=
+	 qualified_identifier type_arguments? '{' ( ( _expression | element_initializer ) ( ',' ( _expression | element_initializer ) )* ','? )? '}'
+
+include_expression ::=
+	 ( 'include' | 'include_once' ) _expression
+
+require_expression ::=
+	 ( 'require' | 'require_once' ) _expression
+
+parenthesized_expression ::=
+	 '(' _expression ')'
+
+subscript_expression ::=
+	 _expression '[' _expression? ']'
+
+list_expression ::=
+	 'list' '(' _expression? ( ',' _expression? )* ','? ')'
+
+binary_expression ::=
+	 _expression '|>' _expression
+	| _expression '??' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression '&' _expression
+	| _expression '==' _expression
+	| _expression '!=' _expression
+	| _expression '===' _expression
+	| _expression '!==' _expression
+	| _expression '<' _expression
+	| _expression '>' _expression
+	| _expression '<=' _expression
+	| _expression '>=' _expression
+	| _expression '<=>' _expression
+	| _expression '<<' _expression
+	| _expression '>>' _expression
+	| _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '.' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '**' _expression
+	| _expression '?:' _expression
+	| _expression '=' _expression
+	| _expression '??=' _expression
+	| _expression '.=' _expression
+	| _expression '|=' _expression
+	| _expression '^=' _expression
+	| _expression '&=' _expression
+	| _expression '<<=' _expression
+	| _expression '>>=' _expression
+	| _expression '+=' _expression
+	| _expression '-=' _expression
+	| _expression '*=' _expression
+	| _expression '/=' _expression
+	| _expression '%=' _expression
+	| _expression '**=' _expression
+
+prefix_unary_expression ::=
+	 '!' _expression
+	| '~' _expression
+	| '-' _expression
+	| '+' _expression
+	| '++' _expression
+	| '--' _expression
+	| 'print' _expression
+	| 'clone' _expression
+	| 'await' _expression
+	| '@' _expression
+
+postfix_unary_expression ::=
+	 _expression ( '++' | '--' )
+
+is_expression ::=
+	 _expression 'is' _type
+
+as_expression ::=
+	 _expression ( 'as' | '?as' ) _type
+
+awaitable_expression ::=
+	 'async' compound_statement
+
+yield_expression ::=
+	 'yield' ( _expression | element_initializer )
+
+cast_expression ::=
+	 '(' ( 'array' | 'int' | 'float' | 'string' | 'bool' ) ')' _expression
+
+ternary_expression ::=
+	 _expression '?' _expression ':' _expression
+
+lambda_expression ::=
+	 attribute_modifier? async_modifier? ( _single_parameter_parameters | parameters capability_list? ( ':' _type )? ) '==>' ( _expression | compound_statement )
+
+_single_parameter_parameters ::=
+	 _single_parameter
+
+_single_parameter ::=
+	 variable
+
+call_expression ::=
+	 ( _expression | _collection_type ) type_arguments? arguments
+
+new_expression ::=
+	 'new' _variablish type_arguments? arguments
+
+arguments ::=
+	 '(' ( argument ( ',' argument )* ','? )? ')'
+
+argument ::=
+	 ( inout_modifier | variadic_modifier )? _expression
+
+selection_expression ::=
+	 ( _variablish | as_expression ) ( '?->' | '->' ) ( _variablish | braced_expression | _keyword )
+
+alias_declaration ::=
+	 attribute_modifier? ( 'type' | 'newtype' ) identifier type_parameters? ( 'as' _type )? '=' _type ';'
+
+function_declaration ::=
+	 attribute_modifier? _function_declaration_header ( compound_statement | ';' )
+
+_function_declaration_header ::=
+	 async_modifier? 'function' identifier type_parameters? parameters capability_list? ( ':' attribute_modifier? _type )? where_clause?
+
+capability_list ::=
+	 '[' ( capability ( ',' capability )* )? ']'
+
+capability ::=
+	 identifier type_parameters?
+	| scoped_identifier
+	| 'ctx' variable
+
+parameters ::=
+	 '(' ( variadic_modifier | parameter ( ',' parameter )* ','? )? ')'
+
+parameter ::=
+	 attribute_modifier? visibility_modifier? inout_modifier? _type? variadic_modifier? variable ( '=' _expression )?
+
+trait_declaration ::=
+	 attribute_modifier? 'trait' identifier type_parameters? implements_clause? where_clause? member_declarations
+
+interface_declaration ::=
+	 attribute_modifier? 'interface' identifier type_parameters? extends_clause? where_clause? member_declarations
+
+class_declaration ::=
+	 attribute_modifier? _class_modifier? _class_modifier? xhp_modifier? 'class' ( identifier | _xhp_identifier ) type_parameters? extends_clause? implements_clause? where_clause? member_declarations
+
+member_declarations ::=
+	 '{' ( _class_const_declaration | method_declaration | property_declaration | type_const_declaration | context_const_declaration | trait_use_clause | require_implements_clause | require_extends_clause | xhp_attribute_declaration | xhp_children_declaration | xhp_category_declaration )* '}'
+
+trait_use_clause ::=
+	 'use' _type ( ',' _type )* ( '{' ( ( trait_select_clause | trait_alias_clause ) ';' )* '}' | ';' )
+
+trait_select_clause ::=
+	 qualified_identifier '::' identifier 'insteadof' qualified_identifier ( ',' qualified_identifier )*
+
+trait_alias_clause ::=
+	 identifier 'as' ( visibility_modifier identifier? | visibility_modifier? identifier )
+
+extends_clause ::=
+	 'extends' _type ( ',' _type )*
+
+implements_clause ::=
+	 'implements' _type ( ',' _type )*
+
+require_extends_clause ::=
+	 'require' 'extends' _type ( ',' _type )* ';'
+
+require_implements_clause ::=
+	 'require' 'implements' _type ( ',' _type )* ';'
+
+method_declaration ::=
+	 attribute_modifier? _member_modifier* _function_declaration_header ( compound_statement | ';' )
+
+_class_const_declaration ::=
+	 _member_modifier* 'const' _type? _class_const_declarator ( ',' _class_const_declarator )* ';'
+
+_class_const_declarator ::=
+	 ( identifier | _keyword ) ( '=' _expression )?
+
+type_const_declaration ::=
+	 attribute_modifier? _member_modifier* 'const' 'type' identifier type_parameters? ( 'as' _type )? ( '=' _type )? ';'
+
+context_const_declaration ::=
+	 abstract_modifier? 'const' 'ctx' identifier ( 'super' capability_list )? ( 'as' capability_list )? ( '=' capability_list )? ';'
+
+const_declaration ::=
+	 'const' _type? const_declarator ( ',' const_declarator )* ';'
+
+const_declarator ::=
+	 ( identifier | _keyword ) ( '=' _expression )
+
+property_declaration ::=
+	 attribute_modifier? _member_modifier* _type? property_declarator ( ',' property_declarator )* ';'
+
+property_declarator ::=
+	 variable ( '=' _expression )?
+
+enum_declaration ::=
+	 attribute_modifier? 'enum' identifier ':' _type ( 'as' _type )? '{' enumerator* '}'
+
+abstract_enum_class_declaration ::=
+	 attribute_modifier? 'abstract' 'enum' 'class' identifier ':' extends_clause? _type '{' ( typed_enumerator | 'abstract' _type identifier ';' )* '}'
+
+enum_class_declaration ::=
+	 attribute_modifier? 'enum' 'class' identifier ':' _type extends_clause? '{' typed_enumerator* '}'
+
+enum_class_label ::=
+	 qualified_identifier? '#' identifier
+
+enumerator ::=
+	 identifier '=' _expression ';'
+
+typed_enumerator ::=
+	 _type enumerator
+
+namespace_declaration ::=
+	 'namespace' ( qualified_identifier ';' | qualified_identifier? compound_statement )?
+
+_member_modifier ::=
+	 visibility_modifier
+	| static_modifier
+	| abstract_modifier
+	| final_modifier
+
+_class_modifier ::=
+	 abstract_modifier
+	| final_modifier
+
+final_modifier ::=
+	 'final'
+
+abstract_modifier ::=
+	 'abstract'
+
+xhp_modifier ::=
+	 'xhp'
+
+static_modifier ::=
+	 'static'
+
+visibility_modifier ::=
+	 'public'
+	| 'protected'
+	| 'private'
+
+attribute_modifier ::=
+	 '<<' qualified_identifier arguments? ( ',' qualified_identifier arguments? )* ','? '>>'
+
+inout_modifier ::=
+	 'inout'
+
+variadic_modifier ::=
+	 '...'
+
+async_modifier ::=
+	 'async'
+
+await_modifier ::=
+	 'await'
+
+xhp_identifier ::=
+	 [a-zA-Z_][a-zA-Z0-9_]*([-:][a-zA-Z0-9_]+)*
+
+xhp_class_identifier ::=
+	 ':'[a-zA-Z_][a-zA-Z0-9_]*([-:][a-zA-Z0-9_]+)*
+
+_xhp_identifier ::=
+	 xhp_identifier
+	| xhp_class_identifier
+
+xhp_category_identifier ::=
+	 '%'[a-zA-Z_][a-zA-Z0-9_]*([-:][a-zA-Z0-9_]+)*
+
+xhp_expression ::=
+	 xhp_open_close
+	| xhp_open ( xhp_string | xhp_comment | braced_expression | xhp_expression )* xhp_close
+
+xhp_comment ::=
+	 ( '<!--' ('-'?'>')?([^>]|[^-]'>'|[^-]'->')* '-->' )
+
+xhp_string ::=
+	 [^<{]+
+
+xhp_open ::=
+	 '<' _xhp_identifier xhp_attribute* '>'
+
+xhp_open_close ::=
+	 '<' _xhp_identifier xhp_attribute* '/>'
+
+xhp_close ::=
+	 '</' _xhp_identifier '>'
+
+xhp_attribute ::=
+	 xhp_identifier '=' ( string | braced_expression )
+	| braced_expression
+	| xhp_spread_expression
+
+xhp_spread_expression ::=
+	 '{' '...' _expression '}'
+
+xhp_attribute_declaration ::=
+	 'attribute' xhp_class_attribute ( ',' xhp_class_attribute )* ';'
+
+xhp_class_attribute ::=
+	 ( _type | xhp_enum_type ) xhp_identifier? ( '=' _expression )? ( '@required' | '@lateinit' )?
+
+xhp_enum_type ::=
+	 'enum' '{' ( string | integer ) ( ',' ( string | integer ) )* ','? '}'
+
+_xhp_attribute_expression ::=
+	 xhp_identifier
+	| xhp_class_identifier
+	| xhp_category_identifier
+	| _xhp_binary_expression
+	| _xhp_postfix_unary_expression
+	| _xhp_parenthesized_expression
+
+function_pointer ::=
+	 ( scoped_identifier | qualified_identifier ) type_arguments
+
+comment ::=
+	 ( '//' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+anonymous_function_expression ::=
+	 async_modifier? 'function' parameters capability_list? ( ':' _type )? _anonymous_function_use_clause? compound_statement
+
+_anonymous_function_use_clause ::=
+	 'use' '(' variable ( ',' variable )* ','? ')'
+
+xhp_children_declaration ::=
+	 'children' _xhp_attribute_expression ( ',' _xhp_attribute_expression )* ';'
+
+xhp_category_declaration ::=
+	 'category' xhp_category_identifier ( ',' xhp_category_identifier )* ';'
+
+_xhp_binary_expression ::=
+	 _xhp_attribute_expression '|' _xhp_attribute_expression
+
+_xhp_postfix_unary_expression ::=
+	 _xhp_attribute_expression ( '+' | '*' | '?' )
+
+_xhp_parenthesized_expression ::=
+	 '(' _xhp_attribute_expression ( ',' _xhp_attribute_expression )* ')'
+

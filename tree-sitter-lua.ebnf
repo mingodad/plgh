@@ -1,103 +1,250 @@
-/*
-Grammar originally from https://github.com/Azganoth/tree-sitter-lua
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-lua/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-program ::=  ( (  _statement )*  ( return_statement )?  )
+chunk ::=
+	 shebang? _block?
 
-return_statement ::=  ( 'return'  ( ( _expression (  ( ','  _expression )  )*  )  )?  ( _empty_statement )?  )
+shebang ::=
+	 '#!.'*
 
-_statement ::=  ( (  _expression )  |  variable_declaration |  local_variable_declaration |  do_statement |  if_statement |  while_statement |  repeat_statement |  for_statement |  for_in_statement |  goto_statement |  break_statement |  label_statement |  _empty_statement |  (  function_statement )  |  (  local_function_statement )  |  (  function_call_statement )  )
+block ::=
+	 _block
 
-variable_declaration ::=  ( ( (  _variable_declarator )  (  ( ','  (  _variable_declarator )  )  )*  )  '='  ( _expression (  ( ','  _expression )  )*  )  )
+_block ::=
+	 return_statement
+	| statement+ return_statement?
 
-local_variable_declaration ::=  ( 'local'  (  _local_variable_declarator )  ( ( '='  ( _expression (  ( ','  _expression )  )*  )  )  )?  )
+return_statement ::=
+	 'return' expression_list? empty_statement?
 
-_variable_declarator ::=  ( identifier |  ( _prefix '['  _expression ']'  )  |  field_expression )
+statement ::=
+	 empty_statement
+	| variable_assignment
+	| local_variable_declaration
+	| call
+	| label_statement
+	| goto_statement
+	| break_statement
+	| do_statement
+	| while_statement
+	| repeat_statement
+	| if_statement
+	| for_numeric_statement
+	| for_generic_statement
+	| function_definition_statement
+	| local_function_definition_statement
 
-field_expression ::=  ( _prefix '.'  (  identifier )  )
+local_function_definition_statement ::=
+	 'local' 'function' identifier _function_body
 
-_local_variable_declarator ::=  ( identifier (  ( ','  identifier )  )*  )
+function_definition_statement ::=
+	 'function' ( identifier | _table_function_variable ) _function_body
 
-do_statement ::=  ( 'do'  (  _statement )*  ( return_statement )?  'end'  )
+_table_function_variable ::=
+	 _table_identifier ( _named_field_identifier | _method_identifier )
 
-if_statement ::=  ( 'if'  (  _expression )  'then'  (  _statement )*  ( return_statement )?  (  elseif )*  ( else )?  'end'  )
+_table_identifier ::=
+	 ( identifier | _table_field_variable )
 
-elseif ::=  ( 'elseif'  (  _expression )  'then'  (  _statement )*  ( return_statement )?  )
+_table_field_variable ::=
+	 _table_identifier _named_field_identifier
 
-else ::=  ( 'else'  (  _statement )*  ( return_statement )?  )
+for_generic_statement ::=
+	 'for' _name_list 'in' _value_list 'do' block? 'end'
 
-while_statement ::=  ( 'while'  (  _expression )  'do'  (  _statement )*  ( return_statement )?  'end'  )
+_name_list ::=
+	 identifier ( ',' identifier )*
 
-repeat_statement ::=  ( 'repeat'  (  _statement )*  ( return_statement )?  'until'  (  _expression )  )
+_value_list ::=
+	 expression ( ',' expression )*
 
-for_statement ::=  ( 'for'  (  _loop_expression )  'do'  (  _statement )*  ( return_statement )?  'end'  )
+for_numeric_statement ::=
+	 'for' identifier '=' expression ',' expression ( ',' expression )? 'do' block? 'end'
 
-for_in_statement ::=  ( 'for'  (  _in_loop_expression )  'do'  (  _statement )*  ( return_statement )?  'end'  )
+if_statement ::=
+	 'if' expression 'then' block? elseif_clause* else_clause? 'end'
 
-_loop_expression ::=  ( identifier '='  _expression ','  _expression ( ( ','  _expression )  )?  )
+elseif_clause ::=
+	 'elseif' expression 'then' block?
 
-_in_loop_expression ::=  ( ( identifier (  ( ','  identifier )  )*  )  'in'  ( _expression (  ( ','  _expression )  )*  )  )
+else_clause ::=
+	 'else' block?
 
-goto_statement ::=  ( 'goto'  identifier )
+repeat_statement ::=
+	 'repeat' block? 'until' expression
 
-break_statement ::=  'break'
+while_statement ::=
+	 'while' expression 'do' block? 'end'
 
-label_statement ::=  ( '::'  identifier '::'  )
+do_statement ::=
+	 'do' block? 'end'
 
-_empty_statement ::=  ';'
+break_statement ::=
+	 'break'
 
-function_statement ::=  ( 'function'  function_name _function_body )
+goto_statement ::=
+	 'goto' identifier
 
-local_function_statement ::=  ( 'local'  'function'  identifier _function_body )
+label_statement ::=
+	 '::' identifier '::'
 
-function_call_statement ::=   (  ( ( _prefix arguments )  |  ( _prefix ':'  (  identifier )  arguments )  )  )
+local_variable_declaration ::=
+	 'local' _local_variable_list ( '=' _value_list )?
 
-arguments ::=  ( ( '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )  |  table |  string )
+_local_variable_list ::=
+	 _local_variable ( ',' _local_variable )*
 
-function_name ::=  ( ( identifier |  function_name_field )  ( ( ':'  (  identifier )  )  )?  )
+_local_variable ::=
+	 identifier attribute?
 
-function_name_field ::=  ( (  identifier )  (  ( '.'  (  identifier )  )  )*  )
+attribute ::=
+	 '<' identifier '>'
 
-parameters ::=  ( '('  ( ( ( self |  spread |  identifier )  (  ( ','  identifier )  )*  ( ( ','  spread )  )?  )  )?  ')'  )
+variable_assignment ::=
+	 variable_list '=' _value_list
 
-_function_body ::=  ( parameters (  _statement )*  ( return_statement )?  'end'  )
+variable_list ::=
+	 variable ( ',' variable )*
 
-_expression ::=  ( spread |  _prefix |  next |  function_definition |  table |  binary_operation |  unary_operation |  string |  number |  nil |  true |  false |  identifier )
+empty_statement ::=
+	 ';'
 
-spread ::=  '...'
+expression ::=
+	 nil
+	| false
+	| true
+	| number
+	| string
+	| vararg_expression
+	| function_definition
+	| prefix_expression
+	| table
+	| unary_expression
+	| binary_expression
 
-self ::=  'self'
+binary_expression ::=
+	 expression 'or' expression
+	| expression 'and' expression
+	| expression '==' expression
+	| expression '~=' expression
+	| expression '<' expression
+	| expression '>' expression
+	| expression '<=' expression
+	| expression '>=' expression
+	| expression '|' expression
+	| expression '~' expression
+	| expression '&' expression
+	| expression '<<' expression
+	| expression '>>' expression
+	| expression '+' expression
+	| expression '-' expression
+	| expression '*' expression
+	| expression '/' expression
+	| expression '//' expression
+	| expression '%' expression
+	| expression '..' expression
+	| expression '^' expression
 
-next ::=  'next'
+unary_expression ::=
+	 'not' expression
+	| '#' expression
+	| '-' expression
+	| '~' expression
 
-global_variable ::=  ( '_G'  |  '_VERSION'  )
+table ::=
+	 '{' field_list? '}'
 
-_prefix ::=  ( self |  global_variable |  _variable_declarator |   (  (  function_call_statement )  )  |  ( '('  _expression ')'  )  )
+field_list ::=
+	 field ( field_separator field )* field_separator?
 
-function_definition ::=  ( 'function'  _function_body )
+field ::=
+	 ( ( identifier | '[' expression ']' ) '=' )? expression
 
-table ::=  ( '{'  ( _field_sequence )?  '}'  )
+field_separator ::=
+	 ','
+	| ';'
 
-field ::=  ( ( '['  _expression ']'  '='  _expression )  |  ( identifier '='  _expression )  |  _expression )
+prefix ::=
+	 variable
+	| call
+	| parenthesized_expression
 
-_field_sequence ::=   (  ( field (  ( _field_sep field )  )*  ( _field_sep )?  )  )
+prefix_expression ::=
+	 prefix
 
-_field_sep ::=  ( ','  |  ';'  )
+_prefix_expression ::=
+	 prefix
 
-binary_operation ::=  (  (  ( _expression 'or'  _expression )  )  |   (  ( _expression 'and'  _expression )  )  |   (  ( _expression '<'  _expression )  )  |   (  ( _expression '<='  _expression )  )  |   (  ( _expression '=='  _expression )  )  |   (  ( _expression '~='  _expression )  )  |   (  ( _expression '>='  _expression )  )  |   (  ( _expression '>'  _expression )  )  |   (  ( _expression '|'  _expression )  )  |   (  ( _expression '~'  _expression )  )  |   (  ( _expression '&'  _expression )  )  |   (  ( _expression '<<'  _expression )  )  |   (  ( _expression '>>'  _expression )  )  |   (  ( _expression '+'  _expression )  )  |   (  ( _expression '-'  _expression )  )  |   (  ( _expression '*'  _expression )  )  |   (  ( _expression '/'  _expression )  )  |   (  ( _expression '//'  _expression )  )  |   (  ( _expression '%'  _expression )  )  |   (  ( _expression '..'  _expression )  )  |   (  ( _expression '^'  _expression )  )  )
+parenthesized_expression ::=
+	 '(' expression ')'
 
-unary_operation ::=   (  ( ( 'not'  |  '#'  |  '-'  |  '~'  )  _expression )  )
+call ::=
+	 ( _prefix_expression | _table_method_variable ) argument_list
 
-number ::=  (  ( ( ( ( '0'  |  ( ( '0'  )?  [1-9] ( [0-9]+ )?  )  )  '.'  ( [0-9]+ )?  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( '.'  [0-9]+ ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  |  ( ( '0'  |  ( ( '0'  )?  [1-9] ( [0-9]+ )?  )  )  ( ( ( 'e'  |  'E'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  )  |  ( ( '0x'  |  '0X'  )  [a-fA-F0-9]+ ( ( '.'  [a-fA-F0-9]+ )  )?  ( ( ( 'p'  |  'P'  )  ( ( ( '-'  |  '+'  )  )?  [0-9]+ )  )  )?  )  )  )
+_table_method_variable ::=
+	 prefix_expression _method_identifier
 
-nil ::=  'nil'
+_method_identifier ::=
+	 ':' identifier
 
-true ::=  'true'
+argument_list ::=
+	 '(' expression_list? ')'
+	| table
+	| string
 
-false ::=  'false'
+expression_list ::=
+	 expression ( ',' expression )*
 
-identifier ::=  [a-zA-Z_][a-zA-Z0-9_]*
+variable ::=
+	 identifier
+	| _table_variable
+
+_table_variable ::=
+	 ( identifier | _table_variable | call | parenthesized_expression ) ( _indexed_field_identifier | _named_field_identifier )
+
+_named_field_identifier ::=
+	 '.' identifier
+
+_indexed_field_identifier ::=
+	 '[' expression ']'
+
+function_definition ::=
+	 'function' _function_body
+
+_function_body ::=
+	 '(' parameter_list? ')' block? 'end'
+
+parameter_list ::=
+	 identifier ( ',' identifier )* ( ',' vararg_expression )?
+	| vararg_expression
+
+vararg_expression ::=
+	 '...'
+
+string ::=
+	 _string_start _string_content? _string_end
+
+number ::=
+	 ( '-'? ( ( [0-9]+ | [0-9]+ '.' [0-9]* | [0-9]* '.' [0-9]+ ) ( ( 'e' | 'E' ) ( '+' | '-' )? [0-9]+ )? | ( '0x' | '0X' ) ( [0-9a-fA-F]+ | [0-9a-fA-F]+ '.' [0-9a-fA-F]* | [0-9a-fA-F]* '.' [0-9a-fA-F]+ ) ( ( 'p' | 'P' ) ( '+' | '-' )? [0-9]+ )? ) )
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+nil ::=
+	 'nil'
+
+identifier ::=
+	 [a-zA-Z_][0-9a-zA-Z_]*
+
+comment ::=
+	 _comment_start _comment_content? _comment_end
 

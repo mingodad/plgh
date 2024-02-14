@@ -1,0 +1,161 @@
+//From https://github.com/frenchy64/typescript-parser/blob/master/typescript.ebnf
+/*The syntax of this file should be mostly self explanatory if you understand EBNF
+  and regular expressions, The one unique feature is that a literal or a rule
+  can be excluded from the resulting parse tree by surronding it with angle brackets*/
+DeclarationSourceFile ::= ws-opt DeclarationElement*
+TypeParameters ::= '' TypeParameter (',' TypeParameter)* ''
+TypeParameter ::= ws-opt Identifier (ws Constraint)? ws-opt
+Identifier ::= [a-zA-Z_][a-zA-Z0-9_]* //"[$_\p{L}][$_\p{L}\p{N}]*"
+Constraint ::= 'extends' ws Type
+Type ::= TypeLiteral
+       | TypeReference
+       | TypeQuery
+       /*| PredefinedType*/
+
+/*PredefinedType ::= "any"
+                 | "number"
+                 | "boolean"
+                 | "string"
+                 | "void"*/
+TypeReference ::= QualifiedIdentifier (ws-opt TypeArguments)?
+QualifiedIdentifier ::= Identifier
+                      | ModuleName '.' Identifier
+/*This isn't really necessary, but it's useful to seperate the module name*/
+ModuleName ::= Identifier ('.' Identifier)*
+TypeArguments ::= '' TypeArgumentList ''
+TypeArgumentList ::= TypeArgument (',' TypeArgument)*
+TypeArgument ::= ws-opt Type ws-opt
+TypeQuery ::= "typeof" ws QualifiedIdentifier
+TypeLiteral ::= ObjectType
+              | ArrayType
+              | FunctionType
+              | ConstructorType
+ArrayType ::= ElementType lbrace rbrace
+ElementType ::= TypeQuery
+                | TypeReference
+                /* some ambiguity with predefined types and type references */
+                /*| PredefinedType*/
+                | ObjectType
+                | ArrayType
+FunctionType ::=
+  TypeParameters? lparen Parameter-List? rparen "=>" ws-opt Type
+ConstructorType ::= "new" ws FunctionType
+ObjectType ::= '{' ws-opt (TypeBody ws-opt)? '}'
+TypeBody ::= TypeMemberList ws-opt ';'?
+TypeMemberList ::= TypeMember ws-opt (';' ws-opt TypeMember)*
+TypeMember ::= PropertySignature
+              | CallSignature
+              | ConstructSignature
+              | IndexSignature
+              | MethodSignature
+PropertySignature ::= PropertyName '?'? ws-opt TypeAnnotation?
+PropertyName ::= Identifier
+               | StringLiteral
+               | NumericLiteral
+CallSignature ::=
+  (TypeParameters ws-opt)? '(' ws-opt (Parameter-List ws-opt)? ')' ws-opt TypeAnnotation?
+Parameter-List ::=
+    RequiredParameterList
+  | OptionalParameterList
+  | RestParameter
+  | RequiredParameterList comma OptionalParameterList
+  | RequiredParameterList comma RestParameter
+  | OptionalParameterList comma RestParameter
+  | RequiredParameterList comma OptionalParameterList comma RestParameter
+RequiredParameterList ::= RequiredParameter (comma RequiredParameter)* ws-opt
+RequiredParameter ::=
+    AccessLevel? Identifier TypeAnnotation?
+  | Identifier ':' ws-opt StringLiteral
+OptionalParameterList ::= OptionalParameter (comma OptionalParameter)* ws-opt
+OptionalParameter ::=
+    AccessLevel? Identifier '?' TypeAnnotation?
+  | AccessLevel? Identifier TypeAnnotation? Initialiser
+Initialiser ::= equals LiteralValue
+RestParameter ::= "..." Identifier TypeAnnotation? ws-opt
+ConstructSignature ::= "new" ws-opt CallSignature
+IndexSignature ::=
+  ('[' ws-opt)? Identifier ws-opt ':' ws-opt ("string"|"number") rbrace TypeAnnotation
+MethodSignature ::= '!'("new" ws | "new(") PropertyName '?'? ws-opt CallSignature
+TypeAnnotation ::= ws-opt ':' ws Type
+InterfaceDeclaration ::=
+  "interface" ws Identifier ((TypeParameters ws)? | ws-opt) (InterfaceExtendsClause ws)? ObjectType
+InterfaceExtendsClause ::= "extends" ws ClassOrInterfaceTypeList
+ClassOrInterfaceTypeList ::=
+  TypeReference (comma TypeReference)* ws-opt
+ClassHeritage ::= ClassExtendsClause? ImplementsClause?
+ClassExtendsClause ::= "extends" ws TypeReference
+ImplementsClause ::= "implements" ws ClassOrInterfaceTypeList
+DeclarationElement ::= ExportAssignment ws-opt
+                       | ("export" ws)? InterfaceDeclaration ws-opt
+                       | ("export" ws)? ImportDeclarartion ws-opt
+                       | ("export" ws)? ExternalImportDeclaration ws-opt
+                       | ("export" ws)? AmbientDeclaration ws-opt
+ImportDeclarartion ::= "import" ws Identifier equals QualifiedIdentifier ';'
+ExternalImportDeclaration ::=
+  "import" ws Identifier equals ExternalModuleReference ';'
+ExternalModuleReference ::=
+  "require" lparen StringLiteral rparen
+ExportAssignment ::= "export" equals Identifier ';'
+AmbientDeclaration ::= "declare" ws AmbientVariableDeclaration
+                       | "declare" ws AmbientFunctionDeclaration
+                       | "declare" ws AmbientClassDeclaration
+                       | "declare" ws AmbientEnumDeclaration
+                       | "declare" ws AmbientModuleDeclaration
+                       | "declare" ws AmbientExternalModuleDeclaration
+AmbientVariableDeclaration ::= "var" ws Identifier TypeAnnotation? (ws-opt ';')?
+AmbientFunctionDeclaration ::= "function" ws Identifier ws-opt CallSignature ';'
+AmbientClassDeclaration ::=
+  "class" ws Identifier TypeParameters? ClassHeritage '{' AmbientClassBody '}'
+AmbientClassBody ::= AmbientClassBodyElement*
+AmbientClassBodyElement ::= AmbientConstructorDeclaration
+                           | AmbientPropertyMemberDeclaration
+                           | IndexSignature
+AmbientConstructorDeclaration ::= "constructor" ws '(' Parameter-List? ')' ';'
+AmbientPropertyMemberDeclaration ::=
+  AccessLevel? ("static" ws)? PropertyName TypeAnnotation? ';'
+  AccessLevel? ("static" ws)? PropertyName CallSignature ';'
+AmbientEnumDeclaration ::= "enum" Identifier '{' AmbientEnumBody? '}'
+AmbientEnumBody ::= AmbientEnumMember (',' AmbientEnumMember)* ','?
+AmbientEnumMember ::= PropertyName (equals [0-9]+|"0x"[0-9a-fA-F]+ /*"[0-9]+|0x\p{XDigit}+"*/)?
+AmbientModuleDeclaration ::=
+  "module" ws QualifiedIdentifier ws-opt '{' AmbientModuleBody '}'
+AmbientModuleBody ::= (ws-opt AmbientModuleElement)* ws-opt
+AmbientModuleElement ::= ("export" ws)? AmbientVariableDeclaration
+                       | ("export" ws)? AmbientFunctionDeclaration
+                       | ("export" ws)? AmbientClassDeclaration
+                       | ("export" ws)? AmbientEnumDeclaration
+                       | ("export" ws)? AmbientModuleDeclaration
+                       | ("export" ws)? AmbientExternalModuleDeclaration
+                       | ("export" ws)? InterfaceDeclaration
+                       | ("export" ws)? ImportDeclarartion
+AmbientExternalModuleDeclaration ::=
+  "module" StringLiteral '{' AmbientExternalModuleBody '}'
+AmbientExternalModuleBody ::= AmbientExternalModuleElement*
+AmbientExternalModuleElement ::= AmbientModuleElement
+                               | ExportAssignment
+                               | ("export" ws)? ExternalImportDeclaration
+
+LiteralValue ::= ("true"|"false")
+               | "null"
+               | StringLiteral
+               | NumericLiteral
+StringLiteral ::= '"'.*'"'
+NumericLiteral ::=
+  /*Decimal: optional integer followed by optional '.' followed by mandatory
+  integer followed by optional exponent*/
+  [0-9]*.[0-9]+[Ee][-+]?[0-9]+ //"((?:(?:[0-9]*/?\.?[0-f]+(?:[Ee][-+]?[0-9]+))|0[Xx]\p{XDigit}+)"
+SingleLineComment ::= '//' [^\n]*
+MultiLineComment ::= '/*' InsideMultiLineComment* '*/'
+InsideMultiLineComment ::= '!'( '*/' | '/*' ) ("." | [\n\r]) | MultiLineComment
+Whitespace ::= ([\s]+ | SingleLineComment | MultiLineComment)
+AccessLevel ::= ("public"|"private") ws
+/*these are all for making the grammer easer to read*/
+
+ws ::= Whitespace+
+ws-opt ::= Whitespace*
+lparen ::= ws-opt '(' ws-opt
+rparen ::= ws-opt ')' ws-opt
+lbrace ::= ws-opt '[' ws-opt
+rbrace ::= ws-opt ']' ws-opt
+comma  ::= ws-opt ',' ws-opt
+equals ::= ws-opt '=' ws-opt

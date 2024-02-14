@@ -1,0 +1,240 @@
+//
+// From tree-sitter-make/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+makefile ::=
+	 _thing*
+
+_thing ::=
+	 rule
+	| _variable_definition
+	| _directive
+	| _function [#x0D#x0A]+
+
+rule ::=
+	 _ordinary_rule
+	| _static_pattern_rule
+
+_ordinary_rule ::=
+	 _targets ( ':' | '&:' | '::' ) [#x09 ]+? _prerequisites? ( recipe | [#x0D#x0A]+ )
+
+_static_pattern_rule ::=
+	 _targets ':' [#x09 ]+? _target_pattern ':' [#x09 ]+? _prerequisites_pattern? ( recipe | [#x0D#x0A]+ )
+
+_targets ::=
+	 list
+
+_target_pattern ::=
+	 list
+
+_prerequisites ::=
+	 _normal_prerequisites
+	| _normal_prerequisites? '|' _order_only_prerequisites
+
+_normal_prerequisites ::=
+	 list
+
+_order_only_prerequisites ::=
+	 list
+
+_prerequisites_pattern ::=
+	 list
+
+recipe ::=
+	 _attached_recipe_line [#x0D#x0A]+ ( conditional | _prefixed_recipe_line )* | [#x0D#x0A]+ ( conditional | _prefixed_recipe_line )+
+
+_attached_recipe_line ::=
+	 ';' recipe_line?
+
+_prefixed_recipe_line ::=
+	 _recipeprefix recipe_line? [#x0D#x0A]+
+
+recipe_line ::=
+	 ( '@' | '-' | '+' )? ( shell_text_with_split ( _recipeprefix? shell_text_with_split )* _recipeprefix? )? _shell_text_without_split
+
+_variable_definition ::=
+	 VPATH_assignment
+	| RECIPEPREFIX_assignment
+	| variable_assignment
+	| shell_assignment
+	| define_directive
+
+VPATH_assignment ::=
+	 'VPATH' [#x09 ]+? ( '=' | ':=' | '::=' | '?=' | '+=' ) paths [#x0D#x0A]+
+
+RECIPEPREFIX_assignment ::=
+	 '.RECIPEPREFIX' [#x09 ]+? ( '=' | ':=' | '::=' | '?=' | '+=' ) text [#x0D#x0A]+
+
+variable_assignment ::=
+	 _target_or_pattern_assignment? _name [#x09 ]+? ( '=' | ':=' | '::=' | '?=' | '+=' ) [#x09 ]+? text? [#x0D#x0A]+
+
+_target_or_pattern_assignment ::=
+	 list ':' [#x09 ]+?
+
+shell_assignment ::=
+	 word [#x09 ]+? '!=' [#x09 ]+? _shell_command [#x0D#x0A]+
+
+define_directive ::=
+	 'define' word [#x09 ]+? ( '=' | ':=' | '::=' | '?=' | '+=' )? [#x09 ]+? [#x0D#x0A]+ _rawline+? 'endef' [#x0D#x0A]+
+
+_directive ::=
+	 include_directive
+	| vpath_directive
+	| export_directive
+	| unexport_directive
+	| override_directive
+	| undefine_directive
+	| private_directive
+	| conditional
+
+include_directive ::=
+	 'include' list [#x0D#x0A]+
+	| 'sinclude' list [#x0D#x0A]+
+	| '-include' list [#x0D#x0A]+
+
+vpath_directive ::=
+	 'vpath' [#x0D#x0A]+
+	| 'vpath' word [#x0D#x0A]+
+	| 'vpath' word paths [#x0D#x0A]+
+
+export_directive ::=
+	 'export' [#x0D#x0A]+
+	| 'export' list [#x0D#x0A]+
+	| 'export' variable_assignment
+
+unexport_directive ::=
+	 'unexport' [#x0D#x0A]+
+	| 'unexport' list [#x0D#x0A]+
+
+override_directive ::=
+	 'override' define_directive
+	| 'override' variable_assignment
+	| 'override' undefine_directive
+
+undefine_directive ::=
+	 'undefine' word [#x0D#x0A]+
+
+private_directive ::=
+	 'private' variable_assignment
+
+conditional ::=
+	 _conditional_directives _conditional_consequence? elsif_directive* else_directive? 'endif' [#x0D#x0A]+
+
+elsif_directive ::=
+	 'else' _conditional_directives _conditional_consequence?
+
+else_directive ::=
+	 'else' [#x0D#x0A]+ _conditional_consequence?
+
+_conditional_directives ::=
+	 ifeq_directive
+	| ifneq_directive
+	| ifdef_directive
+	| ifndef_directive
+
+_conditional_consequence ::=
+	 ( _thing | _prefixed_recipe_line )+
+
+ifeq_directive ::=
+	 'ifeq' _conditional_args_cmp [#x0D#x0A]+
+
+ifneq_directive ::=
+	 'ifneq' _conditional_args_cmp [#x0D#x0A]+
+
+ifdef_directive ::=
+	 'ifdef' _primary [#x0D#x0A]+
+
+ifndef_directive ::=
+	 'ifndef' _primary [#x0D#x0A]+
+
+_conditional_args_cmp ::=
+	 '(' _primary? ',' _primary? ')'
+	| _primary _primary
+
+_variable ::=
+	 variable_reference
+	| substitution_reference
+	| automatic_variable
+
+variable_reference ::=
+	 ( '$' | '$$' ) ( '(' _primary ')' | '{' _primary '}' | '.' )
+
+substitution_reference ::=
+	 ( '$' | '$$' ) ( '(' _primary ':' _primary '=' _primary ')' | '{' _primary ':' _primary '=' _primary '}' )
+
+automatic_variable ::=
+	 ( '$' | '$$' ) ( '@' | '%' | '<' | '?' | '^' | '+' | '/' | '*' | '(' ( '@' | '%' | '<' | '?' | '^' | '+' | '/' | '*' ) ( 'D' | 'F' )? ')' | '{' ( '@' | '%' | '<' | '?' | '^' | '+' | '/' | '*' ) ( 'D' | 'F' )? '}' )
+
+_function ::=
+	 function_call
+	| shell_function
+
+function_call ::=
+	 ( '$' | '$$' ) '(' ( 'subst' | 'patsubst' | 'strip' | 'findstring' | 'filter' | 'filter-out' | 'sort' | 'word' | 'words' | 'wordlist' | 'firstword' | 'lastword' | 'dir' | 'notdir' | 'suffix' | 'basename' | 'addsuffix' | 'addprefix' | 'join' | 'wildcard' | 'realpath' | 'abspath' | 'error' | 'warning' | 'info' | 'origin' | 'flavor' | 'foreach' | 'if' | 'or' | 'and' | 'call' | 'eval' | 'file' | 'value' ) [#x09 ]+? arguments ')'
+
+arguments ::=
+	 text ( ',' text )*
+
+shell_function ::=
+	 ( '$' | '$$' ) '(' 'shell' [#x09 ]+? _shell_command ')'
+
+list ::=
+	 _primary ( ( [#x09 ]+ | ( '\\'  '#x0D'?'#x0A'|'#x0D' ) ) _primary )* [#x09 ]+?
+
+paths ::=
+	 _primary ( ( ':' | ';' ) _primary )*
+
+_primary ::=
+	 word
+	| archive
+	| _variable
+	| _function
+	| concatenation
+	| string
+
+concatenation ::=
+	 _primary _primary+
+
+_name ::=
+	 word
+
+string ::=
+	 ( '"'  _string? '"'  | "'"  _string? "'"  )
+
+_string ::=
+	 ( _variable | _function | ([^'"$#x0D#x0A\]|"\\"|"\"[^#x0D#x0A])+ )+
+
+word ::=
+	 ( [a-zA-Z0-9%\+#x2D-.@_\*\?\/] | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' )+
+
+archive ::=
+	 word '(' list ')'
+
+_recipeprefix ::=
+	 '\t' 
+
+_rawline ::=
+	 '.'*[#x0D#x0A]+
+
+_shell_text_without_split ::=
+	 ( [^\$#x0D#x0A\] | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+ ( ( _variable | _function | '$$' | '//' ) ( [^\$#x0D#x0A\] | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+? )*
+	| ( _variable | _function | '$$' | '//' ) ( ( [^\$#x0D#x0A\] | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+? ( _variable | _function | '$$' | '//' ) )* ( [^\$#x0D#x0A\] | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+?
+
+shell_text_with_split ::=
+	 _shell_text_without_split ( '\\'  '#x0D'?'#x0A'|'#x0D' )
+
+_shell_command ::=
+	 text
+
+text ::=
+	 ( [^\$\(\)#x0A#x0D\] | ( '\\'  '#x0D'?'#x0A'|'#x0D' ) | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+ ( ( _variable | _function | '$$' | '//' ) ( [^\$\(\)#x0A#x0D\] | ( '\\'  '#x0D'?'#x0A'|'#x0D' ) | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+? )*
+	| ( _variable | _function | '$$' | '//' ) ( ( [^\$\(\)#x0A#x0D\] | ( '\\'  '#x0D'?'#x0A'|'#x0D' ) | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+? ( _variable | _function | '$$' | '//' ) )* ( [^\$\(\)#x0A#x0D\] | ( '\\'  '#x0D'?'#x0A'|'#x0D' ) | '\'[abtnvfrE!"#x23\$&'\(\)\*,;<>\?#x5B\#x5D^`{\|}~] | '\'[0-9]'{3}' | '\'[^#x0A#x0D] )+?
+
+comment ::=
+	 '#.'*
+

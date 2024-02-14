@@ -1,245 +1,489 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-agda
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-agda/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 ( _declaration _newline )*
+
+_FORALL ::=
+	 'forall'
+	| '∀'
+
+_ARROW ::=
+	 '->'
+	| '→'
+
+_LAMBDA ::=
+	 '\\' 
+	| 'λ'
+
+_ELLIPSIS ::=
+	 '...'
+	| '…'
+
+_declaration_block ::=
+	 _indent ( _declaration _newline )+ _dedent
+
+_declaration ::=
+	 fields
+	| function
+	| data
+	| data_signature
+	| record
+	| record_signature
+	| infix
+	| generalize
+	| mutual
+	| abstract
+	| private
+	| instance
+	| macro
+	| postulate
+	| primitive
+	| open
+	| import
+	| module_macro
+	| module
+	| pragma
+	| syntax
+	| pattern
+	| unquote_decl
+
+fields ::=
+	 'field' _signature_block
+
+_signature_block ::=
+	 _indent ( signature _newline )+ _dedent
+
+signature ::=
+	 'overlap'? _modal_arg_ids ':' expr
+	| 'instance' _signature_block
 
-source_file ::=  (  ( _declaration _newline )  )*
+_modal_arg_ids ::=
+	 attribute* _arg_ids
 
-_FORALL ::=  (  ( 'forall'  |  '∀'  )  )
+function ::=
+	 attributes? lhs_decl rhs_decl? where?
+	| attributes? lhs_defn rhs_defn? where?
 
-_ARROW ::=  (  ( '->'  |  '→'  )  )
+lhs_decl ::=
+	 _with_exprs rewrite_equations? with_expressions?
 
-_LAMBDA ::=  (  ( '\\'  |  'λ'  )  )
+lhs_defn ::=
+	 _with_exprs rewrite_equations? with_expressions?
 
-_ELLIPSIS ::=  (  ( '...'  |  '…'  )  )
+rhs_decl ::=
+	 ':' expr
 
-_declaration_block ::=  ( _indent ( ( _declaration _newline )  )+  _dedent )
+rhs_defn ::=
+	 '=' expr
 
-_declaration ::=  ( fields |  function |  data |  data_signature |  record |  record_signature |  infix |  generalize |  mutual |  abstract |  private |  instance |  macro |  postulate |  primitive |  open |  module_macro |  module |  pragma |  syntax |  pattern |  unquote_decl )
+with_expressions ::=
+	 'with' expr
 
-fields ::=  ( 'field'  _signature_block )
+rewrite_equations ::=
+	 'rewrite' _with_exprs
 
-_signature_block ::=  ( _indent ( ( signature _newline )  )+  _dedent )
+where ::=
+	 ( 'module' bid )? 'where' _declaration_block?
 
-signature ::=  ( ( ( 'overlap'  )?  _modal_arg_ids ':'  expr )  |  ( 'instance'  _signature_block )  )
+data_name ::=
+	 id
 
-_modal_arg_ids ::=  ( (  attribute )*  _arg_ids )
+data ::=
+	 ( 'data' | 'codata' ) data_name _typed_untyped_bindings? ( ':' expr )? 'where' _declaration_block?
 
-function ::=  ( ( ( attributes )?  (  lhs_decl )  (  ( rhs_decl )?  )  ( where )?  )  |  ( ( attributes )?  (  lhs_defn )  (  ( rhs_defn )?  )  ( where )?  )  )
+data_signature ::=
+	 'data' data_name _typed_untyped_bindings? ':' expr
 
-lhs_decl ::=  ( (  _with_exprs )  ( rewrite_equations )?  ( with_expressions )?  )
+record ::=
+	 'record' _atom_no_curly _typed_untyped_bindings? ( ':' expr )? record_declarations_block
 
-lhs_defn ::=   (  ( _with_exprs ( rewrite_equations )?  ( with_expressions )?  )  )
+record_declarations_block ::=
+	 'where' _indent ( _record_directive _newline )* ( _declaration _newline )* _dedent
 
-rhs_decl ::=  ( ':'  expr )
+_record_directive ::=
+	 record_constructor
+	| record_constructor_instance
+	| record_induction
+	| record_eta
 
-rhs_defn ::=  ( '='  expr )
+record_constructor ::=
+	 'constructor' id
 
-with_expressions ::=  ( 'with'  expr )
+record_constructor_instance ::=
+	 'instance' _indent ( record_constructor _newline )+ _dedent
 
-rewrite_equations ::=  ( 'rewrite'  _with_exprs )
+record_induction ::=
+	 'inductive'
+	| 'coinductive'
 
-where ::=  ( ( ( 'module'  bid )  )?  'where'  ( _declaration_block )?  )
+record_eta ::=
+	 'eta-equality'
+	| 'no-eta-equality'
 
-data_name ::=  (  id )
+record_signature ::=
+	 'record' _atom_no_curly _typed_untyped_bindings? ':' expr
 
-data ::=  ( ( 'data'  |  'codata'  )  data_name ( _typed_untyped_bindings )?  ( ( ':'  expr )  )?  'where'  ( _declaration_block )?  )
+infix ::=
+	 ( 'infix' | 'infixl' | 'infixr' ) integer bid+
 
-data_signature ::=  ( 'data'  data_name ( _typed_untyped_bindings )?  ':'  expr )
+generalize ::=
+	 'variable' _signature_block?
 
-record ::=  ( 'record'  (  _atom_no_curly )  ( _typed_untyped_bindings )?  ( ( ':'  expr )  )?  record_declarations_block )
+mutual ::=
+	 'mutual' _declaration_block?
 
-record_declarations_block ::=  ( 'where'  ( _indent (  ( _record_directive _newline )  )*  (  ( _declaration _newline )  )*  _dedent )  )
+abstract ::=
+	 'abstract' _declaration_block?
 
-_record_directive ::=  ( record_constructor |  record_constructor_instance |  record_induction |  record_eta )
+private ::=
+	 'private' _declaration_block?
 
-record_constructor ::=  ( 'constructor'  id )
+instance ::=
+	 'instance' _declaration_block?
 
-record_constructor_instance ::=  ( 'instance'  ( _indent ( ( record_constructor _newline )  )+  _dedent )  )
+macro ::=
+	 'macro' _declaration_block?
 
-record_induction ::=  ( 'inductive'  |  'coinductive'  )
+postulate ::=
+	 'postulate' _declaration_block?
 
-record_eta ::=  ( 'eta-equality'  |  'no-eta-equality'  )
+primitive ::=
+	 'primitive' _type_signature_block?
 
-record_signature ::=  ( 'record'  (  _atom_no_curly )  ( _typed_untyped_bindings )?  ':'  expr )
+_type_signature_block ::=
+	 _indent ( type_signature _newline )+ _dedent
 
-infix ::=  ( ( 'infix'  |  'infixl'  |  'infixr'  )  integer ( bid )+  )
+type_signature ::=
+	 _field_names ':' expr
 
-generalize ::=  ( 'variable'  ( _signature_block )?  )
+open ::=
+	 'open' ( import | module_name ) _atoms? _import_directives?
 
-mutual ::=  ( 'mutual'  ( _declaration_block )?  )
+import ::=
+	 'import' module_name
 
-abstract ::=  ( 'abstract'  ( _declaration_block )?  )
+module_name ::=
+	 _qid
 
-private ::=  ( 'private'  ( _declaration_block )?  )
+_import_directives ::=
+	 import_directive+
 
-instance ::=  ( 'instance'  ( _declaration_block )?  )
+import_directive ::=
+	 'public'
+	| 'using' '(' _comma_import_names ')'
+	| 'hiding' '(' _comma_import_names ')'
+	| 'renaming' '(' renaming ( ';' renaming )* ')'
+	| 'using' '(' ')'
+	| 'hiding' '(' ')'
+	| 'renaming' '(' ')'
 
-macro ::=  ( 'macro'  ( _declaration_block )?  )
+_comma_import_names ::=
+	 _import_name ( ';' _import_name )*
 
-postulate ::=  ( 'postulate'  ( _declaration_block )?  )
+renaming ::=
+	 'module'? id 'to' id
 
-primitive ::=  ( 'primitive'  ( _type_signature_block )?  )
+_import_name ::=
+	 'module'? id
 
-_type_signature_block ::=  ( _indent ( ( type_signature _newline )  )+  _dedent )
+module_macro ::=
+	 ( 'module' _qid | 'open' 'module' _qid ) _typed_untyped_bindings? '=' module_application import_directive*
 
-type_signature ::=  ( _field_names ':'  expr )
+module_application ::=
+	 module_name ( '{{' _ELLIPSIS '}}' | '⦃' _ELLIPSIS '⦄' | _atoms )
 
-open ::=  ( ( ( 'import'  )  |  ( 'open'  'import'  )  |  ( 'open'  )  )  module_name ( _atoms )?  ( _import_directives )?  )
+module ::=
+	 'module' ( _qid | '_' ) _typed_untyped_bindings? 'where' _declaration_block?
 
-module_name ::=   (  (  qid )  )
+pragma ::=
+	 ( '{-#' ( [^#x23] | '#'[^-] | '##x2D-'[^}] )* '#-}' )
 
-_import_directives ::=  ( import_directive )+
+catchall_pragma ::=
+	 '{-#' 'CATCHALL' '#-}'
 
-import_directive ::=  ( 'public'  |  ( 'using'  '('  _comma_import_names ')'  )  |  ( 'hiding'  '('  _comma_import_names ')'  )  |  ( 'renaming'  '('  ( renaming (  ( ';'  renaming )  )*  )  ')'  )  |  ( 'using'  '('  ')'  )  |  ( 'hiding'  '('  ')'  )  |  ( 'renaming'  '('  ')'  )  )
+syntax ::=
+	 'syntax' id hole_names '=' id+
 
-_comma_import_names ::=  ( _import_name (  ( ';'  _import_name )  )*  )
+hole_names ::=
+	 hole_name+
 
-renaming ::=  ( ( 'module'  )?  id 'to'  id )
+hole_name ::=
+	 _simple_top_hole
+	| '{' _simple_hole '}'
+	| '{{' _simple_hole '}}'
+	| '⦃' _simple_hole '⦄'
+	| '{' id '=' _simple_hole '}'
+	| '{{' id '=' _simple_hole '}}'
+	| '⦃' id '=' _simple_hole '⦄'
 
-_import_name ::=  ( ( 'module'  )?  id )
+_simple_top_hole ::=
+	 id
+	| '(' _LAMBDA bid _ARROW id ')'
 
-module_macro ::=  ( ( ( 'module'  (  qid )  )  |  ( 'open'  'module'  (  qid )  )  )  ( _typed_untyped_bindings )?  '='  module_application (  import_directive )*  )
+_simple_hole ::=
+	 id
+	| _LAMBDA bid _ARROW id
 
-module_application ::=  ( module_name (  (  ( ( '{{'  ( _ELLIPSIS )  '}}'  )  |  ( '⦃'  ( _ELLIPSIS )  '⦄'  )  )  )  |  ( _atoms )?  )  )
+pattern ::=
+	 'pattern' id _lambda_bindings? '=' expr
 
-module ::=  ( 'module'  (  ( qid |  '_'  )  )  ( _typed_untyped_bindings )?  'where'  ( _declaration_block )?  )
+unquote_decl ::=
+	 'unquoteDecl' '=' expr
+	| 'unquoteDecl' _ids '=' expr
+	| 'unquoteDef' _ids '=' expr
 
-pragma ::=  (  ( '{-#'  (  ( [^#] |  '#'[^-] |  '#-'[^}] )  )*  '#-}'  )  )
+id ::=
+	 ([^ #x09#x0A#x0B#x0C#x0D\.\"\(\)\{\}@\'\_]|"\"[^ #x09#x0A#x0B#x0C#x0Da-zA-Z]|"_"[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@])[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@]*
 
-catchall_pragma ::=  ( '{-#'  'CATCHALL'  '#-}'  )
+_qid ::=
+	 (([^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@\'\_]|"\"[^ #x09#x0A#x0B#x0C#x0Da-zA-Z]|"_"[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@])[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@]*".")*([^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@\'\_]|"\"[^ #x09#x0A#x0B#x0C#x0Da-zA-Z]|"_"[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@])[^ #x09#x0A#x0B#x0C#x0D;.\"\(\)\{\}@]* | id
 
-syntax ::=  ( 'syntax'  id hole_names '='  ( id )+  )
+bid ::=
+	 ( '_' | id )
 
-hole_names ::=  ( hole_name )+
+_ids ::=
+	 id+
 
-hole_name ::=  ( _simple_top_hole |  ( ( '{'  ( _simple_hole )  '}'  )  )  |  ( ( '{{'  ( _simple_hole )  '}}'  )  |  ( '⦃'  ( _simple_hole )  '⦄'  )  )  |  ( ( '{'  ( id '='  _simple_hole )  '}'  )  )  |  ( ( '{{'  ( id '='  _simple_hole )  '}}'  )  |  ( '⦃'  ( id '='  _simple_hole )  '⦄'  )  )  )
+_field_name ::=
+	 id
 
-_simple_top_hole ::=  ( id |  ( ( '('  ( _LAMBDA bid _ARROW id )  ')'  )  )  )
+_field_names ::=
+	 _field_name+
 
-_simple_hole ::=  ( id |  ( _LAMBDA bid _ARROW id )  )
+_maybe_dotted_id ::=
+	 _field_name
+	| '.' _field_name
+	| '..' _field_name
 
-pattern ::=  ( 'pattern'  id ( _lambda_bindings )?  '='  expr )
+_maybe_dotted_ids ::=
+	 _maybe_dotted_id+
+
+_arg_ids ::=
+	 _arg_id+
+
+_arg_id ::=
+	 _maybe_dotted_id
+	| '{' _maybe_dotted_ids '}'
+	| '{{' _maybe_dotted_ids '}}'
+	| '⦃' _maybe_dotted_ids '⦄'
+	| '.' ( '{' _field_names '}' )
+	| '.' ( '{{' _field_names '}}' | '⦃' _field_names '⦄' )
+	| '..' ( '{' _field_names '}' )
+	| '..' ( '{{' _field_names '}}' | '⦃' _field_names '⦄' )
 
-unquote_decl ::=  ( ( 'unquoteDecl'  '='  expr )  |  ( 'unquoteDecl'  _ids '='  expr )  |  ( 'unquoteDef'  _ids '='  expr )  )
+_binding_ids_and_absurds ::=
+	 _application | _qid '=' _qid | _qid '=' '_' | '-' '=' _qid | '-' '=' '_'
 
-id ::=  (  ([^\s\\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]* )
+attribute ::=
+	 '@' _expr_or_attr
 
-qid ::=   (  (  ( (([^\s;\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]*'.')*([^\s;\.\"\(\)\{\}@\'\\_]|'\'[^\sa-zA-Z]|'_'[^\s;\.\"\(\)\{\}@])[^\s;\.\"\(\)\{\}@]* |  id )  )  )
+attributes ::=
+	 attribute+
 
-bid ::=  (  ( '_'  |  id )  )
+expr ::=
+	 _typed_bindings _ARROW expr
+	| attributes? _atoms _ARROW expr
+	| _with_exprs '=' expr
+	| _with_exprs
 
-_ids ::=  ( id )+
+stmt ::=
+	 _typed_bindings _ARROW expr
+	| attributes? _atoms _ARROW expr
+	| _with_exprs '=' expr
+	| _with_exprs_stmt
 
-_field_name ::=  (  id )
+_with_exprs ::=
+	 ( _atoms '|' )* _application
 
-_field_names ::=  ( _field_name )+
+_with_exprs_stmt ::=
+	 ( _atoms '|' )* _application_stmt
 
-_maybe_dotted_id ::=  ( _field_name |  ( '.'  _field_name )  |  ( '..'  _field_name )  )
+_expr_or_attr ::=
+	 literal
+	| _qid
+	| '(' expr ')'
 
-_maybe_dotted_ids ::=  ( _maybe_dotted_id )+
+_application ::=
+	 _atoms? _expr2
 
-_arg_ids ::=  ( _arg_id )+
+_application_stmt ::=
+	 _atoms? _expr2_stmt
 
-_arg_id ::=  ( _maybe_dotted_id |  ( ( '{'  ( _maybe_dotted_ids )  '}'  )  )  |  ( ( '{{'  ( _maybe_dotted_ids )  '}}'  )  |  ( '⦃'  ( _maybe_dotted_ids )  '⦄'  )  )  |  ( '.'  ( ( '{'  ( _field_names )  '}'  )  )  )  |  ( '.'  ( ( '{{'  ( _field_names )  '}}'  )  |  ( '⦃'  ( _field_names )  '⦄'  )  )  )  |  ( '..'  ( ( '{'  ( _field_names )  '}'  )  )  )  |  ( '..'  ( ( '{{'  ( _field_names )  '}}'  )  |  ( '⦃'  ( _field_names )  '⦄'  )  )  )  )
+_expr2_without_let ::=
+	 lambda
+	| lambda_extended_or_absurd
+	| forall
+	| do
+	| atom
+	| 'quoteGoal' id 'in' expr
+	| 'tactic' _atoms
+	| 'tactic' _atoms '|' _with_exprs
 
-_binding_ids_and_absurds ::=   (  ( _application |  ( qid '='  qid )  |  ( qid '='  '_'  )  |  ( '-'  '='  qid )  |  ( '-'  '='  '_'  )  )  )
+_expr2 ::=
+	 _expr2_without_let
+	| let
 
-attribute ::=  ( '@'  _expr_or_attr )
+_expr2_stmt ::=
+	 _expr2_without_let
+	| let_in_do
 
-attributes ::=  ( attribute )+
+atom ::=
+	 _atom_curly
+	| _atom_no_curly
 
-expr ::=  ( ( _typed_bindings _ARROW expr )  |  ( ( attributes )?  _atoms _ARROW expr )  |  ( _with_exprs '='  expr )  |   (  _with_exprs )  )
+_atoms ::=
+	 atom+
 
-stmt ::=  ( ( _typed_bindings _ARROW expr )  |  ( ( attributes )?  _atoms _ARROW expr )  |  ( _with_exprs '='  expr )  |   (  _with_exprs_stmt )  )
+_atom_curly ::=
+	 '{' expr? '}'
 
-_with_exprs ::=  ( (  ( _atoms '|'  )  )*  _application )
+_atom_no_curly ::=
+	 '_'
+	| 'Prop'
+	| SetN
+	| 'quote'
+	| 'quoteTerm'
+	| 'quoteContext'
+	| 'unquote'
+	| PropN
+	| '{{' expr '}}'
+	| '⦃' expr '⦄'
+	| '(|' expr '|)'
+	| '⦇' expr '⦈'
+	| '(' ')'
+	| '{{' '}}'
+	| '⦃' '⦄'
+	| id '@' atom
+	| '.' atom
+	| record_assignments
+	| field_assignments
+	| _ELLIPSIS
+	| _expr_or_attr
 
-_with_exprs_stmt ::=  ( (  ( _atoms '|'  )  )*  _application_stmt )
+forall ::=
+	 _FORALL _typed_untyped_bindings _ARROW expr
 
-_expr_or_attr ::=  ( literal |  qid |  ( ( '('  ( expr )  ')'  )  )  )
+let ::=
+	 'let' _indent? ( _declaration _newline )* _declaration _newline? _let_body
 
-_application ::=  ( ( _atoms )?  _expr2 )
+let_in_do ::=
+	 'let' _indent? ( _declaration _newline )* _declaration ( _newline _dedent | _newline _let_body | _let_body )
 
-_application_stmt ::=  ( ( _atoms )?  _expr2_stmt )
+_let_body ::=
+	 'in' expr
 
-_expr2_without_let ::=  ( lambda |  (  lambda_extended_or_absurd )  |  forall |  do |   (  atom )  |  ( 'quoteGoal'  id 'in'  expr )  |  ( 'tactic'  _atoms )  |  ( 'tactic'  _atoms '|'  _with_exprs )  )
+lambda ::=
+	 _LAMBDA _lambda_bindings _ARROW expr
 
-_expr2 ::=  ( _expr2_without_let |  let )
+_lambda_bindings ::=
+	 _typed_untyped_binding* ( _typed_untyped_binding | '(' ')' | '{' '}' | '{{' '}}' | '⦃' '⦄' )
 
-_expr2_stmt ::=  ( _expr2_without_let |  (  let_in_do )  )
+lambda_extended_or_absurd ::=
+	 _LAMBDA ( '{' lambda_clause '}' | '{' _lambda_clauses '}' | 'where' _lambda_clauses | _lambda_bindings )
 
-atom ::=  ( _atom_curly |  _atom_no_curly )
+_lambda_clauses ::=
+	 ( _lambda_clause_maybe_absurd ';' )* _lambda_clause_maybe_absurd
 
-_atoms ::=  ( atom )+
+_lambda_clause_maybe_absurd ::=
+	 lambda_clause_absurd | lambda_clause
 
-_atom_curly ::=  ( ( '{'  ( ( expr )?  )  '}'  )  )
+lambda_clause_absurd ::=
+	 catchall_pragma? _application
 
-_atom_no_curly ::=  ( '_'  |  'Prop'  |  'Set'  |  'quote'  |  'quoteTerm'  |  'quoteContext'  |  'unquote'  |  SetN |  PropN |  ( ( '{{'  ( expr )  '}}'  )  |  ( '⦃'  ( expr )  '⦄'  )  )  |  ( ( '(|'  ( expr )  '|)'  )  |  ( '⦇'  ( expr )  '⦈'  )  )  |  ( '('  ')'  )  |  ( '{{'  '}}'  )  |  ( '⦃'  '⦄'  )  |  ( id '@'  atom )  |  ( '.'  atom )  |  record_assignments |  (  field_assignments )  |  _ELLIPSIS |  _expr_or_attr )
+lambda_clause ::=
+	 catchall_pragma? _atoms? _ARROW expr
 
-forall ::=  ( _FORALL _typed_untyped_bindings _ARROW expr )
+do ::=
+	 'do' _indent ( _do_stmt _newline )+ _dedent
 
-let ::=   (  ( 'let'  ( _indent )?  (  ( _declaration _newline )  )*  _declaration ( _newline )?  _let_body )  )
+_do_stmt ::=
+	 stmt do_where?
 
-let_in_do ::=   (  ( 'let'  ( _indent )?  (  ( _declaration _newline )  )*  _declaration ( ( _newline _dedent )  |  ( _newline _let_body )  |  _let_body )  )  )
+do_where ::=
+	 'where' _lambda_clauses
 
-_let_body ::=  ( 'in'  expr )
+record_assignments ::=
+	 'record' ( '{' _record_assignments? '}' )
 
-lambda ::=  ( _LAMBDA _lambda_bindings _ARROW expr )
+field_assignments ::=
+	 'record' _atom_no_curly ( '{' _field_assignments? '}' )
 
-_lambda_bindings ::=  ( (  _typed_untyped_binding )*  ( _typed_untyped_binding |  ( '('  ')'  )  |  ( '{'  '}'  )  |  ( '{{'  '}}'  )  |  ( '⦃'  '⦄'  )  )  )
+_record_assignments ::=
+	 ( _record_assignment ';' )* _record_assignment
 
-lambda_extended_or_absurd ::=  ( _LAMBDA ( ( ( '{'  ( lambda_clause )  '}'  )  )  |  ( ( '{'  ( _lambda_clauses )  '}'  )  )  |  ( 'where'  _lambda_clauses )  |  _lambda_bindings )  )
+_field_assignments ::=
+	 ( field_assignment ';' )* field_assignment
 
-_lambda_clauses ::=   (  ( (  ( _lambda_clause_maybe_absurd ';'  )  )*  _lambda_clause_maybe_absurd )  )
+_record_assignment ::=
+	 field_assignment
+	| module_assignment
 
-_lambda_clause_maybe_absurd ::=   (  ( lambda_clause_absurd |  lambda_clause )  )
+field_assignment ::=
+	 id '=' expr
 
-lambda_clause_absurd ::=  ( ( catchall_pragma )?  _application )
+module_assignment ::=
+	 module_name _atoms? _import_directives?
 
-lambda_clause ::=  ( ( catchall_pragma )?  ( _atoms )?  _ARROW expr )
+_typed_bindings ::=
+	 typed_binding+
 
-do ::=  ( 'do'  ( _indent ( ( _do_stmt _newline )  )+  _dedent )  )
+typed_binding ::=
+	 '(' _application ':' expr ')'
+	| '{' _binding_ids_and_absurds ':' expr '}'
+	| '{{' _binding_ids_and_absurds ':' expr '}}'
+	| '⦃' _binding_ids_and_absurds ':' expr '⦄'
+	| '.' ( '(' _application ':' expr ')' | '{' _binding_ids_and_absurds ':' expr '}' | '{{' _binding_ids_and_absurds ':' expr '}}' | '⦃' _binding_ids_and_absurds ':' expr '⦄' )
+	| '..' ( '(' _application ':' expr ')' | '{' _binding_ids_and_absurds ':' expr '}' | '{{' _binding_ids_and_absurds ':' expr '}}' | '⦃' _binding_ids_and_absurds ':' expr '⦄' )
+	| '(' attributes _application ':' expr ')'
+	| '{' attributes _binding_ids_and_absurds ':' expr '}'
+	| '{{' attributes _binding_ids_and_absurds ':' expr '}}'
+	| '⦃' attributes _binding_ids_and_absurds ':' expr '⦄'
+	| '(' open ')'
+	| '(' 'let' _declaration_block ')'
 
-_do_stmt ::=  ( stmt ( do_where )?  )
+_typed_untyped_bindings ::=
+	 _typed_untyped_binding+
 
-do_where ::=  ( 'where'  _lambda_clauses )
+_typed_untyped_binding ::=
+	 untyped_binding
+	| typed_binding
 
-record_assignments ::=  ( 'record'  ( ( '{'  ( ( _record_assignments )?  )  '}'  )  )  )
+untyped_binding ::=
+	 bid
+	| '{' _binding_ids_and_absurds '}'
+	| '{{' _binding_ids_and_absurds '}}'
+	| '⦃' _binding_ids_and_absurds '⦄'
+	| '.' ( bid | '{' _binding_ids_and_absurds '}' | '{{' _binding_ids_and_absurds '}}' | '⦃' _binding_ids_and_absurds '⦄' )
+	| '..' ( bid | '{' _binding_ids_and_absurds '}' | '{{' _binding_ids_and_absurds '}}' | '⦃' _binding_ids_and_absurds '⦄' )
+	| '(' _binding_ids_and_absurds ')'
+	| '(' attributes _binding_ids_and_absurds ')'
+	| '{' attributes _binding_ids_and_absurds '}'
+	| '{{' attributes _binding_ids_and_absurds '}}'
+	| '⦃' attributes _binding_ids_and_absurds '⦄'
 
-field_assignments ::=  ( 'record'  _atom_no_curly ( ( '{'  ( ( _field_assignments )?  )  '}'  )  )  )
+integer ::=
+	 '#x2D-'?('0x'[0-9a-fA-F]+|[0-9]+)
 
-_record_assignments ::=  ( (  ( _record_assignment ';'  )  )*  _record_assignment )
+string ::=
+	 '\".'*'\"'
 
-_field_assignments ::=  ( (  ( field_assignment ';'  )  )*  field_assignment )
+literal ::=
+	 '#x2D-'?('0x'[0-9a-fA-F]+|[0-9]+)
+	| '\".'*'\"'
 
-_record_assignment ::=  ( field_assignment |  module_assignment )
+comment ::=
+	 ( '--' '.'* | '{--}' | '{-' [^#x23] ( [^-] | '-'[^}] )* '-}' )
 
-field_assignment ::=  ( (  id )  '='  expr )
+SetN ::=
+	 'Set' atom?
 
-module_assignment ::=  ( module_name ( _atoms )?  ( _import_directives )?  )
-
-_typed_bindings ::=  ( typed_binding )+
-
-typed_binding ::=  ( ( ( ( ( '('  ( _application ':'  expr )  ')'  )  )  |  ( ( '{'  ( _binding_ids_and_absurds ':'  expr )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds ':'  expr )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds ':'  expr )  '⦄'  )  )  )  |  ( '.'  ( ( ( '('  ( _application ':'  expr )  ')'  )  )  |  ( ( '{'  ( _binding_ids_and_absurds ':'  expr )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds ':'  expr )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds ':'  expr )  '⦄'  )  )  )  )  |  ( '..'  ( ( ( '('  ( _application ':'  expr )  ')'  )  )  |  ( ( '{'  ( _binding_ids_and_absurds ':'  expr )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds ':'  expr )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds ':'  expr )  '⦄'  )  )  )  )  )  |  ( ( '('  ( attributes _application ':'  expr )  ')'  )  )  |  ( ( '{'  ( attributes _binding_ids_and_absurds ':'  expr )  '}'  )  )  |  ( ( '{{'  ( attributes _binding_ids_and_absurds ':'  expr )  '}}'  )  |  ( '⦃'  ( attributes _binding_ids_and_absurds ':'  expr )  '⦄'  )  )  |  ( ( '('  ( open )  ')'  )  )  |  ( ( '('  ( 'let'  _declaration_block )  ')'  )  )  )
-
-_typed_untyped_bindings ::=  ( _typed_untyped_binding )+
-
-_typed_untyped_binding ::=  ( untyped_binding |  typed_binding )
-
-untyped_binding ::=  ( ( ( bid |  ( ( '{'  ( _binding_ids_and_absurds )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds )  '⦄'  )  )  )  |  ( '.'  ( bid |  ( ( '{'  ( _binding_ids_and_absurds )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds )  '⦄'  )  )  )  )  |  ( '..'  ( bid |  ( ( '{'  ( _binding_ids_and_absurds )  '}'  )  )  |  ( ( '{{'  ( _binding_ids_and_absurds )  '}}'  )  |  ( '⦃'  ( _binding_ids_and_absurds )  '⦄'  )  )  )  )  )  |  ( ( '('  ( _binding_ids_and_absurds )  ')'  )  )  |  ( ( '('  ( attributes _binding_ids_and_absurds )  ')'  )  )  |  ( ( '{'  ( attributes _binding_ids_and_absurds )  '}'  )  )  |  ( ( '{{'  ( attributes _binding_ids_and_absurds )  '}}'  )  |  ( '⦃'  ( attributes _binding_ids_and_absurds )  '⦄'  )  )  )
-
-integer ::=  '-'?('0x'[0-9a-fA-F]+|[0-9]+)
-
-string ::=  '"'[^"]*'"'
-
-literal ::=  ( '-'?('0x'[0-9a-fA-F]+|[0-9]+) |  '"'[.]*'"' )
-
-comment ::=  (  (  (  ( '--'  [^\n]* )  )  |  ( '{--}'  )  |  ( '{-'  [^#] (  ( [^-] |  '-'[^}] )  )*  '-}' )  )  )
-
-SetN ::=  'setN'
-
-PropN ::=  'propN'
+PropN ::=
+	 'propN'
 

@@ -1,105 +1,203 @@
-/*
-Grammar originally from https://github.com/alemuller/tree-sitter-lp
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-lp/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-program ::=  ( (  _statement )*  )
+program ::=
+	 _statement*
 
-_statement ::=  ( fact |  rule |  integrity_constraint |  optimization |  show_statement )
+_statement ::=
+	 fact
+	| rule
+	| integrity_constraint
+	| optimization
+	| show_statement
 
-fact ::=  ( head '.'  )
+fact ::=
+	 head '.'
 
-rule ::=  ( head ':-'  body '.'  )
+rule ::=
+	 head ':-' body '.'
 
-integrity_constraint ::=  ( ':-'  body '.'  )
+integrity_constraint ::=
+	 ':-' body '.'
 
-optimization ::=  ( ':~'  body '.'  ( ( '['  ( ( prioritized_term (  ( ','  prioritized_term )  )*  )  )?  ']'  )  )?  )
+optimization ::=
+	 ':~' body '.' ( '[' ( prioritized_term ( ',' prioritized_term )* )? ']' )?
 
-head ::=  ( disjunction |  condition |  choice )
+head ::=
+	 disjunction
+	| condition
+	| choice
 
-disjunction ::=  ( classical_literal (  ( ';'  classical_literal )  )*  )
+disjunction ::=
+	 classical_literal ( ';' classical_literal )*
 
-classical_literal ::=  ( ( '-'  )?  ( constant |  function )  )
+classical_literal ::=
+	 '-'? ( constant | function )
 
-choice ::=  ( (  ( (  left_guard )  )?  )  ( aggregate_function )?  '{'  ( ( choice_element (  ( ';'  choice_element )  )*  )  )?  '}'  (  ( (  right_guard )  )?  )  )
+choice ::=
+	 left_guard? aggregate_function? '{' ( choice_element ( ';' choice_element )* )? '}' right_guard?
 
-choice_element ::=  ( ( (  aggregate_literals )  (  ( ';'  (  aggregate_literals )  )  )*  )  |  ( terms ( ( ':'  ( ( _literal ( ( ':'  ( (  aggregate_literals )  )?  )  )?  )  )?  )  )?  )  )
+choice_element ::=
+	 aggregate_literals ( ';' aggregate_literals )*
+	| terms ( ':' ( _literal ( ':' aggregate_literals? )? )? )?
 
-aggregate_literals ::=  ( _literal (  ( ','  _literal )  )*  )
+aggregate_literals ::=
+	 _literal ( ',' _literal )*
 
-left_guard ::=  ( _term ( (  ( '='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  |  '=='  |  '/='  |  '<>'  )  )  )?  )
+left_guard ::=
+	 _term ( '=' | '!=' | '<' | '<=' | '>' | '>=' | '==' | '/=' | '<>' )?
 
-right_guard ::=  ( ( (  ( '='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  |  '=='  |  '/='  |  '<>'  )  )  )?  _term )
+right_guard ::=
+	 ( '=' | '!=' | '<' | '<=' | '>' | '>=' | '==' | '/=' | '<>' )? _term
 
-body ::=  ( _literal (  ( ( ','  |  ';'  )  _literal )  )*  )
+body ::=
+	 _literal ( ( ',' | ';' ) _literal )*
 
-aggregate ::=  ( (  ( (  left_guard )  )?  )  ( aggregate_function )?  '{'  ( ( aggregate_element (  ( ';'  aggregate_element )  )*  )  )?  '}'  (  ( (  right_guard )  )?  )  )
+aggregate ::=
+	 left_guard? aggregate_function? '{' ( aggregate_element ( ';' aggregate_element )* )? '}' right_guard?
 
-aggregate_function ::=  (  ( '#'  ( ( '_'  |  '’'  |  'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  |  '+'  )  )+  )  )
+aggregate_function ::=
+	 ( '#' ( '_' | '’' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '+' )+ )
 
-aggregate_element ::=  ( ( (  aggregate_literals )  (  ( ';'  (  aggregate_literals )  )  )*  )  |  ( terms ':'  ( ( ':'  ( (  aggregate_literals )  )?  )  )?  )  )
+aggregate_element ::=
+	 aggregate_literals ( ';' aggregate_literals )*
+	| terms ':' ( ':' aggregate_literals? )?
 
-literals ::=  ( _literal (  ( ( ','  |  ';'  )  _literal )  )*  )
+literals ::=
+	 _literal ( ( ',' | ';' ) _literal )*
 
-_literal ::=  ( comparison |  condition |  negation |  _term |  aggregate )
+_literal ::=
+	 comparison
+	| condition
+	| negation
+	| _term
+	| aggregate
 
-comparison ::=  ( (  _term )  (  ( '='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  |  '=='  |  '/='  |  '<>'  )  )  (  _term )  )
+comparison ::=
+	 _term ( '=' | '!=' | '<' | '<=' | '>' | '>=' | '==' | '/=' | '<>' ) _term
 
-condition ::=   (  ( _term ':'  _literal ( ( (  ( ','  _literal )  )*  )  )?  )  )
+condition ::=
+	 _term ':' _literal ( ( ',' _literal )* )?
 
-negation ::=  ( 'not'  _literal )
+negation ::=
+	 'not' _literal
 
-_aggregate ::=  ( terms |  pooling )
+_aggregate ::=
+	 terms
+	| pooling
 
-terms ::=  ( _term (  ( ','  _term )  )*  )
+terms ::=
+	 _term ( ',' _term )*
 
-pooling ::=  ( terms ';'  ( terms (  ( ';'  terms )  )*  )  )
+pooling ::=
+	 terms ';' terms ( ';' terms )*
 
-_term ::=  ( interval |  tuple |  _simpleterm |  _function |  prioritized_term )
+_term ::=
+	 interval
+	| tuple
+	| _simpleterm
+	| _function
+	| prioritized_term
 
-_simpleterm ::=  ( _constant |  string |  variable |  anonymous_variable |  special_constant )
+_simpleterm ::=
+	 _constant
+	| string
+	| variable
+	| anonymous_variable
+	| special_constant
 
-prioritized_term ::=  ( (  _term )  '@'  (  integer )  )
+prioritized_term ::=
+	 _term '@' integer
 
-_constant ::=  ( constant |  boolean |  integer )
+_constant ::=
+	 constant
+	| boolean
+	| integer
 
-constant ::=  (  ( (  '_'  )*  ( 'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  )  (  ( '_'  |  '’'  |  'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  )  )*  )  )
+constant ::=
+	 ( '_'* ( 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' ) ( '_' | '’' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' )* )
 
-boolean ::=  ( (  '#true'  )  |  (  '#false'  )  )
+boolean ::=
+	 '#true'
+	| '#false'
 
-_digit ::=  ( (  '0'  )  |  (  '1'  )  |  (  '2'  )  |  (  '3'  )  |  (  '4'  )  |  (  '5'  )  |  (  '6'  )  |  (  '7'  )  |  (  '8'  )  |  (  '9'  )  )
+_digit ::=
+	 '0'
+	| '1'
+	| '2'
+	| '3'
+	| '4'
+	| '5'
+	| '6'
+	| '7'
+	| '8'
+	| '9'
 
-_digit_immed ::=  ( ( (  '0'  )  |  (  '1'  )  |  (  '2'  )  |  (  '3'  )  |  (  '4'  )  |  (  '5'  )  |  (  '6'  )  |  (  '7'  )  |  (  '8'  )  |  (  '9'  )  )  )
+_digit_immed ::=
+	 '0'
+	| '1'
+	| '2'
+	| '3'
+	| '4'
+	| '5'
+	| '6'
+	| '7'
+	| '8'
+	| '9'
 
-integer ::=  ( _digit (  _digit_immed )*  )
+integer ::=
+	 _digit _digit_immed*
 
-string ::=  ( '"'  (  ( (   (  [^"\n] )  )  |  escape_sequence )  )*  (  '"'  )  )
+string ::=
+	 '"'  ( [^"#x0A] | escape_sequence )* '"' 
 
-escape_sequence ::=  (  ( '\\\'  |  '\\n'  |  '\\"'  )  )
+escape_sequence ::=
+	 ( '\\' | '\n' | '\"' )
 
-variable ::=  (  ( (  '_'  )*  ( 'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  )  (  ( '_'  |  '’'  |  'a'  |  'b'  |  'c'  |  'd'  |  'e'  |  'f'  |  'g'  |  'h'  |  'i'  |  'j'  |  'k'  |  'l'  |  'm'  |  'n'  |  'o'  |  'p'  |  'q'  |  'r'  |  's'  |  't'  |  'u'  |  'v'  |  'w'  |  'x'  |  'y'  |  'z'  |  'A'  |  'B'  |  'C'  |  'D'  |  'E'  |  'F'  |  'G'  |  'H'  |  'I'  |  'J'  |  'K'  |  'L'  |  'M'  |  'N'  |  'O'  |  'P'  |  'Q'  |  'R'  |  'S'  |  'T'  |  'U'  |  'V'  |  'W'  |  'X'  |  'Y'  |  'Z'  |  '0'  |  '1'  |  '2'  |  '3'  |  '4'  |  '5'  |  '6'  |  '7'  |  '8'  |  '9'  )  )*  )  )
+variable ::=
+	 ( '_'* ( 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ) ( '_' | '’' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' )* )
 
-_function ::=  ( function |  external_function |  binary_arithmetic_function |  unary_arithmetic_function )
+_function ::=
+	 function
+	| external_function
+	| binary_arithmetic_function
+	| unary_arithmetic_function
 
-function ::=  ( constant '('  _aggregate ')'  )
+function ::=
+	 constant '(' _aggregate ')'
 
-external_function ::=  ( '@'  constant '('  _aggregate ')'  )
+external_function ::=
+	 '@' constant '(' _aggregate ')'
 
-binary_arithmetic_function ::=   (  ( (  _term )  (  ( '+'  |  '-'  |  '*'  |  '/'  |  '\\'  |  '**'  |  '&'  |  '?'  |  '^'  )  )  (  _term )  )  )
+binary_arithmetic_function ::=
+	 _term ( '+' | '-' | '*' | '/' | '\\'  | '**' | '&' | '?' | '^' ) _term
 
-unary_arithmetic_function ::=   (  ( ( '|'  (  _term )  '|'  )  |  ( ( '-'  |  '~'  )  (  _term )  )  )  )
+unary_arithmetic_function ::=
+	 '|' _term '|' | ( '-' | '~' ) _term
 
-tuple ::=  ( '('  ( _aggregate )?  ')'  )
+tuple ::=
+	 '(' _aggregate? ')'
 
-interval ::=  ( (  _simpleterm )  (  '..'  )  (  _simpleterm )  )
+interval ::=
+	 _simpleterm '..' _simpleterm
 
-anonymous_variable ::=  (  '_'  )
+anonymous_variable ::=
+	 '_'
 
-special_constant ::=  ( (  '#inf'  )  |  (  '#sup'  )  )
+special_constant ::=
+	 '#inf'
+	| '#sup'
 
-show_statement ::=   (  ( '#show'  ( ( ( constant '/'  integer )  |  ( _term ':'  literals )  )  )?  '.'  )  )
+show_statement ::=
+	 '#show' ( constant '/' integer | _term ':' literals )? '.'
 
-comment ::=  (  (  '%'([^\*\n][^\n]*)? )  |   (  '%*'([^\*]|'*'[^%])*'*%' )  )
+comment ::=
+	 '%'([^\*#x0A][^#x0A]*)?
+	| '%\'*([^\*]|'\'*[^%])*'\'*'%'
 

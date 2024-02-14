@@ -1,0 +1,55 @@
+//
+// From tree-sitter-json5/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+file ::=
+	 object | array
+
+comment ::=
+	 ( '//' [^#x0A]* | '/*' '.'* '*/' )
+
+object ::=
+	 '{' ( member ( ',' member )* ','? )? '}'
+
+member ::=
+	 name ':' _value
+
+name ::=
+	 string
+	| identifier
+
+identifier ::=
+	 ( [\$_\p{L}] ( [\$_\p{L}] | [0-9] )* )
+
+array ::=
+	 '[' ( _value ( ',' _value )* ','? )? ']'
+
+string ::=
+	 ( '"'  ( '\\'  ( '"'  | '\\'  | 'b' | 'f' | 'n' | 'r' | 't' | 'v' ) | [^"\] )* '"'  | "'"  ( '\\'  ( "'"  | '\\'  | 'b' | 'f' | 'n' | 'r' | 't' | 'v' ) | [^'\] )* "'"  )
+
+number ::=
+	 ( [+-]? ( '0' [xX] [0-9a-fA-F]+ | ( '0' | [1-9] [0-9]* ) '.' [0-9]* ( [eE] [+-]? [0-9]+ )? | '.' [0-9]* ( [eE] [+-]? [0-9]+ )? | ( '0' | [1-9] [0-9]* ) ( [eE] [+-]? [0-9]+ )? | 'Infinity' | 'NaN' ) )
+
+null ::=
+	 'null'
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+_value ::=
+	 object
+	| array
+	| number
+	| string
+	| null
+	| true
+	| false
+

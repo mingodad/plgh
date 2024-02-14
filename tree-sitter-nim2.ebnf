@@ -1,0 +1,812 @@
+//
+// From tree-sitter-nim2/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _semi_statement_list
+
+statement_list ::=
+	 _block_statement_list
+	| _line_statement_list
+	| _layout_empty
+
+_line_statement_list ::=
+	 _simple_statement ( ';' _simple_statement )*
+
+_block_statement_list ::=
+	 _layout_start _semi_statement_list? _layout_end
+
+_semi_statement_list ::=
+	 ( _statement ( ';' | _layout_terminator ) )+
+
+_statement ::=
+	 _simple_statement
+	| _complex_statement
+
+_complex_statement ::=
+	 while
+	| static_statement
+	| defer
+	| typeof
+	| _infix_typeof_expression
+	| _declaration
+
+_simple_statement ::=
+	 _expression_statement
+	| _simple_statement_no_expression
+
+_simple_statement_no_expression ::=
+	 import_statement
+	| import_from_statement
+	| export_statement
+	| include_statement
+	| discard_statement
+	| return_statement
+	| raise_statement
+	| yield_statement
+	| break_statement
+	| continue_statement
+	| assembly_statement
+	| bind_statement
+	| mixin_statement
+	| pragma_statement
+
+_expression_statement ::=
+	 _expression
+	| assignment
+	| _call_extended
+	| _infix_extended
+	| _prefix_extended
+
+import_statement ::=
+	 'i_'?[mM]'_'?[pP]'_'?[oO]'_'?[rR]'_'?[tT] _import_body
+
+export_statement ::=
+	 'e_'?[xX]'_'?[pP]'_'?[oO]'_'?[rR]'_'?[tT] _import_body
+
+_import_body ::=
+	 expression_list
+	| _import_except
+
+_import_except ::=
+	 _expression _inhibit_keyword_termination? except_clause
+
+except_clause ::=
+	 'e_'?[xX]'_'?[cC]'_'?[eE]'_'?[pP]'_'?[tT] expression_list
+
+include_statement ::=
+	 'i_'?[nN]'_'?[cC]'_'?[lL]'_'?[uU]'_'?[dD]'_'?[eE] expression_list
+
+discard_statement ::=
+	 'd_'?[iI]'_'?[sS]'_'?[cC]'_'?[aA]'_'?[rR]'_'?[dD] _expression_with_post_block?
+
+return_statement ::=
+	 'r_'?[eE]'_'?[tT]'_'?[uU]'_'?[rR]'_'?[nN] _expression_with_post_block?
+
+raise_statement ::=
+	 'r_'?[aA]'_'?[iI]'_'?[sS]'_'?[eE] _expression_with_post_block?
+
+yield_statement ::=
+	 'y_'?[iI]'_'?[eE]'_'?[lL]'_'?[dD] _expression_with_post_block?
+
+break_statement ::=
+	 'b_'?[rR]'_'?[eE]'_'?[aA]'_'?[kK] _expression_with_post_block?
+
+continue_statement ::=
+	 'c_'?[oO]'_'?[nN]'_'?[tT]'_'?[iI]'_'?[nN]'_'?[uU]'_'?[eE] _expression_with_post_block?
+
+assembly_statement ::=
+	 'a_'?[sS]'_'?[mM] pragma_list? _string_literal
+
+bind_statement ::=
+	 'b_'?[iI]'_'?[nN]'_'?[dD] expression_list
+
+mixin_statement ::=
+	 'm_'?[iI]'_'?[xX]'_'?[iI]'_'?[nN] expression_list
+
+import_from_statement ::=
+	 'f_'?[rR]'_'?[oO]'_'?[mM] _expression 'i_'?[mM]'_'?[pP]'_'?[oO]'_'?[rR]'_'?[tT] expression_list
+
+while ::=
+	 'w_'?[hH]'_'?[iI]'_'?[lL]'_'?[eE] _simple_expression ':' statement_list
+
+static_statement ::=
+	 's_'?[tT]'_'?[aA]'_'?[tT]'_'?[iI]'_'?[cC] ':' statement_list
+
+pragma_statement ::=
+	 pragma_list ( ':' statement_list )?
+
+defer ::=
+	 'd_'?[eE]'_'?[fF]'_'?[eE]'_'?[rR] ':' statement_list
+
+_typeof_expression ::=
+	 typeof
+	| _infix_typeof_expression
+
+typeof ::=
+	 't_'?[yY]'_'?[pP]'_'?[eE] '(' _simple_expression _paren_close
+
+_infix_typeof_expression ::=
+	 _typeof_expression _infix_operator_10r ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_10l ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_9 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_8 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_7 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_6 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_5 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_4 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_3 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_2 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_1 ( _typeof_expression | _simple_expression )
+	| _typeof_expression _infix_operator_0 ( _typeof_expression | _simple_expression )
+
+_declaration ::=
+	 proc_declaration
+	| func_declaration
+	| method_declaration
+	| iterator_declaration
+	| macro_declaration
+	| template_declaration
+	| converter_declaration
+	| using_section
+	| const_section
+	| let_section
+	| var_section
+	| type_section
+
+proc_declaration ::=
+	 'p_'?[rR]'_'?[oO]'_'?[cC] _routine_declaration
+
+func_declaration ::=
+	 'f_'?[uU]'_'?[nN]'_'?[cC] _routine_declaration
+
+method_declaration ::=
+	 'm_'?[eE]'_'?[tT]'_'?[hH]'_'?[oO]'_'?[dD] _routine_declaration
+
+iterator_declaration ::=
+	 'i_'?[tT]'_'?[eE]'_'?[rR]'_'?[aA]'_'?[tT]'_'?[oO]'_'?[rR] _routine_declaration
+
+macro_declaration ::=
+	 'm_'?[aA]'_'?[cC]'_'?[rR]'_'?[oO] _routine_declaration
+
+template_declaration ::=
+	 't_'?[eE]'_'?[mM]'_'?[pP]'_'?[lL]'_'?[aA]'_'?[tT]'_'?[eE] _routine_declaration
+
+converter_declaration ::=
+	 'c_'?[oO]'_'?[nN]'_'?[vV]'_'?[eE]'_'?[rR]'_'?[tT]'_'?[eE]'_'?[rR] _routine_declaration
+
+_routine_declaration ::=
+	 ( _symbol | exported_symbol ) term_rewriting_pattern? generic_parameter_list? parameter_declaration_list? ( ':' type_expression )? pragma_list? ( '=' statement_list )?
+
+generic_parameter_list ::=
+	 '[' _parameter_declaration_list? _bracket_close
+
+term_rewriting_pattern ::=
+	 '{' _semi_statement_list _curly_close
+
+using_section ::=
+	 'u_'?[sS]'_'?[iI]'_'?[nN]'_'?[gG] _variable_declaration_section
+
+const_section ::=
+	 'c_'?[oO]'_'?[nN]'_'?[sS]'_'?[tT] _variable_declaration_section
+
+let_section ::=
+	 'l_'?[eE]'_'?[tT] _variable_declaration_section
+
+var_section ::=
+	 'v_'?[aA]'_'?[rR] _variable_declaration_section
+
+_variable_declaration_section ::=
+	 variable_declaration
+	| _layout_start ( variable_declaration _layout_terminator )* _layout_end
+
+variable_declaration ::=
+	 symbol_declaration_list ':' type_expression ( '=' _expression_with_post_block )?
+	| symbol_declaration_list ( '=' _expression_with_post_block )?
+
+type_section ::=
+	 't_'?[yY]'_'?[pP]'_'?[eE] ( type_declaration | _layout_start ( type_declaration _layout_terminator )* _layout_end )
+
+type_declaration ::=
+	 type_symbol_declaration ( '=' _type_definition )?
+
+type_symbol_declaration ::=
+	 ( _symbol | exported_symbol ) generic_parameter_list? pragma_list?
+
+_type_definition ::=
+	 type_expression
+	| enum_declaration
+	| object_declaration
+	| concept_declaration
+	| _distinct_declaration
+	| _ref_declaration
+	| _pointer_declaration
+	| _tuple_declaration
+	| _call_extended
+
+_distinct_declaration ::=
+	 'd_'?[iI]'_'?[sS]'_'?[tT]'_'?[iI]'_'?[nN]'_'?[cC]'_'?[tT] _type_definition
+
+_ref_declaration ::=
+	 'r_'?[eE]'_'?[fF] _type_definition
+
+_pointer_declaration ::=
+	 'p_'?[tT]'_'?[rR] _type_definition
+
+enum_declaration ::=
+	 'e_'?[nN]'_'?[uU]'_'?[mM] ( ( enum_field_declaration ','? )+ | _layout_start ( ( enum_field_declaration ','? )+ _layout_terminator )* _layout_end )
+
+enum_field_declaration ::=
+	 symbol_declaration ( '=' _expression )?
+
+_tuple_declaration ::=
+	 't_'?[uU]'_'?[pP]'_'?[lL]'_'?[eE] _layout_start ( _identifier_declaration _layout_terminator )+ _layout_end
+
+object_declaration ::=
+	 'o_'?[bB]'_'?[jJ]'_'?[eE]'_'?[cC]'_'?[tT] pragma_list? ( 'o_'?[fF] type_expression )? _object_field_declaration_list?
+
+_object_field_declaration_branch_list ::=
+	 _object_field_declaration
+	| _object_field_declaration_list
+	| _layout_empty
+
+_object_field_declaration_list ::=
+	 _layout_start ( _object_field_declaration _layout_terminator )* _layout_end
+
+_object_field_declaration ::=
+	 _identifier_declaration
+	| conditional_declaration
+	| variant_declaration
+	| nil_literal
+	| 'd_'?[iI]'_'?[sS]'_'?[cC]'_'?[aA]'_'?[rR]'_'?[dD]
+
+conditional_declaration ::=
+	 'w_'?[hH]'_'?[eE]'_'?[nN] _expression ':' _object_field_declaration_branch_list ( _elif_declaration_branch | _else_declaration_branch | _inhibit_keyword_termination )*
+
+_elif_declaration_branch ::=
+	 'e_'?[lL]'_'?[iI]'_'?[fF] _expression ':' _object_field_declaration_branch_list
+
+variant_declaration ::=
+	 'c_'?[aA]'_'?[sS]'_'?[eE] _variant_declaration_body
+
+_variant_declaration_body ::=
+	 variant_discriminator_declaration ':'? _of_declaration_branch* _inhibit_keyword_termination? _else_declaration_branch?
+
+variant_discriminator_declaration ::=
+	 _identifier_declaration
+
+_of_declaration_branch ::=
+	 _case_of expression_list ':' _object_field_declaration_branch_list
+
+_else_declaration_branch ::=
+	 'e_'?[lL]'_'?[sS]'_'?[eE] ':' _object_field_declaration_branch_list
+
+concept_declaration ::=
+	 'c_'?[oO]'_'?[nN]'_'?[cC]'_'?[eE]'_'?[pP]'_'?[tT] _concept_parameter_list? ( 'o_'?[fF] refinement_list )? _block_statement_list?
+
+refinement_list ::=
+	 type_expression ( ',' type_expression )*
+
+_concept_parameter_list ::=
+	 _concept_parameter ( ',' _concept_parameter )*
+
+_concept_parameter ::=
+	 _symbol
+	| _concept_pointer_parameter
+	| _concept_ref_parameter
+	| _concept_static_parameter
+	| _concept_type_parameter
+	| _concept_var_parameter
+
+_concept_pointer_parameter ::=
+	 'p_'?[tT]'_'?[rR] _symbol
+
+_concept_ref_parameter ::=
+	 'r_'?[eE]'_'?[fF] _symbol
+
+_concept_static_parameter ::=
+	 's_'?[tT]'_'?[aA]'_'?[tT]'_'?[iI]'_'?[cC] _symbol
+
+_concept_type_parameter ::=
+	 't_'?[yY]'_'?[pP]'_'?[eE] _symbol
+
+_concept_var_parameter ::=
+	 'v_'?[aA]'_'?[rR] _symbol
+
+_expression_with_post_block ::=
+	 _expression_with_call_do
+	| _call_block
+	| _command_block
+	| _dot_generic_call_block
+	| _infix_extended
+	| _prefix_extended
+
+_expression_with_call_do ::=
+	 _expression
+	| _call_do
+	| _command_complex_expression
+	| _dot_generic_call_do
+
+_expression ::=
+	 _simple_expression
+	| proc_expression
+	| func_expression
+	| iterator_expression
+	| block
+	| if
+	| when
+	| case
+	| try
+	| for
+
+_simple_expression ::=
+	 _simple_expression_command_start
+	| _prefix_expression
+
+_simple_expression_command_start ::=
+	 _basic_expression
+	| _command_expression
+	| _infix_expression
+	| _prefix_expression_command_start
+
+_basic_expression ::=
+	 _literal
+	| _symbol
+	| array_construction
+	| curly_construction
+	| tuple_construction
+	| cast
+	| parenthesized
+	| dot_expression
+	| bracket_expression
+	| curly_expression
+	| generalized_string
+	| pragma_expression
+	| object_type
+	| tuple_type
+	| enum_type
+	| var_type
+	| out_type
+	| distinct_type
+	| ref_type
+	| pointer_type
+	| dot_generic_call
+	| _proc_type
+	| _iterator_type
+	| _call_expression
+	| _sigil_expression
+
+for ::=
+	 'f_'?[oO]'_'?[rR] _for_body ':' statement_list
+
+_for_body ::=
+	 symbol_declaration_list 'i_'?[nN] _expression
+
+block ::=
+	 'b_'?[lL]'_'?[oO]'_'?[cC]'_'?[kK] _symbol? ':' statement_list
+
+if ::=
+	 'i_'?[fF] _expression _if_body
+
+when ::=
+	 'w_'?[hH]'_'?[eE]'_'?[nN] _expression _if_body
+
+_if_body ::=
+	 ':' statement_list _if_alternatives?
+
+_if_branch ::=
+	 elif_branch
+	| else_branch
+
+_if_alternatives ::=
+	 ( _inhibit_keyword_termination | _if_branch )+
+
+case ::=
+	 'c_'?[aA]'_'?[sS]'_'?[eE] _expression ':'? of_branch* _if_alternatives?
+
+try ::=
+	 't_'?[rR]'_'?[yY] ':' statement_list ( _inhibit_keyword_termination | _try_branch )*
+
+_try_branch ::=
+	 except_branch
+	| finally_branch
+
+of_branch ::=
+	 _case_of expression_list ':' statement_list
+
+elif_branch ::=
+	 'e_'?[lL]'_'?[iI]'_'?[fF] _expression ':' statement_list
+
+else_branch ::=
+	 'e_'?[lL]'_'?[sS]'_'?[eE] ':' statement_list
+
+except_branch ::=
+	 'e_'?[xX]'_'?[cC]'_'?[eE]'_'?[pP]'_'?[tT] expression_list? ':' statement_list
+
+finally_branch ::=
+	 'f_'?[iI]'_'?[nN]'_'?[aA]'_'?[lL]'_'?[lL]'_'?[yY] ':' statement_list
+
+do_block ::=
+	 'd_'?[oO] parameter_declaration_list? ( '->' type_expression )? pragma_list? ':' statement_list
+
+_call_extended ::=
+	 _command_statement
+	| _call_block
+	| _dot_generic_call_block
+
+_command_statement ::=
+	 _basic_expression _command_statement_argument_list
+
+_command_statement_argument_list ::=
+	 _equal_expression_list ( ':' statement_list _post_expression_block_tail? )?
+
+_command_block ::=
+	 _basic_expression _command_block_argument_list
+
+_command_block_argument_list ::=
+	 _command_expression_argument_list ':' statement_list _post_expression_block_tail?
+
+_dot_generic_call_block ::=
+	 _dot_generic_head _call_block_argument_list
+
+_call_block ::=
+	 _basic_expression _call_block_argument_list
+
+_call_block_argument_list ::=
+	 _call_argument_list? _post_expression_block
+
+_dot_generic_call_do ::=
+	 _dot_generic_head _call_do_argument_list
+
+_call_do ::=
+	 _basic_expression _call_do_argument_list
+
+_call_do_argument_list ::=
+	 _call_argument_list? do_block _post_expression_block_tail?
+
+_call_expression ::=
+	 _basic_expression _call_argument_list
+
+_call_argument_list ::=
+	 '(' _colon_equal_expression_list? _paren_close
+
+_command_complex_expression ::=
+	 _basic_expression _command_complex_expression_argument_list
+
+_command_complex_expression_argument_list ::=
+	 _expression_with_call_do
+
+_command_expression ::=
+	 _basic_expression _command_expression_argument_list
+
+_command_expression_argument_list ::=
+	 _simple_expression_command_start
+
+dot_generic_call ::=
+	 _dot_generic_head _call_argument_list?
+
+_dot_generic_head ::=
+	 _basic_expression '.' _symbol _dot_generic_argument_list
+
+_dot_generic_argument_list ::=
+	 '[:' _expression ( ',' _expression )* _bracket_close
+
+_post_expression_block ::=
+	 ( ':' statement_list | do_block ) _post_expression_block_tail?
+
+_post_expression_block_tail ::=
+	 ( ( _if_branch | of_branch | _try_branch | do_block | _inhibit_keyword_termination ) )+
+
+proc_expression ::=
+	 _proc_type '=' statement_list
+
+func_expression ::=
+	 _func_type '=' statement_list
+
+iterator_expression ::=
+	 _iterator_type '=' statement_list
+
+type_expression ::=
+	 _simple_expression
+
+object_type ::=
+	 'o_'?[bB]'_'?[jJ]'_'?[eE]'_'?[cC]'_'?[tT]
+
+enum_type ::=
+	 'e_'?[nN]'_'?[uU]'_'?[mM]
+
+tuple_type ::=
+	 't_'?[uU]'_'?[pP]'_'?[lL]'_'?[eE] _tuple_field_declaration_list?
+
+var_type ::=
+	 'v_'?[aA]'_'?[rR] type_expression?
+
+out_type ::=
+	 'o_'?[uU]'_'?[tT] type_expression?
+
+distinct_type ::=
+	 'd_'?[iI]'_'?[sS]'_'?[tT]'_'?[iI]'_'?[nN]'_'?[cC]'_'?[tT] type_expression?
+
+ref_type ::=
+	 'r_'?[eE]'_'?[fF] type_expression?
+
+pointer_type ::=
+	 'p_'?[tT]'_'?[rR] type_expression?
+
+_tuple_field_declaration_list ::=
+	 ( '[' | '[' ) _field_declaration_list? _bracket_close
+
+_proc_type ::=
+	 'p_'?[rR]'_'?[oO]'_'?[cC] parameter_declaration_list? ( ':' type_expression )? pragma_list?
+
+_iterator_type ::=
+	 'i_'?[tT]'_'?[eE]'_'?[rR]'_'?[aA]'_'?[tT]'_'?[oO]'_'?[rR] parameter_declaration_list? ( ':' type_expression )? pragma_list?
+
+_func_type ::=
+	 'f_'?[uU]'_'?[nN]'_'?[cC] parameter_declaration_list? ( ':' type_expression )? pragma_list?
+
+_infix_extended ::=
+	 _infix_expression _post_expression_block
+
+_infix_expression ::=
+	 _simple_expression _infix_operator_10r _simple_expression
+	| _simple_expression _infix_operator_10l _simple_expression
+	| _simple_expression _infix_operator_9 _simple_expression
+	| _simple_expression _infix_operator_8 _simple_expression
+	| _simple_expression _infix_operator_7 _simple_expression
+	| _simple_expression _infix_operator_6 _simple_expression
+	| _simple_expression _infix_operator_5 _simple_expression
+	| _simple_expression _infix_operator_4 _simple_expression
+	| _simple_expression _infix_operator_3 _simple_expression
+	| _simple_expression _infix_operator_2 _simple_expression
+	| _simple_expression _infix_operator_1 _simple_expression
+	| _simple_expression _infix_operator_0 _simple_expression
+
+_infix_operator_0 ::=
+	 ( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' )
+
+_infix_operator_1 ::=
+	 ( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' )
+
+_infix_operator_10r ::=
+	 ( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_infix_operator_10l ::=
+	 ( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_infix_operator_9 ::=
+	 ( ( ( '%' | '\\'  | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | 'd_'?[iI]'_'?[vV] | 'm_'?[oO]'_'?[dD] | 's_'?[hH]'_'?[lL] | 's_'?[hH]'_'?[rR] )
+
+_infix_operator_8 ::=
+	 ( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_infix_operator_7 ::=
+	 ( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_infix_operator_6 ::=
+	 ( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ )
+
+_infix_operator_5 ::=
+	 ( ( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | 'i_'?[nN] | 'n_'?[oO]'_'?[tT]'_'?[iI]'_'?[nN] | 'i_'?[sS] | 'i_'?[sS]'_'?[nN]'_'?[oO]'_'?[tT] | 'o_'?[fF] | 'a_'?[sS] | 'f_'?[rR]'_'?[oO]'_'?[mM] )
+
+_infix_operator_4 ::=
+	 ( 'a_'?[nN]'_'?[dD] )
+
+_infix_operator_3 ::=
+	 ( 'o_'?[rR] | 'x_'?[oO]'_'?[rR] )
+
+_infix_operator_2 ::=
+	 ( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_prefix_extended ::=
+	 _prefix_expression _post_expression_block
+
+_prefix_expression ::=
+	 _prefix_expression_command_start
+	| _prefix_expression_word
+
+_prefix_expression_word ::=
+	 ( 'o_'?[rR] | 'x_'?[oO]'_'?[rR] | 'a_'?[nN]'_'?[dD] | 'i_'?[nN] | 'n_'?[oO]'_'?[tT]'_'?[iI]'_'?[nN] | 'i_'?[sS] | 'i_'?[sS]'_'?[nN]'_'?[oO]'_'?[tT] | 'o_'?[fF] | 'a_'?[sS] | 'f_'?[rR]'_'?[oO]'_'?[mM] | 'd_'?[iI]'_'?[vV] | 'm_'?[oO]'_'?[dD] | 's_'?[hH]'_'?[lL] | 's_'?[hH]'_'?[rR] ) _simple_expression
+
+_prefix_expression_command_start ::=
+	 _prefix_operator _simple_expression
+	| 'n_'?[oO]'_'?[tT] _simple_expression
+	| _sigil_operator _simple_expression
+
+_sigil_expression ::=
+	 _sigil_operator _basic_expression
+
+_sigil_operator ::=
+	 ( '@' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+
+_prefix_operator ::=
+	 ( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( ( '%' | '\\'  | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ ) | ( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | ( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' ) | ( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' )
+
+cast ::=
+	 'c_'?[aA]'_'?[sS]'_'?[tT] ( '[' type_expression _bracket_close )? '(' ( _expression | colon_expression ) _paren_close
+
+parenthesized ::=
+	 '(' ( _expression_with_call_do | _simple_statement_no_expression | assignment | const_section | var_section | let_section | while ) ( ';' _statement )* ';'? _paren_close
+	| '(' ';' _statement ( ';' _statement )* ';'? _paren_close
+
+dot_expression ::=
+	 _basic_expression '.' _symbol
+
+bracket_expression ::=
+	 _basic_expression '[' _colon_equal_expression_list? _bracket_close
+
+curly_expression ::=
+	 _basic_expression '{' _colon_equal_expression_list? _curly_close
+
+pragma_expression ::=
+	 _basic_expression pragma_list
+
+array_construction ::=
+	 '[' _colon_equal_expression_list? _bracket_close
+
+curly_construction ::=
+	 '{' _colon_equal_expression_list _curly_close
+	| '{' ':'? _curly_close
+
+tuple_construction ::=
+	 '(' _colon_equal_expression_list? _paren_close
+
+generalized_string ::=
+	 ( identifier | dot_expression ) _generalized_string_literal
+
+_generalized_string_literal ::=
+	 '"""' _long_string_body? '"""'
+	| '"'  _raw_string_body? '"' 
+
+pragma_list ::=
+	 '{.' _colon_equal_expression_list? ( _dot_curly_close | _curly_close )
+
+expression_list ::=
+	 ( _expression ) ( ',' ( _expression ) )*
+
+_equal_expression_list ::=
+	 ( _expression_with_call_do | equal_expression ) ( ',' ( _expression_with_call_do | equal_expression ) )*
+
+_colon_equal_expression_list ::=
+	 ( _expression_with_call_do | colon_expression | equal_expression ) ( ',' ( _expression_with_call_do | colon_expression | equal_expression ) )* ','?
+
+colon_expression ::=
+	 _left_hand_side ':' _expression
+
+equal_expression ::=
+	 _left_hand_side '=' _expression
+
+assignment ::=
+	 _left_hand_side '=' _expression_with_post_block
+
+_left_hand_side ::=
+	 _simple_expression
+
+parameter_declaration_list ::=
+	 ( '(' | '(' ) _parameter_declaration_list? _paren_close
+
+_parameter_declaration_list ::=
+	 _identifier_declaration ( ( ',' | ';' ) _identifier_declaration )* ( ',' | ';' )?
+
+_field_declaration_list ::=
+	 _identifier_declaration ( ( ',' | ';' ) _identifier_declaration )* ( ',' | ';' )?
+
+_identifier_declaration ::=
+	 symbol_declaration_list ( ':' type_expression )? ( '=' _expression_with_post_block )?
+
+symbol_declaration_list ::=
+	 ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','?
+
+tuple_deconstruct_declaration ::=
+	 '(' ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? _paren_close
+
+symbol_declaration ::=
+	 ( _symbol | exported_symbol ) pragma_list?
+
+exported_symbol ::=
+	 _symbol _symbol_export_marker
+
+_symbol_export_marker ::=
+	 '*'
+
+_literal ::=
+	 nil_literal
+	| integer_literal
+	| float_literal
+	| custom_numeric_literal
+	| char_literal
+	| _string_literal
+
+nil_literal ::=
+	 'n_'?[iI]'_'?[lL]
+
+integer_literal ::=
+	 ( ( '-'? ( [0-9]('_'?[0-9])* | '0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])* | '0'[oO][0-7]('_'?[0-7])* | '0'[bB][01]('_'?[01])* ) ) "'"?[iIuU]("8"|"16"|"32"|"64")|[uU]? )
+
+float_literal ::=
+	 ( ( '-'? ( [0-9]('_'?[0-9])* | '0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])* | '0'[oO][0-7]('_'?[0-7])* | '0'[bB][01]('_'?[01])* ) ) "'"?[fFdD]("32"|"64"|"128")? | ( '-'? ( [0-9]('_'?[0-9])* '.' [0-9]('_'?[0-9])* | [0-9]('_'?[0-9])* [eE][+-]? [0-9]('_'?[0-9])* | [0-9]('_'?[0-9])* '.' [0-9]('_'?[0-9])* [eE][+-]? [0-9]('_'?[0-9])* ) ) "'"?[fFdD]("32"|"64"|"128")?? )
+
+custom_numeric_literal ::=
+	 ( ( ( '-'? ( [0-9]('_'?[0-9])* | '0'[xX][0-9a-fA-F]('_'?[0-9a-fA-F])* | '0'[oO][0-7]('_'?[0-7])* | '0'[bB][01]('_'?[01])* ) ) | ( '-'? ( [0-9]('_'?[0-9])* '.' [0-9]('_'?[0-9])* | [0-9]('_'?[0-9])* [eE][+-]? [0-9]('_'?[0-9])* | [0-9]('_'?[0-9])* '.' [0-9]('_'?[0-9])* [eE][+-]? [0-9]('_'?[0-9])* ) ) ) "'"  [a-zA-Z\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]]('_'?[a-zA-Z0-9\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]])* )
+
+char_literal ::=
+	 "'"  ( [^\#x0A#x0D'] | _char_escape_sequence ) "'" 
+
+_char_escape_sequence ::=
+	 ( '\\'  [rRcCnNlLfFtTvV\"'aAbBeE]|[0-9]+|[xX][0-9a-fA-F]"{2}" )
+
+_string_literal ::=
+	 interpreted_string_literal
+	| raw_string_literal
+	| long_string_literal
+
+interpreted_string_literal ::=
+	 '"'  _interpreted_string_body? '"' 
+
+_interpreted_string_body ::=
+	 ( [^#x0A#x0D"\]+ | escape_sequence )+
+
+escape_sequence ::=
+	 ( '\\'  ( [rRcCnNlLfFtTvV\"'aAbBeE]|[0-9]+|[xX][0-9a-fA-F]"{2}" | [pP] | [uU]([0-9a-fA-F]'{4}'|'\{'[0-9a-fA-F]+'\}') ) )
+
+raw_string_literal ::=
+	 ( 'r"' | 'R"' ) _raw_string_body? '"' 
+
+_raw_string_body ::=
+	 ( [^#x0A#x0D"] | _raw_string_escape )+
+
+_raw_string_escape ::=
+	 '""'
+
+long_string_literal ::=
+	 ( '"""' | 'r"""' | 'R"""' ) _long_string_body? '"""'
+
+_long_string_body ::=
+	 ( [^"]+ | _long_string_quote )+
+
+_symbol ::=
+	 accent_quoted
+	| identifier
+	| blank_identifier
+
+accent_quoted ::=
+	 '`' _accent_quoted_identifier+ '`'
+
+_accent_quoted_identifier ::=
+	 [^\x00-\x1f#x0D#x0A#x09` ]+
+
+blank_identifier ::=
+	 '_'
+
+identifier ::=
+	 [a-zA-Z\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]]('_'?[a-zA-Z0-9\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]])*
+
+_paren_close ::=
+	 _inhibit_layout_end? ')'
+
+_bracket_close ::=
+	 _inhibit_layout_end? ']'
+
+_curly_close ::=
+	 _inhibit_layout_end? '}'
+
+_dot_curly_close ::=
+	 _inhibit_layout_end? '.}'
+
+block_documentation_comment ::=
+	 '##[' _block_documentation_comment_content ']##'
+
+block_comment ::=
+	 '#[' _block_comment_content ']#'
+
+documentation_comment ::=
+	 '##' comment_content
+
+comment ::=
+	 '#' comment_content
+

@@ -1,0 +1,147 @@
+//
+// From tree-sitter-linkerscript/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+linkerscript ::=
+	 entry_command? _command*
+
+entry_command ::=
+	 'ENTRY' '(' symbol ')'
+
+_command ::=
+	 assignment
+	| sections_command
+	| memory_command
+	| phdrs_command
+
+sections_command ::=
+	 'SECTIONS' '{' _output_section_command* '}'
+
+_output_section_command ::=
+	 output_section
+	| overlay_command
+	| assignment
+	| assert_command
+
+output_section ::=
+	 ( symbol | '/DISCARD/' ) expression? section_type? ':'? _at? '{' ( ( input_section | assignment | keep_command | provide_command ) ';'? )+ '}' region? lma_region? phdr? fillexp?
+
+_at ::=
+	 'AT' '(' expression ')'
+
+region ::=
+	 '>' symbol
+
+lma_region ::=
+	 'AT' '>' symbol
+
+phdr ::=
+	 ':' symbol
+
+fillexp ::=
+	 '=' expression
+
+section_type ::=
+	 '(' ( 'NOLOAD' | 'DSECT' | 'COPY' | 'INFO' | 'OVERLAY' ) ')'
+
+input_section ::=
+	 ( wildcard_pattern | filename | symbol ) ( '(' ( filename | expression | wildcard_pattern )+ ')' )?
+
+wildcard_pattern ::=
+	 ( '[' symbol ']' )? '*'
+
+overlay_command ::=
+	 'OVERLAY' expression? ':' 'NOCROSSREFS'? _at? '{' _output_section_command* '}' region? phdr? fillexp?
+
+assignment ::=
+	 ( symbol | '.' ) ( '=' | '+=' | '-=' | '*=' | '/=' | '<<=' | '>>=' | '&=' | '|=' ) expression ';'
+
+assert_command ::=
+	 'ASSERT' '(' expression ( ',' expression )* ')'
+
+keep_command ::=
+	 'KEEP' '(' input_section? ')'
+
+provide_command ::=
+	 ( 'PROVIDE' | 'PROVIDE_HIDDEN' ) '(' symbol '=' expression ')' ';'
+
+memory_command ::=
+	 'MEMORY' '{' _memory* '}'
+
+_memory ::=
+	 symbol ( '(' attributes ')' | attributes )? ':' ( 'ORIGIN' | 'org' | 'o' ) '=' expression ',' ( 'LENGTH' | 'len' | 'l' ) '=' expression
+
+attributes ::=
+	 [rwxail!]+
+
+phdrs_command ::=
+	 'PHDRS' '{' _phdr* '}'
+
+_phdr ::=
+	 symbol symbol 'FILEHDR'? 'PHDRS'? _at? ';'
+
+expression ::=
+	 conditional_expression
+	| unary_expression
+	| binary_expression
+	| parenthesized_expression
+	| call_expression
+	| symbol
+	| quoted_symbol
+	| number
+	| '.'
+
+conditional_expression ::=
+	 expression '?' expression? ':' expression
+
+unary_expression ::=
+	 ( '!' | '~' | '-' ) expression
+
+binary_expression ::=
+	 expression '+' expression
+	| expression '-' expression
+	| expression '*' expression
+	| expression '/' expression
+	| expression '%' expression
+	| expression '||' expression
+	| expression '&&' expression
+	| expression '|' expression
+	| expression '&' expression
+	| expression '==' expression
+	| expression '!=' expression
+	| expression '>' expression
+	| expression '>=' expression
+	| expression '<=' expression
+	| expression '<' expression
+	| expression '<<' expression
+	| expression '>>' expression
+
+parenthesized_expression ::=
+	 '(' expression ')'
+
+call_expression ::=
+	 expression argument_list
+
+argument_list ::=
+	 '(' ( ( expression | input_section ) ( ',' ( expression | input_section ) )* )? ')'
+
+number ::=
+	 ( '0'[xX][a-fA-F0-9]+ | '0'[bB][01]+ | '0'[0-7]+ | '0'|[1-9][0-9]*('h'|'H'|'o'|'O'|'b'|'B'|'d'|'D'|'K'|'M')? )
+
+symbol ::=
+	 [a-zA-Z_.][a-zA-Z0-9_.-]*
+
+quoted_symbol ::=
+	 '"'  [^"]* '"' 
+
+filename ::=
+	 [^(){};=, #x09#x0A#x0B#x0C#x0D]+
+
+comment ::=
+	 ( '//' ('\'+('.'|'#x0D'?'#x0A')|[^\#x0A])* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+

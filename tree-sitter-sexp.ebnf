@@ -1,14 +1,22 @@
-/*
-Grammar originally from https://github.com/AbstractMachinesLab/tree-sitter-sexp
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-sexp/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-sexp ::=  _sexp
+sexp ::=
+	 _sexp
 
-_sexp ::=  ( atom |  list )
+_sexp ::=
+	 atom
+	| list
 
-atom ::=  [_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF:-]+
+atom ::=
+	 [_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF:-]+
 
-list ::=  ( '('  (  _sexp )*  ')'  )
+list ::=
+	 '(' _sexp* ')'
+

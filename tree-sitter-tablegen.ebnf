@@ -1,0 +1,179 @@
+//
+// From tree-sitter-tablegen/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+file ::=
+	 statement*
+
+comment ::=
+	 '\/\/'[^#x0A#x0D]*
+
+number ::=
+	 [+-]?[0-9]+|'0x'[0-9a-fA-F]+|'0b'[01]+
+
+identifier ::=
+	 [a-zA-Z_0-9]*[a-zA-Z_][a-zA-Z_0-9]*
+
+string_string ::=
+	 '"'('\\'|"\'"|"\""|"\t"|"\n"|[^\"])*"""
+
+code_string ::=
+	 '#x5B\{'([^}]|'\}'+[^}#x5D])*'\}#x5D'
+
+string ::=
+	 string_string
+	| code_string
+
+var ::=
+	 '\$'[a-zA-Z_][a-zA-Z_0-9]*
+
+include ::=
+	 'include' string_string
+
+preprocessor ::=
+	 ( ( '#define' | '#ifdef' | '#ifndef' ) [ #x09#x0A#x0B#x0C#x0D]+ [a-zA-Z_][a-zA-Z_0-9]* | '#else' | '#endif' )
+
+statement ::=
+	 assert
+	| class
+	| def
+	| defm
+	| defset
+	| defvar
+	| foreach
+	| if
+	| let
+	| multiclass
+	| include
+
+statement_or_block ::=
+	 statement
+	| '{' statement* '}'
+
+class ::=
+	 'class' identifier template_args? parent_class_list? record_body
+
+parent_class_list ::=
+	 ':' identifier ( '<' ( value ( ',' value )* )? '>' )? ( ',' identifier ( '<' ( value ( ',' value )* )? '>' )? )*
+
+template_args ::=
+	 '<' ( template_arg ( ',' template_arg )* )? '>'
+
+template_arg ::=
+	 type identifier ( '=' value )?
+
+record_body ::=
+	 ';'
+	| '{' body_item* '}'
+
+body_item ::=
+	 instruction
+	| let_inst
+	| def_var
+	| assert
+
+instruction ::=
+	 'field'? ( type | 'code' ) identifier ( '=' value )? ';'
+
+let_inst ::=
+	 'let' identifier ( '{' ( value ( ',' value )* )? '}' )? '=' value ';'
+
+def_var ::=
+	 'defvar' identifier '=' value ';'
+
+def ::=
+	 'def' value? parent_class_list? record_body
+
+let ::=
+	 'let' let_item ( ',' let_item )* 'in' ( statement | '{' statement* '}' )
+
+let_item ::=
+	 identifier ( '<' ( value ( ',' value )* )? '>' )? '=' value
+
+multiclass ::=
+	 'multiclass' identifier template_args? parent_class_list? multiclass_body
+
+multiclass_body ::=
+	 ';'
+	| '{' multiclass_statement* '}'
+
+multiclass_statement ::=
+	 assert
+	| def
+	| defm
+	| defvar
+	| foreach
+	| if
+	| let
+
+defm ::=
+	 'defm' value? parent_class_list ';'
+
+defset ::=
+	 'defset' type identifier '=' '{' statement* '}'
+
+defvar ::=
+	 'defvar' identifier '=' value ';'
+
+foreach ::=
+	 'foreach' identifier '=' value 'in' statement_or_block
+
+if ::=
+	 'if' value 'then' statement_or_block ( 'else' statement_or_block )?
+
+assert ::=
+	 'assert' value ',' value ';'
+
+type ::=
+	 'bit'
+	| 'int'
+	| 'string'
+	| 'dag'
+	| 'bits' '<' number '>'
+	| 'list' '<' type '>'
+	| identifier
+
+value ::=
+	 _simple_value value_suffix*
+	| _value_concat
+
+_value_concat ::=
+	 value '#' value?+
+
+_simple_value ::=
+	 number
+	| identifier
+	| string_string
+	| _repeated_string
+	| code_string
+	| 'true'
+	| 'false'
+	| '?'
+	| '{' ( value ( ',' value )* )? ','? '}'
+	| '[' ( value ( ',' value )* )? ','? ']' ( '<' type '>' )?
+	| '(' dag_arg ( dag_arg ( ',' dag_arg )* )? ')'
+	| identifier '<' ( value ( ',' value )* )? '>'
+	| operator
+
+_repeated_string ::=
+	 string_string+
+
+operator ::=
+	 operator_keyword ( '<' type '>' )? '(' ( value ( ',' value )* )? ','? ')'
+	| '!cond' '(' ( ( value ':' value ) ( ',' ( value ':' value ) )* )? ','? ')'
+
+dag_arg ::=
+	 value ( ':' var )?
+	| var
+
+value_suffix ::=
+	 '{' ( value ( ',' value )* )? '}' | '[' ( value ( ',' value )* )? ']' | '.' identifier | ( '...' | '-' ) value
+
+operator_keyword ::=
+	 '!' ( 'add' | 'and' | 'cast' | 'con' | 'dag' | 'empty' | 'eq' | 'filter' | 'find' | 'foldl' | 'foreach' | 'ge' | 'getdagop' | 'gt' | 'head' | 'if' | 'interleave' | 'isa' | 'le' | 'listconcat' | 'listsplat' | 'lt' | 'mul' | 'ne' | 'not' | 'or' | 'setdagop' | 'shl' | 'size' | 'sra' | 'srl' | 'strconcat' | 'sub' | 'subst' | 'substr' | 'tail' | 'xor' )
+

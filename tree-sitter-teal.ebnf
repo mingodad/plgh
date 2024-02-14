@@ -1,153 +1,312 @@
-/*
-Grammar originally from https://github.com/euclidianAce/tree-sitter-teal
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-teal/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+program ::=
+	 '#!'[^#x0A#x0D]*? _statement*
+
+_statement ::=
+	 ( var_declaration | var_assignment | type_declaration | record_declaration | enum_declaration | return_statement | break | _for_statement | do_statement | while_statement | repeat_statement | function_call | function_statement | if_statement | '::' identifier '::' | goto ) ';'?
+
+return_statement ::=
+	 'return' ( _expression ( ',' _expression )* | '(' _expression ( ',' _expression )* ')' )?
+
+break ::=
+	 'break'
+
+if_statement ::=
+	 'if' _expression 'then' _statement* elseif_block* else_block? 'end'
+
+elseif_block ::=
+	 'elseif' _expression 'then' _statement*
+
+else_block ::=
+	 'else' _statement*
+
+numeric_for_statement ::=
+	 'for' identifier '=' _expression ',' _expression ( ',' _expression )? do_statement
+
+generic_for_statement ::=
+	 'for' ( identifier ( ',' identifier )* ) 'in' ( _expression ( ',' _expression )* ) do_statement
+
+_for_statement ::=
+	 numeric_for_statement
+	| generic_for_statement
+
+while_statement ::=
+	 'while' _expression do_statement
+
+repeat_statement ::=
+	 'repeat' _statement* 'until' _expression
+
+do_statement ::=
+	 'do' _statement* 'end'
+
+_expression ::=
+	 identifier
+	| _var
+	| number
+	| string
+	| boolean
+	| nil
+	| table_constructor
+	| anon_function
+	| function_call
+	| _prefix_expression
+	| bin_op
+	| unary_op
+	| varargs
+	| type_cast
+
+unary_op ::=
+	 ( 'not' | '#' | '-' | '~' ) _expression
+
+bin_op ::=
+	 _expression 'or' _expression
+	| _expression 'and' _expression
+	| _expression '<' _expression
+	| _expression '<=' _expression
+	| _expression '==' _expression
+	| _expression '~=' _expression
+	| _expression '>=' _expression
+	| _expression '>' _expression
+	| _expression '|' _expression
+	| _expression '~' _expression
+	| _expression '&' _expression
+	| _expression '<<' _expression
+	| _expression '>>' _expression
+	| _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '//' _expression
+	| _expression '%' _expression
+	| _expression '..' _expression
+	| _expression '^' _expression
+	| _expression 'is' _type
+
+type_cast ::=
+	 _expression 'as' ( _type | type_tuple )
+
+type_tuple ::=
+	 '(' _type ( ',' _type )* ')'
+
+type_union ::=
+	 _type '|' _type
 
-program ::=  ( (  ( (  '#!'[^\n\r]* )  )?  )  (  _statement )*  )
+var_declarator ::=
+	 identifier ( '<' identifier '>' )?
 
-_statement ::=   (  ( ( var_declaration |  var_assignment |  type_declaration |  record_declaration |  enum_declaration |  return_statement |  break |  for_statement |  do_statement |  while_statement |  repeat_statement |  function_call |  function_statement |  if_statement |  ( '::'  (  identifier )  '::'  )  |  goto )  ( ';'  )?  )  )
+var_declarators ::=
+	 var_declarator ( ',' var_declarator )*
 
-return_statement ::=   (  ( 'return'  ( ( ( _expression (  ( ','  _expression )  )*  )  |  ( '('  ( _expression (  ( ','  _expression )  )*  )  ')'  )  )  )?  )  )
+expressions ::=
+	 _expression ( ',' _expression )*
 
-break ::=  'break'
+var_declaration ::=
+	 scope var_declarators type_annotation? ( '=' expressions )?
 
-if_statement ::=  ( 'if'  (  _expression )  'then'  (  _statement )*  (  elseif_block )*  ( else_block )?  'end'  )
+_type_def ::=
+	 'type' identifier '=' ( _type | _newtype )
 
-elseif_block ::=  ( 'elseif'  (  _expression )  'then'  (  _statement )*  )
+type_declaration ::=
+	 scope _type_def
+	| record_declaration
+	| enum_declaration
 
-else_block ::=  ( 'else'  (  _statement )*  )
+assignment_variables ::=
+	 _var ( ',' _var )*
 
-for_statement ::=  ( ( 'for'  identifier '='  _expression ','  _expression ( ( ','  _expression )  )?  (  do_statement )  )  |  ( 'for'  ( identifier (  ( ','  identifier )  )*  )  'in'  ( _expression (  ( ','  _expression )  )*  )  (  do_statement )  )  )
+var_assignment ::=
+	 assignment_variables '=' expressions
 
-while_statement ::=  ( 'while'  (  _expression )  (  do_statement )  )
+_prefix_expression ::=
+	 _var | function_call | '(' _expression ')'
 
-repeat_statement ::=  ( 'repeat'  (  _statement )*  'until'  (  _expression )  )
+method_index ::=
+	 _prefix_expression ':' identifier
 
-do_statement ::=  ( 'do'  (  _statement )*  'end'  )
+arguments ::=
+	 '(' ( _expression ( ',' _expression )* )? ')'
+	| string
+	| table_constructor
 
-_expression ::=  ( identifier |  _var |  number |  string |  boolean |  nil |  table_constructor |  anon_function |  function_call |  _prefix_expression |  bin_op |  unary_op |  varargs |  type_cast )
+function_call ::=
+	 ( _prefix_expression | method_index ) arguments
 
-unary_op ::=   (  ( (  (  ( 'not'  |  '#'  |  '-'  |  '~'  )  )  )  _expression )  )
+table_entry ::=
+	 '[' _expression ']' '=' _expression
+	| identifier ( ':' _type )? '=' _expression
+	| _expression
 
-bin_op ::=  (  (  ( _expression (  (  'or'  )  )  _expression )  )  |   (  ( _expression (  (  'and'  )  )  _expression )  )  |   (  ( _expression (  (  '<'  )  )  _expression )  )  |   (  ( _expression (  (  '<='  )  )  _expression )  )  |   (  ( _expression (  (  '=='  )  )  _expression )  )  |   (  ( _expression (  (  '~='  )  )  _expression )  )  |   (  ( _expression (  (  '>='  )  )  _expression )  )  |   (  ( _expression (  (  '>'  )  )  _expression )  )  |   (  ( _expression (  (  '|'  )  )  _expression )  )  |   (  ( _expression (  (  '~'  )  )  _expression )  )  |   (  ( _expression (  (  '&'  )  )  _expression )  )  |   (  ( _expression (  (  '<<'  )  )  _expression )  )  |   (  ( _expression (  (  '>>'  )  )  _expression )  )  |   (  ( _expression (  (  '+'  )  )  _expression )  )  |   (  ( _expression (  (  '-'  )  )  _expression )  )  |   (  ( _expression (  (  '*'  )  )  _expression )  )  |   (  ( _expression (  (  '/'  )  )  _expression )  )  |   (  ( _expression (  (  '//'  )  )  _expression )  )  |   (  ( _expression (  (  '%'  )  )  _expression )  )  |   (  ( _expression (  (  '..'  )  )  _expression )  )  |   (  ( _expression (  (  '^'  )  )  _expression )  )  |   (  ( _expression (  (  'is'  )  )  _type )  )  )
+table_constructor ::=
+	 '{' ( table_entry ( ( ',' | ';' ) table_entry )* )? ( ',' | ';' )? '}'
 
-type_cast ::=   (  ( _expression 'as'  ( _type |  type_tuple )  )  )
+function_name ::=
+	 identifier ( ( '.' identifier )* ':' identifier | ( '.' identifier )+ )
 
-type_tuple ::=   (  ( '('  ( _type (  ( ','  _type )  )*  )  ')'  )  )
+scope ::=
+	 ( 'local' | 'global' )
 
-type_union ::=   (  ( _type '|'  _type )  )
+function_statement ::=
+	 scope 'function' identifier function_signature function_body
+	| 'function' function_name function_signature function_body
 
-var_declarator ::=  ( (  identifier )  ( ( '<'  (  (  identifier )  )  '>'  )  )?  )
+variadic_type ::=
+	 _type '...'
 
-var_declaration ::=  ( scope ( (  var_declarator )  (  ( ','  (  var_declarator )  )  )*  )  ( (  type_annotation )  )?  ( ( '='  ( _expression (  ( ','  _expression )  )*  )  )  )?  )
+_type_list_maybe_vararg ::=
+	 _type ( ',' _type )* ( ',' variadic_type )?
 
-type_declaration ::=  ( ( scope 'type'  (  identifier )  '='  ( _type |  _newtype )  )  |  record_declaration |  enum_declaration )
+return_type ::=
+	 variadic_type
+	| _type_list_maybe_vararg
+	| '(' _type_list_maybe_vararg ')'
 
-var_assignment ::=  ( ( (  _var )  (  ( ','  (  _var )  )  )*  )  '='  ( _expression (  ( ','  _expression )  )*  )  )
+_partypelist ::=
+	 _partype ( ',' _partype )*
 
-_prefix_expression ::=   (  ( _var |  function_call |  ( '('  _expression ')'  )  )  )
+_partype ::=
+	 ( identifier ':' )? _type
 
-method_index ::=  ( _prefix_expression ':'  (  identifier )  )
+_parnamelist ::=
+	 _parname ( ',' _parname )*
 
-arguments ::=  ( ( '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )  |  string |  table_constructor )
+_parname ::=
+	 identifier ( ':' _type )?
 
-function_call ::=   (  ( (  ( _prefix_expression |  method_index )  )  (  arguments )  )  )
+typeargs ::=
+	 '<' identifier ( ',' identifier )* '>'
 
-table_entry ::=  ( ( '['  (  _expression )  ']'  '='  (  _expression )  )  |   (  ( (  identifier )  (  ( ( ':'  _type )  )?  )  '='  (  _expression )  )  )  |   (  (  _expression )  )  )
+anon_function ::=
+	 'function' function_signature function_body
 
-table_constructor ::=  ( '{'  ( ( table_entry (  ( ( ','  |  ';'  )  table_entry )  )*  )  )?  ( ( ','  |  ';'  )  )?  '}'  )
+_annotated_var_arg ::=
+	 '...' ':' _type
 
-function_name ::=  ( (  identifier )  ( ( (  ( '.'  (  identifier )  )  )*  ( ':'  (  identifier )  )  )  |  ( ( '.'  (  identifier )  )  )+  )  )
+signature_arguments ::=
+	 '(' ( _parnamelist | _parnamelist ',' _annotated_var_arg | _annotated_var_arg )? ')'
 
-scope ::=  (  ( 'local'  |  'global'  )  )
+function_signature ::=
+	 typeargs? signature_arguments ( ':' return_type )?
 
-function_statement ::=  ( ( scope 'function'  (  identifier )  (  function_signature )  (  function_body )  )  |  ( 'function'  (  function_name )  (  function_signature )  (  function_body )  )  )
+function_body ::=
+	 _statement* 'end'
 
-variadic_type ::=   (  ( _type '...'  )  )
+record_field ::=
+	 identifier ':' _type
+	| '[' string ']' ':' _type
+	| 'type' ':' _type
+	| 'record' ':' _type
+	| 'enum' ':' _type
+	| 'userdata' ':' _type
+	| 'metamethod' ':' _type
 
-_type_list_maybe_vararg ::=  ( ( _type (  ( ','  _type )  )*  )  ( ( ','  variadic_type )  )?  )
+_record_entry ::=
+	 record_field
+	| _type_def
+	| _record_def
+	| _enum_def
 
-return_type ::=  ( variadic_type |   (  _type_list_maybe_vararg )  |   (  ( '('  _type_list_maybe_vararg ')'  )  )  )
+metamethod_annotation ::=
+	 'metamethod' identifier ':' _type
 
-_partypelist ::=  ( (  _partype )  (  ( ','  (  _partype )  )  )*  )
+record_body ::=
+	 ( '{' _type '}' )? ( _record_entry | 'userdata' | metamethod_annotation )* 'end'
 
-_partype ::=  ( ( ( (  identifier )  ':'  )  )?  (  _type )  )
+_record_def ::=
+	 'record' identifier typeargs? record_body
 
-_parnamelist ::=  ( (  _parname )  (  ( ','  (  _parname )  )  )*  )
+record_declaration ::=
+	 scope _record_def
 
-_parname ::=  ( (  identifier )  ( ( ':'  (  _type )  )  )?  )
+enum_body ::=
+	 string* 'end'
 
-typeargs ::=  ( '<'  ( identifier (  ( ','  identifier )  )*  )  '>'  )
+_enum_def ::=
+	 'enum' identifier enum_body
 
-anon_function ::=  ( 'function'  (  function_signature )  (  function_body )  )
+enum_declaration ::=
+	 scope _enum_def
 
-_annotated_var_arg ::=  ( '...'  ':'  (  _type )  )
+anon_record ::=
+	 'record' typeargs? record_body
 
-signature_arguments ::=  ( '('  ( ( _parnamelist |  ( _parnamelist ','  (  _annotated_var_arg )  )  |  (  _annotated_var_arg )  )  )?  ')'  )
+_anon_enum ::=
+	 'enum' enum_body
 
-function_signature ::=  ( (  ( typeargs )?  )  (  (  signature_arguments )  )  ( ( ':'  (  return_type )  )  )?  )
+_newtype ::=
+	 _anon_enum
+	| anon_record
 
-function_body ::=  ( (  _statement )*  'end'  )
+type_annotation ::=
+	 ':' _type ( ',' _type )*
 
-record_entry ::=  ( ( (  identifier )  ':'  (  _type )  )  |  ( '['  (  string )  ']'  ':'  (  _type )  )  |  ( (  (  'type'  )  )  ':'  (  _type )  )  |  ( (  (  'record'  )  )  ':'  (  _type )  )  |  ( (  (  'enum'  )  )  ':'  (  _type )  )  |  ( (  (  'userdata'  )  )  ':'  (  _type )  )  |  ( (  (  'metamethod'  )  )  ':'  (  _type )  )  |  ( 'type'  (  identifier )  '='  (  ( _type |  _newtype )  )  )  |  ( 'record'  (  identifier )  (  ( typeargs )?  )  (  record_body )  )  |  ( 'enum'  (  identifier )  (  enum_body )  )  )
+_type ::=
+	 simple_type | type_index | table_type | function_type | type_union | '(' _type ')'
 
-metamethod_annotation ::=  ( 'metamethod'  (  identifier )  ':'  (  _type )  )
+typearg_params ::=
+	 '<' _type ( ',' _type )* '>'
 
-record_body ::=  ( ( ( '{'  (  _type )  '}'  )  )?  (  ( record_entry |  (  'userdata'  )  |  (  metamethod_annotation )  )  )*  'end'  )
+type_index ::=
+	 ( identifier | type_index ) '.' identifier typearg_params?
 
-_record_def ::=  ( 'record'  (  identifier )  ( typeargs )?  record_body )
+simple_type ::=
+	 identifier typearg_params?
 
-record_declaration ::=  ( scope _record_def )
+table_type ::=
+	 '{' ( _type | _type ':' _type | _type ( ',' _type )+ ) '}'
 
-enum_body ::=  ( (  string )*  'end'  )
+function_type_args ::=
+	 '(' ( _partypelist ( ',' _annotated_var_arg )? | _annotated_var_arg )? ')'
 
-_enum_def ::=  ( 'enum'  (  identifier )  enum_body )
+function_type ::=
+	 'function' typeargs? ( function_type_args ( ':' return_type )? )?
 
-enum_declaration ::=  ( scope _enum_def )
+goto ::=
+	 'goto' identifier
 
-anon_record ::=  ( 'record'  ( typeargs )?  record_body )
+index ::=
+	 _prefix_expression ( ( '.' identifier ) | ( '[' _expression ']' ) )
 
-_anon_enum ::=  ( 'enum'  enum_body )
+_var ::=
+	 identifier | index
 
-_newtype ::=  ( _anon_enum |  anon_record )
+varargs ::=
+	 '...'
 
-type_annotation ::=  ( ':'  ( _type (  ( ','  _type )  )*  )  )
+identifier ::=
+	 [a-zA-Z_][a-zA-Z_0-9]*
 
-_type ::=   (  ( simple_type |  type_index |  table_type |  function_type |  type_union |  ( '('  _type ')'  )  )  )
+number ::=
+	 [0-9]+('.'[0-9]+)?('e'[0-9]+)?
+	| '.'[0-9]+('e'[0-9]+)?
+	| '0x'[0-9a-fA-F]+('.'[0-9a-fA-F]+)?('p'[0-9]+)?
 
-typearg_params ::=   (  ( '<'  ( _type (  ( ','  _type )  )*  )  '>'  )  )
+boolean ::=
+	 'true'
+	| 'false'
 
-type_index ::=   (  ( ( identifier |  type_index )  '.'  identifier ( (  typearg_params )  )?  )  )
+_short_string_content ::=
+	 ( format_specifier | escape_sequence | '%' | _short_string_char )+
 
-simple_type ::=   (  ( (  identifier )  ( (  typearg_params )  )?  )  )
+_long_string_content ::=
+	 ( format_specifier | _long_string_char | '%' )+
 
-table_type ::=  ( '{'  ( (  _type )  |  ( (  _type )  ':'  (  _type )  )  |  ( (  _type )  ( ( ','  (  _type )  )  )+  )  )  '}'  )
+string ::=
+	 _short_string_start _short_string_content? _short_string_end | _long_string_start _long_string_content? _long_string_end
 
-function_type_args ::=  ( '('  ( ( ( _partypelist ( ( ','  (  _annotated_var_arg )  )  )?  )  |  (  _annotated_var_arg )  )  )?  ')'  )
+format_specifier ::=
+	 '%' ( '%' | ( '+' | '-' )? ' '? '#'? [0-9]+? '.'? [0-9]+? [AaEefGgcdiouXxpqs] )
 
-function_type ::=   (  ( 'function'  (  ( typeargs )?  )  ( ( (  (  function_type_args )  )  ( ( ':'  (  return_type )  )  )?  )  )?  )  )
+escape_sequence ::=
+	 '\\'  ( [abfnrtvz"'\] | 'x' [0-9a-fA-F]'{2}' | 'd' [0-7]'{3}' | 'u{' [0-9a-fA-F]'{1,8}' '}' )
 
-goto ::=  ( 'goto'  identifier )
-
-index ::=  ( _prefix_expression ( (  ( '.'  identifier )  )  |  (  ( '['  _expression ']'  )  )  )  )
-
-_var ::=   (  ( identifier |  index )  )
-
-varargs ::=  '...'
-
-identifier ::=  [a-zA-Z_][a-zA-Z_0-9]*
-
-number ::=  ( [0-9]+('.'[\d]+)?('e'[\d]+)? |  '.'[0-9]+('e'[\d]+)? |  '0x'[0-9a-fA-F]+('.'[0-9a-fA-F]+)?('p'[0-9]+)? )
-
-boolean ::=  ( 'true'  |  'false'  )
-
-string ::=   (  ( ( _short_string_start (  ( format_specifier |  escape_sequence |  (   (  '%'  )  )  |   (  _short_string_char )  )  )*  _short_string_end )  |  ( _long_string_start (  ( format_specifier |  _long_string_char |  (   (  '%'  )  )  )  )*  _long_string_end )  )  )
-
-format_specifier ::=  (   (  ( '%'  ( '%'  |  ( ( ( '+'  |  '-'  )  )?  ( ' '  )?  ( '#'  )?  ( [0-9]+ )?  ( '.'  )?  ( [0-9]+ )?  [AaEefGgcdiouXxpqs] )  )  )  )  )
-
-escape_sequence ::=  (   (  ( '\\'  ( [abfnrtvz"'\\] |  ( 'x'  [0-9a-fA-F]+/*{2}*/ )  |  ( 'd'  [0-7]+/*{3}*/ )  |  ( 'u{'  [0-9a-fA-F]+/*{1,8}*/ '}'  )  )  )  )  )
-
-nil ::=  'nil'
+nil ::=
+	 'nil'
 

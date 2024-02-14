@@ -1,207 +1,374 @@
-/*
-Grammar originally from https://github.com/IwanKaramazow/tree-sitter-reason
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-reason/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+program ::=
+	 hash_bang_line? structure_item*
+
+structure_item ::=
+	 str_open
+	| str_eval
+	| str_value
+	| str_type
+
+hash_bang_line ::=
+	 '#!.'*
+
+str_eval ::=
+	 expr
+
+str_value ::=
+	 'let' 'rec'? value_binding ( 'and' value_binding )*
+
+str_open ::=
+	 'open' ident ';'?
+
+value_binding ::=
+	 pattern '=' expr
+
+pattern ::=
+	 pat_any
+	| pat_var
+	| pat_alias
+	| pat_interval
+	| pat_tuple
+	| pat_array
+	| pat_or
+	| pat_lazy
+	| pat_open
+	| pat_exception
+	| pat_unpack
+
+pat_any ::=
+	 '_'
+
+pat_var ::=
+	 lower_ident
+
+pat_alias ::=
+	 pattern 'as' lower_ident
+
+pat_interval ::=
+	 constant '..' constant
+
+pat_tuple ::=
+	 '(' pattern ( ',' pattern )* ','? ')'
+
+pat_array ::=
+	 '[|' pattern ( ',' pattern )* ','? '|]'
+
+pat_or ::=
+	 pattern '|' pattern
+
+pat_lazy ::=
+	 'lazy' pattern
+
+pat_open ::=
+	 module_ident '.' '(' pattern ')'
+
+pat_exception ::=
+	 'exception' pattern
+
+pat_unpack ::=
+	 '(' 'module' upper_ident ')'
+
+braced_expr ::=
+	 '{' expr '}'
+
+parenthesized_expr ::=
+	 '(' expr ')'
+
+expr ::=
+	 exp_ident
+	| exp_constant
+	| exp_let
+	| exp_function
+	| exp_unreachable
+	| exp_lazy
+	| braced_expr
+	| exp_apply
+	| exp_fun
+	| exp_tuple
+	| exp_infix
+	| exp_prefix
+	| expr_jsx
+	| exp_ifthenelse
+	| exp_assert
+	| exp_while
+	| exp_for
 
-program ::=  ( ( hash_bang_line )?  (  structure_item )*  )
+expr_jsx ::=
+	 jsx_element
+	| jsx_element_self_closing
+	| jsx_fragment
+	| jsx_fragment_self_closing
 
-structure_item ::=  ( str_open |  str_eval |  str_value |  str_type )
+jsx_fragment ::=
+	 '<' '>' exp_jsx* '<' '/' '>'
 
-hash_bang_line ::=  '#!'[^\n]*
+jsx_fragment_self_closing ::=
+	 '<' '/' '>'
 
-str_eval ::=  expr
+jsx_element ::=
+	 jsx_start_tag exp_jsx* jsx_closing_tag
 
-str_value ::=   (  ( 'let'  ( 'rec'  )?  value_binding (  ( 'and'  value_binding )  )*  )  )
+exp_jsx ::=
+	 exp_ident
+	| exp_constant
+	| exp_let
+	| exp_unreachable
+	| exp_lazy
+	| exp_tuple
+	| exp_jsx_parens
 
-str_open ::=  ( 'open'  ident ( ';'  )?  )
+exp_jsx_parens ::=
+	 '(' ( exp_apply | exp_fun | exp_function | exp_ident | exp_constant | exp_let | exp_unreachable | exp_lazy | exp_tuple ) ')'
 
-value_binding ::=  ( pattern '='  expr )
+jsx_attr ::=
+	 lower_ident ( '=' exp_jsx )?
 
-pattern ::=  ( pat_any |  pat_var |  pat_alias |  pat_interval |  pat_tuple |  pat_array |  pat_or |  pat_lazy |  pat_open |  pat_exception |  pat_unpack )
+jsx_start_tag ::=
+	 '<' ( lower_ident | upper_ident ) jsx_attr* '>'
 
-pat_any ::=  '_'
+jsx_closing_tag ::=
+	 '<' '/' ( lower_ident | upper_ident ) '>'
 
-pat_var ::=  lower_ident
+jsx_element_self_closing ::=
+	 '<' ( lower_ident | upper_ident ) jsx_attr* '/' '>'
 
-pat_alias ::=  ( pattern 'as'  lower_ident )
+exp_constant ::=
+	 constant
 
-pat_interval ::=  ( constant '..'  constant )
+exp_ident ::=
+	 ident
 
-pat_tuple ::=   (  ( '('  pattern (  ( ','  pattern )  )*  ( ','  )?  ')'  )  )
+exp_tuple ::=
+	 '(' expr ( ',' expr )+ ','? ')'
 
-pat_array ::=  ( '[|'  pattern (  ( ','  pattern )  )*  ( ','  )?  '|]'  )
+exp_let ::=
+	 'let' 'rec'? value_binding ( 'and' value_binding )* expr
 
-pat_or ::=   (  ( pattern '|'  pattern )  )
+exp_function ::=
+	 'fun' case*
 
-pat_lazy ::=   (  ( 'lazy'  pattern )  )
+exp_fun ::=
+	 es6_args '=>' expr
 
-pat_open ::=   (  (  (  module_ident )  '.'  '('  pattern ')'  )  )
+exp_infix ::=
+	 expr hash_operator expr
+	| expr shift_operator expr | 'lsl' | 'lsr' | 'asr'
+	| expr mult_operator expr | 'mod' | 'land' | 'lor' | 'lxor'
+	| expr add_operator expr
+	| expr concat_operator expr
+	| expr equal_operator expr
+	| expr ( '&' | '&&' ) expr
+	| expr ( 'or' | '||' ) expr
 
-pat_exception ::=   (  ( 'exception'  pattern )  )
+exp_prefix ::=
+	 prefix_operator expr
+	| ( '-' | '-.' ) expr
 
-pat_unpack ::=  ( '('  'module'  upper_ident ')'  )
+exp_ifthenelse ::=
+	 'if' parenthesized_expr braced_expr ( 'else if' parenthesized_expr braced_expr )* ( 'else' braced_expr )?
 
-braced_expr ::=  ( '{'  expr '}'  )
+exp_while ::=
+	 'while' parenthesized_expr braced_expr
 
-parenthesized_expr ::=  ( '('  expr ')'  )
+exp_assert ::=
+	 'assert' parenthesized_expr
 
-expr ::=  ( exp_ident |  exp_constant |  exp_let |  exp_function |  exp_unreachable |  exp_lazy |  braced_expr |  exp_apply |  exp_fun |  exp_tuple |  exp_infix |  exp_prefix |  expr_jsx |  exp_ifthenelse |  exp_assert |  exp_while |  exp_for )
+exp_for ::=
+	 'for' '(' pattern 'in' expr ( 'to' | 'downto' ) expr ')' expr
 
-expr_jsx ::=  ( jsx_element |  jsx_element_self_closing |  jsx_fragment |  jsx_fragment_self_closing )
+es6_args ::=
+	 '(' parameter ( ',' parameter )* ','? ')'
 
-jsx_fragment ::=  ( ( '<'  '>'  )  (  exp_jsx )*  ( '<'  '/'  '>'  )  )
+parameter ::=
+	 pattern
+	| param_labeled
+	| param_labeled_punned
+	| param_labeled_constraint
+	| param_optional
+	| param_optional_punned
 
-jsx_fragment_self_closing ::=  ( '<'  '/'  '>'  )
+param_labeled ::=
+	 '~' lower_ident 'as' lower_ident
 
-jsx_element ::=  ( jsx_start_tag (  exp_jsx )*  jsx_closing_tag )
+param_labeled_punned ::=
+	 '~' lower_ident
 
-exp_jsx ::=  ( exp_ident |  exp_constant |  exp_let |  exp_unreachable |  exp_lazy |  exp_tuple |  exp_jsx_parens )
+param_labeled_constraint ::=
+	 '~' lower_ident ':' core_type
 
-exp_jsx_parens ::=  ( '('  ( exp_apply |  exp_fun |  exp_function |  exp_ident |  exp_constant |  exp_let |  exp_unreachable |  exp_lazy |  exp_tuple )  ')'  )
+param_optional_punned ::=
+	 '~' lower_ident '=' '?'
 
-jsx_attr ::=  ( lower_ident ( ( '='  exp_jsx )  )?  )
+param_optional ::=
+	 '~' lower_ident 'as' pattern ( ':' core_type )? '=' ( '?' | expr )
 
-jsx_start_tag ::=  ( '<'  ( lower_ident |  upper_ident )  (  jsx_attr )*  '>'  )
+exp_lazy ::=
+	 'lazy' parenthesized_expr
 
-jsx_closing_tag ::=  ( '<'  '/'  ( lower_ident |  upper_ident )  '>'  )
+exp_unreachable ::=
+	 '.'
 
-jsx_element_self_closing ::=  ( '<'  ( lower_ident |  upper_ident )  (  jsx_attr )*  '/'  '>'  )
+exp_apply ::=
+	 lower_ident '(' argument* ')'
 
-exp_constant ::=  constant
+argument ::=
+	 expr
+	| arg_labeled
+	| arg_labeled_punned
+	| arg_optional
+	| arg_optional_punned
 
-exp_ident ::=  ident
+arg_labeled ::=
+	 '~' lower_ident '=' expr
 
-exp_tuple ::=  ( '('  expr ( ( ','  expr )  )+  ( ','  )?  ')'  )
+arg_labeled_punned ::=
+	 '~' ident
 
-exp_let ::=  ( 'let'  ( 'rec'  )?  value_binding (  ( 'and'  value_binding )  )*  expr )
+arg_optional ::=
+	 '~' lower_ident '=' '?' expr
 
-exp_function ::=   (  ( 'fun'  (  case )*  )  )
+arg_optional_punned ::=
+	 '~' lower_ident '?'
 
-exp_fun ::=  ( es6_args '=>'  expr )
+case ::=
+	 '|' pattern guard? '=>' expr
 
-exp_infix ::=  (  (  ( expr hash_operator expr )  )  |   (  ( ( expr shift_operator expr )  |  ( 'lsl'  |  'lsr'  |  'asr'  )  )  )  |   (  ( ( expr mult_operator expr )  |  ( 'mod'  |  'land'  |  'lor'  |  'lxor'  )  )  )  |   (  ( expr add_operator expr )  )  |   (  ( expr concat_operator expr )  )  |   (  ( expr equal_operator expr )  )  |   (  ( expr (  ( '&'  |  '&&'  )  )  expr )  )  |   (  ( expr (  ( 'or'  |  '||'  )  )  expr )  )  )
+guard ::=
+	 'when' expr
 
-exp_prefix ::=  (  (  ( prefix_operator expr )  )  |   (  ( ( '-'  |  '-.'  )  expr )  )  )
+constant ::=
+	 const_integer
+	| const_char
+	| const_string
+	| const_float
 
-exp_ifthenelse ::=  ( 'if'  parenthesized_expr braced_expr (  ( 'else if'  parenthesized_expr braced_expr )  )*  ( ( 'else'  braced_expr )  )?  )
+const_char ::=
+	 char
 
-exp_while ::=  ( 'while'  parenthesized_expr braced_expr )
+const_string ::=
+	 string
 
-exp_assert ::=  ( 'assert'  parenthesized_expr )
+const_integer ::=
+	 number
+	| number [G-Zg-z]
 
-exp_for ::=  ( 'for'  '('  pattern 'in'  expr ( 'to'  |  'downto'  )  expr ')'  expr )
+const_float ::=
+	 float
+	| float [G-Zg-z]
 
-es6_args ::=  ( '('  parameter (  ( ','  parameter )  )*  ( ','  )?  ')'  )
+string ::=
+	 '"'  ( [^\"#x0A] | '\'('.'|'#x0A') )* '"' 
 
-parameter ::=  ( pattern |  param_labeled |  param_labeled_punned |  param_labeled_constraint |  param_optional |  param_optional_punned )
+char ::=
+	 "'"  [A-Za-z0-9] "'" 
 
-param_labeled ::=  ( '~'  lower_ident 'as'  lower_ident )
+number ::=
+	 [+#x2D-]?[0-9]+
 
-param_labeled_punned ::=  ( '~'  lower_ident )
+float ::=
+	 [+#x2D-]?[0-9]+('.'[0-9]+)('e'[+/-]?[0-9]*)?
 
-param_labeled_constraint ::=  ( '~'  lower_ident ( ':'  core_type )  )
+ident ::=
+	 upper_ident
+	| lower_ident
 
-param_optional_punned ::=  ( '~'  lower_ident '='  '?'  )
+module_ident ::=
+	 upper_ident
+	| module_ident '.' upper_ident
 
-param_optional ::=  ( '~'  lower_ident 'as'  pattern ( ( ':'  core_type )  )?  '='  ( '?'  |  expr )  )
+upper_ident ::=
+	 [A-Z][a-z]+
 
-exp_lazy ::=  ( 'lazy'  parenthesized_expr )
+lower_ident ::=
+	 [a-z]+
 
-exp_unreachable ::=  '.'
+str_type ::=
+	 'type' 'rec'? type_declaration ( 'and' type_declaration )* ';'?
 
-exp_apply ::=   (  ( lower_ident '('  (  argument )*  ')'  )  )
+type_declaration ::=
+	 lower_ident type_params? type_manifest? type_representation? type_constraint*
 
-argument ::=  ( expr |  arg_labeled |  arg_labeled_punned |  arg_optional |  arg_optional_punned )
+type_constraint ::=
+	 'optional' lower_ident '=' core_type
 
-arg_labeled ::=  ( '~'  lower_ident '='  expr )
+type_representation ::=
+	 '=' ( '|'? constr_decl ( '|' constr_decl )* | record_decl )
 
-arg_labeled_punned ::=  ( '~'  ident )
+constr_decl ::=
+	 upper_ident constr_args
 
-arg_optional ::=  ( '~'  lower_ident '='  '?'  expr )
+constr_args ::=
+	 '(' core_type ( ',' core_type )* ','? ')'
 
-arg_optional_punned ::=  ( '~'  lower_ident '?'  )
+record_decl ::=
+	 '{' field_decl ( ',' field_decl )* ','? '}'
 
-case ::=  ( '|'  pattern ( guard )?  '=>'  expr )
+field_decl ::=
+	 'mutable'? lower_ident ':' core_type
 
-guard ::=  ( 'when'  expr )
+type_manifest ::=
+	 '=' core_type
 
-constant ::=  ( const_integer |  const_char |  const_string |  const_float )
+type_params ::=
+	 '(' type_param* ')'
 
-const_char ::=  char
+type_param ::=
+	 ( '+' | '-' )? "'"  lower_ident
 
-const_string ::=  string
+type_open ::=
+	 '..'
 
-const_integer ::=  ( number |  ( number [G-Zg-z] )  )
+core_type ::=
+	 core_type_desc
 
-const_float ::=  ( float |  ( float [G-Zg-z] )  )
+core_type_desc ::=
+	 typ_any
+	| typ_var
+	| typ_tuple
+	| typ_alias
 
-string ::=  ( '"'  (  ( [^\\"\n] |  '\'('.'|'\n') )  )*  '"'  )
+typ_any ::=
+	 '_'
 
-char ::=  ( "'"  [A-Za-z0-9] "'"  )
+typ_var ::=
+	 lower_ident
 
-number ::=  [+\-]?[0-9]+
+typ_tuple ::=
+	 '(' core_type ( ',' core_type )* ','? ')'
 
-float ::=  [+\-]?[0-9]+('.'[\d]+)('e'[+/-]?[\d]*)?
+typ_alias ::=
+	 core_type 'as' lower_ident
 
-ident ::=  ( upper_ident |  lower_ident )
+typ_poly ::=
+	 lower_ident+ '.' core_type
 
-module_ident ::=  ( upper_ident |  ( module_ident '.'  upper_ident )  )
+hash_operator ::=
+	 ( '#' ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )+ )
 
-upper_ident ::=  [A-Z][a-z]+
+prefix_operator ::=
+	 ( '!' ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* | ( '?' | '~' ) ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )+ )
 
-lower_ident ::=  [a-z]+
+shift_operator ::=
+	 ( '**' ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* )
 
-str_type ::=  ( 'type'  ( 'rec'  )?  type_declaration (  ( 'and'  type_declaration )  )*  ( ';'  )?  )
+mult_operator ::=
+	 ( ( '*' | '/' | '%' ) ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* )
 
-type_declaration ::=   (  ( lower_ident ( type_params )?  ( type_manifest )?  ( type_representation )?  (  type_constraint )*  )  )
+add_operator ::=
+	 ( ( '+' | '-' ) ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* )
 
-type_constraint ::=  ( 'optional'  lower_ident '='  core_type )
+concat_operator ::=
+	 ( ( '@' | '^' ) ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* )
 
-type_representation ::=  ( '='  ( ( ( '|'  )?  constr_decl (  ( '|'  constr_decl )  )*  )  |  record_decl )  )
-
-constr_decl ::=  ( upper_ident constr_args )
-
-constr_args ::=  ( '('  core_type (  ( ','  core_type )  )*  ( ','  )?  ')'  )
-
-record_decl ::=  ( '{'  field_decl (  ( ','  field_decl )  )*  ( ','  )?  '}'  )
-
-field_decl ::=  ( ( 'mutable'  )?  lower_ident ':'  core_type )
-
-type_manifest ::=  ( '='  core_type )
-
-type_params ::=  ( '('  (  type_param )*  ')'  )
-
-type_param ::=  ( ( ( '+'  |  '-'  )  )?  "'"  lower_ident )
-
-type_open ::=  '..'
-
-core_type ::=  core_type_desc
-
-core_type_desc ::=  ( typ_any |  typ_var |  typ_tuple |  typ_alias )
-
-typ_any ::=  '_'
-
-typ_var ::=  lower_ident
-
-typ_tuple ::=  ( '('  core_type (  ( ','  core_type )  )*  ( ','  )?  ')'  )
-
-typ_alias ::=  ( core_type 'as'  lower_ident )
-
-typ_poly ::=  ( ( lower_ident )+  '.'  core_type )
-
-hash_operator ::=  (  ( '#'  ( ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )+  )  )
-
-prefix_operator ::=  (  ( ( '!'  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  |  ( ( '?'  |  '~'  )  ( ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )+  )  )  )
-
-shift_operator ::=  (  ( '**'  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  )
-
-mult_operator ::=  (  ( ( '*'  |  '/'  |  '%'  )  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  )
-
-add_operator ::=  (  ( ( '+'  |  '-'  )  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  )
-
-concat_operator ::=  (  ( ( '@'  |  '^'  )  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  )
-
-equal_operator ::=  (  ( ( ( '='  |  '<'  |  '>'  |  '|'  |  '&'  |  '$'  )  (  ( '!'  |  '$'  |  '%'  |  '&'  |  '*'  |  '+'  |  '-'  |  '.'  |  '/'  |  ':'  |  '<'  |  '='  |  '>'  |  '?'  |  '@'  |  '^'  |  '|'  |  '~'  )  )*  )  |  '!='  )  )
+equal_operator ::=
+	 ( ( '=' | '<' | '>' | '|' | '&' | '$' ) ( '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>' | '?' | '@' | '^' | '|' | '~' )* | '!=' )
 

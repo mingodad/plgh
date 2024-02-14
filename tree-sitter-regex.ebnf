@@ -1,71 +1,120 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-regex
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-regex/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-pattern ::=  ( disjunction |  term )
+pattern ::=
+	 alternation
+	| term
 
-disjunction ::=  ( ( term )?  ( ( '|'  ( term )?  )  )+  )
+alternation ::=
+	 term? ( '|' term? )+
 
-term ::=  ( ( ( start_assertion |  end_assertion |  boundary_assertion |  non_boundary_assertion |  lookahead_assertion |  pattern_character |  character_class |  any_character |  decimal_escape |  character_class_escape |  _character_escape |  backreference_escape |  anonymous_capturing_group |  named_capturing_group |  non_capturing_group )  ( ( zero_or_more |  one_or_more |  optional |  count_quantifier )  )?  )  )+
+term ::=
+	 ( ( start_assertion | end_assertion | boundary_assertion | non_boundary_assertion | lookaround_assertion | pattern_character | character_class | any_character | decimal_escape | character_class_escape | _character_escape | backreference_escape | anonymous_capturing_group | named_capturing_group | non_capturing_group ) ( zero_or_more | one_or_more | optional | count_quantifier )? )+
 
-any_character ::=  '.'
+any_character ::=
+	 '.'
 
-start_assertion ::=  '^'
+start_assertion ::=
+	 '^'
 
-end_assertion ::=  '$'
+end_assertion ::=
+	 '$'
 
-boundary_assertion ::=  '\b'
+boundary_assertion ::=
+	 '\b'
 
-non_boundary_assertion ::=  '\B'
+non_boundary_assertion ::=
+	 '\B'
 
-lookahead_assertion ::=  ( '(?'  ( '='  |  '!'  |  '<='  |  '<!'  )  pattern ')'  )
+lookaround_assertion ::=
+	 _lookahead_assertion
+	| _lookbehind_assertion
 
-pattern_character ::=  [^\^\$\\\.\*\+\?\(\)\[#x5d\{\}\|\n]
+_lookahead_assertion ::=
+	 '(?' ( '=' | '!' ) pattern ')'
 
-character_class ::=  ( '['  ( '^'  )?  (  ( class_range |  _class_atom )  )*  ']'  )
+_lookbehind_assertion ::=
+	 '(?<' ( '=' | '!' ) pattern ')'
 
-class_range ::=   (  ( _class_atom '-'  _class_atom )  )
+pattern_character ::=
+	 [^\^\$\.\*\+\?\(\)#x5B#x5D\|#x0D?#x0A]
 
-_class_atom ::=  ( (  '-'  )  |  class_character |  (  '\-'  )  |  character_class_escape |  _character_escape )
+character_class ::=
+	 '[' '^'? ( class_range | _class_atom )* ']'
 
-class_character ::=  [^\\#x5d'-']
+class_range ::=
+	 _class_atom '-' _class_atom
 
-anonymous_capturing_group ::=  ( '('  pattern ')'  )
+_class_atom ::=
+	 '-'
+	| class_character
+	| '\-'
+	| character_class_escape
+	| _character_escape
 
-named_capturing_group ::=  ( '(?<'  group_name '>'  pattern ')'  )
+class_character ::=
+	 [^\#x5D#x2D-]
 
-non_capturing_group ::=  ( '(?:'  pattern ')'  )
+anonymous_capturing_group ::=
+	 '(' pattern ')'
 
-zero_or_more ::=  ( '*'  ( (  '?'  )  )?  )
+named_capturing_group ::=
+	 '(?<' group_name '>' pattern ')'
 
-one_or_more ::=  ( '+'  ( (  '?'  )  )?  )
+non_capturing_group ::=
+	 '(?:' pattern ')'
 
-optional ::=  ( '?'  ( (  '?'  )  )?  )
+zero_or_more ::=
+	 '*' '?'?
 
-count_quantifier ::=  ( ( '{'  ( decimal_digits ( ( ','  decimal_digits )  )?  )  '}'  )  ( (  '?'  )  )?  )
+one_or_more ::=
+	 '+' '?'?
 
-backreference_escape ::=  ( '\k'  group_name )
+optional ::=
+	 '?' '?'?
 
-decimal_escape ::=  '\'[1-9][0-9]+
+count_quantifier ::=
+	 '{' decimal_digits ( ',' decimal_digits )? '}' '?'?
 
-character_class_escape ::=  ( '\'[dDsSwW] |  ( '\'[pP] '{'  unicode_property_value_expression '}'  )  )
+backreference_escape ::=
+	 '\k' group_name
 
-unicode_property_value_expression ::=  ( ( ( (  unicode_property )  '='  )  )?  (  unicode_property )  )
+decimal_escape ::=
+	 '\'[1-9][0-9]*
 
-unicode_property ::=  [a-zA-Z_0-9]+
+character_class_escape ::=
+	 '\'[dDsSwW]
+	| '\'[pP] '{' unicode_property_value_expression '}'
 
-_character_escape ::=  ( control_escape |  control_letter_escape |  identity_escape )
+unicode_property_value_expression ::=
+	 ( unicode_property '=' )? unicode_property
 
-control_escape ::=  '\'[bfnrtv0]
+unicode_property ::=
+	 [a-zA-Z_0-9]+
 
-control_letter_escape ::=  '\c'[a-zA-Z]
+_character_escape ::=
+	 control_escape
+	| control_letter_escape
+	| identity_escape
 
-identity_escape ::=  (  ( '\'  [^kdDsSpPwWbfnrtv0-9] )  )
+control_escape ::=
+	 '\'[bfnrtv0]
 
-group_name ::=  [A-Za-z0-9]+
+control_letter_escape ::=
+	 '\c'[a-zA-Z]
 
-decimal_digits ::=  [0-9]+
+identity_escape ::=
+	 ( '\\'  [^kdDsSpPwWbfnrtv0-9] )
+
+group_name ::=
+	 [A-Za-z0-9]+
+
+decimal_digits ::=
+	 [0-9]+
 

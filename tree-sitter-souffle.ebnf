@@ -1,0 +1,279 @@
+//
+// From tree-sitter-souffle/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+program ::=
+	 ( block_comment | line_comment | pragma | functor_decl | component_decl | component_init | directive | _rule | fact | relation_decl | type_decl | legacy_type_decl | preprocessor )*
+
+preprocessor ::=
+	 '#line' [0-9]+ string
+
+block_comment ::=
+	 '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/'
+
+line_comment ::=
+	 '//' [^#x0A]* '\n' 
+
+pragma ::=
+	 '.pragma' string string?
+
+functor_decl ::=
+	 '.functor' ident '(' ( _type_name | attribute )? ( ',' ( _type_name | attribute ) )* ')' ':' _type_name 'stateful'?
+
+component_decl ::=
+	 '.comp' component_type ( ':' component_type ( ',' component_type )* )? '{' ( block_comment | line_comment | component_decl | component_init | directive | fact | relation_decl | _rule | type_decl | preprocessor | '.override' ident )* '}'
+
+component_type ::=
+	 ident ( '<' ident ( ',' ident )* '>' )?
+
+component_init ::=
+	 '.init' ident '=' component_type
+
+directive ::=
+	 _directive_qualifier qualified_name ( ',' qualified_name )* ( '(' ( ident '=' _directive_value )? ( ',' ident '=' _directive_value )* ')' )?
+
+_directive_qualifier ::=
+	 '.input'
+	| '.limitsize'
+	| '.output'
+	| '.printsize'
+
+_directive_value ::=
+	 string
+	| ident
+	| number
+
+bool ::=
+	 'true'
+	| 'false'
+
+_rule ::=
+	 monotonic_rule
+	| subsumptive_rule
+
+monotonic_rule ::=
+	 ( atom ( ',' atom )* ) ':-' disjunction '.' query_plan?
+
+subsumptive_rule ::=
+	 atom '<=' atom ':-' disjunction '.' query_plan?
+
+query_plan ::=
+	 '.plan' [0-9]+ ':' '(' [0-9]+? ( ',' [0-9]+ )* ')' ( ',' [0-9]+ ':' '(' [0-9]+? ( ',' [0-9]+ )* ')' )*
+
+disjunction ::=
+	 conjunction ( ';' conjunction )*
+
+negation ::=
+	 '!'
+
+conjunction ::=
+	 negation* ( atom | _constraint | '(' disjunction ')' ) ( ',' negation* ( atom | _constraint | '(' disjunction ')' ) )*
+
+_constraint ::=
+	 bool
+	| comparison
+	| match
+	| contains
+
+match ::=
+	 'match' '(' _argument? ( ',' _argument )* ')'
+
+contains ::=
+	 'contains' '(' _argument? ( ',' _argument )* ')'
+
+comparison ::=
+	 _argument ( '=' | '!=' | '<=' | '>=' | '<' | '>' ) _argument
+
+fact ::=
+	 atom '.'
+
+atom ::=
+	 qualified_name '(' _argument? ( ',' _argument )* ')'
+
+_argument ::=
+	 anonymous
+	| constant
+	| variable
+	| nil
+	| record_constructor
+	| adt_constructor
+	| '(' _argument ')'
+	| as
+	| functor_call
+	| aggregator
+	| unary_op
+	| binary_op
+
+adt_constructor ::=
+	 '$' qualified_name ( '(' _argument? ( ',' _argument )* ')' )?
+
+record_constructor ::=
+	 '[' _argument? ( ',' _argument )* ']'
+
+constant ::=
+	 ipv4
+	| number
+	| string
+
+ipv4 ::=
+	 [0-9]'{0,3}.'[0-9]'{0,3}.'[0-9]'{0,3}.'[0-9]'{0,3}'
+
+string ::=
+	 '"'([^"]|'\"')*'"'
+
+number ::=
+	 float
+	| integer
+	| unsigned
+
+integer ::=
+	 decimal
+	| hex
+	| binary
+
+decimal ::=
+	 '-'?[0-9]+
+
+unsigned ::=
+	 [0-9]+'u'
+
+hex ::=
+	 '0x'([0-9]|[A-F]|[a-f])+
+
+binary ::=
+	 '0b'[0-1]+
+
+float ::=
+	 '-'?[0-9]+'.'[0-9]+
+
+variable ::=
+	 ident
+
+nil ::=
+	 'nil'
+
+anonymous ::=
+	 '_'
+
+as ::=
+	 'as' '(' _argument ',' _type_name ')'
+
+functor_call ::=
+	 ( user_defined_functor | intrinsic_functor ) '(' _argument? ( ',' _argument )* ')'
+
+user_defined_functor ::=
+	 '@' ident
+
+intrinsic_functor ::=
+	 'acos' | 'acosh' | 'asin' | 'asinh' | 'atan' | 'atanh' | 'cos' | 'cosh' | 'exp' | 'log' | 'sin' | 'sinh' | 'tan' | 'tanh' | 'autoinc' | 'cat' | 'max' | 'min' | 'ord' | 'strlen' | 'substr' | 'to_float' | 'to_number' | 'to_string' | 'to_unsigned'
+
+aggregator ::=
+	 ( ( ( 'max' | 'mean' | 'min' | 'sum' ) _argument | 'count' ) ':' ( atom | '{' disjunction '}' ) | range )
+
+range ::=
+	 'range' '(' _argument ',' _argument ( ',' _argument )? ')'
+
+_unary_operator ::=
+	 'bnot' | 'lnot' | '-' | '~' | '!'
+
+unary_op ::=
+	 _unary_operator _argument
+
+binary_op ::=
+	 _argument '+' _argument
+	| _argument '-' _argument
+	| _argument '*' _argument
+	| _argument '/' _argument
+	| _argument '%' _argument
+	| _argument '^' _argument
+	| _argument 'land' _argument
+	| _argument 'lor' _argument
+	| _argument 'lxor' _argument
+	| _argument 'band' _argument
+	| _argument 'bor' _argument
+	| _argument 'bxor' _argument
+	| _argument 'bshl' _argument
+	| _argument 'bshr' _argument
+	| _argument 'bshru' _argument
+	| _argument '&' _argument
+	| _argument '|' _argument
+	| _argument '&&' _argument
+	| _argument '||' _argument
+	| _argument '**' _argument
+	| _argument '^^' _argument
+	| _argument '<<' _argument
+	| _argument '>>' _argument
+	| _argument '>>>' _argument
+
+relation_decl ::=
+	 '.decl' ( ident? ( ',' ident )* ) '(' attribute? ( ',' attribute )* ')' _relation_qualifier* choice_domain?
+
+_relation_qualifier ::=
+	 'brie'
+	| 'btree'
+	| 'btree_delete'
+	| 'eqrel'
+	| 'inline'
+	| 'magic'
+	| 'no_inline'
+	| 'no_magic'
+	| 'override'
+	| 'overridable'
+	| 'input'
+	| 'output'
+	| 'printsize'
+
+choice_domain ::=
+	 'choice-domain' ( ident | '(' ident ( ',' ident )* ')' ) ( ',' ( ident | '(' ident ( ',' ident )* ')' ) )*
+
+legacy_type_decl ::=
+	 ( '.number_type' | '.symbol_type' ) _type_name
+
+type_decl ::=
+	 '.type' ( type_synonym | subtype | type_union | type_record | adt | legacy_bare_type_decl )
+
+legacy_bare_type_decl ::=
+	 ident
+
+subtype ::=
+	 ident '<:' _type_name
+
+type_synonym ::=
+	 ident '=' _type_name
+
+type_union ::=
+	 ident '=' ( _type_name ( '|' _type_name )+ )
+
+type_record ::=
+	 ident '=' '[' attribute? ( ',' attribute )* ']'
+
+adt ::=
+	 ident '=' ( _adt_branch ( '|' _adt_branch )* )
+
+_adt_branch ::=
+	 ident '{' attribute? ( ',' attribute )* '}'
+
+_type_name ::=
+	 primitive_type
+	| qualified_name
+
+primitive_type ::=
+	 'number'
+	| 'symbol'
+	| 'unsigned'
+	| 'float'
+
+attribute ::=
+	 ident ':' _type_name
+
+qualified_name ::=
+	 ident ( '.' ident )*
+
+ident ::=
+	 ('_'|'\'?|[A-Z]|[a-z])(([A-Z]|[a-z])|[0-9]|'_'|'\'?)*
+

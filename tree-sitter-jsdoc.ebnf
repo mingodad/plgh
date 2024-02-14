@@ -1,39 +1,66 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-jsdoc
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-jsdoc/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-document ::=  ( _begin ( description )?  (  tag )*  _end )
+document ::=
+	 _begin description? tag* _end
 
-description ::=  ( _text (  ( _text |  inline_tag )  )*  )
+description ::=
+	 _text ( _text | inline_tag | _inline_tag_false_positive )*
 
-tag ::=  ( ( (  tag_name_with_argument )  ( ( '{'  type '}'  )  )?  ( _expression )?  ( description )?  )  |  ( (  tag_name_with_type )  ( ( '{'  type '}'  )  )?  ( description )?  )  |  ( tag_name ( description )?  )  )
+tag ::=
+	 tag_name_with_argument ( '{' type '}' )? _expression? description?
+	| tag_name_with_type ( '{' type '}' )? description?
+	| tag_name description?
 
-inline_tag ::=  ( '{'  tag_name description '}'  )
+inline_tag ::=
+	 '{' tag_name description '}'
 
-tag_name_with_argument ::=  (  ( '@access'  |  '@alias'  |  '@api'  |  '@augments'  |  '@borrows'  |  '@callback'  |  '@constructor'  |  '@event'  |  '@exports'  |  '@external'  |  '@fires'  |  '@function'  |  '@mixes'  |  '@name'  |  '@namespace'  |  '@param'  |  '@property'  )  )
+_inline_tag_false_positive ::=
+	 '\{'[^@}]+'\}'?
 
-tag_name_with_type ::=  (  ( '@return'  |  '@returns'  |  '@throw'  |  '@throws'  )  )
+tag_name_with_argument ::=
+	 ( '@access' | '@alias' | '@api' | '@augments' | '@borrows' | '@callback' | '@constructor' | '@event' | '@exports' | '@external' | '@extends' | '@fires' | '@function' | '@mixes' | '@name' | '@namespace' | '@param' | '@property' | '@prop' | '@satisfies' | '@typedef' )
 
-tag_name ::=  '@'[a-zA-Z_]+
+tag_name_with_type ::=
+	 ( '@return' | '@returns' | '@throw' | '@throws' | '@type' )
 
-_expression ::=  ( identifier |  member_expression |  path_expression |  qualified_expression )
+tag_name ::=
+	 '@'[a-zA-Z_]+
 
-qualified_expression ::=   (  ( identifier ':'  _expression )  )
+_expression ::=
+	 identifier
+	| optional_identifier
+	| member_expression
+	| path_expression
+	| qualified_expression
 
-path_expression ::=   (  ( identifier (  '/'  )  identifier )  )
+qualified_expression ::=
+	 identifier ':' _expression
 
-member_expression ::=  ( _expression ( '.'  |  '#'  |  '~'  )  ( identifier |  qualified_expression )  )
+path_expression ::=
+	 identifier '/' identifier
 
-identifier ::=  [a-zA-Z_$][a-zA-Z_$0-9]*
+member_expression ::=
+	 _expression ( '.' | '#' | '~' ) ( identifier | qualified_expression )
 
-type ::=  [^}\n]+
+optional_identifier ::=
+	 '[' identifier ']'
 
-_text ::=  (   (  [^*{}@\s][^*{}\n]*([^*/{}\n][^*{}\n]*'*'+)* )  )
+identifier ::=
+	 [a-zA-Z_$][a-zA-Z_$0-9]*
 
-_begin ::=  (  ( '/'  (  '*'  )*  )  )
+_text ::=
+	 [^*{}@ #x09#x0A#x0B#x0C#x0D][^*{}#x0A]*([^*/{}#x0A][^*{}#x0A]*'\'*+)*
 
-_end ::=  '/'
+_begin ::=
+	 ( '/' '*'* )
+
+_end ::=
+	 '/'
 

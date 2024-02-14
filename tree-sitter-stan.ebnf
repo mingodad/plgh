@@ -1,191 +1,369 @@
-/*
-Grammar originally from https://github.com/jrnold/tree-sitter-stan
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-stan/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-program ::=  ( ( ( functions )?  ( data )?  ( transformed_data )?  ( parameters )?  ( transformed_parameters )?  ( model )?  ( generated_quantities )?  )  )
+program ::=
+	 functions? data? transformed_data? parameters? transformed_parameters? model? generated_quantities?
 
-functions ::=  ( 'functions'  '{'  (  function_definition )*  '}'  )
+functions ::=
+	 'functions' '{' function_definition* '}'
 
-data ::=  ( 'data'  _variable_decls )
+data ::=
+	 'data' _variable_decls
 
-transformed_data ::=  ( 'transformed'  'data'  _variable_decl_statements )
+transformed_data ::=
+	 'transformed' 'data' _variable_decl_statements
 
-parameters ::=  ( 'parameters'  _variable_decls )
+parameters ::=
+	 'parameters' _variable_decls
 
-transformed_parameters ::=  ( 'transformed'  'parameters'  _variable_decl_statements )
+transformed_parameters ::=
+	 'transformed' 'parameters' _variable_decl_statements
 
-model ::=   (  ( 'model'  _variable_decl_statements )  )
+model ::=
+	 'model' _variable_decl_statements
 
-generated_quantities ::=  ( 'generated'  'quantities'  _variable_decl_statements )
+generated_quantities ::=
+	 'generated' 'quantities' _variable_decl_statements
 
-_variable_decl_statements ::=  ( '{'  (  variable_declaration )*  (  _statement )*  '}'  )
+_variable_decl_statements ::=
+	 '{' variable_declaration* _statement* '}'
 
-_variable_decls ::=  ( '{'  (  variable_declaration )*  '}'  )
+_variable_decls ::=
+	 '{' variable_declaration* '}'
 
-function_definition ::=  ( return_type function_declarator _statement )
+function_definition ::=
+	 return_type function_declarator _statement
 
-function_declarator ::=   (  ( identifier parameter_list )  )
+function_declarator ::=
+	 identifier parameter_list
 
-parameter_list ::=   (  ( '('  ( ( parameter_declaration (  ( ','  parameter_declaration )  )*  )  )?  ')'  )  )
+parameter_list ::=
+	 '(' ( parameter_declaration ( ',' parameter_declaration )* )? ')'
 
-parameter_declaration ::=  ( ( 'data'  )?  unsized_type identifier )
+parameter_declaration ::=
+	 'data'? unsized_type identifier
 
-return_type ::=  ( 'void'  |  unsized_type )
+return_type ::=
+	 'void'
+	| unsized_type
 
-unsized_type ::=  ( basic_type ( ( '['  (  ','  )*  ']'  )  )?  )
+unsized_type ::=
+	 basic_type ( '[' ','* ']' )?
 
-basic_type ::=   (  ( 'int'  |  'real'  |  'vector'  |  'row_vector'  |  'matrix'  )  )
+basic_type ::=
+	 'int' | 'real' | 'vector' | 'row_vector' | 'matrix'
 
-variable_declaration ::=   (  ( _var_type identifier ( dims )?  ( ( '='  _expression )  )?  ';'  )  )
+variable_declaration ::=
+	 _var_type identifier dims? ( '=' _expression )? ';'
 
-_var_type ::=  ( int_type |  real_type |  vector_type |  ordered_type |  positive_ordered_type |  simplex_type |  unit_vector_type |  row_vector_type |  matrix_type |  cholesky_factor_cov_type |  cholesky_factor_corr_type |  cov_matrix_type |  corr_matrix_type )
+_var_type ::=
+	 int_type
+	| real_type
+	| vector_type
+	| ordered_type
+	| positive_ordered_type
+	| simplex_type
+	| unit_vector_type
+	| row_vector_type
+	| matrix_type
+	| cholesky_factor_cov_type
+	| cholesky_factor_corr_type
+	| cov_matrix_type
+	| corr_matrix_type
 
-int_type ::=  ( 'int'  ( range_constraint )?  )
+int_type ::=
+	 'int' range_constraint?
 
-real_type ::=  ( 'real'  ( range_constraint )?  )
+real_type ::=
+	 'real' range_constraint?
 
-vector_type ::=  ( 'vector'  ( range_constraint )?  '['  _expression ']'  )
-
-ordered_type ::=  ( 'ordered'  '['  _expression ']'  )
-
-positive_ordered_type ::=  ( 'positive_ordered'  '['  _expression ']'  )
-
-simplex_type ::=  ( 'simplex'  '['  _expression ']'  )
-
-unit_vector_type ::=  ( 'unit_vector'  '['  _expression ']'  )
-
-row_vector_type ::=  ( 'row_vector'  ( range_constraint )?  '['  _expression ']'  )
-
-matrix_type ::=  ( 'matrix'  ( range_constraint )?  '['  _expression ','  _expression ']'  )
-
-cholesky_factor_corr_type ::=  ( 'cholesky_factor_corr'  '['  _expression ']'  )
-
-cholesky_factor_cov_type ::=  ( 'cholesky_factor_cov'  '['  _expression ( ( ','  _expression )  )?  ']'  )
-
-corr_matrix_type ::=  ( 'corr_matrix'  '['  _expression ']'  )
-
-cov_matrix_type ::=  ( 'cov_matrix'  '['  _expression ']'  )
-
-range_constraint ::=   (  ( range_empty |  range_lower |  range_upper |  range_lower_upper )  )
-
-range_empty ::=   (  ( '<'  '>'  )  )
-
-range_lower_upper ::=   (  ( '<'  'lower'  '='  _range_expression ','  'upper'  '='  _range_expression '>'  )  )
-
-range_lower ::=   (  ( '<'  'lower'  '='  _range_expression '>'  )  )
-
-range_upper ::=   (  ( '<'  'upper'  '='  _range_expression '>'  )  )
-
-dims ::=  ( '['  ( ( _expression (  ( ','  _expression )  )*  )  )?  ']'  )
-
-identifier ::=  [A-Za-z][A-Za-z0-9_]*
-
-_expression ::=  ( _range_expression |  conditional_expression |  infix_op_expression |  prefix_op_expression |  postfix_op_expression |  indexed_expression )
-
-_range_expression ::=  ( _common_expression |  (  infix_op_range_expression )  |  (  prefix_op_range_expression )  |  (  postfix_op_range_expression )  |  (  indexed_range_expression )  )
-
-_common_expression ::=  ( integer_literal |  real_literal |  identifier |  array_expression |  vector_expression |  function_expression |  distr_expression |  parenthized_expression )
-
-conditional_expression ::=   (  ( _expression '?'  _expression ':'  _expression )  )
-
-array_expression ::=  ( '{'  ( ( _expression (  ( ','  _expression )  )*  )  )?  '}'  )
-
-vector_expression ::=   (  ( '['  ( ( _expression (  ( ','  _expression )  )*  )  )?  ']'  )  )
-
-infix_op_expression ::=  (  (  ( _expression '^'  _expression )  )  |   (  ( _expression '.*'  _expression )  )  |   (  ( _expression './'  _expression )  )  |   (  ( _expression '\\'  _expression )  )  |   (  ( _expression '*'  _expression )  )  |   (  ( _expression '%'  _expression )  )  |   (  ( _expression '/'  _expression )  )  |   (  ( _expression '+'  _expression )  )  |   (  ( _expression '-'  _expression )  )  |   (  ( _expression '>='  _expression )  )  |   (  ( _expression '>'  _expression )  )  |   (  ( _expression '<='  _expression )  )  |   (  ( _expression '<'  _expression )  )  |   (  ( _expression '!='  _expression )  )  |   (  ( _expression '=='  _expression )  )  |   (  ( _expression '&&'  _expression )  )  |   (  ( _expression '||'  _expression )  )  )
-
-prefix_op_expression ::=  (  (  ( '+'  _expression )  )  |   (  ( '-'  _expression )  )  |   (  ( '!'  _expression )  )  )
-
-postfix_op_expression ::=  (  (  ( _expression "'"  )  )  )
-
-indexed_expression ::=   (  ( _expression '['  ( index )?  (  ( ','  ( index )?  )  )*  ']'  )  )
-
-infix_op_range_expression ::=  (  (  ( _range_expression '^'  _range_expression )  )  |   (  ( _range_expression '.*'  _range_expression )  )  |   (  ( _range_expression './'  _range_expression )  )  |   (  ( _range_expression '\\'  _range_expression )  )  |   (  ( _range_expression '*'  _range_expression )  )  |   (  ( _range_expression '%'  _range_expression )  )  |   (  ( _range_expression '/'  _range_expression )  )  |   (  ( _range_expression '+'  _range_expression )  )  |   (  ( _range_expression '-'  _range_expression )  )  )
-
-prefix_op_range_expression ::=  (  (  ( '+'  _range_expression )  )  |   (  ( '-'  _range_expression )  )  |   (  ( '!'  _range_expression )  )  )
-
-postfix_op_range_expression ::=  (  (  ( _range_expression "'"  )  )  )
-
-indexed_range_expression ::=   (  ( _range_expression '['  ( index )?  (  ( ','  ( index )?  )  )*  ']'  )  )
-
-function_expression ::=   (  ( identifier argument_list )  )
-
-argument_list ::=   (  ( '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )  )
-
-distr_expression ::=   (  ( identifier distr_argument_list )  )
-
-distr_argument_list ::=   (  ( '('  _expression '|'  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  )  )
-
-integrate_ode ::=  ( 'integrate_ode'  '('  identifier ( _expression _expression _expression _expression _expression _expression )  ')'  )
-
-integrate_ode_r45 ::=  ( 'integrate_ode_rk45'  '('  identifier ( ( _expression _expression _expression _expression _expression _expression )  |  ( _expression _expression _expression _expression _expression _expression _expression _expression _expression )  )  ')'  )
-
-algebra_solver ::=  ( 'algebra_solver'  '('  identifier ( ( _expression _expression _expression _expression )  |  ( _expression _expression _expression _expression _expression _expression _expression )  )  ')'  )
-
-integrate_ode_bdf ::=  ( 'integrate_ode_bdf'  '('  identifier ( ( _expression _expression _expression _expression _expression _expression )  |  ( _expression _expression _expression _expression _expression _expression _expression _expression _expression )  )  ')'  )
-
-parenthized_expression ::=  ( '('  _expression ')'  )
-
-index ::=  ( _expression |  colon_expression |  left_colon_expression |  right_colon_expression )
-
-colon_expression ::=  ( _expression ':'  _expression )
-
-left_colon_expression ::=  ( ':'  _expression )
-
-right_colon_expression ::=  ( _expression ':'  )
-
-integer_literal ::=  [0-9]+
-
-real_literal ::=  (  ( [0-9]*[.][0-9]+([eE][+-]?[0-9]+)? |  [0-9]+[.]([eE][+-]?[0-9]+)? |  [0-9]+[eE][+-]?[0-9]+ )  )
-
-_statement ::=  ( empty_statement |  assignment_statement |  sampling_statement |  function_expression |  log_prob_statement |  target_statement |  break_statement |  continue_statement |  print_statement |  reject_statement |  return_statement |  if_statement |  while_statement |  for_statement |  block_statement )
-
-empty_statement ::=  ';'
-
-assignment_statement ::=   (  ( lhs assignment_op _expression ';'  )  )
-
-lhs ::=  ( identifier (  ( '['  ( index (  ( ','  index )  )*  )  ']'  )  )*  )
-
-assignment_op ::=  ( '<-'  |  '='  |  '+='  |  '-='  |  '*='  |  '/='  |  '.*='  |  './='  )
-
-sampling_statement ::=  ( _expression '~'  identifier '('  ( ( _expression (  ( ','  _expression )  )*  )  )?  ')'  ( _truncation )?  ';'  )
-
-_truncation ::=  ( lower_upper_truncation |  lower_truncation |  upper_truncation |  empty_truncation )
-
-lower_upper_truncation ::=  ( 'T'  '['  _expression ','  _expression ']'  )
-
-lower_truncation ::=  ( 'T'  '['  _expression ','  ']'  )
-
-upper_truncation ::=  ( 'T'  '['  ','  _expression ']'  )
-
-empty_truncation ::=  ( 'T'  '['  ','  ']'  )
-
-log_prob_statement ::=  ( 'increment_log_prob'  '('  _expression ')'  ';'  )
-
-target_statement ::=  ( 'target'  '+='  _expression ';'  )
-
-break_statement ::=  ( 'break'  ';'  )
-
-continue_statement ::=  ( 'continue'  ';'  )
-
-print_statement ::=  ( 'print'  '('  ( ( ( _expression |  string_literal )  (  ( ','  ( _expression |  string_literal )  )  )*  )  )?  ')'  ';'  )
-
-string_literal ::=  "[A-Za-z0-9 ~@#$%^&*_'`+{}\[#x5d()<>|/!?.,;:=-]*"
-
-reject_statement ::=  ( 'reject'  '('  ( ( _expression |  string_literal )  )?  ')'  ';'  )
-
-return_statement ::=  ( 'return'  _expression ';'  )
-
-if_statement ::=   (  ( 'if'  '('  _expression ')'  _statement ( ( 'else'  _statement )  )?  )  )
-
-while_statement ::=   (  ( 'while'  '('  _expression ')'  _statement )  )
-
-for_statement ::=   (  ( 'for'  '('  identifier 'in'  _expression ( ( ':'  _expression )  )?  ')'  _statement )  )
-
-block_statement ::=  ( '{'  (  variable_declaration )*  (  _statement )*  '}'  )
-
-comment ::=  (  ( ( '//'  [^\n]* )  |  ( '#'  [^\n]* )  |  ( '/*'  [^*]*'*'+([^/*][^*]*'*'+)* '/'  )  )  )
+vector_type ::=
+	 'vector' range_constraint? '[' _expression ']'
+
+ordered_type ::=
+	 'ordered' '[' _expression ']'
+
+positive_ordered_type ::=
+	 'positive_ordered' '[' _expression ']'
+
+simplex_type ::=
+	 'simplex' '[' _expression ']'
+
+unit_vector_type ::=
+	 'unit_vector' '[' _expression ']'
+
+row_vector_type ::=
+	 'row_vector' range_constraint? '[' _expression ']'
+
+matrix_type ::=
+	 'matrix' range_constraint? '[' _expression ',' _expression ']'
+
+cholesky_factor_corr_type ::=
+	 'cholesky_factor_corr' '[' _expression ']'
+
+cholesky_factor_cov_type ::=
+	 'cholesky_factor_cov' '[' _expression ( ',' _expression )? ']'
+
+corr_matrix_type ::=
+	 'corr_matrix' '[' _expression ']'
+
+cov_matrix_type ::=
+	 'cov_matrix' '[' _expression ']'
+
+range_constraint ::=
+	 range_empty | range_lower | range_upper | range_lower_upper
+
+range_empty ::=
+	 '<' '>'
+
+range_lower_upper ::=
+	 '<' 'lower' '=' _range_expression ',' 'upper' '=' _range_expression '>'
+
+range_lower ::=
+	 '<' 'lower' '=' _range_expression '>'
+
+range_upper ::=
+	 '<' 'upper' '=' _range_expression '>'
+
+dims ::=
+	 '[' ( _expression ( ',' _expression )* )? ']'
+
+identifier ::=
+	 [A-Za-z][A-Za-z0-9_]*
+
+_expression ::=
+	 _range_expression
+	| conditional_expression
+	| infix_op_expression
+	| prefix_op_expression
+	| postfix_op_expression
+	| indexed_expression
+
+_range_expression ::=
+	 _common_expression
+	| infix_op_range_expression
+	| prefix_op_range_expression
+	| postfix_op_range_expression
+	| indexed_range_expression
+
+_common_expression ::=
+	 integer_literal
+	| real_literal
+	| identifier
+	| array_expression
+	| vector_expression
+	| function_expression
+	| distr_expression
+	| parenthized_expression
+
+conditional_expression ::=
+	 _expression '?' _expression ':' _expression
+
+array_expression ::=
+	 '{' ( _expression ( ',' _expression )* )? '}'
+
+vector_expression ::=
+	 '[' ( _expression ( ',' _expression )* )? ']'
+
+infix_op_expression ::=
+	 _expression '^' _expression
+	| _expression '.*' _expression
+	| _expression './' _expression
+	| _expression '\\'  _expression
+	| _expression '*' _expression
+	| _expression '%' _expression
+	| _expression '/' _expression
+	| _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '>=' _expression
+	| _expression '>' _expression
+	| _expression '<=' _expression
+	| _expression '<' _expression
+	| _expression '!=' _expression
+	| _expression '==' _expression
+	| _expression '&&' _expression
+	| _expression '||' _expression
+
+prefix_op_expression ::=
+	 '+' _expression
+	| '-' _expression
+	| '!' _expression
+
+postfix_op_expression ::=
+	 _expression "'" 
+
+indexed_expression ::=
+	 _expression '[' index? ( ',' index? )* ']'
+
+infix_op_range_expression ::=
+	 _range_expression '^' _range_expression
+	| _range_expression '.*' _range_expression
+	| _range_expression './' _range_expression
+	| _range_expression '\\'  _range_expression
+	| _range_expression '*' _range_expression
+	| _range_expression '%' _range_expression
+	| _range_expression '/' _range_expression
+	| _range_expression '+' _range_expression
+	| _range_expression '-' _range_expression
+
+prefix_op_range_expression ::=
+	 '+' _range_expression
+	| '-' _range_expression
+	| '!' _range_expression
+
+postfix_op_range_expression ::=
+	 _range_expression "'" 
+
+indexed_range_expression ::=
+	 _range_expression '[' index? ( ',' index? )* ']'
+
+function_expression ::=
+	 identifier argument_list
+
+argument_list ::=
+	 '(' ( _expression ( ',' _expression )* )? ')'
+
+distr_expression ::=
+	 identifier distr_argument_list
+
+distr_argument_list ::=
+	 '(' _expression '|' ( _expression ( ',' _expression )* )? ')'
+
+integrate_ode ::=
+	 'integrate_ode' '(' identifier _expression _expression _expression _expression _expression _expression ')'
+
+integrate_ode_r45 ::=
+	 'integrate_ode_rk45' '(' identifier ( _expression _expression _expression _expression _expression _expression | _expression _expression _expression _expression _expression _expression _expression _expression _expression ) ')'
+
+algebra_solver ::=
+	 'algebra_solver' '(' identifier ( _expression _expression _expression _expression | _expression _expression _expression _expression _expression _expression _expression ) ')'
+
+integrate_ode_bdf ::=
+	 'integrate_ode_bdf' '(' identifier ( _expression _expression _expression _expression _expression _expression | _expression _expression _expression _expression _expression _expression _expression _expression _expression ) ')'
+
+parenthized_expression ::=
+	 '(' _expression ')'
+
+index ::=
+	 _expression
+	| colon_expression
+	| left_colon_expression
+	| right_colon_expression
+
+colon_expression ::=
+	 _expression ':' _expression
+
+left_colon_expression ::=
+	 ':' _expression
+
+right_colon_expression ::=
+	 _expression ':'
+
+integer_literal ::=
+	 [0-9]+
+
+real_literal ::=
+	 ( [0-9]*'.'[0-9]+([eE][+-]?[0-9]+)? | [0-9]+'.'([eE][+-]?[0-9]+)? | [0-9]+[eE][+-]?[0-9]+ )
+
+_statement ::=
+	 empty_statement
+	| assignment_statement
+	| sampling_statement
+	| function_expression
+	| log_prob_statement
+	| target_statement
+	| break_statement
+	| continue_statement
+	| print_statement
+	| reject_statement
+	| return_statement
+	| if_statement
+	| while_statement
+	| for_statement
+	| block_statement
+
+empty_statement ::=
+	 ';'
+
+assignment_statement ::=
+	 lhs assignment_op _expression ';'
+
+lhs ::=
+	 identifier ( '[' index ( ',' index )* ']' )*
+
+assignment_op ::=
+	 '<-'
+	| '='
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '.*='
+	| './='
+
+sampling_statement ::=
+	 _expression '~' identifier '(' ( _expression ( ',' _expression )* )? ')' _truncation? ';'
+
+_truncation ::=
+	 lower_upper_truncation
+	| lower_truncation
+	| upper_truncation
+	| empty_truncation
+
+lower_upper_truncation ::=
+	 'T' '[' _expression ',' _expression ']'
+
+lower_truncation ::=
+	 'T' '[' _expression ',' ']'
+
+upper_truncation ::=
+	 'T' '[' ',' _expression ']'
+
+empty_truncation ::=
+	 'T' '[' ',' ']'
+
+log_prob_statement ::=
+	 'increment_log_prob' '(' _expression ')' ';'
+
+target_statement ::=
+	 'target' '+=' _expression ';'
+
+break_statement ::=
+	 'break' ';'
+
+continue_statement ::=
+	 'continue' ';'
+
+print_statement ::=
+	 'print' '(' ( ( _expression | string_literal ) ( ',' ( _expression | string_literal ) )* )? ')' ';'
+
+string_literal ::=
+	 '"'[A-Za-z0-9 ~@#x23$%^&*_'`+{}#x5B#x5D()<>|/!?.,;:=-]*"""
+
+reject_statement ::=
+	 'reject' '(' ( _expression | string_literal )? ')' ';'
+
+return_statement ::=
+	 'return' _expression ';'
+
+if_statement ::=
+	 'if' '(' _expression ')' _statement ( 'else' _statement )?
+
+while_statement ::=
+	 'while' '(' _expression ')' _statement
+
+for_statement ::=
+	 'for' '(' identifier 'in' _expression ( ':' _expression )? ')' _statement
+
+block_statement ::=
+	 '{' variable_declaration* _statement* '}'
+
+comment ::=
+	 ( '//' '.'* | '#' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
 

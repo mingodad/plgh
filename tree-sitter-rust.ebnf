@@ -1,339 +1,721 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-rust
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-rust/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 shebang? _statement*
+
+_statement ::=
+	 expression_statement
+	| _declaration_statement
+
+empty_statement ::=
+	 ';'
+
+expression_statement ::=
+	 _expression ';'
+	| _expression_ending_with_block
+
+_declaration_statement ::=
+	 const_item
+	| macro_invocation
+	| macro_definition
+	| empty_statement
+	| attribute_item
+	| inner_attribute_item
+	| mod_item
+	| foreign_mod_item
+	| struct_item
+	| union_item
+	| enum_item
+	| type_item
+	| function_item
+	| function_signature_item
+	| impl_item
+	| trait_item
+	| associated_type
+	| let_declaration
+	| use_declaration
+	| extern_crate_declaration
+	| static_item
+
+macro_definition ::=
+	 'macro_rules!' ( identifier | _reserved_identifier ) ( '(' ( macro_rule ';' )* macro_rule? ')' ';' | '{' ( macro_rule ';' )* macro_rule? '}' )
+
+macro_rule ::=
+	 token_tree_pattern '=>' token_tree
+
+_token_pattern ::=
+	 token_tree_pattern
+	| token_repetition_pattern
+	| token_binding_pattern
+	| metavariable
+	| _non_special_token
+
+token_tree_pattern ::=
+	 '(' _token_pattern* ')'
+	| '[' _token_pattern* ']'
+	| '{' _token_pattern* '}'
+
+token_binding_pattern ::=
+	 metavariable ':' fragment_specifier
+
+token_repetition_pattern ::=
+	 '$' '(' _token_pattern* ')' [^+*?]+? ( '+' | '*' | '?' )
+
+fragment_specifier ::=
+	 'block'
+	| 'expr'
+	| 'ident'
+	| 'item'
+	| 'lifetime'
+	| 'literal'
+	| 'meta'
+	| 'pat'
+	| 'path'
+	| 'stmt'
+	| 'tt'
+	| 'ty'
+	| 'vis'
+
+_tokens ::=
+	 token_tree
+	| token_repetition
+	| metavariable
+	| _non_special_token
+
+token_tree ::=
+	 '(' _tokens* ')'
+	| '[' _tokens* ']'
+	| '{' _tokens* '}'
+
+token_repetition ::=
+	 '$' '(' _tokens* ')' [^+*?]+? ( '+' | '*' | '?' )
+
+_non_special_token ::=
+	 _literal
+	| identifier
+	| mutable_specifier
+	| self
+	| super
+	| crate
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' )
+	| ( '/' | '_' | '\\'  | '-' | '=' | '->' | ',' | ';' | ':' | '::' | '!' | '?' | '.' | '@' | '*' | '&' | '#' | '%' | '^' | '+' | '<' | '>' | '|' | '~' )+
+	| "'" 
+	| 'as'
+	| 'async'
+	| 'await'
+	| 'break'
+	| 'const'
+	| 'continue'
+	| 'default'
+	| 'enum'
+	| 'fn'
+	| 'for'
+	| 'if'
+	| 'impl'
+	| 'let'
+	| 'loop'
+	| 'match'
+	| 'mod'
+	| 'pub'
+	| 'return'
+	| 'static'
+	| 'struct'
+	| 'trait'
+	| 'type'
+	| 'union'
+	| 'unsafe'
+	| 'use'
+	| 'where'
+	| 'while'
 
-source_file ::=  (  _statement )*
+attribute_item ::=
+	 '#' '[' attribute ']'
 
-_statement ::=  ( _expression_statement |  _declaration_statement )
+inner_attribute_item ::=
+	 '#' '!' '[' attribute ']'
 
-empty_statement ::=  ';'
+attribute ::=
+	 _path ( '=' _expression | delim_token_tree )?
+
+mod_item ::=
+	 visibility_modifier? 'mod' identifier ( ';' | declaration_list )
+
+foreign_mod_item ::=
+	 visibility_modifier? extern_modifier ( ';' | declaration_list )
+
+declaration_list ::=
+	 '{' _declaration_statement* '}'
+
+struct_item ::=
+	 visibility_modifier? 'struct' _type_identifier type_parameters? ( where_clause? field_declaration_list | ordered_field_declaration_list where_clause? ';' | ';' )
+
+union_item ::=
+	 visibility_modifier? 'union' _type_identifier type_parameters? where_clause? field_declaration_list
 
-_expression_statement ::=  ( ( _expression ';'  )  |   (  _expression_ending_with_block )  )
+enum_item ::=
+	 visibility_modifier? 'enum' _type_identifier type_parameters? where_clause? enum_variant_list
 
-_declaration_statement ::=  ( const_item |  macro_invocation |  macro_definition |  empty_statement |  attribute_item |  inner_attribute_item |  mod_item |  foreign_mod_item |  struct_item |  union_item |  enum_item |  type_item |  function_item |  function_signature_item |  impl_item |  trait_item |  associated_type |  let_declaration |  use_declaration |  extern_crate_declaration |  static_item )
+enum_variant_list ::=
+	 '{' ( attribute_item* enum_variant ( ',' attribute_item* enum_variant )* )? ','? '}'
 
-macro_definition ::=  ( 'macro_rules!'  (  identifier )  ( ( '('  ( (  ( macro_rule ';'  )  )*  ( macro_rule )?  )  ')'  ';'  )  |  ( '{'  ( (  ( macro_rule ';'  )  )*  ( macro_rule )?  )  '}'  )  )  )
+enum_variant ::=
+	 visibility_modifier? identifier ( field_declaration_list | ordered_field_declaration_list )? ( '=' _expression )?
 
-macro_rule ::=  ( (  token_tree_pattern )  '=>'  (  token_tree )  )
+field_declaration_list ::=
+	 '{' ( attribute_item* field_declaration ( ',' attribute_item* field_declaration )* )? ','? '}'
 
-_token_pattern ::=  ( token_tree_pattern |  token_repetition_pattern |  token_binding_pattern |  _non_special_token )
+field_declaration ::=
+	 visibility_modifier? _field_identifier ':' _type
 
-token_tree_pattern ::=  ( ( '('  (  _token_pattern )*  ')'  )  |  ( '['  (  _token_pattern )*  ']'  )  |  ( '{'  (  _token_pattern )*  '}'  )  )
+ordered_field_declaration_list ::=
+	 '(' ( attribute_item* visibility_modifier? _type ( ',' attribute_item* visibility_modifier? _type )* )? ','? ')'
 
-token_binding_pattern ::=   (  ( (  metavariable )  ':'  (  fragment_specifier )  )  )
+extern_crate_declaration ::=
+	 visibility_modifier? 'extern' crate identifier ( 'as' identifier )? ';'
 
-token_repetition_pattern ::=  ( '$'  '('  (  _token_pattern )*  ')'  ( [^+*?]+ )?  ( '+'  |  '*'  |  '?'  )  )
+const_item ::=
+	 visibility_modifier? 'const' identifier ':' _type ( '=' _expression )? ';'
 
-fragment_specifier ::=  ( 'block'  |  'expr'  |  'ident'  |  'item'  |  'lifetime'  |  'literal'  |  'meta'  |  'pat'  |  'path'  |  'stmt'  |  'tt'  |  'ty'  |  'vis'  )
+static_item ::=
+	 visibility_modifier? 'static' 'ref'? mutable_specifier? identifier ':' _type ( '=' _expression )? ';'
 
-_tokens ::=  ( token_tree |  token_repetition |  _non_special_token )
+type_item ::=
+	 visibility_modifier? 'type' _type_identifier type_parameters? '=' _type where_clause? ';'
+
+function_item ::=
+	 visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ) type_parameters? parameters ( '->' _type )? where_clause? block
+
+function_signature_item ::=
+	 visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ) type_parameters? parameters ( '->' _type )? where_clause? ';'
+
+function_modifiers ::=
+	 ( 'async' | 'default' | 'const' | 'unsafe' | extern_modifier )+
+
+where_clause ::=
+	 'where' where_predicate ( ',' where_predicate )* ','?
+
+where_predicate ::=
+	 ( lifetime | _type_identifier | scoped_type_identifier | generic_type | reference_type | pointer_type | tuple_type | array_type | higher_ranked_trait_bound | ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) ) trait_bounds
+
+impl_item ::=
+	 'unsafe'? 'impl' type_parameters? ( '!'? ( _type_identifier | scoped_type_identifier | generic_type ) 'for' )? _type where_clause? ( declaration_list | ';' )
+
+trait_item ::=
+	 visibility_modifier? 'unsafe'? 'trait' _type_identifier type_parameters? trait_bounds? where_clause? declaration_list
+
+associated_type ::=
+	 'type' _type_identifier type_parameters? trait_bounds? ';'
+
+trait_bounds ::=
+	 ':' ( _type | lifetime | higher_ranked_trait_bound | removed_trait_bound ) ( '+' ( _type | lifetime | higher_ranked_trait_bound | removed_trait_bound ) )*
+
+higher_ranked_trait_bound ::=
+	 'for' type_parameters _type
 
-token_tree ::=  ( ( '('  (  _tokens )*  ')'  )  |  ( '['  (  _tokens )*  ']'  )  |  ( '{'  (  _tokens )*  '}'  )  )
+removed_trait_bound ::=
+	 '?' _type
 
-token_repetition ::=  ( '$'  '('  (  _tokens )*  ')'  ( [^+*?]+ )?  ( '+'  |  '*'  |  '?'  )  )
+type_parameters ::=
+	 '<' ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) ( ',' ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) )* ','? '>'
 
-_non_special_token ::=  ( _literal |  identifier |  metavariable |  mutable_specifier |  self |  super |  crate |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  |  [/_\-=->,;:::!=?.@*&#%^+<>|~]+ |  "'"  |  'as'  |  'async'  |  'await'  |  'break'  |  'const'  |  'continue'  |  'default'  |  'enum'  |  'fn'  |  'for'  |  'if'  |  'impl'  |  'let'  |  'loop'  |  'match'  |  'mod'  |  'pub'  |  'return'  |  'static'  |  'struct'  |  'trait'  |  'type'  |  'union'  |  'unsafe'  |  'use'  |  'where'  |  'while'  )
+const_parameter ::=
+	 'const' identifier ':' _type
 
-attribute_item ::=  ( '#'  '['  meta_item ']'  )
+constrained_type_parameter ::=
+	 ( lifetime | _type_identifier ) trait_bounds
 
-inner_attribute_item ::=  ( '#'  '!'  '['  meta_item ']'  )
+optional_type_parameter ::=
+	 ( _type_identifier | constrained_type_parameter ) '=' _type
 
-meta_item ::=  ( _path ( ( ( '='  (  _literal )  )  |  (  meta_arguments )  )  )?  )
+let_declaration ::=
+	 'let' mutable_specifier? _pattern ( ':' _type )? ( '=' _expression )? ( 'else' block )? ';'
 
-meta_arguments ::=  ( '('  ( ( ( meta_item |  _literal )  (  ( ','  ( meta_item |  _literal )  )  )*  )  )?  ( ','  )?  ')'  )
+use_declaration ::=
+	 visibility_modifier? 'use' _use_clause ';'
 
-mod_item ::=  ( ( visibility_modifier )?  'mod'  (  identifier )  ( ';'  |  (  declaration_list )  )  )
+_use_clause ::=
+	 _path
+	| use_as_clause
+	| use_list
+	| scoped_use_list
+	| use_wildcard
 
-foreign_mod_item ::=  ( ( visibility_modifier )?  extern_modifier ( ';'  |  (  declaration_list )  )  )
+scoped_use_list ::=
+	 _path? '::' use_list
 
-declaration_list ::=  ( '{'  (  _declaration_statement )*  '}'  )
+use_list ::=
+	 '{' ( ( _use_clause ) ( ',' ( _use_clause ) )* )? ','? '}'
 
-struct_item ::=  ( ( visibility_modifier )?  'struct'  (  _type_identifier )  (  ( type_parameters )?  )  ( ( ( where_clause )?  (  field_declaration_list )  )  |  ( (  ordered_field_declaration_list )  ( where_clause )?  ';'  )  |  ';'  )  )
+use_as_clause ::=
+	 _path 'as' identifier
 
-union_item ::=  ( ( visibility_modifier )?  'union'  (  _type_identifier )  (  ( type_parameters )?  )  ( where_clause )?  (  field_declaration_list )  )
+use_wildcard ::=
+	 ( _path '::' )? '*'
 
-enum_item ::=  ( ( visibility_modifier )?  'enum'  (  _type_identifier )  (  ( type_parameters )?  )  ( where_clause )?  (  enum_variant_list )  )
+parameters ::=
+	 '(' ( attribute_item? ( parameter | self_parameter | variadic_parameter | '_' | _type ) ( ',' attribute_item? ( parameter | self_parameter | variadic_parameter | '_' | _type ) )* )? ','? ')'
 
-enum_variant_list ::=  ( '{'  ( ( ( (  attribute_item )*  enum_variant )  (  ( ','  ( (  attribute_item )*  enum_variant )  )  )*  )  )?  ( ','  )?  '}'  )
+self_parameter ::=
+	 '&'? lifetime? mutable_specifier? self
 
-enum_variant ::=  ( ( visibility_modifier )?  (  identifier )  (  ( ( field_declaration_list |  ordered_field_declaration_list )  )?  )  ( ( '='  (  _expression )  )  )?  )
+variadic_parameter ::=
+	 '...'
 
-field_declaration_list ::=  ( '{'  ( ( ( (  attribute_item )*  field_declaration )  (  ( ','  ( (  attribute_item )*  field_declaration )  )  )*  )  )?  ( ','  )?  '}'  )
+parameter ::=
+	 mutable_specifier? ( _pattern | self ) ':' _type
 
-field_declaration ::=  ( ( visibility_modifier )?  (  _field_identifier )  ':'  (  _type )  )
+extern_modifier ::=
+	 'extern' string_literal?
+
+visibility_modifier ::=
+	 crate | 'pub' ( '(' ( self | super | crate | 'in' _path ) ')' )?
+
+_type ::=
+	 abstract_type
+	| reference_type
+	| metavariable
+	| pointer_type
+	| generic_type
+	| scoped_type_identifier
+	| tuple_type
+	| unit_type
+	| array_type
+	| function_type
+	| _type_identifier
+	| macro_invocation
+	| empty_type
+	| dynamic_type
+	| bounded_type
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' )
+
+bracketed_type ::=
+	 '<' ( _type | qualified_type ) '>'
+
+qualified_type ::=
+	 _type 'as' _type
+
+lifetime ::=
+	 "'"  identifier
+
+array_type ::=
+	 '[' _type ( ';' _expression )? ']'
+
+for_lifetimes ::=
+	 'for' '<' lifetime ( ',' lifetime )* ','? '>'
+
+function_type ::=
+	 for_lifetimes? ( ( _type_identifier | scoped_type_identifier ) | function_modifiers? 'fn' ) parameters ( '->' _type )?
+
+tuple_type ::=
+	 '(' _type ( ',' _type )* ','? ')'
+
+unit_type ::=
+	 '(' ')'
+
+generic_function ::=
+	 ( identifier | scoped_identifier | field_expression ) '::' type_arguments
+
+generic_type ::=
+	 ( _type_identifier | _reserved_identifier | scoped_type_identifier ) type_arguments
+
+generic_type_with_turbofish ::=
+	 ( _type_identifier | scoped_identifier ) '::' type_arguments
+
+bounded_type ::=
+	 lifetime '+' _type | _type '+' _type | _type '+' lifetime
+
+type_arguments ::=
+	 '<' ( _type | type_binding | lifetime | _literal | block ) ( ',' ( _type | type_binding | lifetime | _literal | block ) )* ','? '>'
+
+type_binding ::=
+	 _type_identifier type_arguments? '=' _type
+
+reference_type ::=
+	 '&' lifetime? mutable_specifier? _type
+
+pointer_type ::=
+	 '*' ( 'const' | mutable_specifier ) _type
+
+empty_type ::=
+	 '!'
+
+abstract_type ::=
+	 'impl' ( 'for' type_parameters )? ( _type_identifier | scoped_type_identifier | generic_type | function_type )
+
+dynamic_type ::=
+	 'dyn' ( _type_identifier | scoped_type_identifier | generic_type | function_type )
+
+mutable_specifier ::=
+	 'mut'
+
+_expression_except_range ::=
+	 unary_expression
+	| reference_expression
+	| try_expression
+	| binary_expression
+	| assignment_expression
+	| compound_assignment_expr
+	| type_cast_expression
+	| call_expression
+	| return_expression
+	| yield_expression
+	| _literal
+	| identifier
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' )
+	| _reserved_identifier
+	| self
+	| scoped_identifier
+	| generic_function
+	| await_expression
+	| field_expression
+	| array_expression
+	| tuple_expression
+	| macro_invocation
+	| unit_expression
+	| break_expression
+	| continue_expression
+	| index_expression
+	| metavariable
+	| closure_expression
+	| parenthesized_expression
+	| struct_expression
+	| _expression_ending_with_block
+
+_expression ::=
+	 _expression_except_range
+	| range_expression
+
+_expression_ending_with_block ::=
+	 unsafe_block
+	| async_block
+	| try_block
+	| block
+	| if_expression
+	| match_expression
+	| while_expression
+	| loop_expression
+	| for_expression
+	| const_block
+
+macro_invocation ::=
+	 ( scoped_identifier | identifier | _reserved_identifier ) '!' delim_token_tree
+
+delim_token_tree ::=
+	 '(' _delim_tokens* ')'
+	| '[' _delim_tokens* ']'
+	| '{' _delim_tokens* '}'
+
+_delim_tokens ::=
+	 _non_delim_token
+	| delim_token_tree
+
+_non_delim_token ::=
+	 _non_special_token
+	| '$'
+
+scoped_identifier ::=
+	 ( _path | bracketed_type | generic_type_with_turbofish )? '::' ( identifier | super )
+
+scoped_type_identifier_in_expression_position ::=
+	 ( _path | generic_type_with_turbofish )? '::' _type_identifier
+
+scoped_type_identifier ::=
+	 ( _path | generic_type_with_turbofish | bracketed_type | generic_type )? '::' _type_identifier
+
+range_expression ::=
+	 _expression ( '..' | '...' | '..=' ) _expression | _expression '..' | '..' _expression | '..'
+
+unary_expression ::=
+	 ( '-' | '*' | '!' ) _expression
 
-ordered_field_declaration_list ::=  ( '('  ( ( ( (  attribute_item )*  ( visibility_modifier )?  (  _type )  )  (  ( ','  ( (  attribute_item )*  ( visibility_modifier )?  (  _type )  )  )  )*  )  )?  ( ','  )?  ')'  )
+try_expression ::=
+	 _expression '?'
 
-extern_crate_declaration ::=  ( ( visibility_modifier )?  'extern'  crate (  identifier )  ( ( 'as'  (  identifier )  )  )?  ';'  )
+reference_expression ::=
+	 '&' mutable_specifier? _expression
 
-const_item ::=  ( ( visibility_modifier )?  'const'  (  identifier )  ':'  (  _type )  ( ( '='  (  _expression )  )  )?  ';'  )
+binary_expression ::=
+	 _expression '&&' _expression
+	| _expression '||' _expression
+	| _expression '&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression ( '==' | '!=' | '<' | '<=' | '>' | '>=' ) _expression
+	| _expression ( '<<' | '>>' ) _expression
+	| _expression ( '+' | '-' ) _expression
+	| _expression ( '*' | '/' | '%' ) _expression
 
-static_item ::=  ( ( visibility_modifier )?  'static'  ( 'ref'  )?  ( mutable_specifier )?  (  identifier )  ':'  (  _type )  ( ( '='  (  _expression )  )  )?  ';'  )
+assignment_expression ::=
+	 _expression '=' _expression
 
-type_item ::=  ( ( visibility_modifier )?  'type'  (  _type_identifier )  (  ( type_parameters )?  )  '='  (  _type )  ';'  )
+compound_assignment_expr ::=
+	 _expression ( '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' ) _expression
 
-function_item ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  ( identifier |  metavariable )  )  (  ( type_parameters )?  )  (  parameters )  ( ( '->'  (  _type )  )  )?  ( where_clause )?  (  block )  )
+type_cast_expression ::=
+	 _expression 'as' _type
 
-function_signature_item ::=  ( ( visibility_modifier )?  ( function_modifiers )?  'fn'  (  ( identifier |  metavariable )  )  (  ( type_parameters )?  )  (  parameters )  ( ( '->'  (  _type )  )  )?  ( where_clause )?  ';'  )
+return_expression ::=
+	 'return' _expression
+	| 'return'
 
-function_modifiers ::=  ( ( 'async'  |  'default'  |  'const'  |  'unsafe'  |  extern_modifier )  )+
+yield_expression ::=
+	 'yield' _expression
+	| 'yield'
 
-where_clause ::=  ( 'where'  ( where_predicate (  ( ','  where_predicate )  )*  )  ( ','  )?  )
+call_expression ::=
+	 _expression_except_range arguments
 
-where_predicate ::=  ( (  ( lifetime |  _type_identifier |  scoped_type_identifier |  generic_type |  reference_type |  pointer_type |  tuple_type |  higher_ranked_trait_bound |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  )  )  (  trait_bounds )  )
+arguments ::=
+	 '(' ( attribute_item* _expression ( ',' attribute_item* _expression )* )? ','? ')'
 
-impl_item ::=  ( ( 'unsafe'  )?  'impl'  (  ( type_parameters )?  )  ( ( (  ( _type_identifier |  scoped_type_identifier |  generic_type )  )  'for'  )  )?  (  _type )  ( where_clause )?  (  declaration_list )  )
+array_expression ::=
+	 '[' attribute_item* ( _expression ';' _expression | ( attribute_item* _expression ( ',' attribute_item* _expression )* )? ','? ) ']'
 
-trait_item ::=  ( ( visibility_modifier )?  ( 'unsafe'  )?  'trait'  (  _type_identifier )  (  ( type_parameters )?  )  (  ( trait_bounds )?  )  ( where_clause )?  (  declaration_list )  )
+parenthesized_expression ::=
+	 '(' _expression ')'
 
-associated_type ::=  ( 'type'  (  _type_identifier )  (  ( trait_bounds )?  )  ';'  )
+tuple_expression ::=
+	 '(' attribute_item* _expression ',' ( _expression ',' )* _expression? ')'
 
-trait_bounds ::=  ( ':'  ( ( _type |  lifetime |  higher_ranked_trait_bound |  removed_trait_bound )  (  ( '+'  ( _type |  lifetime |  higher_ranked_trait_bound |  removed_trait_bound )  )  )*  )  )
+unit_expression ::=
+	 '(' ')'
 
-higher_ranked_trait_bound ::=  ( 'for'  (  type_parameters )  (  _type )  )
+struct_expression ::=
+	 ( _type_identifier | scoped_type_identifier_in_expression_position | generic_type_with_turbofish ) field_initializer_list
 
-removed_trait_bound ::=  ( '?'  _type )
+field_initializer_list ::=
+	 '{' ( ( shorthand_field_initializer | field_initializer | base_field_initializer ) ( ',' ( shorthand_field_initializer | field_initializer | base_field_initializer ) )* )? ','? '}'
 
-type_parameters ::=   (  ( '<'  ( ( lifetime |  metavariable |  _type_identifier |  constrained_type_parameter |  optional_type_parameter |  const_parameter )  (  ( ','  ( lifetime |  metavariable |  _type_identifier |  constrained_type_parameter |  optional_type_parameter |  const_parameter )  )  )*  )  ( ','  )?  '>'  )  )
+shorthand_field_initializer ::=
+	 attribute_item* identifier
 
-const_parameter ::=  ( 'const'  (  identifier )  ':'  (  _type )  )
+field_initializer ::=
+	 attribute_item* _field_identifier ':' _expression
 
-constrained_type_parameter ::=  ( (  ( lifetime |  _type_identifier )  )  (  trait_bounds )  )
+base_field_initializer ::=
+	 '..' _expression
+
+if_expression ::=
+	 'if' _condition block else_clause?
+
+let_condition ::=
+	 'let' _pattern '=' _expression
+
+_let_chain ::=
+	 _let_chain '&&' let_condition | _let_chain '&&' _expression | let_condition '&&' _expression | let_condition '&&' let_condition | _expression '&&' let_condition
 
-optional_type_parameter ::=  ( (  ( _type_identifier |  constrained_type_parameter )  )  '='  (  _type )  )
+_condition ::=
+	 _expression
+	| let_condition
+	| _let_chain
 
-let_declaration ::=  ( 'let'  ( mutable_specifier )?  (  _pattern )  ( ( ':'  (  _type )  )  )?  ( ( '='  (  _expression )  )  )?  ';'  )
+else_clause ::=
+	 'else' ( block | if_expression )
 
-use_declaration ::=  ( ( visibility_modifier )?  'use'  (  _use_clause )  ';'  )
+match_expression ::=
+	 'match' _expression match_block
 
-_use_clause ::=  ( _path |  use_as_clause |  use_list |  scoped_use_list |  use_wildcard )
+match_block ::=
+	 '{' ( match_arm* last_match_arm )? '}'
 
-scoped_use_list ::=  ( (  ( _path )?  )  '::'  (  use_list )  )
+match_arm ::=
+	 attribute_item* match_pattern '=>' ( _expression ',' | _expression_ending_with_block )
 
-use_list ::=  ( '{'  ( ( ( _use_clause )  (  ( ','  ( _use_clause )  )  )*  )  )?  ( ','  )?  '}'  )
+last_match_arm ::=
+	 attribute_item* match_pattern '=>' _expression ','?
 
-use_as_clause ::=  ( (  _path )  'as'  (  identifier )  )
+match_pattern ::=
+	 ( _pattern | closure_expression ) ( 'if' _condition )?
 
-use_wildcard ::=  ( ( ( _path '::'  )  )?  '*'  )
+while_expression ::=
+	 ( label ':' )? 'while' _condition block
 
-parameters ::=  ( '('  ( ( ( ( attribute_item )?  ( parameter |  self_parameter |  variadic_parameter |  '_'  |  _type )  )  (  ( ','  ( ( attribute_item )?  ( parameter |  self_parameter |  variadic_parameter |  '_'  |  _type )  )  )  )*  )  )?  ( ','  )?  ')'  )
+loop_expression ::=
+	 ( label ':' )? 'loop' block
 
-self_parameter ::=  ( ( '&'  )?  ( lifetime )?  ( mutable_specifier )?  self )
+for_expression ::=
+	 ( label ':' )? 'for' _pattern 'in' _expression block
 
-variadic_parameter ::=  '...'
+const_block ::=
+	 'const' block
 
-parameter ::=  ( ( mutable_specifier )?  (  ( _pattern |  self |  _reserved_identifier )  )  ':'  (  _type )  )
+closure_expression ::=
+	 'static'? 'move'? closure_parameters ( ( '->' _type )? block | ( _expression | '_' ) )
 
-extern_modifier ::=  ( 'extern'  ( string_literal )?  )
+closure_parameters ::=
+	 '|' ( ( _pattern | parameter ) ( ',' ( _pattern | parameter ) )* )? '|'
 
-visibility_modifier ::=   (  ( crate |  ( 'pub'  ( ( '('  ( self |  super |  crate |  ( 'in'  _path )  )  ')'  )  )?  )  )  )
+label ::=
+	 "'"  identifier
 
-_type ::=  ( abstract_type |  reference_type |  metavariable |  pointer_type |  generic_type |  scoped_type_identifier |  tuple_type |  unit_type |  array_type |  function_type |  _type_identifier |  macro_invocation |  empty_type |  dynamic_type |  bounded_type |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  )
+break_expression ::=
+	 'break' label? _expression?
 
-bracketed_type ::=  ( '<'  ( _type |  qualified_type )  '>'  )
+continue_expression ::=
+	 'continue' label?
 
-qualified_type ::=  ( (  _type )  'as'  (  _type )  )
+index_expression ::=
+	 _expression '[' _expression ']'
 
-lifetime ::=  ( "'"  identifier )
+await_expression ::=
+	 _expression '.' 'await'
 
-array_type ::=  ( '['  (  _type )  ( ( ';'  (  _expression )  )  )?  ']'  )
+field_expression ::=
+	 _expression '.' ( _field_identifier | integer_literal )
 
-for_lifetimes ::=  ( 'for'  '<'  ( lifetime (  ( ','  lifetime )  )*  )  ( ','  )?  '>'  )
+unsafe_block ::=
+	 'unsafe' block
 
-function_type ::=  ( ( for_lifetimes )?   (  ( ( (  ( _type_identifier |  scoped_type_identifier )  )  |  ( ( function_modifiers )?  'fn'  )  )  (  parameters )  )  )  ( ( '->'  (  _type )  )  )?  )
+async_block ::=
+	 'async' 'move'? block
 
-tuple_type ::=  ( '('  ( _type (  ( ','  _type )  )*  )  ( ','  )?  ')'  )
+try_block ::=
+	 'try' block
 
-unit_type ::=  ( '('  ')'  )
+block ::=
+	 ( label ':' )? '{' _statement* _expression? '}'
 
-generic_function ::=   (  ( (  ( identifier |  scoped_identifier |  field_expression )  )  '::'  (  type_arguments )  )  )
+_pattern ::=
+	 _literal_pattern
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' )
+	| identifier
+	| scoped_identifier
+	| tuple_pattern
+	| tuple_struct_pattern
+	| struct_pattern
+	| _reserved_identifier
+	| ref_pattern
+	| slice_pattern
+	| captured_pattern
+	| reference_pattern
+	| remaining_field_pattern
+	| mut_pattern
+	| range_pattern
+	| or_pattern
+	| const_block
+	| macro_invocation
+	| '_'
 
-generic_type ::=   (  ( (  ( _type_identifier |  scoped_type_identifier )  )  (  type_arguments )  )  )
+tuple_pattern ::=
+	 '(' ( ( _pattern | closure_expression ) ( ',' ( _pattern | closure_expression ) )* )? ','? ')'
 
-generic_type_with_turbofish ::=  ( (  ( _type_identifier |  scoped_identifier )  )  '::'  (  type_arguments )  )
+slice_pattern ::=
+	 '[' ( _pattern ( ',' _pattern )* )? ','? ']'
 
-bounded_type ::=   (  ( ( lifetime '+'  _type )  |  ( _type '+'  _type )  |  ( _type '+'  lifetime )  )  )
+tuple_struct_pattern ::=
+	 ( identifier | scoped_identifier ) '(' ( _pattern ( ',' _pattern )* )? ','? ')'
 
-type_arguments ::=  ( (   (  '<'  )  )  ( ( _type |  type_binding |  lifetime |  _literal |  block )  (  ( ','  ( _type |  type_binding |  lifetime |  _literal |  block )  )  )*  )  ( ','  )?  '>'  )
+struct_pattern ::=
+	 ( _type_identifier | scoped_type_identifier ) '{' ( ( field_pattern | remaining_field_pattern ) ( ',' ( field_pattern | remaining_field_pattern ) )* )? ','? '}'
 
-type_binding ::=  ( (  _type_identifier )  '='  (  _type )  )
+field_pattern ::=
+	 'ref'? mutable_specifier? ( identifier | _field_identifier ':' _pattern )
 
-reference_type ::=  ( '&'  ( lifetime )?  ( mutable_specifier )?  (  _type )  )
+remaining_field_pattern ::=
+	 '..'
 
-pointer_type ::=  ( '*'  ( 'const'  |  mutable_specifier )  (  _type )  )
+mut_pattern ::=
+	 mutable_specifier _pattern
 
-empty_type ::=  '!'
+range_pattern ::=
+	 ( _literal_pattern | _path ) ( ( '...' | '..=' ) ( _literal_pattern | _path ) | '..' )
 
-abstract_type ::=  ( 'impl'  (  ( _type_identifier |  scoped_type_identifier |  generic_type |  function_type )  )  )
+ref_pattern ::=
+	 'ref' _pattern
 
-dynamic_type ::=  ( 'dyn'  (  ( _type_identifier |  scoped_type_identifier |  generic_type |  function_type )  )  )
+captured_pattern ::=
+	 identifier '@' _pattern
 
-mutable_specifier ::=  'mut'
+reference_pattern ::=
+	 '&' mutable_specifier? _pattern
 
-_expression ::=  ( unary_expression |  reference_expression |  try_expression |  binary_expression |  assignment_expression |  compound_assignment_expr |  type_cast_expression |  range_expression |  call_expression |  return_expression |  _literal |   (  identifier )  |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  |   (  _reserved_identifier )  |  self |  scoped_identifier |  generic_function |  await_expression |  field_expression |  array_expression |  tuple_expression |   (  macro_invocation )  |  unit_expression |  _expression_ending_with_block |  break_expression |  continue_expression |  index_expression |  metavariable |  closure_expression |  parenthesized_expression |  struct_expression )
+or_pattern ::=
+	 _pattern '|' _pattern
 
-_expression_ending_with_block ::=  ( unsafe_block |  async_block |  block |  if_expression |  if_let_expression |  match_expression |  while_expression |  while_let_expression |  loop_expression |  for_expression |  const_block )
+_literal ::=
+	 string_literal
+	| raw_string_literal
+	| char_literal
+	| boolean_literal
+	| integer_literal
+	| float_literal
 
-macro_invocation ::=  ( (  ( scoped_identifier |  identifier )  )  '!'  token_tree )
+_literal_pattern ::=
+	 string_literal
+	| raw_string_literal
+	| char_literal
+	| boolean_literal
+	| integer_literal
+	| float_literal
+	| negative_literal
 
-scoped_identifier ::=  ( (  ( ( _path |  bracketed_type |  (  generic_type_with_turbofish )  )  )?  )  '::'  (  identifier )  )
+negative_literal ::=
+	 '-' ( integer_literal | float_literal )
 
-scoped_type_identifier_in_expression_position ::=   (  ( (  ( ( _path |  (  generic_type_with_turbofish )  )  )?  )  '::'  (  _type_identifier )  )  )
+integer_literal ::=
+	 ( ( [0-9][0-9_]* | '0x'[0-9a-fA-F_]+ | '0b'[01_]+ | '0o'[0-7_]+ ) ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' )? )
 
-scoped_type_identifier ::=  ( (  ( ( _path |  (  generic_type_with_turbofish )  |  bracketed_type |  generic_type )  )?  )  '::'  (  _type_identifier )  )
+string_literal ::=
+	 [bc]?'"' ( escape_sequence | _string_content )* '"' 
 
-range_expression ::=   (  (  (  ( _expression ( '..'  |  '...'  |  '..='  )  _expression )  )  |  ( _expression '..'  )  |  ( '..'  _expression )  |  '..'  )  )
+char_literal ::=
+	 ( 'b'? "'"  ( '\\'  ( [^xu] | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F]+'}' | 'x'[0-9a-fA-F]'{2}' ) | [^\'] )? "'"  )
 
-unary_expression ::=   (  ( ( '-'  |  '*'  |  '!'  )  _expression )  )
+escape_sequence ::=
+	 ( '\\'  ( [^xu] | 'u'[0-9a-fA-F]'{4}' | 'u{'[0-9a-fA-F]+'}' | 'x'[0-9a-fA-F]'{2}' ) )
 
-try_expression ::=  ( _expression '?'  )
+boolean_literal ::=
+	 'true'
+	| 'false'
 
-reference_expression ::=   (  ( '&'  ( mutable_specifier )?  (  _expression )  )  )
+comment ::=
+	 line_comment
+	| block_comment
 
-binary_expression ::=  (  (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '||'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '|'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '^'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '=='  |  '!='  |  '<'  |  '<='  |  '>'  |  '>='  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '<<'  |  '>>'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '+'  |  '-'  )  )  (  _expression )  )  )  |   (  ( (  _expression )  (  ( '*'  |  '/'  |  '%'  )  )  (  _expression )  )  )  )
+line_comment ::=
+	 ( '//' '.'* )
 
-assignment_expression ::=   (  ( (  _expression )  '='  (  _expression )  )  )
+_path ::=
+	 self
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' )
+	| metavariable
+	| super
+	| crate
+	| identifier
+	| scoped_identifier
+	| _reserved_identifier
 
-compound_assignment_expr ::=   (  ( (  _expression )  (  ( '+='  |  '-='  |  '*='  |  '/='  |  '%='  |  '&='  |  '|='  |  '^='  |  '<<='  |  '>>='  )  )  (  _expression )  )  )
+identifier ::=
+	 ('r#')?[_\p{XID_Start}][_\p{XID_Continue}]*
 
-type_cast_expression ::=  ( (  _expression )  'as'  (  _type )  )
+shebang ::=
+	 '#!'[ #x09#x0A#x0B#x0C#x0D]*[^#x5B #x09#x0A#x0B#x0C#x0D]+
 
-return_expression ::=  (  (  ( 'return'  _expression )  )  |   (  'return'  )  )
+_reserved_identifier ::=
+	 ( 'default' | 'union' )
 
-call_expression ::=   (  ( (  _expression )  (  arguments )  )  )
+_type_identifier ::=
+	 identifier
 
-arguments ::=  ( '('  ( ( ( (  attribute_item )*  _expression )  (  ( ','  ( (  attribute_item )*  _expression )  )  )*  )  )?  ( ','  )?  ')'  )
+_field_identifier ::=
+	 identifier
 
-array_expression ::=  ( '['  (  attribute_item )*  ( ( _expression ';'  (  _expression )  )  |  ( ( ( _expression (  ( ','  _expression )  )*  )  )?  ( ','  )?  )  )  ']'  )
+self ::=
+	 'self'
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+super ::=
+	 'super'
 
-tuple_expression ::=  ( '('  (  attribute_item )*  ( _expression ','  )  (  ( _expression ','  )  )*  ( _expression )?  ')'  )
+crate ::=
+	 'crate'
 
-unit_expression ::=  ( '('  ')'  )
-
-struct_expression ::=  ( (  ( _type_identifier |  (  scoped_type_identifier_in_expression_position )  |  generic_type_with_turbofish )  )  (  field_initializer_list )  )
-
-field_initializer_list ::=  ( '{'  ( ( ( shorthand_field_initializer |  field_initializer |  base_field_initializer )  (  ( ','  ( shorthand_field_initializer |  field_initializer |  base_field_initializer )  )  )*  )  )?  ( ','  )?  '}'  )
-
-shorthand_field_initializer ::=  ( (  attribute_item )*  identifier )
-
-field_initializer ::=  ( (  attribute_item )*  (  _field_identifier )  ':'  (  _expression )  )
-
-base_field_initializer ::=  ( '..'  _expression )
-
-if_expression ::=  ( 'if'  (  _expression )  (  block )  ( (  else_clause )  )?  )
-
-if_let_expression ::=  ( 'if'  'let'  (  _pattern )  '='  (  _expression )  (  block )  ( (  else_clause )  )?  )
-
-else_clause ::=  ( 'else'  ( block |  if_expression |  if_let_expression )  )
-
-match_expression ::=  ( 'match'  (  _expression )  (  match_block )  )
-
-match_block ::=  ( '{'  ( ( (  match_arm )*  (  last_match_arm )  )  )?  '}'  )
-
-match_arm ::=  ( (  attribute_item )*  (  ( macro_invocation |  match_pattern )  )  '=>'  ( ( (  _expression )  ','  )  |  (   (  _expression_ending_with_block )  )  )  )
-
-last_match_arm ::=  ( (  attribute_item )*  (  match_pattern )  '=>'  (  _expression )  ( ','  )?  )
-
-match_pattern ::=  ( _pattern ( ( 'if'  (  _expression )  )  )?  )
-
-while_expression ::=  ( ( ( loop_label ':'  )  )?  'while'  (  _expression )  (  block )  )
-
-while_let_expression ::=  ( ( ( loop_label ':'  )  )?  'while'  'let'  (  _pattern )  '='  (  _expression )  (  block )  )
-
-loop_expression ::=  ( ( ( loop_label ':'  )  )?  'loop'  (  block )  )
-
-for_expression ::=  ( ( ( loop_label ':'  )  )?  'for'  (  _pattern )  'in'  (  _expression )  (  block )  )
-
-const_block ::=  ( 'const'  (  block )  )
-
-closure_expression ::=   (  ( ( 'move'  )?  (  closure_parameters )  ( ( ( ( '->'  (  _type )  )  )?  (  block )  )  |  (  _expression )  )  )  )
-
-closure_parameters ::=  ( '|'  ( ( ( _pattern |  parameter )  (  ( ','  ( _pattern |  parameter )  )  )*  )  )?  '|'  )
-
-loop_label ::=  ( "'"  identifier )
-
-break_expression ::=   (  ( 'break'  ( loop_label )?  ( _expression )?  )  )
-
-continue_expression ::=   (  ( 'continue'  ( loop_label )?  )  )
-
-index_expression ::=   (  ( _expression '['  _expression ']'  )  )
-
-await_expression ::=   (  ( _expression '.'  'await'  )  )
-
-field_expression ::=   (  ( (  _expression )  '.'  (  ( _field_identifier |  integer_literal )  )  )  )
-
-unsafe_block ::=  ( 'unsafe'  block )
-
-async_block ::=  ( 'async'  ( 'move'  )?  block )
-
-block ::=  ( '{'  (  _statement )*  ( _expression )?  '}'  )
-
-_pattern ::=  ( _literal_pattern |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  |  identifier |  scoped_identifier |  tuple_pattern |  tuple_struct_pattern |  struct_pattern |  ref_pattern |  slice_pattern |  captured_pattern |  reference_pattern |  remaining_field_pattern |  mut_pattern |  range_pattern |  or_pattern |  const_block |  '_'  )
-
-tuple_pattern ::=  ( '('  ( ( _pattern (  ( ','  _pattern )  )*  )  )?  ( ','  )?  ')'  )
-
-slice_pattern ::=  ( '['  ( ( _pattern (  ( ','  _pattern )  )*  )  )?  ( ','  )?  ']'  )
-
-tuple_struct_pattern ::=  ( (  ( identifier |  scoped_identifier )  )  '('  ( ( _pattern (  ( ','  _pattern )  )*  )  )?  ( ','  )?  ')'  )
-
-struct_pattern ::=  ( (  ( _type_identifier |  scoped_type_identifier )  )  '{'  ( ( ( field_pattern |  remaining_field_pattern )  (  ( ','  ( field_pattern |  remaining_field_pattern )  )  )*  )  )?  ( ','  )?  '}'  )
-
-field_pattern ::=  ( ( 'ref'  )?  ( mutable_specifier )?  ( (  (  identifier )  )  |  ( (  _field_identifier )  ':'  (  _pattern )  )  )  )
-
-remaining_field_pattern ::=  '..'
-
-mut_pattern ::=   (  ( mutable_specifier _pattern )  )
-
-range_pattern ::=  ( ( _literal_pattern |  _path )  ( '...'  |  '..='  )  ( _literal_pattern |  _path )  )
-
-ref_pattern ::=  ( 'ref'  _pattern )
-
-captured_pattern ::=  ( identifier '@'  _pattern )
-
-reference_pattern ::=  ( '&'  ( mutable_specifier )?  _pattern )
-
-or_pattern ::=   (  ( _pattern '|'  _pattern )  )
-
-_literal ::=  ( string_literal |  raw_string_literal |  char_literal |  boolean_literal |  integer_literal |  float_literal )
-
-_literal_pattern ::=  ( string_literal |  raw_string_literal |  char_literal |  boolean_literal |  integer_literal |  float_literal |  negative_literal )
-
-negative_literal ::=  ( '-'  ( integer_literal |  float_literal )  )
-
-integer_literal ::=  (  ( ( [0-9][0-9_]* |  '0x'[0-9a-fA-F_]+ |  '0b'[01_]+ |  '0o'[0-7_]+ )  ( ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  )  )?  )  )
-
-string_literal ::=  ( (  'b'?'"' )  (  ( escape_sequence |  _string_content )  )*  (  '"'  )  )
-
-char_literal ::=  (  ( ( 'b'  )?  "'"  ( ( ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]+/*{2}*/ )  )  |  [^\\'] )  )?  "'"  )  )
-
-escape_sequence ::=  (  ( '\\'  ( [^xu] |  'u'[0-9a-fA-F]+/*{4}*/ |  'u{'[0-9a-fA-F]+'}' |  'x'[0-9a-fA-F]+/*{2}*/ )  )  )
-
-boolean_literal ::=  ( 'true'  |  'false'  )
-
-comment ::=  ( line_comment |  block_comment )
-
-line_comment ::=  (  ( '//'  [^\n]* )  )
-
-_path ::=  ( self |  (  ( 'u8'  |  'i8'  |  'u16'  |  'i16'  |  'u32'  |  'i32'  |  'u64'  |  'i64'  |  'u128'  |  'i128'  |  'isize'  |  'usize'  |  'f32'  |  'f64'  |  'bool'  |  'str'  |  'char'  )  )  |  metavariable |  super |  crate |  identifier |  scoped_identifier )
-
-identifier ::=  ('r#')?[_\p{XID_Start}][_\p{XID_Continue}]*
-
-_reserved_identifier ::=  (  ( 'default'  |  'union'  )  )
-
-_type_identifier ::=  (  identifier )
-
-_field_identifier ::=  (  identifier )
-
-self ::=  'self'
-
-super ::=  'super'
-
-crate ::=  'crate'
-
-metavariable ::=  '$'[a-zA-Z_][\w]*
+metavariable ::=
+	 '\$'[a-zA-Z_][a-zA-Z_]*
 

@@ -1,43 +1,99 @@
-/*
-Grammar originally from https://github.com/MortenSchou/tree-sitter-lbnf
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-lbnf/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-grammar ::=  (  ( def ';'  )  )*
+grammar ::=
+	 ( def ';' )*
 
-def ::=  ( ( label '.'  cat '::='  (  item )*  )  |  ( 'comment'  string )  |  ( 'comment'  string string )  |  ( 'internal'  label '.'  cat '::='  (  item )*  )  |  ( 'token'  ident reg )  |  ( 'position'  'token'  ident reg )  |  ( 'entrypoints'  ( ident (  ( ','  ident )  )*  )  )  |  ( 'separator'  ( 'nonempty'  )?  cat string )  |  ( 'terminator'  ( 'nonempty'  )?  cat string )  |  ( 'coercions'  ident integer )  |  ( 'rules'  ident '::='  ( (  item )*  (  ( '|'  (  item )*  )  )*  )  )  |  ( 'layout'  ( string (  ( ','  string )  )*  )  )  |  ( 'layout'  'stop'  ( string (  ( ','  string )  )*  )  )  |  ( 'layout'  'toplevel'  )  )
+def ::=
+	 label '.' cat '::=' item*
+	| 'comment' string
+	| 'comment' string string
+	| 'internal' label '.' cat '::=' item*
+	| 'token' ident reg
+	| 'position' 'token' ident reg
+	| 'entrypoints' ident ( ',' ident )*
+	| 'separator' 'nonempty'? cat string
+	| 'terminator' 'nonempty'? cat string
+	| 'coercions' ident integer
+	| 'rules' ident '::=' item* ( '|' item* )*
+	| 'layout' string ( ',' string )*
+	| 'layout' 'stop' string ( ',' string )*
+	| 'layout' 'toplevel'
 
-item ::=  ( string |  cat )
+item ::=
+	 string
+	| cat
 
-cat ::=  ( ( '['  cat ']'  )  |  ident )
+cat ::=
+	 '[' cat ']'
+	| ident
 
-label ::=  ( label_id |  ( label_id (  prof_item )*  )  |  ( label_id label_id (  prof_item )*  )  )
+label ::=
+	 label_id
+	| label_id prof_item*
+	| label_id label_id prof_item*
 
-label_id ::=  ( ident |  '_'  |  ( '['  ']'  )  |  ( '('  ':'  ')'  )  |  ( '('  ':'  '['  ']'  ')'  )  )
+label_id ::=
+	 ident
+	| '_'
+	| '[' ']'
+	| '(' ':' ')'
+	| '(' ':' '[' ']' ')'
 
-prof_item ::=  ( '('  '['  ( ( int_list (  ( ','  int_list )  )*  )  )?  ']'  ','  '['  ( ( integer (  ( ','  integer )  )*  )  )?  ']'  ')'  )
+prof_item ::=
+	 '(' '[' ( int_list ( ',' int_list )* )? ']' ',' '[' ( integer ( ',' integer )* )? ']' ')'
 
-int_list ::=  ( '['  ( ( integer (  ( ','  integer )  )*  )  )?  ']'  )
+int_list ::=
+	 '[' ( integer ( ',' integer )* )? ']'
 
-reg2 ::=  ( ( reg2 reg3 )  |  reg3 )
+reg2 ::=
+	 reg2 reg3
+	| reg3
 
-reg1 ::=  ( ( reg1 '|'  reg2 )  |  ( reg2 '-'  reg2 )  |  reg2 )
+reg1 ::=
+	 reg1 '|' reg2
+	| reg2 '-' reg2
+	| reg2
 
-reg3 ::=  ( ( reg3 '*'  )  |  ( reg3 '+'  )  |  ( reg3 '?'  )  |  'eps'  |  char |  ( '['  string ']'  )  |  ( '{'  string '}'  )  |  'digit'  |  'letter'  |  'upper'  |  'lower'  |  'char'  |  ( '('  reg ')'  )  )
+reg3 ::=
+	 reg3 '*'
+	| reg3 '+'
+	| reg3 '?'
+	| 'eps'
+	| char
+	| '[' string ']'
+	| '{' string '}'
+	| 'digit'
+	| 'letter'
+	| 'upper'
+	| 'lower'
+	| 'char'
+	| '(' reg ')'
 
-reg ::=  reg1
+reg ::=
+	 reg1
 
-integer ::=  [0-9]+
+integer ::=
+	 [0-9]+
 
-char ::=  ( "'"  ( escape_sequence |  (  [^\n'] )  )  "'"  )
+char ::=
+	 "'"  ( escape_sequence | [^#x0A'] ) "'" 
 
-string ::=  ( '"'  (  ( (   (  [^\\"\n]+ )  )  |  escape_sequence )  )*  '"'  )
+string ::=
+	 '"'  ( [^\"#x0A]+ | escape_sequence )* '"' 
 
-escape_sequence ::=  (  ( '\\'  ( [^xuU] |  [0-9]+/*{2,3}*/ |  'x'[0-9a-fA-F]+/*{2,}*/ |  'u'[0-9a-fA-F]+/*{4}*/ |  'U'[0-9a-fA-F]+/*{8}*/ )  )  )
+escape_sequence ::=
+	 ( '\\'  ( [^xuU] | [0-9]'{2,3}' | 'x'[0-9a-fA-F]'{2,}' | 'u'[0-9a-fA-F]'{4}' | 'U'[0-9a-fA-F]'{8}' ) )
 
-ident ::=  [a-zA-Z][\w]*
+ident ::=
+	 [a-zA-Z][a-zA-Z_]*
 
-comment ::=  (  ( ( '--'  .* )  |  ( '{-'  (  ( [^-] |  '-'[^}] )  )*  '-}'  )  )  )
+comment ::=
+	 ( '--' '.'* | '{-' ( [^-] | '-'[^}] )* '-}' )
 

@@ -1,148 +1,283 @@
-source_file ::=  Document
+//
+// From tree-sitter-graphql/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-comma ::=  ','
+source_file ::=
+	 Document
 
-Document ::=  ( Definition )+
+comma ::=
+	 ','
 
-Definition ::=  ( ExecutableDefinition |  TypeSystemDefinition |  TypeSystemExtension )
+Document ::=
+	 Definition+
 
-ExecutableDefinition ::=  ( OperationDefinition |  FragmentDefinition )
+Definition ::=
+	 ExecutableDefinition
+	| TypeSystemDefinition
+	| TypeSystemExtension
 
-OperationDefinition ::=  ( SelectionSet |  ( OperationType ( Name )?  ( VariableDefinitions )?  ( Directives )?  SelectionSet )  )
+ExecutableDefinition ::=
+	 OperationDefinition
+	| FragmentDefinition
 
-OperationType ::=  ( 'query'  |  'mutation'  |  'subscription'  )
+OperationDefinition ::=
+	 SelectionSet
+	| OperationType Name? VariableDefinitions? Directives? SelectionSet
 
-SelectionSet ::=  ( '{'  ( Selection )+  '}'  )
+OperationType ::=
+	 'query'
+	| 'mutation'
+	| 'subscription'
 
-Selection ::=  ( Field |  FragmentSpread |  InlineFragment )
+SelectionSet ::=
+	 '{' Selection+ '}'
 
-Field ::=  ( ( Alias )?  Name ( Arguments )?  ( Directives )?  ( SelectionSet )?  )
+Selection ::=
+	 Field
+	| FragmentSpread
+	| InlineFragment
 
-Alias ::=  ( Name ':'  )
+Field ::=
+	 Alias? Name Arguments? Directives? SelectionSet?
 
-Arguments ::=  ( '('  ( Argument )+  ')'  )
+Alias ::=
+	 Name ':'
 
-Argument ::=  ( Name ':'  Value )
+Arguments ::=
+	 '(' Argument+ ')'
 
-FragmentSpread ::=  ( '...'  FragmentName ( Directives )?  )
+Argument ::=
+	 Name ':' Value
 
-InlineFragment ::=  ( '...'  ( TypeCondition )?  ( Directives )?  SelectionSet )
+FragmentSpread ::=
+	 '...' FragmentName Directives?
 
-FragmentDefinition ::=  ( 'fragment'  FragmentName TypeCondition ( Directives )?  SelectionSet )
+InlineFragment ::=
+	 '...' TypeCondition? Directives? SelectionSet
 
-FragmentName ::=  Name
+FragmentDefinition ::=
+	 'fragment' FragmentName TypeCondition Directives? SelectionSet
 
-TypeCondition ::=  ( 'on'  NamedType )
+FragmentName ::=
+	 Name
 
-Value ::=  ( Variable |  IntValue |  FloatValue |  StringValue |  BooleanValue |  NullValue |  EnumValue |  ListValue |  ObjectValue )
+TypeCondition ::=
+	 'on' NamedType
 
-BooleanValue ::=  ( 'false'  |  'true'  )
+Value ::=
+	 Variable
+	| IntValue
+	| FloatValue
+	| StringValue
+	| BooleanValue
+	| NullValue
+	| EnumValue
+	| ListValue
+	| ObjectValue
 
-NullValue ::=  'null'
+BooleanValue ::=
+	 'false'
+	| 'true'
 
-EnumValue ::=  Name
+NullValue ::=
+	 'null'
 
-ListValue ::=  ( '['  (  Value )*  ']'  )
+EnumValue ::=
+	 Name
 
-ObjectValue ::=  ( '{'  (  ObjectField )*  '}'  )
+ListValue ::=
+	 '[' Value* ']'
 
-ObjectField ::=  ( Name ':'  Value )
+ObjectValue ::=
+	 '{' ObjectField* '}'
 
-IntValue ::=  '-'?('0'|[1-9][0-9]*)
+ObjectField ::=
+	 Name ':' Value
 
-FloatValue ::=  (  ( '-'?('0'|[1-9][0-9]*) ( '.'[0-9]+ |  ('e'|'E')('+'|'-')?[0-9]+ |  ( '.'[0-9]+ ('e'|'E')('+'|'-')?[0-9]+ )  )  )  )
+IntValue ::=
+	 '-'?('0'|[1-9][0-9]*)
 
-StringValue ::=  ( ( '"""'  ([^"]|'\n'|""?[^"])* '"""'  )  |  ( '"'  [^"\\\n]* '"'  )  )
+FloatValue ::=
+	 ( '-'?('0'|[1-9][0-9]*) ( '.'[0-9]+ | ('e'|'E')('\'+|'-')?[0-9]+ | '.'[0-9]+ ('e'|'E')('\'+|'-')?[0-9]+ ) )
 
-VariableDefinitions ::=  ( '('  ( VariableDefinition )+  ')'  )
+StringValue ::=
+	 '"""' ([^"]|'#x0A'|'""'?[^"])* '"""'
+	| '"'  [^"\#x0A]* '"' 
 
-VariableDefinition ::=  ( Variable ':'  Type ( DefaultValue )?  )
+VariableDefinitions ::=
+	 '(' VariableDefinition+ ')'
 
-Variable ::=  ( '$'  Name )
+VariableDefinition ::=
+	 Variable ':' Type DefaultValue?
 
-DefaultValue ::=  ( '='  Value )
+Variable ::=
+	 '$' Name
 
-Type ::=  ( NamedType |  ListType |  NonNullType )
+DefaultValue ::=
+	 '=' Value
 
-NamedType ::=  Name
+Type ::=
+	 NamedType
+	| ListType
+	| NonNullType
 
-ListType ::=  ( '['  Type ']'  )
+NamedType ::=
+	 Name
 
-NonNullType ::=  ( ( NamedType |  ListType )  '!'  )
+ListType ::=
+	 '[' Type ']'
 
-Directives ::=  ( Directive )+
+NonNullType ::=
+	 ( NamedType | ListType ) '!'
 
-Directive ::=  ( '@'  Name ( Arguments )?  )
+Directives ::=
+	 Directive+
 
-TypeSystemDefinition ::=  ( SchemaDefinition |  TypeDefinition |  DirectiveDefinition )
+Directive ::=
+	 '@' Name Arguments?
 
-TypeSystemExtension ::=  ( SchemaExtension |  TypeExtension )
+TypeSystemDefinition ::=
+	 SchemaDefinition
+	| TypeDefinition
+	| DirectiveDefinition
 
-SchemaDefinition ::=  ( 'schema'  ( Directives )?  '{'  ( OperationTypeDefinition )+  '}'  )
+TypeSystemExtension ::=
+	 SchemaExtension
+	| TypeExtension
 
-SchemaExtension ::=   (  ( ( 'extend'  'schema'  ( Directives )?  '{'  ( OperationTypeDefinition )+  '}'  )  |  ( 'extend'  'schema'  Directives )  )  )
+SchemaDefinition ::=
+	 'schema' Directives? '{' OperationTypeDefinition+ '}'
 
-TypeExtension ::=  ( ScalarTypeExtension |  ObjectTypeExtension |  InterfaceTypeExtension |  UnionTypeExtension |  EnumTypeExtension |  InputObjectTypeExtension )
+SchemaExtension ::=
+	 'extend' 'schema' Directives? '{' OperationTypeDefinition+ '}' | 'extend' 'schema' Directives
 
-ScalarTypeExtension ::=  ( 'extend'  'scalar'  Name Directives )
+TypeExtension ::=
+	 ScalarTypeExtension
+	| ObjectTypeExtension
+	| InterfaceTypeExtension
+	| UnionTypeExtension
+	| EnumTypeExtension
+	| InputObjectTypeExtension
 
-ObjectTypeExtension ::=   (  ( ( 'extend'  'type'  Name ( ImplementsInterfaces )?  ( Directives )?  FieldsDefinition )  |  ( 'extend'  'type'  Name ( ImplementsInterfaces )?  Directives )  |  ( 'extend'  'type'  Name ImplementsInterfaces )  )  )
+ScalarTypeExtension ::=
+	 'extend' 'scalar' Name Directives
 
-InterfaceTypeExtension ::=   (  ( ( 'extend'  'interface'  Name ( Directives )?  FieldsDefinition )  |  ( 'extend'  'interface'  Name Directives )  )  )
+ObjectTypeExtension ::=
+	 'extend' 'type' Name ImplementsInterfaces? Directives? FieldsDefinition | 'extend' 'type' Name ImplementsInterfaces? Directives | 'extend' 'type' Name ImplementsInterfaces
 
-UnionTypeExtension ::=  ( ( 'extend'  'union'  Name ( Directives )?  UnionMemberTypes )  |  ( 'extend'  'union'  Name Directives )  )
+InterfaceTypeExtension ::=
+	 'extend' 'interface' Name Directives? FieldsDefinition | 'extend' 'interface' Name Directives
 
-EnumTypeExtension ::=   (  ( ( 'extend'  'enum'  Name ( Directives )?  EnumValuesDefinition )  |  ( 'extend'  'enum'  Name Directives )  )  )
+UnionTypeExtension ::=
+	 'extend' 'union' Name Directives? UnionMemberTypes
+	| 'extend' 'union' Name Directives
 
-InputObjectTypeExtension ::=   (  ( ( 'extend'  'input'  Name ( Directives )?  InputFieldsDefinition )  |  ( 'extend'  'input'  Name Directives )  )  )
+EnumTypeExtension ::=
+	 'extend' 'enum' Name Directives? EnumValuesDefinition | 'extend' 'enum' Name Directives
 
-OperationTypeDefinition ::=  ( OperationType ':'  NamedType )
+InputObjectTypeExtension ::=
+	 'extend' 'input' Name Directives? InputFieldsDefinition | 'extend' 'input' Name Directives
 
-Description ::=  StringValue
+OperationTypeDefinition ::=
+	 OperationType ':' NamedType
 
-TypeDefinition ::=  ( ScalarTypeDefinition |  ObjectTypeDefinition |  InterfaceTypeDefinition |  UnionTypeDefinition |  EnumTypeDefinition |  InputObjectTypeDefinition )
+Description ::=
+	 StringValue
 
-ScalarTypeDefinition ::=  ( ( Description )?  'scalar'  Name ( Directives )?  )
+TypeDefinition ::=
+	 ScalarTypeDefinition
+	| ObjectTypeDefinition
+	| InterfaceTypeDefinition
+	| UnionTypeDefinition
+	| EnumTypeDefinition
+	| InputObjectTypeDefinition
 
-ObjectTypeDefinition ::=   (  ( ( Description )?  'type'  Name ( ImplementsInterfaces )?  ( Directives )?  ( FieldsDefinition )?  )  )
+ScalarTypeDefinition ::=
+	 Description? 'scalar' Name Directives?
 
-ImplementsInterfaces ::=  ( 'implements'  ( '&'  )?  NamedType (  ( '&'  NamedType )  )*  )
+ObjectTypeDefinition ::=
+	 Description? 'type' Name ImplementsInterfaces? Directives? FieldsDefinition?
 
-FieldsDefinition ::=  ( '{'  ( FieldDefinition )+  '}'  )
+ImplementsInterfaces ::=
+	 'implements' '&'? NamedType ( '&' NamedType )*
 
-FieldDefinition ::=  ( ( Description )?  Name ( ArgumentsDefinition )?  ':'  Type ( Directive )?  )
+FieldsDefinition ::=
+	 '{' FieldDefinition+ '}'
 
-ArgumentsDefinition ::=  ( '('  ( InputValueDefinition )+  ')'  )
+FieldDefinition ::=
+	 Description? Name ArgumentsDefinition? ':' Type Directive?
 
-InputValueDefinition ::=  ( ( Description )?  Name ':'  Type ( DefaultValue )?  ( Directives )?  )
+ArgumentsDefinition ::=
+	 '(' InputValueDefinition+ ')'
 
-InterfaceTypeDefinition ::=   (  ( ( Description )?  'interface'  Name ( Directives )?  ( FieldsDefinition )?  )  )
+InputValueDefinition ::=
+	 Description? Name ':' Type DefaultValue? Directives?
 
-UnionTypeDefinition ::=  ( ( Description )?  'union'  Name ( Directives )?  ( UnionMemberTypes )?  )
+InterfaceTypeDefinition ::=
+	 Description? 'interface' Name Directives? FieldsDefinition?
 
-UnionMemberTypes ::=  ( '='  ( '|'  )?  NamedType (  ( '|'  NamedType )  )*  )
+UnionTypeDefinition ::=
+	 Description? 'union' Name Directives? UnionMemberTypes?
 
-EnumTypeDefinition ::=   (  ( ( Description )?  'enum'  Name ( Directives )?  ( EnumValuesDefinition )?  )  )
+UnionMemberTypes ::=
+	 '=' '|'? NamedType ( '|' NamedType )*
 
-EnumValuesDefinition ::=  ( '{'  ( EnumValueDefinition )+  '}'  )
+EnumTypeDefinition ::=
+	 Description? 'enum' Name Directives? EnumValuesDefinition?
 
-EnumValueDefinition ::=  ( ( Description )?  EnumValue ( Directives )?  )
+EnumValuesDefinition ::=
+	 '{' EnumValueDefinition+ '}'
 
-InputObjectTypeDefinition ::=   (  ( ( Description )?  'input'  Name ( Directives )?  ( InputFieldsDefinition )?  )  )
+EnumValueDefinition ::=
+	 Description? EnumValue Directives?
 
-InputFieldsDefinition ::=  ( '{'  ( InputValueDefinition )+  '}'  )
+InputObjectTypeDefinition ::=
+	 Description? 'input' Name Directives? InputFieldsDefinition?
 
-DirectiveDefinition ::=   (  ( ( Description )?  'directive'  '@'  Name ( ArgumentsDefinition )?  'on'  DirectiveLocations )  )
+InputFieldsDefinition ::=
+	 '{' InputValueDefinition+ '}'
 
-DirectiveLocations ::=  ( ( '|'  )?  DirectiveLocation (  ( '|'  DirectiveLocation )  )*  )
+DirectiveDefinition ::=
+	 Description? 'directive' '@' Name ArgumentsDefinition? 'on' DirectiveLocations
 
-DirectiveLocation ::=  ( ExecutableDirectiveLocation |  TypeSystemDirectiveLocation )
+DirectiveLocations ::=
+	 '|'? DirectiveLocation ( '|' DirectiveLocation )*
 
-ExecutableDirectiveLocation ::=  ( 'QUERY'  |  'MUTATION'  |  'SUBSCRIPTION'  |  'FIELD'  |  'FRAGMENT_DEFINITION'  |  'FRAGMENT_SPREAD'  |  'INLINE_FRAGMENT'  |  'VARIABLE_DEFINITION'  )
+DirectiveLocation ::=
+	 ExecutableDirectiveLocation
+	| TypeSystemDirectiveLocation
 
-TypeSystemDirectiveLocation ::=  ( 'SCHEMA'  |  'SCALAR'  |  'OBJECT'  |  'FIELD_DEFINITION'  |  'ARGUMENT_DEFINITION'  |  'INTERFACE'  |  'UNION'  |  'ENUM'  |  'ENUM_VALUE'  |  'INPUT_OBJECT'  |  'INPUT_FIELD_DEFINITION'  )
+ExecutableDirectiveLocation ::=
+	 'QUERY'
+	| 'MUTATION'
+	| 'SUBSCRIPTION'
+	| 'FIELD'
+	| 'FRAGMENT_DEFINITION'
+	| 'FRAGMENT_SPREAD'
+	| 'INLINE_FRAGMENT'
+	| 'VARIABLE_DEFINITION'
 
-comment ::=  (  ( '# '  .* )  )
+TypeSystemDirectiveLocation ::=
+	 'SCHEMA'
+	| 'SCALAR'
+	| 'OBJECT'
+	| 'FIELD_DEFINITION'
+	| 'ARGUMENT_DEFINITION'
+	| 'INTERFACE'
+	| 'UNION'
+	| 'ENUM'
+	| 'ENUM_VALUE'
+	| 'INPUT_OBJECT'
+	| 'INPUT_FIELD_DEFINITION'
 
-Name ::=  [_A-Za-z][_0-9A-Za-z]*
+comment ::=
+	 ( '# ' '.'* )
+
+Name ::=
+	 [_A-Za-z][_0-9A-Za-z]*
 

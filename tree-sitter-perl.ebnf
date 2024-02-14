@@ -1,207 +1,690 @@
-/*
-Grammar originally from https://github.com/ganezdragon/tree-sitter-perl
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-perl/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 _statement*
+
+_statement ::=
+	 package_statement
+	| use_no_statement
+	| use_no_if_statement
+	| bareword_import
+	| use_no_subs_statement
+	| use_no_feature_statement
+	| use_no_version
+	| require_statement
+	| use_constant_statement
+	| use_parent_statement
+	| _expression_statement
+	| _declaration
+	| single_line_statement
+	| _compound_statement
+	| standalone_block
+	| named_block_statement
+	| ellipsis_statement
+	| special_block
+	| special_literal
+	| heredoc_body_statement
+	| pod_statement
+
+heredoc_initializer ::=
+	 _heredoc_operator heredoc_start_identifier
+
+_heredoc_operator ::=
+	 '<<'
+
+heredoc_body_statement ::=
+	 _imaginary_heredoc_start ( interpolation | escape_sequence | _heredoc_content )* heredoc_end_identifier
+
+pod_statement ::=
+	 '='[a-zA-Z_]* _pod_content
+
+special_literal ::=
+	 '__FILE__'
+	| '__LINE__'
+	| '__PACKAGE__'
+	| '__SUB__'
+	| '__END__'
+	| '__DATA__'
+
+use_parent_statement ::=
+	 'use' 'parent' ( no_require ',' )? ( _string ( ( ',' | '=>' ) _string )* ','? | word_list_qw ) semi_colon
+
+use_constant_statement ::=
+	 'use' 'constant' ( ( identifier | _string ) ( '=>' | ',' ) _expression | hash_ref ) semi_colon
+
+special_block ::=
+	 'sub'? ( 'BEGIN' | 'UNITCHECK' | 'CHECK' | 'INIT' | 'END' ) block
+
+package_statement ::=
+	 'package' package_name version? ( semi_colon | block )
+
+ellipsis_statement ::=
+	 '...' semi_colon?
+
+use_no_version ::=
+	 ( 'use' | 'no' ) version semi_colon
 
-source_file ::=  (  _statement )*
+use_no_feature_statement ::=
+	 ( 'use' | 'no' ) 'feature' ( _list | _string )? semi_colon
 
-_statement ::=  ( use_statement |  use_feature_statement |  use_version |  require_statement |  _expression_statement |  _declaration |  single_line_statement |  _compound_statement |  standalone_block |  ellipsis_statement )
+_expression_or_return_expression ::=
+	 _expression
+	| return_expression
 
-ellipsis_statement ::=  ( '...'  ( semi_colon )?  )
+single_line_statement ::=
+	 _expression_or_return_expression _statement_modifiers
 
-use_version ::=  ( 'use'  (  version )  semi_colon )
+_statement_modifiers ::=
+	 if_simple_statement
+	| unless_simple_statement
+	| while_simple_statement
+	| until_simple_statement
+	| for_simple_statement
+	| when_simple_statement
 
-use_feature_statement ::=  ( 'use'  'feature'  _experimental_feature semi_colon )
+_compound_statement ::=
+	 if_statement
+	| unless_statement
+	| while_statement
+	| until_statement
+	| for_statement_1
+	| for_statement_2
 
-_experimental_feature ::=  ( '"switch"'  |  "'switch'"  )
+_expression_statement ::=
+	 _expression semi_colon
 
-_expression_or_return_expression ::=  ( _expression |  return_expression )
+use_no_statement ::=
+	 ( 'use' | 'no' ) ( package_name | module_name ) version? ( _list | _string )? semi_colon
 
-single_line_statement ::=   (  ( _expression_or_return_expression _statement_modifiers )  )
+use_no_if_statement ::=
+	 ( 'use' | 'no' ) _if_simple ',' ( package_name | module_name | _string ) version? _comma_operator? ( _list | _string )? semi_colon
 
-_statement_modifiers ::=  ( if_simple_statement |  unless_simple_statement |  while_simple_statement |  until_simple_statement |  for_simple_statement |  foreach_simple_statement |  when_simple_statement )
+bareword_import ::=
+	 identifier '->' 'import' _list semi_colon
 
-_compound_statement ::=  ( if_statement |  unless_statement |  while_statement |  until_statement |  for_statement_1 |  for_statement_2 |  foreach_statement )
+use_no_subs_statement ::=
+	 ( 'use' | 'no' ) 'subs' _list semi_colon
 
-_expression_statement ::=  ( _expression semi_colon )
+require_statement ::=
+	 'require' package_name semi_colon
 
-use_statement ::=  ( 'use'  package_name semi_colon )
+if_simple_statement ::=
+	 _if_simple semi_colon
 
-require_statement ::=  ( 'require'  package_name semi_colon )
+_if_simple ::=
+	 'if' ( parenthesized_expression | _expression )
 
-if_simple_statement ::=   (  ( 'if'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+unless_simple_statement ::=
+	 'unless' ( parenthesized_expression | _expression ) semi_colon
 
-unless_simple_statement ::=   (  ( 'unless'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+while_simple_statement ::=
+	 'while' ( parenthesized_expression | _expression ) semi_colon
 
-while_simple_statement ::=   (  ( 'while'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+until_simple_statement ::=
+	 'until' ( parenthesized_expression | _expression ) semi_colon
 
-until_simple_statement ::=   (  ( 'until'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+for_simple_statement ::=
+	 ( 'for' | 'foreach' ) _expression | '(' _expression ')' semi_colon
 
-for_simple_statement ::=   (  ( 'for'  (  ( _list |  ( '('  _list ')'  )  )  )  semi_colon )  )
+when_simple_statement ::=
+	 'when' ( parenthesized_expression | _expression ) semi_colon
 
-foreach_simple_statement ::=   (  ( 'foreach'  (  ( _list |  ( '('  _list ')'  )  )  )  semi_colon )  )
+if_statement ::=
+	 'if' parenthesized_expression block elsif_clause* else_clause?
 
-when_simple_statement ::=   (  ( 'when'  (  ( parenthesized_expression |  _expression )  )  semi_colon )  )
+unless_statement ::=
+	 'unless' parenthesized_expression block elsif_clause* else_clause?
 
-if_statement ::=   (  ( 'if'  (  parenthesized_expression )  (  block )  ( (  ( 'elsif'  (  parenthesized_expression )  (  block )  )  )*  )?  ( ( 'else'  (  block )  )  )?  )  )
+elsif_clause ::=
+	 'elsif' parenthesized_expression block
 
-unless_statement ::=   (  ( 'unless'  (  parenthesized_expression )  (  block )  ( (  ( 'elsif'  (  parenthesized_expression )  (  block )  )  )*  )?  ( ( 'else'  (  block )  )  )?  )  )
+else_clause ::=
+	 'else' block
 
-while_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'while'  (  empty_parenthesized_expression )  (  block )  ( ( 'continue'  (  block )  )  )?  )
+while_statement ::=
+	 ( identifier ':' )? 'while' empty_parenthesized_expression block continue?
 
-until_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'until'  (  empty_parenthesized_expression )  (  block )  ( ( 'continue'  (  block )  )  )?  )
+continue ::=
+	 'continue' block
 
-for_statement_1 ::=  ( ( ( (  identifier )  ':'  )  )?  ( 'for'  |  'foreach'  )  _for_parenthesize (  block )  )
+until_statement ::=
+	 ( identifier ':' )? 'until' empty_parenthesized_expression block continue?
 
-for_statement_2 ::=  ( ( ( (  identifier )  ':'  )  )?  'for'  ( ( ( scope )?  scalar_variable )  |  ( '\\'  ( scope )?  hash_variable )  )  '('  _list ')'  (  block )  ( ( 'continue'  (  block )  )  )?  )
+for_statement_1 ::=
+	 ( identifier ':' )? ( 'for' | 'foreach' ) _for_parenthesize block
 
-_for_parenthesize ::=  ( '('  ( (  _expression )  )?  semi_colon ( (  _expression )  )?  semi_colon ( (  _expression )  )?  ')'  )
+for_statement_2 ::=
+	 ( identifier ':' )? ( 'for' | 'foreach' ) ( scope? scalar_variable | '\\'  scope? hash_variable )? array block continue?
 
-foreach_statement ::=  ( ( ( (  identifier )  ':'  )  )?  'foreach'  ( ( ( scope )?  scalar_variable )  |  ( '\\'  ( scope )?  hash_variable )  )  '('  _list ')'  (  block )  ( ( 'continue'  (  block )  )  )?  )
+_for_parenthesize ::=
+	 '(' _expression semi_colon _expression semi_colon _expression ')'
+	| '(' semi_colon semi_colon ')'
 
-_declaration ::=  ( function_definition |  variable_declaration )
+_declaration ::=
+	 function_definition
 
-variable_declaration ::=  ( scope ( multi_var_declaration |  single_var_declaration )  semi_colon )
+variable_declaration ::=
+	 scope ( multi_var_declaration | single_var_declaration | type_glob_declaration ) _initializer?
 
-multi_var_declaration ::=  ( '('  ( variable_declarator (  ( ','  variable_declarator )  )*  ( ','  )?  )  ')'  )
+multi_var_declaration ::=
+	 '(' variable_declarator ( ( ',' | '=>' ) variable_declarator )* ','? ')'
 
-single_var_declaration ::=  (  variable_declarator )
+single_var_declaration ::=
+	 variable_declarator
 
-variable_declarator ::=  ( (  ( scalar_variable |  array_variable |  hash_variable )  )  ( _initializer )?  )
+variable_declarator ::=
+	 _variables
 
-_initializer ::=  ( '='  (  _expression )  )
+_initializer ::=
+	 '=' _expression
 
-scope ::=  ( 'our'  |  'state'  |  'my'  )
+type_glob_declaration ::=
+	 type_glob
 
-function_definition ::=  ( 'sub'  (  identifier )  (  block )  )
+scope ::=
+	 'our'
+	| 'state'
+	| 'my'
+	| 'local'
 
-block ::=  ( '{'  ( (  _block_statements )*  )?  '}'  )
+function_definition ::=
+	 scope? 'sub' identifier ( function_prototype? function_attribute? function_signature? semi_colon | function_prototype? function_attribute? block | function_attribute? function_signature? block | ':' 'prototype' function_prototype function_signature block )
 
-standalone_block ::=  ( ( ( ( (  identifier )  ':'  )  |  phase )  )?  '{'  ( (  _block_statements )*  )?  '}'  ( ( 'continue'  (  block )  )  )?  )
+anonymous_function ::=
+	 'sub' block
 
-_block_statements ::=  ( _statement |  ( return_expression semi_colon )  |  loop_control_statement )
+block ::=
+	 '{' _block_statements*? '}'
 
-loop_control_statement ::=  ( loop_control_keyword ( (  identifier )  )?  ( _statement_modifiers )?  semi_colon )
+function_prototype ::=
+	 '(' prototype? ')'
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+prototype ::=
+	 [#x5B#x5D$@%&*\]+
 
-empty_parenthesized_expression ::=  ( '('  ( _expression )?  ')'  )
+function_attribute ::=
+	 ':' identifier ( ':'? identifier )*
 
-return_expression ::=  ( 'return'  ( _expression )?  )
+function_signature ::=
+	 '(' ( _variables | _string | hash_ref | array_ref | ( scope? ( single_var_declaration | type_glob_declaration ) _initializer? ) ) ( ( ',' | '=>' ) ( _variables | _string | hash_ref | array_ref | ( scope? ( single_var_declaration | type_glob_declaration ) _initializer? ) ) )* ','? ')'
 
-_expression ::=  ( _primitive_expression |  _variables |  binary_expression |  unary_expression |  ternary_expression |  call_expression |  goto_expression )
+standalone_block ::=
+	 ( identifier ':' )? '{' _block_statements*? '}' continue?
 
-goto_expression ::=  ( 'goto'  ( ( (  identifier )  ':'  )  |  (  _expression )  |  (  call_expression )  )  )
+_block_statements ::=
+	 _statement
+	| return_expression semi_colon
+	| loop_control_statement
 
-binary_expression ::=  (  (  ( (  _expression )  (  '+'  )  (  _expression )  )  )  |   (  ( (  _expression )  (  '-'  )  (  _expression )  )  )  |  _exponentiation |  _binding_expression |  _bodmas_1 |  _bodmas_2 |  _shift_expression |  _relational_expression |  _equality_expression |  _class_instance_exp |  _bitwise_and_exp |  _bitwise_or_xor_exp |  _logical_and_exp |  _logical_ors_exp |  _range_exp |  _assignment_exp |  _logical_verbal_or_xor )
+loop_control_statement ::=
+	 loop_control_keyword identifier? ( _statement_modifiers | semi_colon )
 
-unary_expression ::=  ( _auto_increment_decrement |  _symbolic_unary |  _unary_not |  _unary_and )
+named_block_statement ::=
+	 ( identifier '{' ( _statement | return_expression semi_colon )* '}' )+ semi_colon
 
-ternary_expression ::=   (  ( (  _expression )  (  '?'  )  (  _expression )  (  ':'  )  (  _expression )  )  )
+parenthesized_expression ::=
+	 '(' _expression ')'
 
-_auto_increment_decrement ::=   (  ( ( (  ( '++'  |  '--'  )  )  (  _expression )  )  |  ( (  _expression )  (  ( '++'  |  '--'  )  )  )  )  )
+empty_parenthesized_expression ::=
+	 '(' _expression? ')'
 
-_exponentiation ::=   (  ( (  _expression )  (  '**'  )  (  _expression )  )  )
+return_expression ::=
+	 'return' _expression?
 
-_symbolic_unary ::=   (  ( ( (  '!'  )  (  _expression )  )  |  ( (  '~'  )  (  _expression )  )  |  ( (  '\\'  )  (  _expression )  )  |  ( (  '+'  )  (  _expression )  )  |  ( (  '-'  )  (  _expression )  )  )  )
+_expression ::=
+	 _expression_without_bareword | call_expression_with_bareword | '(' ( _expression_without_bareword | call_expression_with_bareword ) ')'
 
-_binding_expression ::=   (  ( ( (  _expression )  (  '=~'  )  (  _expression )  )  |  ( (  _expression )  (  '!~'  )  (  _expression )  )  )  )
+_expression_without_bareword ::=
+	 _primitive_expression | _string | _variables | _special_variable | _dereference | package_variable | binary_expression | unary_expression | ternary_expression | call_expression | call_expression_recursive | method_invocation | goto_expression | command_qx_quoted | backtick_quoted | patter_matcher_m | regex_pattern_qr | substitution_pattern_s | transliteration_tr_or_y | heredoc_initializer | pattern_matcher | _i_o_operator | type_glob | anonymous_function | bless | grep_or_map_function | join_function | sort_function | unpack_function | push_function | array_function | variable_declaration | '(' ( _primitive_expression | _string | _variables | _special_variable | _dereference | package_variable | binary_expression | unary_expression | ternary_expression | call_expression | call_expression_recursive | method_invocation | goto_expression | command_qx_quoted | backtick_quoted | patter_matcher_m | regex_pattern_qr | substitution_pattern_s | transliteration_tr_or_y | heredoc_initializer | pattern_matcher | _i_o_operator | type_glob | anonymous_function | bless | grep_or_map_function | join_function | sort_function | unpack_function | push_function | array_function | variable_declaration ) ')'
 
-_bodmas_1 ::=   (  ( ( (  _expression )  (  '*'  )  (  _expression )  )  |  ( (  _expression )  (  '/'  )  (  _expression )  )  |  ( (  _expression )  (  '%'  )  (  _expression )  )  |  ( (  _expression )  (  'X'  )  (  _expression )  )  )  )
+array_function ::=
+	 identifier list_block _expression
 
-_bodmas_2 ::=   (  ( ( (  _expression )  (  '+'  )  (  _expression )  )  |  ( (  _expression )  (  '-'  )  (  _expression )  )  |  ( (  _expression )  (  '.'  )  (  _expression )  )  )  )
+package_variable ::=
+	 ( scalar_variable '::' ( identifier '::' )* ) identifier
 
-_shift_expression ::=   (  ( ( (  _expression )  (  '<<'  )  (  _expression )  )  |  ( (  _expression )  (  '>>'  )  (  _expression )  )  )  )
+push_function ::=
+	 'push' _expression ( ( ',' | '=>' ) _expression )* ','? | '(' _expression ( ( ',' | '=>' ) _expression )* ','? ')'
 
-_relational_expression ::=   (  ( (  _expression )  ( ( ( '<'  |  '>'  |  '<='  |  '>='  |  'lt'  |  'gt'  |  'le'  |  'ge'  )  _expression )  )+  )  )
+grep_or_map_function ::=
+	 ( 'grep' | 'map' ) ( list_block _expression | _expression ( ( ',' | '=>' ) _expression )* ','? | '(' _expression ( ( ',' | '=>' ) _expression )* ','? ')' )
 
-_equality_expression ::=   (  ( ( (  _expression )  ( ( ( '=='  |  '!='  |  'eq'  |  'ne'  )  _expression )  )+  )  |  ( (  _expression )  (  '<=>'  )  (  _expression )  )  |  ( (  _expression )  (  'cmp'  )  (  _expression )  )  |  ( (  _expression )  (  '~~'  )  (  _expression )  )  )  )
+join_function ::=
+	 ( 'join' ) _expression ( ( ',' | '=>' ) _expression )* ','? | '(' _expression ( ( ',' | '=>' ) _expression )* ','? ')'
 
-_class_instance_exp ::=   (  ( (  _expression )  (  'isa'  )  (  _expression )  )  )
+reverse_function ::=
+	 'reverse' _expression ( ( ',' | '=>' ) _expression )* ','? | '(' _expression ( ( ',' | '=>' ) _expression )* ','? ')'?
 
-_bitwise_and_exp ::=   (  ( (  _expression )  (  '&'  )  (  _expression )  )  )
+sort_function ::=
+	 'sort' ( _expression | list_block _expression | call_expression _expression )
 
-_bitwise_or_xor_exp ::=   (  ( ( (  _expression )  (  '|'  )  (  _expression )  )  |  ( (  _expression )  (  '^'  )  (  _expression )  )  )  )
+unpack_function ::=
+	 'unpack' _expression ( ( ',' | '=>' ) _expression )* ','? | '(' _expression ( ( ',' | '=>' ) _expression )* ','? ')'
 
-_logical_and_exp ::=   (  ( (  _expression )  (  '&&'  )  (  _expression )  )  )
+list_block ::=
+	 '{' ( ( _expression_without_bareword | key_value_pair )+ | _statement+ ) '}'
 
-_logical_ors_exp ::=   (  ( ( (  _expression )  (  '||'  )  (  _expression )  )  |  ( (  _expression )  (  '//'  )  (  _expression )  )  )  )
+_special_variable ::=
+	 'local'? ( special_scalar_variable | special_array_variable | special_hash_variable )
 
-_range_exp ::=   (  ( ( (  _expression )  (  '..'  )  (  _expression )  )  |  ( (  _expression )  (  '...'  )  (  _expression )  )  )  )
+special_scalar_variable ::=
+	 '$!' | '$"' | '$#' | '$$' | '$%' | '$&' | "$'" | '$(' | '$)' | '$*' | '$+' | '$,' | '$-' | '$.' | '$/' | '$0' | '$1' | '$2' | '$3' | '$4' | '$5' | '$6' | '$7' | '$8' | '$9' | '$:' | '$;' | '$<' | '$=' | '$>' | '$?' | '$@' | '$ACCUMULATOR' | '$ARG' | '$ARGV' | '$BASETIME' | '$CHILD_ERROR' | '$COMPILING' | '$DEBUGGING' | '$EFFECTIVE_GROUP_ID' | '$EFFECTIVE_USER_ID' | '$EGID' | '$ERRNO' | '$EUID' | '$EVAL_ERROR' | '$EXCEPTIONS_BEING_CAUGHT' | '$EXECUTABLE_NAME' | '$EXTENDED_OS_ERROR' | '$FORMAT_FORMFEED' | '$FORMAT_LINES_LEFT' | '$FORMAT_LINES_PER_PAGE' | '$FORMAT_LINE_BREAK_CHARACTERS' | '$FORMAT_NAME' | '$FORMAT_PAGE_NUMBER' | '$FORMAT_TOP_NAME' | '$GID' | '$INPLACE_EDIT' | '$INPUT_LINE_NUMBER' | '$INPUT_RECORD_SEPARATOR' | '$LAST_PAREN_MATCH' | '$LAST_REGEXP_CODE_RESULT' | '$LAST_SUBMATCH_RESULT' | '$LIST_SEPARATOR' | '$MATCH' | '$NR' | '$OFS' | '$OLD_PERL_VERSION' | '$ORS' | '$OSNAME' | '$OS_ERROR' | '$OUTPUT_AUTOFLUSH' | '$OUTPUT_FIELD_SEPARATOR' | '$OUTPUT_RECORD_SEPARATOR' | '$PERLDB' | '$PERL_VERSION' | '$PID' | '$POSTMATCH' | '$PREMATCH' | '$PROCESS_ID' | '$PROGRAM_NAME' | '$REAL_GROUP_ID' | '$REAL_USER_ID' | '$RS' | '$SUBSCRIPT_SEPARATOR' | '$SUBSEP' | '$SYSTEM_FD_MAX' | '$UID' | '$WARNING' | '$[' | '$\' | '$]' | '$^' | '$^A' | '$^C' | '$^D' | '$^E' | '$^F' | '$^H' | '$^I' | '$^L' | '$^M' | '$^N' | '$^O' | '$^P' | '$^R' | '$^S' | '$^T' | '$^V' | '$^W' | '$^X' | '$_' | '$`' | '$a' | '$b' | '${^CHILD_ERROR_NATIVE}' | '${^ENCODING}' | '${^GLOBAL_PHASE}' | '${^LAST_FH}' | '${^MATCH}' | '${^OPEN}' | '${^POSTMATCH}' | '${^PREMATCH}' | '${^RE_COMPILE_RECURSION_LIMIT}' | '${^RE_DEBUG_FLAGS}' | '${^RE_TRIE_MAXBUF}' | '${^SAFE_LOCALES}' | '${^TAINT}' | '${^UNICODE}' | '${^UTF8CACHE}' | '${^UTF8LOCALE}' | '${^WARNING_BITS}' | '${^WIN32_SLOPPY_STAT}' | '$|' | '$~' | '$ENV' | '$INC' | '$SIG' | '${^CAPTURE_ALL}' | '${^CAPTURE}' | '$F' | '$ISA' | '$LAST_MATCH_END' | '$LAST_MATCH_START'
 
-_assignment_exp ::=   (  ( ( (  _expression )  (  '='  )  (  _expression )  )  |  ( (  _expression )  (  '**='  )  (  _expression )  )  |  ( (  _expression )  (  '+='  )  (  _expression )  )  |  ( (  _expression )  (  '*='  )  (  _expression )  )  |  ( (  _expression )  (  '&='  )  (  _expression )  )  |  ( (  _expression )  (  '&.='  )  (  _expression )  )  |  ( (  _expression )  (  '<<='  )  (  _expression )  )  |  ( (  _expression )  (  '&&='  )  (  _expression )  )  |  ( (  _expression )  (  '-='  )  (  _expression )  )  |  ( (  _expression )  (  '/='  )  (  _expression )  )  |  ( (  _expression )  (  '|='  )  (  _expression )  )  |  ( (  _expression )  (  '|.='  )  (  _expression )  )  |  ( (  _expression )  (  '>>='  )  (  _expression )  )  |  ( (  _expression )  (  '||='  )  (  _expression )  )  |  ( (  _expression )  (  '.='  )  (  _expression )  )  |  ( (  _expression )  (  '%='  )  (  _expression )  )  |  ( (  _expression )  (  '^='  )  (  _expression )  )  |  ( (  _expression )  (  '^.='  )  (  _expression )  )  |  ( (  _expression )  (  '//='  )  (  _expression )  )  |  ( (  _expression )  (  'X='  )  (  _expression )  )  )  )
+special_array_variable ::=
+	 '@+'
+	| '@-'
+	| '@ARG'
+	| '@ARGV'
+	| '@F'
+	| '@INC'
+	| '@ISA'
+	| '@LAST_MATCH_END'
+	| '@LAST_MATCH_START'
+	| '@_'
+	| '@{^CAPTURE}'
+	| '@!'
+	| '@ENV'
+	| '@ERRNO'
+	| '@INC'
+	| '@LAST_PAREN_MATCH'
+	| '@OS_ERROR'
+	| '@SIG'
+	| '@^H'
+	| '@{^CAPTURE_ALL}'
+	| '@{^CAPTURE}'
 
-_unary_not ::=   (  ( (  'not'  )  (  _expression )  )  )
+special_hash_variable ::=
+	 '%!'
+	| '%+'
+	| '%-'
+	| '%ENV'
+	| '%ERRNO'
+	| '%INC'
+	| '%LAST_PAREN_MATCH'
+	| '%OS_ERROR'
+	| '%SIG'
+	| '%^H'
+	| '%{^CAPTURE_ALL}'
+	| '%{^CAPTURE}'
 
-_unary_and ::=   (  ( (  'and'  )  (  _expression )  )  )
+bless ::=
+	 'bless' _reference ( ',' _expression )? | '(' _reference ( ',' _expression )? ')'
 
-_logical_verbal_or_xor ::=   (  ( ( (  _expression )  (  'or'  )  (  _expression )  )  |  ( (  _expression )  (  'xor'  )  (  _expression )  )  )  )
+type_glob ::=
+	 '*' ( identifier )
 
-call_expression ::=   (  ( ( '&'  )?  (  identifier )  (  ( ( parenthesized_arguments |  arguments )  )?  )  )  )
+goto_expression ::=
+	 'goto' ( identifier ':' | _expression | call_expression )
 
-parenthesized_arguments ::=   (  ( '('  ( arguments )?  ')'  )  )
+binary_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _exponentiation
+	| _binding_expression
+	| _bodmas_1
+	| _bodmas_2
+	| _shift_expression
+	| _relational_expression
+	| _equality_expression
+	| _class_instance_exp
+	| _bitwise_and_exp
+	| _bitwise_or_xor_exp
+	| _logical_and_exp
+	| _logical_ors_exp
+	| _range_exp
+	| _assignment_exp
+	| _logical_verbal_or_xor
 
-arguments ::=   (  ( _expression (  ( ','  _expression )  )*  ( ','  )?  )  )
+unary_expression ::=
+	 _auto_increment_decrement
+	| _symbolic_unary
+	| _unary_not
+	| _unary_and
 
-_primitive_expression ::=  ( _scalar_type |  _boolean |  array |  hash )
+ternary_expression ::=
+	 _expression '?' _expression ':' _expression
 
-_variables ::=  ( scalar_variable |  array_variable |  hash_variable )
+_auto_increment_decrement ::=
+	 ( '++' | '--' ) _expression | _expression ( '++' | '--' )
 
-_scalar_type ::=  ( string_single_quoted |  string_double_quoted |  _numeric_literals |  array_ref |  hash_ref )
+_exponentiation ::=
+	 _expression '**' _expression
 
-_numeric_literals ::=  ( integer |  floating_point |  scientific_notation |  hexadecimal |  octal )
+_symbolic_unary ::=
+	 '!' _expression | '~' _expression | to_reference | '+' _expression | '-' _expression
 
-integer ::=  '-'?[0-9]+
+_binding_expression ::=
+	 _expression '=~' _expression | _expression '!~' _expression
 
-floating_point ::=  '-'?[0-9]+'.'[\d]+
+_bodmas_1 ::=
+	 _expression '*' _expression | _expression '/' _expression | _expression '%' _expression | _expression 'x' _expression
 
-scientific_notation ::=  [-+]?[0-9]*'.'?[0-9]+([eE][-+]?[0-9]+)?
+_bodmas_2 ::=
+	 _expression '+' _expression | _expression '-' _expression | _expression '.' _expression
 
-hexadecimal ::=  '0'[xX][0-9a-fA-F]+
+_shift_expression ::=
+	 _expression_without_bareword '<<' _expression_without_bareword | _expression_without_bareword '>>' _expression_without_bareword
 
-octal ::=  '0'[1-7][0-7]*
+_relational_expression ::=
+	 _expression ( ( '<' | '>' | '<=' | '>=' | 'lt' | 'gt' | 'le' | 'ge' ) _expression )+
 
-version ::=  'v'[0-9.]+
+_equality_expression ::=
+	 _expression ( ( '==' | '!=' | 'eq' | 'ne' ) _expression )+ | _expression '<=>' _expression | _expression 'cmp' _expression | _expression '~~' _expression
 
-identifier ::=  [a-zA-z0-9_]+
+_class_instance_exp ::=
+	 _expression 'isa' _expression
 
-loop_control_keyword ::=  ( 'next'  |  'last'  |  'redo'  )
+_bitwise_and_exp ::=
+	 _expression '&' _expression
 
-phase ::=  ( 'BEGIN'  )
+_bitwise_or_xor_exp ::=
+	 _expression '|' _expression | _expression '^' _expression
 
-package_name ::=  [A-Z_a-z][0-9A-Z_a-z]*('?:::'[0-9A-Z_a-z]+)*
+_logical_and_exp ::=
+	 _expression '&&' _expression
 
-semi_colon ::=  ';'
+_logical_ors_exp ::=
+	 _expression '||' _expression | _expression '//' _expression
 
-string_single_quoted ::=   (  "'"[^']*"'" )
+_range_exp ::=
+	 _expression '..' _expression | _expression '...' _expression
 
-string_double_quoted ::=   (  '"'[^"]*'"' )
+_assignment_exp ::=
+	 _expression '=' _expression | _expression '**=' _expression | _expression '+=' _expression | _expression '*=' _expression | _expression '&=' _expression | _expression '&.=' _expression | _expression '<<=' _expression | _expression '&&=' _expression | _expression '-=' _expression | _expression '/=' _expression | _expression '|=' _expression | _expression '|.=' _expression | _expression '>>=' _expression | _expression '||=' _expression | _expression '.=' _expression | _expression '%=' _expression | _expression '^=' _expression | _expression '^.=' _expression | _expression '//=' _expression | _expression 'X=' _expression
 
-_boolean ::=  ( true |  false )
+_comma_operator ::=
+	 ','
+	| '=>'
 
-true ::=  'true'
+_unary_not ::=
+	 'not' _expression
 
-false ::=  'false'
+_unary_and ::=
+	 'and' _expression
 
-scalar_variable ::=  ( '$'[0-9]+ |  '$'[!] |  '$#' '_'?[a-zA-z0-9_]+ |  '$'[A-Z^_?\\] |  '$' '_'?[a-zA-z0-9_]+ )
+_logical_verbal_or_xor ::=
+	 _expression 'or' _expression | _expression 'xor' _expression
 
-array_variable ::=  '@'[a-zA-z0-9_]+
+_i_o_operator ::=
+	 standard_input
+	| file_handle
+	| standard_input_to_identifier
+	| standard_input_to_variable
 
-hash_variable ::=  '%'[a-zA-z0-9_]+
+standard_input ::=
+	 '<>'
+	| '<<>>'
+	| '<STDIN>'
+	| '\\'*'STDIN'
 
-_list ::=  ( array |  array_variable )
+file_handle ::=
+	 '<FILEHANDLE>'
 
-array ::=   (  ( '('  ( ( _primitive_expression (  ( ','  _primitive_expression )  )*  ( ','  )?  )  )?  ')'  )  )
+standard_input_to_identifier ::=
+	 '<' identifier '>'
 
-array_ref ::=  ( '['  ( ( _primitive_expression (  ( ','  _primitive_expression )  )*  ( ','  )?  )  )?  ']'  )
+standard_input_to_variable ::=
+	 '<' scalar_variable '>'
 
-hash ::=   (  ( '('  ( ( _key_value_pair (  ( ','  _key_value_pair )  )*  ( ','  )?  )  )?  ')'  )  )
+call_expression ::=
+	 '&'? ( package_name '::' )? identifier ( empty_parenthesized_argument | parenthesized_argument | arguments )
 
-hash_ref ::=  ( '{'  ( ( _key_value_pair (  ( ','  _key_value_pair )  )*  ( ','  )?  )  )?  '}'  )
+call_expression_with_bareword ::=
+	 '&'? ( package_name '::' )? identifier
 
-_key_value_pair ::=  ( ( identifier |  ( "'"  identifier "'"  )  |  ( '"'  identifier '"'  )  )  '=>'  _primitive_expression )
+method_invocation ::=
+	 ( ( identifier | package_name | string_single_quoted ) | scalar_variable | _expression ) ( arrow_operator ( ( super '::' )? identifier | scalar_variable | scalar_dereference ) ( empty_parenthesized_argument | parenthesized_argument | arguments )? )+
 
-comments ::=  (   (  ( '#'[^\n]* )  )  )
+empty_parenthesized_argument ::=
+	 '(' ')'
+
+parenthesized_argument ::=
+	 '(' arguments ')'
+
+arguments ::=
+	 argument ( ( ',' | '=>' ) argument )* ','?
+
+argument ::=
+	 key_value_pair | _expression
+
+call_expression_recursive ::=
+	 '__SUB__' '->' parenthesized_argument
+
+_primitive_expression ::=
+	 _scalar_type
+	| _boolean
+	| _array_type
+	| hash
+
+_variables ::=
+	 scalar_variable
+	| array_variable
+	| hash_variable
+
+_scalar_type ::=
+	 string_single_quoted
+	| string_q_quoted
+	| string_double_quoted
+	| string_qq_quoted
+	| _numeric_literals
+	| array_ref
+	| hash_ref
+	| array_access_variable
+	| hash_access_variable
+
+_string ::=
+	 string_single_quoted | string_q_quoted | string_double_quoted | string_qq_quoted | heredoc_initializer
+
+_resolves_to_digit ::=
+	 string_single_quoted
+	| string_q_quoted
+	| string_qq_quoted
+	| _numeric_literals
+
+_array_type ::=
+	 array
+	| word_list_qw
+
+_numeric_literals ::=
+	 integer
+	| floating_point
+	| scientific_notation
+	| hexadecimal
+	| octal
+
+integer ::=
+	 '-'?[0-9]+
+
+floating_point ::=
+	 '-'?[0-9]+'.'[0-9]+
+
+scientific_notation ::=
+	 [-+]?[0-9]*'.'?[0-9]+([eE][-+]?[0-9]+)?
+
+hexadecimal ::=
+	 '0'[xX][0-9a-fA-F]+
+
+octal ::=
+	 '0'[1-7][0-7]*
+
+version ::=
+	 'v'[0-9.]+
+	| [0-9.]+
+	| [0-9._]+
+
+identifier ::=
+	 [a-zA-Z0-9_]+
+
+identifier_2 ::=
+	 [a-zA-Z0-9_$:.@%\^]+
+
+loop_control_keyword ::=
+	 'next'
+	| 'last'
+	| 'redo'
+
+package_name ::=
+	 identifier
+	| identifier ( '::' identifier )+
+
+module_name ::=
+	 "'"  '.'*'pm' "'" 
+	| '"'  '.'*'pm' '"' 
+
+semi_colon ::=
+	 ';'
+
+string_single_quoted ::=
+	 "'"  _string_single_quoted_content* "'" 
+
+string_q_quoted ::=
+	 'q' ( '{' [^}]+ '}' | '/' [^/]+ '/' | '(' [^)]+ ')' | "'"  [^']+ "'"  )
+
+string_double_quoted ::=
+	 '"'  ( interpolation | escape_sequence | _string_double_quoted_content )* '"' 
+
+string_qq_quoted ::=
+	 'qq' _start_delimiter ( _string_qq_quoted_content | interpolation | escape_sequence )* _end_delimiter
+
+command_qx_quoted ::=
+	 'qx' ( string_single_quoted | _start_delimiter ( _string_qq_quoted_content | interpolation | escape_sequence )* _end_delimiter )
+
+backtick_quoted ::=
+	 '`' ( interpolation | escape_sequence | [^`]+ )* '`'
+
+word_list_qw ::=
+	 'qw' _start_delimiter_qw _element_in_qw* _end_delimiter_qw
+
+patter_matcher_m ::=
+	 'm' _start_delimiter_regex ( _regex_pattern | interpolation | escape_sequence )* _end_delimiter_regex regex_option?
+
+pattern_matcher ::=
+	 '/' regex_pattern '/' regex_option?
+
+regex_pattern_qr ::=
+	 'qr' _start_delimiter_regex ( _regex_pattern | interpolation | escape_sequence )* _end_delimiter_regex regex_option?
+
+substitution_pattern_s ::=
+	 's' _start_delimiter_search_replace ( _search_replace_content | interpolation | escape_sequence )* _separator_delimiter_search_replace ( _search_replace_content | interpolation | escape_sequence )* _end_delimiter_search_replace regex_option_for_substitution?
+
+transliteration_tr_or_y ::=
+	 ( 'tr' | 'y' ) _start_delimiter_transliteration _transliteration_content* _separator_delimiter_transliteration _transliteration_content* _end_delimiter_transliteration regex_option_for_transliteration?
+
+regex_pattern ::=
+	 ( '[' ( '\\'  '.' | [^#x5D#x0A\] )* ']' | '\\'  '.' | [^/\#x5B#x0A] )+
+
+regex_option ::=
+	 [msixpodualng]+
+
+regex_option_for_substitution ::=
+	 [msixpodualngcer]+
+
+regex_option_for_transliteration ::=
+	 [cdsr]+
+
+escape_sequence ::=
+	 '\\'  [tnrfbae]
+
+interpolation ::=
+	 array_variable
+	| hash_ref_in_interpolation
+	| scalar_variable
+	| _special_variable
+
+hash_ref_in_interpolation ::=
+	 '\$_'?[a-zA-Z0-9_]+ '->' '{' ( identifier | scalar_variable ) '}'
+
+_boolean ::=
+	 true
+	| false
+
+true ::=
+	 'true'
+
+false ::=
+	 'false'
+
+scalar_variable ::=
+	 '\$\#_'?[a-zA-Z0-9_]+
+	| '\$'[A-Z^_?\]
+	| '\$_'?[a-zA-Z0-9_]+
+
+array_access_variable ::=
+	 ( scalar_variable | array_access_variable | hash_access_variable | call_expression | method_invocation | _expression ) ( ( '->[' | '[' ) _expression ']' )+
+
+hash_access_variable ::=
+	 ( scalar_variable | array_access_variable | hash_access_variable | call_expression | method_invocation | _expression ) ( ( '->{' | '{' ) ( identifier | key_words_in_hash_key | _expression_without_bareword ) '}' )+
+
+array_variable ::=
+	 '@'[a-zA-Z0-9_]+
+
+hash_variable ::=
+	 '%'[a-zA-Z0-9_]+
+
+_list ::=
+	 _array_type
+	| array_variable
+
+array ::=
+	 '(' _expression ( ( ',' | '=>' ) _expression )* ','?? ')'
+
+array_ref ::=
+	 '[' _expression ( ( ',' | '=>' ) _expression )* ','?? ']'
+
+hash ::=
+	 '(' ( ternary_expression | key_value_pair | hash_dereference ) ( ',' ( ternary_expression | key_value_pair | hash_dereference ) )* ','?? ')'
+
+hash_ref ::=
+	 '+'? '{' ( ternary_expression | key_value_pair | hash_dereference | hash_variable ) ( ',' ( ternary_expression | key_value_pair | hash_dereference | hash_variable ) )* ','?? '}'
+
+_reference ::=
+	 array_ref
+	| hash_ref
+	| scalar_variable
+	| to_reference
+
+to_reference ::=
+	 '\\'  _expression
+
+_dereference ::=
+	 scalar_dereference
+	| array_dereference
+	| hash_dereference
+
+scalar_dereference ::=
+	 '$' _expression_without_bareword | '{' _expression_without_bareword '}'
+
+array_dereference ::=
+	 '@' _expression | '{' _expression '}'
+
+hash_dereference ::=
+	 '%' _expression | '{' _expression '}'
+
+key_value_pair ::=
+	 ( identifier | key_words_in_hash_key | ( scope? ( single_var_declaration | type_glob_declaration ) _initializer? ) | _expression_without_bareword ) hash_arrow_operator _expression
+
+key_words_in_hash_key ::=
+	 'sub'
+
+arrow_operator ::=
+	 '->'
+
+hash_arrow_operator ::=
+	 '=>'
+
+super ::=
+	 'SUPER'
+
+no_require ::=
+	 '-norequire'
+
+comments ::=
+	 '#' '.'*
 

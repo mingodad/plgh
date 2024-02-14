@@ -1,118 +1,420 @@
-program ::=  ( _statements )?
+//
+// From tree-sitter-bash/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
 
-_statements ::=   (  ( (  ( _statement ( ( '\n'  heredoc_body )  )?  _terminator )  )*  _statement ( ( '\n'  heredoc_body )  )?  ( _terminator )?  )  )
+program ::=
+	 _statements
 
-_statements2 ::=  ( ( _statement ( ( '\n'  heredoc_body )  )?  _terminator )  )+
+_statements ::=
+	 ( _statement _terminator )* _statement _terminator?
 
-_terminated_statement ::=  ( _statement _terminator )
+_terminated_statement ::=
+	 ( _statement _terminator )+
 
-_statement ::=  ( redirected_statement |  variable_assignment |  command |  declaration_command |  unset_command |  test_command |  negated_command |  for_statement |  c_style_for_statement |  while_statement |  if_statement |  case_statement |  pipeline |  list |  subshell |  compound_statement |  function_definition )
+_statement ::=
+	 _statement_not_subshell
+	| subshell
 
-redirected_statement ::=   (  ( (  _statement )  (  ( ( file_redirect |  heredoc_redirect |  herestring_redirect )  )+  )  )  )
+_statement_not_subshell ::=
+	 redirected_statement
+	| variable_assignment
+	| variable_assignments
+	| command
+	| declaration_command
+	| unset_command
+	| test_command
+	| negated_command
+	| for_statement
+	| c_style_for_statement
+	| while_statement
+	| if_statement
+	| case_statement
+	| pipeline
+	| list
+	| compound_statement
+	| function_definition
 
-for_statement ::=  ( 'for'  (  _simple_variable_name )  ( ( 'in'  (  ( _literal )+  )  )  )?  _terminator (  do_group )  )
+_statement_not_pipeline ::=
+	 redirected_statement | variable_assignment | variable_assignments | command | declaration_command | unset_command | test_command | negated_command | for_statement | c_style_for_statement | while_statement | if_statement | case_statement | list | compound_statement | function_definition | subshell
 
-c_style_for_statement ::=  ( 'for'  '(('  (  ( _expression )?  )  _terminator (  ( _expression )?  )  _terminator (  ( _expression )?  )  '))'  ( ';'  )?  (  ( do_group |  compound_statement )  )  )
+redirected_statement ::=
+	 _statement ( ( file_redirect | heredoc_redirect )+ ) | ( if_statement | while_statement ) herestring_redirect | _redirect+ | herestring_redirect
 
-while_statement ::=  ( 'while'  (  _terminated_statement )  (  do_group )  )
+for_statement ::=
+	 ( 'for' | 'select' ) _simple_variable_name ( 'in' _literal+ )? _terminator do_group
 
-do_group ::=  ( 'do'  ( _statements2 )?  'done'  )
+c_style_for_statement ::=
+	 'for' '((' ( _for_body ) '))' ';'? ( do_group | compound_statement )
 
-if_statement ::=  ( 'if'  (  _terminated_statement )  'then'  ( _statements2 )?  (  elif_clause )*  ( else_clause )?  'fi'  )
+_for_body ::=
+	 ( _c_expression ( ',' _c_expression )* )? _c_terminator ( _c_expression ( ',' _c_expression )* )? _c_terminator ( _c_expression ( ',' _c_expression )* )?
 
-elif_clause ::=  ( 'elif'  _terminated_statement 'then'  ( _statements2 )?  )
+_c_expression ::=
+	 _c_expression_not_assignment
+	| _c_variable_assignment
 
-else_clause ::=  ( 'else'  ( _statements2 )?  )
+_c_expression_not_assignment ::=
+	 _c_word
+	| simple_expansion
+	| expansion
+	| number
+	| string
+	| _c_unary_expression
+	| _c_binary_expression
+	| _c_postfix_expression
+	| _c_parenthesized_expression
+	| command_substitution
 
-case_statement ::=  ( 'case'  (  _literal )  ( _terminator )?  'in'  _terminator ( ( (  case_item )*  (  last_case_item )  )  )?  'esac'  )
+_c_variable_assignment ::=
+	 _c_word '=' _c_expression
 
-case_item ::=  ( (  _literal )  (  ( '|'  (  _literal )  )  )*  ')'  ( _statements )?   (  ( (  ';;'  )  |  (  ( ';&'  |  ';;&'  )  )  )  )  )
+_c_unary_expression ::=
+	 ( '++' | '--' ) _c_expression_not_assignment
 
-last_case_item ::=  ( (  _literal )  (  ( '|'  (  _literal )  )  )*  ')'  ( _statements )?  (  (  ';;'  )  )?  )
+_c_binary_expression ::=
+	 _c_expression_not_assignment ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '||' | '-o' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '&&' | '-a' ) _c_expression_not_assignment
+	| _c_expression_not_assignment '|' _c_expression_not_assignment
+	| _c_expression_not_assignment '^' _c_expression_not_assignment
+	| _c_expression_not_assignment '&' _c_expression_not_assignment
+	| _c_expression_not_assignment ( '==' | '!=' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '<' | '>' | '<=' | '>=' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '<<' | '>>' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '+' | '-' ) _c_expression_not_assignment
+	| _c_expression_not_assignment ( '*' | '/' | '%' ) _c_expression_not_assignment
+	| _c_expression_not_assignment '**' _c_expression_not_assignment
 
-function_definition ::=  ( ( ( 'function'  (  word )  ( ( '('  ')'  )  )?  )  |  ( (  word )  '('  ')'  )  )  (  ( compound_statement |  subshell |  test_command )  )  )
+_c_postfix_expression ::=
+	 _c_expression_not_assignment ( '++' | '--' )
 
-compound_statement ::=  ( '{'  ( _statements2 )?  '}'  )
+_c_parenthesized_expression ::=
+	 '(' _c_expression ( ',' _c_expression )* ')'
 
-subshell ::=  ( '('  _statements ')'  )
+_c_word ::=
+	 [a-zA-Z_][a-zA-Z0-9_]*
 
-pipeline ::=   (  ( _statement ( '|'  |  '|&'  )  _statement )  )
+while_statement ::=
+	 ( 'while' | 'until' ) _terminated_statement do_group
 
-list ::=   (  ( _statement ( '&&'  |  '||'  )  _statement )  )
+do_group ::=
+	 'do' _terminated_statement? 'done'
 
-negated_command ::=  ( '!'  ( command |  test_command |  subshell )  )
+if_statement ::=
+	 'if' _terminated_statement 'then' _terminated_statement? elif_clause* else_clause? 'fi'
 
-test_command ::=  ( ( ( '['  _expression ']'  )  |  ( '[['  _expression ']]'  )  |  ( '(('  _expression '))'  )  )  )
+elif_clause ::=
+	 'elif' _terminated_statement 'then' _terminated_statement?
 
-declaration_command ::=   (  ( ( 'declare'  |  'typeset'  |  'export'  |  'readonly'  |  'local'  )  (  ( _literal |  _simple_variable_name |  variable_assignment )  )*  )  )
+else_clause ::=
+	 'else' _terminated_statement?
 
-unset_command ::=   (  ( ( 'unset'  |  'unsetenv'  )  (  ( _literal |  _simple_variable_name )  )*  )  )
+case_statement ::=
+	 'case' _literal _terminator? 'in' _terminator? ( case_item* last_case_item )? 'esac'
 
-command ::=   (  ( (  ( variable_assignment |  file_redirect )  )*  (  command_name )  (  (  ( _literal |  ( ( '=~'  |  '=='  )  ( _literal |  regex )  )  )  )  )*  )  )
+case_item ::=
+	 ( '('? ( _literal | _extglob_blob ) ( '|' ( _literal | _extglob_blob ) )* ')' ) _statements? ';;' | ( ';&' | ';;&' )
 
-command_name ::=  _literal
+last_case_item ::=
+	 '('? ( _literal | _extglob_blob ) ( '|' ( _literal | _extglob_blob ) )* ')' _statements? ';;'?
 
-variable_assignment ::=  ( (  ( variable_name |  subscript )  )  ( '='  |  '+='  )  (  ( _literal |  array |  _empty_value )  )  )
+function_definition ::=
+	 ( 'function' word ( '(' ')' )? | word '(' ')' ) ( compound_statement | subshell | test_command | if_statement ) _redirect?
 
-subscript ::=  ( (  variable_name )  '['  (  _literal )  ( _concat )?  ']'  ( _concat )?  )
+compound_statement ::=
+	 '{' _terminated_statement? '}'
 
-file_redirect ::=   (  ( (  ( file_descriptor )?  )  ( '<'  |  '>'  |  '>>'  |  '&>'  |  '&>>'  |  '<&'  |  '>&'  |  '>|'  )  (  _literal )  )  )
+subshell ::=
+	 '(' _statements ')'
 
-heredoc_redirect ::=  ( ( '<<'  |  '<<-'  )  heredoc_start )
+pipeline ::=
+	 _statement_not_pipeline ( ( '|' | '|&' ) _statement_not_pipeline )+
 
-heredoc_body ::=  ( _simple_heredoc_body |  ( _heredoc_body_beginning (  ( expansion |  simple_expansion |  command_substitution |  _heredoc_body_middle )  )*  _heredoc_body_end )  )
+list ::=
+	 _statement ( '&&' | '||' ) _statement
 
-herestring_redirect ::=  ( '<<<'  _literal )
+negated_command ::=
+	 '!' ( command | variable_assignment | test_command | subshell )
 
-_expression ::=  ( _literal |  unary_expression |  ternary_expression |  binary_expression |  postfix_expression |  parenthesized_expression )
+test_command ::=
+	 ( '[' ( _expression | redirected_statement )? ']' | '[[' ( _expression | _test_command_binary_expression ) ']]' | '((' _expression? '))' )
 
-binary_expression ::=   (  ( ( (  _expression )  (  ( '='  |  '=='  |  '=~'  |  '!='  |  '+'  |  '-'  |  '+='  |  '-='  |  '<'  |  '>'  |  '<='  |  '>='  |  '||'  |  '&&'  |  test_operator )  )  (  _expression )  )  |  ( (  _expression )  (  ( '=='  |  '=~'  )  )  (  regex )  )  )  )
+_test_command_binary_expression ::=
+	 _expression '=' _regex_no_space
 
-ternary_expression ::=   (  ( (  _expression )  '?'  (  _expression )  ':'  (  _expression )  )  )
+declaration_command ::=
+	 ( 'declare' | 'typeset' | 'export' | 'readonly' | 'local' ) ( _literal | _simple_variable_name | variable_assignment )*
 
-unary_expression ::=   (  ( ( '!'  |  test_operator )  _expression )  )
+unset_command ::=
+	 ( 'unset' | 'unsetenv' ) ( _literal | _simple_variable_name )*
 
-postfix_expression ::=  ( _expression ( '++'  |  '--'  )  )
+command ::=
+	 ( variable_assignment | _redirect )* command_name ( ( _literal | _bare_dollar | ( ( '=~' | '==' ) ( _literal | regex ) ) | herestring_redirect )* | subshell )
 
-parenthesized_expression ::=  ( '('  _expression ')'  )
+command_name ::=
+	 _literal
 
-_literal ::=  ( concatenation |  _primary_expression |  (   (  ( _special_character )+  )  )  )
+variable_assignment ::=
+	 ( variable_name | subscript ) ( '=' | '+=' ) ( _literal | array | _empty_value | _comment_word )
 
-_primary_expression ::=  ( word |  string |  raw_string |  ansii_c_string |  expansion |  simple_expansion |  string_expansion |  command_substitution |  process_substitution )
+variable_assignments ::=
+	 variable_assignment variable_assignment+
 
-concatenation ::=   (  ( ( _primary_expression |  _special_character )  (  (  ( _concat ( _primary_expression |  _special_character )  )  )  )+  ( ( _concat '$'  )  )?  )  )
+subscript ::=
+	 variable_name '[' ( _literal | binary_expression | unary_expression | parenthesized_expression ) _concat? ']' _concat?
 
-_special_character ::=  (   (  ( '{'  |  '}'  |  '['  |  ']'  )  )  )
+file_redirect ::=
+	 file_descriptor? ( ( '<' | '>' | '>>' | '&>' | '&>>' | '<&' | '>&' | '>|' ) _literal+ | ( '<&-' | '>&-' ) _literal? )
 
-string ::=  ( '"'  (  ( ( ( ( '$'  )?  _string_content )  |  expansion |  simple_expansion |  command_substitution )  ( _concat )?  )  )*  ( '$'  )?  '"'  )
+heredoc_redirect ::=
+	 file_descriptor? ( '<<' | '<<-' ) heredoc_start ( _heredoc_pipeline | _redirect+ _heredoc_expression? | _heredoc_expression | _heredoc_command )? '#x0A' ( _heredoc_body | _simple_heredoc_body )
 
-_string_content ::=  (   (  ([^"`$\\]|'\'('.'|'\n'))+ )  )
+_heredoc_pipeline ::=
+	 ( '|' | '|&' ) _statement
 
-array ::=  ( '('  (  _literal )*  ')'  )
+_heredoc_expression ::=
+	 ( '||' | '&&' ) _statement
 
-raw_string ::=  "'" [^']* "'"
+_heredoc_command ::=
+	 _literal+
 
-ansii_c_string ::=  '$' "'" ([^']|"\'")* "'"
+_heredoc_body ::=
+	 heredoc_body heredoc_end
 
-simple_expansion ::=  ( '$'  ( _simple_variable_name |  _special_variable_name |  (  '!'  )  |  (  '#'  )  )  )
+heredoc_body ::=
+	 _heredoc_body_beginning ( expansion | simple_expansion | command_substitution | heredoc_content )*
 
-string_expansion ::=  ( '$'  ( string |  raw_string )  )
+_simple_heredoc_body ::=
+	 simple_heredoc_body heredoc_end
 
-expansion ::=  ( '${'  ( ( '#'  |  '!'  )  )?  ( ( ( variable_name '='  ( _literal )?  )  |  ( ( subscript |  _simple_variable_name |  _special_variable_name )  ( ( (   (  '/'  )  )  ( regex )?  )  )?  (  ( _literal |  ':'  |  ':?'  |  '='  |  ':-'  |  '%'  |  '-'  |  '#'  )  )*  )  )  )?  '}'  )
+herestring_redirect ::=
+	 file_descriptor? '<<<' _literal
 
-command_substitution ::=  ( ( '$('  _statements ')'  )  |  ( '$('  file_redirect ')'  )  |   (  ( '`'  _statements '`'  )  )  )
+_redirect ::=
+	 file_redirect
+	| herestring_redirect
 
-process_substitution ::=  ( ( '<('  |  '>('  )  _statements ')'  )
+_expression ::=
+	 _literal
+	| unary_expression
+	| ternary_expression
+	| binary_expression
+	| postfix_expression
+	| parenthesized_expression
 
-comment ::=  (   (  '#'[^\n]* )  )
+binary_expression ::=
+	 _expression ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ) _expression
+	| _expression ( '=' | '=~' ) _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression '&' _expression
+	| _expression ( '==' | '!=' ) _expression
+	| _expression ( '<' | '>' | '<=' | '>=' ) _expression
+	| _expression test_operator _expression
+	| _expression ( '<<' | '>>' ) _expression
+	| _expression ( '+' | '-' ) _expression
+	| _expression ( '*' | '/' | '%' ) _expression
+	| _expression '**' _expression
+	| _expression '=~' _regex_no_space
+	| _expression ( '==' | '!=' ) _extglob_blob
 
-_simple_variable_name ::=  (  [\w]+ )
+ternary_expression ::=
+	 _expression '?' _expression ':' _expression
 
-_special_variable_name ::=  (  ( '*'  |  '@'  |  '?'  |  '-'  |  '$'  |  '0'  |  '_'  )  )
+unary_expression ::=
+	 ( '++' | '--' ) _expression
+	| ( '-' | '+' | '~' ) _expression
+	| '!' _expression
+	| test_operator _expression
 
-word ::=  (  ( ( [^'"<>{}#x5b#x5d()`$|&;\\\s#] |  ( '\\'  [^\s] )  )  )+  )
+postfix_expression ::=
+	 _expression ( '++' | '--' )
 
-test_operator ::=  (   (  ( '-'  [a-zA-Z]+ )  )  )
+parenthesized_expression ::=
+	 '(' _expression ')'
 
-_terminator ::=  ( ';'  |  ';;'  |  '\n'  |  '&'  )
+_literal ::=
+	 concatenation
+	| _primary_expression
+	| _special_character+
+
+_primary_expression ::=
+	 word
+	| test_operator
+	| string
+	| raw_string
+	| translated_string
+	| ansi_c_string
+	| number
+	| expansion
+	| simple_expansion
+	| command_substitution
+	| process_substitution
+	| arithmetic_expansion
+	| brace_expression
+
+arithmetic_expansion ::=
+	 ( '$((' | '((' ) _arithmetic_expression ( ',' _arithmetic_expression )* '))'
+	| '$[' _arithmetic_expression ']'
+
+brace_expression ::=
+	 _brace_start [0-9]+ '..' [0-9]+ '}'
+
+_arithmetic_expression ::=
+	 _arithmetic_literal | _arithmetic_unary_expression | _arithmetic_ternary_expression | _arithmetic_binary_expression | _arithmetic_postfix_expression | _arithmetic_parenthesized_expression | command_substitution
+
+_arithmetic_literal ::=
+	 number | subscript | simple_expansion | expansion | _simple_variable_name | variable_name | string
+
+_arithmetic_binary_expression ::=
+	 _arithmetic_expression ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ) _arithmetic_expression
+	| _arithmetic_expression ( '=' | '=~' ) _arithmetic_expression
+	| _arithmetic_expression '||' _arithmetic_expression
+	| _arithmetic_expression '&&' _arithmetic_expression
+	| _arithmetic_expression '|' _arithmetic_expression
+	| _arithmetic_expression '^' _arithmetic_expression
+	| _arithmetic_expression '&' _arithmetic_expression
+	| _arithmetic_expression ( '==' | '!=' ) _arithmetic_expression
+	| _arithmetic_expression ( '<' | '>' | '<=' | '>=' ) _arithmetic_expression
+	| _arithmetic_expression ( '<<' | '>>' ) _arithmetic_expression
+	| _arithmetic_expression ( '+' | '-' ) _arithmetic_expression
+	| _arithmetic_expression ( '*' | '/' | '%' ) _arithmetic_expression
+	| _arithmetic_expression '**' _arithmetic_expression
+
+_arithmetic_ternary_expression ::=
+	 _arithmetic_expression '?' _arithmetic_expression ':' _arithmetic_expression
+
+_arithmetic_unary_expression ::=
+	 ( '++' | '--' ) _arithmetic_expression
+	| ( '-' | '+' | '~' ) _arithmetic_expression
+	| '!' _arithmetic_expression
+
+_arithmetic_postfix_expression ::=
+	 _arithmetic_expression ( '++' | '--' )
+
+_arithmetic_parenthesized_expression ::=
+	 '(' _arithmetic_expression ')'
+
+concatenation ::=
+	 ( _primary_expression | _special_character ) ( ( _concat | '`'[ #x09#x0A#x0B#x0C#x0D]*'`' ) ( _primary_expression | _special_character | _comment_word | _bare_dollar ) )+ ( _concat '$' )?
+
+_special_character ::=
+	 '{' | '}' | '[' | ']'
+
+string ::=
+	 '"'  ( ( '$'? string_content | expansion | simple_expansion | command_substitution | arithmetic_expansion ) _concat? )* '$'? '"' 
+
+string_content ::=
+	 ([^"`$\#x0D#x0A]|'\'('.'|'#x0D'?'#x0A'))+
+
+translated_string ::=
+	 '$' string
+
+array ::=
+	 '(' _literal* ')'
+
+raw_string ::=
+	 "'"[^']*"'"
+
+ansi_c_string ::=
+	 "\$'"([^']|"\'")*"'"
+
+number ::=
+	 '-'?('0x')?[0-9]+('#'[0-9A-Za-z@_]+)?
+	| '-'?('0x')?[0-9]+'#' ( expansion | command_substitution )
+
+simple_expansion ::=
+	 '$' ( _simple_variable_name | _multiline_variable_name | _special_variable_name | variable_name | '!' | '#' )
+
+string_expansion ::=
+	 '$' string
+
+expansion ::=
+	 '${' _expansion_body? '}'
+
+_expansion_body ::=
+	 ( _external_expansion_sym_hash | _external_expansion_sym_bang | _external_expansion_sym_equal )+
+	| '!'? ( variable_name | _simple_variable_name | _special_variable_name | subscript ) ( _expansion_expression | _expansion_regex | _expansion_regex_replacement | _expansion_regex_removal | _expansion_max_length | _expansion_operator )
+	| '!' ( _simple_variable_name | variable_name ) ( '@' | '*' )?
+	| ( '#' | '!' | '=' )? ( subscript | _simple_variable_name | _special_variable_name | command_substitution ) ( _external_expansion_sym_hash | _external_expansion_sym_bang | _external_expansion_sym_equal )*
+
+_expansion_expression ::=
+	 ( '=' | ':=' | '-' | ':-' | '+' | ':+' | '?' | ':?' ) ( ( _concatenation_in_expansion | command_substitution | word | expansion | simple_expansion | array | string | raw_string | ansi_c_string | _expansion_word ) )?
+
+_expansion_regex ::=
+	 ( '#' | _immediate_double_hash | '%' | '%%' ) ( regex | ')' | string | raw_string | [ #x09#x0A#x0B#x0C#x0D]+ )*
+
+_expansion_regex_replacement ::=
+	 ( '/' | '//' | '/#' | '/%' ) ( _regex_no_slash | string | command_substitution | string _regex_no_slash )? ( '/' ( ( _primary_expression | _special_character+ | command_substitution _expansion_word | _expansion_word | _concatenation_in_expansion | array ) '/'? )? )?
+
+_expansion_regex_removal ::=
+	 ( ',' | ',,' | '^' | '^^' ) regex?
+
+_expansion_max_length ::=
+	 ':' ( _simple_variable_name | number | arithmetic_expansion | expansion | parenthesized_expression | command_substitution | _expansion_max_length_binary_expression | '#x0A' )? ( ':' simple_expansion? ( _simple_variable_name | number | arithmetic_expansion | expansion | parenthesized_expression | command_substitution | _expansion_max_length_binary_expression | '#x0A' )? )?
+
+_expansion_max_length_expression ::=
+	 _simple_variable_name
+	| number
+	| expansion
+	| _expansion_max_length_binary_expression
+
+_expansion_max_length_binary_expression ::=
+	 _expansion_max_length_expression ( '+' | '-' ) _expansion_max_length_expression
+	| _expansion_max_length_expression ( '*' | '/' | '%' ) _expansion_max_length_expression
+
+_expansion_operator ::=
+	 '@' ( 'U' | 'u' | 'L' | 'Q' | 'E' | 'P' | 'A' | 'K' | 'a' | 'k' )
+
+_concatenation_in_expansion ::=
+	 ( word | variable_name | simple_expansion | expansion | string | raw_string | ansi_c_string | command_substitution | _expansion_word | array | process_substitution ) ( ( _concat | '`'[ #x09#x0A#x0B#x0C#x0D]*'`' ) ( word | variable_name | simple_expansion | expansion | string | raw_string | ansi_c_string | command_substitution | _expansion_word | array | process_substitution ) )+
+
+command_substitution ::=
+	 '$(' _statements ')'
+	| '$(' file_redirect ')'
+	| '`' _statements '`'
+	| '$`' _statements '`'
+
+process_substitution ::=
+	 ( '<(' | '>(' ) _statements ')'
+
+_extglob_blob ::=
+	 extglob_pattern
+	| extglob_pattern ( string | expansion | command_substitution ) extglob_pattern?
+
+comment ::=
+	 '#.'*
+
+_comment_word ::=
+	 ( [^'"<>{}#x5B#x5D()`$|&;\ #x09#x0A#x0B#x0C#x0D] | '\\'  [^ #x09#x0A#x0B#x0C#x0D] ) ( [^'"<>{}#x5B#x5D()`$|&;\ #x09#x0A#x0B#x0C#x0D] | '\\'  [^ #x09#x0A#x0B#x0C#x0D] | '\ ' )*
+
+_simple_variable_name ::=
+	 [a-zA-Z_]+
+
+_multiline_variable_name ::=
+	 ([a-zA-Z_]|'\#x0D'?'#x0A')+
+
+_special_variable_name ::=
+	 ( '*' | '@' | '?' | '!' | '#' | '-' | '$' | '0' | '_' )
+
+word ::=
+	 ( ( [^#x23'"<>{}#x5B#x5D()`$|&;\ #x09#x0A#x0B#x0C#x0D] | '\\'  [^ #x09#x0A#x0B#x0C#x0D] ) ( [^'"<>{}#x5B#x5D()`$|&;\ #x09#x0A#x0B#x0C#x0D] | '\\'  [^ #x09#x0A#x0B#x0C#x0D] | '\ ' )* )
+
+_c_terminator ::=
+	 ';'
+	| '#x0A'
+	| '&'
+
+_terminator ::=
+	 ';'
+	| ';;'
+	| '#x0A'
+	| '&'
 

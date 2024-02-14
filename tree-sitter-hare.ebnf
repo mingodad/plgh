@@ -1,0 +1,496 @@
+//
+// From tree-sitter-hare/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+sub_unit ::=
+	 imports? declarations?
+
+keyword ::=
+	 ( 'abort' | 'align' | 'alloc' | 'append' | 'as' | 'assert' | 'bool' | 'break' | 'case' | 'const' | 'continue' | 'def' | 'defer' | 'delete' | 'else' | 'enum' | 'export' | 'f32' | 'f64' | 'false' | 'fn' | 'for' | 'free' | 'i16' | 'i32' | 'i64' | 'i8' | 'if' | 'insert' | 'int' | 'is' | 'len' | 'let' | 'match' | 'null' | 'nullable' | 'offset' | 'return' | 'rune' | 'size' | 'static' | 'str' | 'struct' | 'switch' | 'true' | 'type' | 'u16' | 'u32' | 'u64' | 'u8' | 'uint' | 'uintptr' | 'union' | 'use' | 'vaarg' | 'vaend' | 'valist' | 'vastart' | 'void' | 'opaque' | 'yield' | '_' | 'never' )
+
+name ::=
+	 [a-zA-Z_][a-zA-Z_]*
+
+identifier ::=
+	 ( [a-zA-Z_][a-zA-Z_]* ( '::' [a-zA-Z_][a-zA-Z_]* )* )
+
+comment ::=
+	 '\/\/'[^#x0A]*
+
+type ::=
+	 'const'? '!'? _storage_class
+
+_storage_class ::=
+	 _primitive_type
+	| struct_union_type
+	| tuple_type
+	| tagged_union_type
+	| slice_array_type
+	| function_type
+	| alias_type
+	| unwrapped_alias
+	| _string_type
+
+_primitive_type ::=
+	 _integer_type
+	| _floating_type
+	| pointer_type
+	| 'rune'
+	| 'bool'
+	| 'valist'
+	| 'void'
+	| 'opaque'
+	| 'never'
+
+_integer_type ::=
+	 'i8'
+	| 'i16'
+	| 'i32'
+	| 'i64'
+	| 'u8'
+	| 'u16'
+	| 'u32'
+	| 'u64'
+	| 'int'
+	| 'uint'
+	| 'size'
+	| 'uintptr'
+
+_floating_type ::=
+	 'f32'
+	| 'f64'
+
+pointer_type ::=
+	 '*' type
+	| 'nullable' '*' type
+
+struct_union_type ::=
+	 'struct' '@packed'? '{' _struct_union_fields '}'
+	| 'union' '{' _struct_union_fields '}'
+
+_struct_union_fields ::=
+	 struct_union_field ( ',' struct_union_field )* ','?
+
+struct_union_field ::=
+	 offset_specifier? ( name ':' type | struct_union_type | identifier )
+
+offset_specifier ::=
+	 '@offset' '(' expression ')'
+
+tuple_type ::=
+	 '(' type ( ',' type )+ ','? ')'
+
+tagged_union_type ::=
+	 '(' type ( '|' type )+ '|'? ')'
+
+slice_array_type ::=
+	 '[' ']' type
+	| '[' expression ']' type
+	| '[' '*' ']' type
+	| '[' '_' ']' type
+
+_string_type ::=
+	 'str'
+
+function_type ::=
+	 'fn' _prototype
+
+_prototype ::=
+	 '(' ( parameter ( ',' parameter )* ( ','? '...' )? ','? )? ')' type
+
+parameter ::=
+	 name ':' type
+	| '_' ':' type
+
+alias_type ::=
+	 identifier
+
+unwrapped_alias ::=
+	 '...' identifier
+
+literal ::=
+	 integer_literal
+	| floating_literal
+	| rune_literal
+	| string_literal
+	| array_literal
+	| struct_literal
+	| tuple_literal
+	| 'true'
+	| 'false'
+	| 'null'
+	| 'void'
+
+floating_literal ::=
+	 ( '0x'[0-9a-fA-F]+('.'[0-9a-fA-F]+)? [pP][+-]?[0-9]+ ( 'f32' | 'f64' )? | '0'|([1-9][0-9]*) '.'[0-9]+ [eE][+-]?[0-9]+? | '0'|([1-9][0-9]*) [eE][+-]?[0-9]+? ( 'f32' | 'f64' ) )
+
+integer_literal ::=
+	 ( ( '0x'[0-9A-Fa-f]+ | '0o'[0-8]+ | '0b'[01]+ | '0'|([1-9][0-9]*) [eE]+?[0-9]+? ) ( 'i' | 'u' | 'z' | 'i8' | 'i16' | 'i32' | 'i64' | 'u8' | 'u16' | 'u32' | 'u64' )? )
+
+rune_literal ::=
+	 "'"  ( escape_sequence | [^\'] ) "'" 
+
+escape_sequence ::=
+	 ( '\'[0abfnrtv\'"] | '\x'[0-9A-Fa-f]'{2}' | '\u'[0-9A-Fa-f]'{4}' | '\U'[0-9A-Fa-f]'{8}' )
+
+string_literal ::=
+	 '`'[^`]+'`'
+	| '"'  ( escape_sequence | [^\"]+ )* '"' 
+
+array_literal ::=
+	 '[' ( expression ( ',' expression )* '...'? ','? )? ']'
+
+struct_literal ::=
+	 ( 'struct' | identifier ) '{' ( field_value ( ',' field_value )* ','? )? '}'
+
+field_value ::=
+	 name '=' expression
+	| name ':' type '=' expression
+	| struct_literal
+	| '...'
+
+tuple_literal ::=
+	 '(' expression ( ',' expression )+ ','? ')'
+
+_plain_expression ::=
+	 identifier
+	| literal
+
+nested_expression ::=
+	 _plain_expression
+	| '(' expression ')'
+
+allocation_expression ::=
+	 'alloc' '(' expression ')'
+	| 'alloc' '(' expression '...' ')'
+	| 'alloc' '(' expression ',' expression ')'
+	| 'free' '(' expression ')'
+
+assertion_expression ::=
+	 'static'? ( 'assert' '(' expression ')' | 'assert' '(' expression ',' string_literal ')' | 'abort' '(' string_literal? ')' )
+
+call_expression ::=
+	 postfix_expression '(' argument_list? ')'
+
+argument_list ::=
+	 expression ','?
+	| expression '...' ','?
+	| expression ',' argument_list
+
+measurement_expression ::=
+	 align_expression
+	| size_expression
+	| length_expression
+	| offset_expression
+
+align_expression ::=
+	 'align' '(' type ')'
+
+size_expression ::=
+	 'size' '(' type ')'
+
+length_expression ::=
+	 'len' '(' expression ')'
+
+offset_expression ::=
+	 'offset' '(' field_access_expression ')'
+
+field_access_expression ::=
+	 postfix_expression ( '.' name )
+	| postfix_expression ( '.' integer_literal )
+
+indexing_expression ::=
+	 postfix_expression '[' expression ']'
+
+slicing_expression ::=
+	 postfix_expression '[' expression? '..' expression? ']'
+
+slice_mutation_expression ::=
+	 append_expression
+	| insert_expression
+	| delete_expression
+
+append_expression ::=
+	 'static'? ( 'append' '(' expression ',' expression ')' | 'append' '(' expression ',' expression '...' ')' | 'append' '(' expression ',' expression ',' expression ')' )
+
+insert_expression ::=
+	 'static'? 'insert' '(' indexing_expression ',' expression ( '...' | ',' expression ) ')'
+
+delete_expression ::=
+	 'static'? ( 'delete' '(' slicing_expression ')' | 'delete' '(' indexing_expression ')' )
+
+error_propagation ::=
+	 postfix_expression ( '?' | '!' )
+
+postfix_expression ::=
+	 nested_expression
+	| call_expression
+	| field_access_expression
+	| indexing_expression
+	| slicing_expression
+	| error_propagation
+
+variadic_expression ::=
+	 'vastart' '(' ')'
+	| 'vaarg' '(' expression ')'
+	| 'vaend' '(' expression ')'
+
+builtin_expression ::=
+	 allocation_expression
+	| assertion_expression
+	| measurement_expression
+	| slice_mutation_expression
+	| variadic_expression
+
+unary_expression ::=
+	 ( '+' | '-' | '~' | '!' | '*' | '&' ) expression
+
+cast_expression ::=
+	 ( expression ':' type ) | ( expression 'as' assertion_target ) | ( expression 'is' assertion_target )
+
+assertion_target ::=
+	 type
+	| 'null'
+
+multiplicative_expression ::=
+	 expression ( '*' | '/' | '%' ) expression
+
+additive_expression ::=
+	 expression ( '+' | '-' ) expression
+
+shift_expression ::=
+	 expression ( '<<' | '>>' ) expression
+
+and_expression ::=
+	 expression '&' expression
+
+exclusive_or_expression ::=
+	 expression '^' expression
+
+inclusive_or_expression ::=
+	 expression '|' expression
+
+comparison_expression ::=
+	 expression ( '<' | '>' | '<=' | '>=' ) expression
+
+equality_expression ::=
+	 expression ( '==' | '!=' ) expression
+
+logical_and_expression ::=
+	 expression '&&' expression
+
+logical_xor_expression ::=
+	 expression '^^' expression
+
+logical_or_expression ::=
+	 expression '||' expression
+
+if_expression ::=
+	 'if' conditional_branch | 'if' conditional_branch 'else' expression
+
+conditional_branch ::=
+	 '(' expression ')' expression
+
+for_loop ::=
+	 'for' label? '(' for_predicate ')' expression
+
+for_predicate ::=
+	 expression
+	| binding_list ';' expression
+	| expression ';' expression
+	| binding_list ';' expression ';' expression
+
+switch_expression ::=
+	 'switch' label? '(' expression ')' '{' switch_cases '}'
+
+switch_cases ::=
+	 switch_case+
+
+switch_case ::=
+	 'case' case_options '=>' expression_list
+	| 'case' '=>' expression_list
+
+case_options ::=
+	 expression ','?
+	| expression ',' case_options
+
+match_expression ::=
+	 'match' label? '(' expression ')' '{' match_cases '}'
+
+match_cases ::=
+	 match_case+
+
+match_case ::=
+	 'case' 'let' name ':' type '=>' expression_list
+	| 'case' 'let' '(' binding_names ')' ':' type '=>' expression_list
+	| 'case' type '=>' expression_list
+	| 'case' '=>' expression_list
+
+assignment ::=
+	 expression assignment_op expression | '(' binding_names ')' '=' expression
+
+assignment_op ::=
+	 '='
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '%='
+	| '<<='
+	| '>>='
+	| '&='
+	| '|='
+	| '^='
+	| '&&='
+	| '||='
+	| '^^='
+
+binding_list ::=
+	 'static'? 'let' bindings
+	| 'static'? 'const' bindings
+	| 'def' binding
+
+bindings ::=
+	 binding ','?
+	| binding ',' bindings
+
+binding ::=
+	 name '=' expression
+	| name ':' type '=' expression
+	| '(' binding_names ')' '=' expression
+	| '(' binding_names ')' ':' type '=' expression
+
+binding_names ::=
+	 name ',' name
+	| name ',' binding_names
+
+defer_expression ::=
+	 'defer' expression
+
+expression_list ::=
+	 expression ';' expression_list?
+	| binding_list ';' expression_list?
+	| defer_expression ';' expression_list?
+
+compound_expression ::=
+	 label? '{' expression_list '}'
+
+label ::=
+	 ':' name
+
+control_expression ::=
+	 'break' label? | 'continue' label? | 'return' expression? | 'yield' expression? | 'yield' label ( ', ' expression )?
+
+expression ::=
+	 assignment
+	| logical_or_expression
+	| logical_xor_expression
+	| logical_and_expression
+	| equality_expression
+	| comparison_expression
+	| inclusive_or_expression
+	| exclusive_or_expression
+	| and_expression
+	| shift_expression
+	| additive_expression
+	| multiplicative_expression
+	| cast_expression
+	| unary_expression
+	| postfix_expression
+	| builtin_expression
+	| compound_expression
+	| match_expression
+	| switch_expression
+	| if_expression
+	| for_loop
+	| control_expression
+
+declarations ::=
+	 ( 'export'? declaration ';' )+
+
+declaration ::=
+	 global_declaration
+	| constant_declaration
+	| type_declaration
+	| function_declaration
+
+global_declaration ::=
+	 'let' global_bindings
+	| 'const' global_bindings
+
+global_bindings ::=
+	 global_binding ','?
+	| global_binding ',' global_bindings
+
+global_binding ::=
+	 decl_attr? '@threadlocal'? identifier ( '=' expression | ':' type ( '=' expression )? )
+
+decl_attr ::=
+	 '@symbol' '(' string_literal ')'
+
+constant_declaration ::=
+	 'def' constant_bindings
+
+constant_bindings ::=
+	 constant_binding ','?
+	| constant_binding ',' constant_bindings
+
+constant_binding ::=
+	 identifier ( ':' type )? '=' expression
+
+type_declaration ::=
+	 'type' type_bindings
+
+type_bindings ::=
+	 type_binding ','?
+	| type_binding ',' type_bindings
+
+type_binding ::=
+	 identifier '=' ( type | enum_type )
+
+enum_type ::=
+	 'enum' enum_storage? '{' enum_values '}'
+
+enum_values ::=
+	 enum_value ','?
+	| enum_value ',' enum_values
+
+enum_value ::=
+	 name
+	| name '=' expression
+
+enum_storage ::=
+	 _integer_type
+	| 'rune'
+
+function_declaration ::=
+	 fndec_attrs? 'fn' identifier _prototype ( '=' expression )?
+
+fndec_attrs ::=
+	 fndec_attr+
+
+fndec_attr ::=
+	 '@fini'
+	| '@init'
+	| '@test'
+	| decl_attr
+
+imports ::=
+	 use_directive+
+
+use_directive ::=
+	 'use' ( identifier | name '=' identifier | identifier '::' '*' | identifier '::' '{' member_list '}' ) ';'
+
+member_list ::=
+	 member ','?
+	| member ',' member_list
+
+member ::=
+	 name
+	| name '=' name
+

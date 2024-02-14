@@ -1,0 +1,1040 @@
+//
+// From tree-sitter-objc/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+translation_unit ::=
+	 _top_level_item*
+
+_top_level_item ::=
+	 function_definition
+	| linkage_specification
+	| declaration
+	| _statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| _import
+	| class_interface
+	| class_implementation
+	| category_interface
+	| category_implementation
+	| protocol_declaration
+	| protocol_forward_declaration
+	| class_forward_declaration
+	| _ns_assume_nonnull_declaration
+	| compatibility_alias_declaration
+
+preproc_include ::=
+	 '#'[ #x09]*'include' ( string_literal | system_lib_string | identifier | preproc_call_expression ) '\n' 
+
+preproc_def ::=
+	 '#'[ #x09]*'define' identifier preproc_arg? '\n' 
+
+preproc_function_def ::=
+	 '#'[ #x09]*'define' identifier preproc_params preproc_arg? '\n' 
+
+preproc_params ::=
+	 '(' ( ( identifier | '...' ) ( ',' ( identifier | '...' ) )* )? ')'
+
+preproc_call ::=
+	 preproc_directive preproc_arg? '\n' 
+
+preproc_if ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  _top_level_item* ( preproc_else | preproc_elif )? '#'[ #x09]*'endif'
+
+preproc_ifdef ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier _top_level_item* ( preproc_else | preproc_elif )? '#'[ #x09]*'endif'
+
+preproc_else ::=
+	 '#'[ #x09]*'else' _top_level_item*
+
+preproc_elif ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  _top_level_item* ( preproc_else | preproc_elif )?
+
+preproc_if_in_field_declaration_list ::=
+	 '#'[ #x09]*'if' _preproc_expression '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )? '#'[ #x09]*'endif'
+
+preproc_ifdef_in_field_declaration_list ::=
+	 ( '#'[ #x09]*'ifdef' | '#'[ #x09]*'ifndef' ) identifier _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )? '#'[ #x09]*'endif'
+
+preproc_else_in_field_declaration_list ::=
+	 '#'[ #x09]*'else' _field_declaration_list_item*
+
+preproc_elif_in_field_declaration_list ::=
+	 '#'[ #x09]*'elif' _preproc_expression '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list | preproc_elif_in_field_declaration_list )?
+
+preproc_directive ::=
+	 '#'[ #x09]*[a-zA-Z][a-zA-Z_]*
+
+preproc_arg ::=
+	 '.'|'\#x0D'?'#x0A'+
+
+_preproc_expression ::=
+	 preproc_has_include
+	| identifier
+	| preproc_call_expression
+	| number_literal
+	| char_literal
+	| preproc_defined
+	| preproc_unary_expression
+	| preproc_binary_expression
+	| preproc_parenthesized_expression
+
+preproc_parenthesized_expression ::=
+	 '(' _preproc_expression ')'
+
+preproc_defined ::=
+	 'defined' '(' identifier ')'
+	| 'defined' identifier
+
+preproc_unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _preproc_expression
+
+preproc_call_expression ::=
+	 identifier preproc_argument_list
+
+preproc_argument_list ::=
+	 '(' ( _preproc_expression ( ',' _preproc_expression )* )? ')'
+
+preproc_binary_expression ::=
+	 _preproc_expression '+' _preproc_expression
+	| _preproc_expression '-' _preproc_expression
+	| _preproc_expression '*' _preproc_expression
+	| _preproc_expression '/' _preproc_expression
+	| _preproc_expression '%' _preproc_expression
+	| _preproc_expression '||' _preproc_expression
+	| _preproc_expression '&&' _preproc_expression
+	| _preproc_expression '|' _preproc_expression
+	| _preproc_expression '^' _preproc_expression
+	| _preproc_expression '&' _preproc_expression
+	| _preproc_expression '==' _preproc_expression
+	| _preproc_expression '!=' _preproc_expression
+	| _preproc_expression '>' _preproc_expression
+	| _preproc_expression '>=' _preproc_expression
+	| _preproc_expression '<=' _preproc_expression
+	| _preproc_expression '<' _preproc_expression
+	| _preproc_expression '<<' _preproc_expression
+	| _preproc_expression '>>' _preproc_expression
+
+function_definition ::=
+	 ms_call_modifier? _declaration_specifiers _declarator compound_statement
+
+declaration ::=
+	 swift_name_attribute_sepcifier? _declaration_specifiers ( _declarator | init_declarator ) ( ',' ( _declarator | init_declarator ) )* attribute_specifier? type_qualifier? ';'
+
+type_definition ::=
+	 attribute_specifier? swift_name_attribute_sepcifier? 'typedef' ( attribute_specifier? type_qualifier* _type_specifier attribute_specifier? type_qualifier* _type_declarator | attribute_specifier? type_qualifier* ns_enum_specifier attribute_specifier? type_qualifier* _type_declarator? ) ( identifier | attribute_specifier )? ';'
+
+_declaration_specifiers ::=
+	 ( storage_class_specifier | type_qualifier | attribute_specifier | ms_declspec_modifier )* _type_specifier ( storage_class_specifier | type_qualifier | attribute_specifier | ms_declspec_modifier )*
+
+linkage_specification ::=
+	 'extern' string_literal ( function_definition | declaration | declaration_list )
+
+attribute_specifier ::=
+	 ( '__attribute' | '__attribute__' ) '(' argument_list ')' | method_attribute_specifier | method_variadic_arguments_attribute_specifier | availability_attribute_specifier
+
+ms_declspec_modifier ::=
+	 '__declspec' '(' identifier ')'
+
+ms_based_modifier ::=
+	 '__based' argument_list
+
+ms_call_modifier ::=
+	 '__cdecl'
+	| '__clrcall'
+	| '__stdcall'
+	| '__fastcall'
+	| '__thiscall'
+	| '__vectorcall'
+
+ms_restrict_modifier ::=
+	 '__restrict'
+
+ms_unsigned_ptr_modifier ::=
+	 '__uptr'
+
+ms_signed_ptr_modifier ::=
+	 '__sptr'
+
+ms_unaligned_ptr_modifier ::=
+	 '_unaligned'
+	| '__unaligned'
+
+ms_pointer_modifier ::=
+	 ms_unaligned_ptr_modifier
+	| ms_restrict_modifier
+	| ms_unsigned_ptr_modifier
+	| ms_signed_ptr_modifier
+
+declaration_list ::=
+	 '{' _top_level_item* '}'
+
+_declarator ::=
+	 pointer_declarator
+	| function_declarator
+	| array_declarator
+	| parenthesized_declarator
+	| identifier
+	| block_declarator
+
+_field_declarator ::=
+	 pointer_field_declarator
+	| function_field_declarator
+	| array_field_declarator
+	| parenthesized_field_declarator
+	| _field_identifier
+	| block_declarator
+
+_type_declarator ::=
+	 pointer_type_declarator
+	| function_type_declarator
+	| array_type_declarator
+	| parenthesized_type_declarator
+	| _type_identifier
+	| block_declarator
+
+_abstract_declarator ::=
+	 abstract_pointer_declarator
+	| abstract_function_declarator
+	| abstract_array_declarator
+	| abstract_parenthesized_declarator
+	| block_abstract_declarator
+
+parenthesized_declarator ::=
+	 '(' _declarator ')'
+
+parenthesized_field_declarator ::=
+	 '(' _field_declarator ')'
+
+parenthesized_type_declarator ::=
+	 '(' _type_declarator ')'
+
+abstract_parenthesized_declarator ::=
+	 '(' _abstract_declarator ')'
+
+pointer_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _declarator
+
+pointer_field_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _field_declarator
+
+pointer_type_declarator ::=
+	 ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* _type_declarator
+
+abstract_pointer_declarator ::=
+	 '*' type_qualifier* _abstract_declarator?
+
+function_declarator ::=
+	 _declarator parameter_list attribute_specifier*
+
+function_field_declarator ::=
+	 _field_declarator parameter_list
+
+function_type_declarator ::=
+	 _type_declarator parameter_list
+
+abstract_function_declarator ::=
+	 _abstract_declarator? parameter_list
+
+array_declarator ::=
+	 _declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+array_field_declarator ::=
+	 _field_declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+array_type_declarator ::=
+	 _type_declarator '[' type_qualifier* ( _expression | '*' )? ']'
+
+abstract_array_declarator ::=
+	 _abstract_declarator? '[' type_qualifier* ( _expression | '*' )? ']'
+
+init_declarator ::=
+	 _declarator '=' ( initializer_list | _expression )
+
+compound_statement ::=
+	 '{' _top_level_item* '}'
+
+storage_class_specifier ::=
+	 'extern'
+	| 'static'
+	| 'auto'
+	| 'register'
+	| 'inline'
+	| 'FOUNDATION_EXPORT'|'FOUNDATION_EXTERN'|'FOUNDATION_STATIC_INLINE'|'NS_INLINE'|'UIKIT_EXTERN'|'CG_EXTERN'|'CG_INLINE'
+
+type_qualifier ::=
+	 'const'
+	| 'volatile'
+	| 'restrict'
+	| '_Atomic'
+	| 'in'
+	| 'out'
+	| 'inout'
+	| 'bycopy'
+	| 'byref'
+	| 'oneway'
+	| '_Nullable'
+	| '_Nonnull'
+	| '_Nullable_result'
+	| '_Null_unspecified'
+	| '__autoreleasing'
+	| '__nullable'
+	| '__nonnull'
+	| '__strong'
+	| '__weak'
+	| '__bridge'
+	| '__bridge_transfer'
+	| '__bridge_retained'
+	| '__unsafe_unretained'
+	| '__block'
+	| '__kindof'
+	| '__unused'
+	| '_Complex'
+	| '__complex'
+	| 'IBOutlet'
+	| 'IBInspectable'
+	| 'NS_VALID_UNTIL_END_OF_SCOPE'
+
+_type_specifier ::=
+	 struct_specifier
+	| union_specifier
+	| enum_specifier
+	| macro_type_specifier
+	| sized_type_specifier
+	| primitive_type
+	| _type_identifier
+	| id
+	| SEL
+	| IMP
+	| Class
+	| BOOL
+	| auto
+	| instancetype
+	| ns_enum_specifier
+	| typeof_specifier
+	| atomic_specifier
+	| generic_type_specifier
+
+sized_type_specifier ::=
+	 ( 'signed' | 'unsigned' | 'long' | 'short' )+ ( _type_identifier | primitive_type )?
+
+primitive_type ::=
+	 ( 'bool' | 'char' | 'int' | 'float' | 'double' | 'void' | 'size_t' | 'ssize_t' | 'intptr_t' | 'uintptr_t' | 'charptr_t' | 'int8_t' | 'int16_t' | 'int32_t' | 'int64_t' | 'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' | 'char8_t' | 'char16_t' | 'char32_t' | 'char64_t' )
+
+enum_specifier ::=
+	 'enum' ( _type_identifier? ( ':' _type_specifier )? enumerator_list? | enumerator_list )
+
+enumerator_list ::=
+	 '{' ( enumerator ( ',' enumerator )* )? ','? '}'
+
+struct_specifier ::=
+	 'struct' attribute_specifier? ( _type_identifier superclass_reference? field_declaration_list? | field_declaration_list )
+	| 'struct' attribute_specifier? identifier? ( '@defs' '(' identifier ')' )
+
+union_specifier ::=
+	 'union' ms_declspec_modifier? ( _type_identifier field_declaration_list? | field_declaration_list )
+
+field_declaration_list ::=
+	 '{' _field_declaration_list_item* '}'
+
+_field_declaration_list_item ::=
+	 field_declaration
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| preproc_if_in_field_declaration_list
+	| preproc_ifdef_in_field_declaration_list
+
+field_declaration ::=
+	 _declaration_specifiers ( _field_declarator ( ',' _field_declarator )* )? bitfield_clause? ';'
+
+bitfield_clause ::=
+	 ':' _expression
+
+enumerator ::=
+	 identifier ( '=' _expression )? ( attribute_specifier | swift_name_attribute_sepcifier )*
+
+parameter_list ::=
+	 '(' ( ( parameter_declaration | '...' ) ( ',' ( parameter_declaration | '...' ) )* )? ')'
+
+parameter_declaration ::=
+	 _declaration_specifiers ( _declarator | _abstract_declarator )?
+
+_statement ::=
+	 case_statement
+	| _non_case_statement
+
+_non_case_statement ::=
+	 labeled_statement
+	| compound_statement
+	| expression_statement
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| autoreleasepool_statement
+	| synchronized_statement
+	| for_in_statement
+	| try_catch_statement
+	| throw_statement
+
+labeled_statement ::=
+	 _statement_identifier ':' _statement
+
+expression_statement ::=
+	 ( _expression | comma_expression )? ';'
+
+if_statement ::=
+	 'if' parenthesized_expression _statement ( 'else' _statement )?
+
+switch_statement ::=
+	 'switch' parenthesized_expression compound_statement
+
+case_statement ::=
+	 ( 'case' _expression | 'default' ) ':' ( _non_case_statement | declaration | type_definition )*
+
+while_statement ::=
+	 'while' parenthesized_expression _statement
+
+do_statement ::=
+	 'do' _statement 'while' parenthesized_expression ';'
+
+for_statement ::=
+	 'for' '(' ( declaration | ( _expression | comma_expression )? ';' ) _expression? ';' ( _expression | comma_expression )? ')' _statement
+
+return_statement ::=
+	 'return' ( _expression | comma_expression )? ';'
+
+break_statement ::=
+	 'break' ';'
+
+continue_statement ::=
+	 'continue' ';'
+
+goto_statement ::=
+	 'goto' _statement_identifier ';'
+
+_expression ::=
+	 conditional_expression
+	| assignment_expression
+	| binary_expression
+	| unary_expression
+	| update_expression
+	| cast_expression
+	| pointer_expression
+	| sizeof_expression
+	| subscript_expression
+	| call_expression
+	| field_expression
+	| compound_literal_expression
+	| identifier
+	| number_literal
+	| string_literal
+	| true
+	| false
+	| null
+	| concatenated_string
+	| char_literal
+	| parenthesized_expression
+	| self
+	| super
+	| nil
+	| YES
+	| NO
+	| message_expression
+	| selector_expression
+	| protocol_expression
+	| encode_expression
+	| number_expression
+	| string_expression
+	| object_expression
+	| dictionary_expression
+	| array_expression
+	| boolean_expression
+	| block_expression
+	| available_expression
+	| statement_expression
+	| va_arg_expression
+
+comma_expression ::=
+	 _expression ',' ( _expression | comma_expression )
+
+conditional_expression ::=
+	 _expression '?' _expression ':' _expression | _expression '?' ':' _expression
+
+_assignment_left_expression ::=
+	 identifier
+	| call_expression
+	| field_expression
+	| pointer_expression
+	| subscript_expression
+	| parenthesized_expression
+	| self
+
+assignment_expression ::=
+	 _assignment_left_expression ( '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ) _expression
+
+pointer_expression ::=
+	 ( '*' | '&' ) _expression
+
+unary_expression ::=
+	 ( '!' | '~' | '-' | '+' ) _expression
+
+binary_expression ::=
+	 _expression '+' _expression
+	| _expression '-' _expression
+	| _expression '*' _expression
+	| _expression '/' _expression
+	| _expression '%' _expression
+	| _expression '||' _expression
+	| _expression '&&' _expression
+	| _expression '|' _expression
+	| _expression '^' _expression
+	| _expression '&' _expression
+	| _expression '==' _expression
+	| _expression '!=' _expression
+	| _expression '>' _expression
+	| _expression '>=' _expression
+	| _expression '<=' _expression
+	| _expression '<' _expression
+	| _expression '<<' _expression
+	| _expression '>>' _expression
+
+update_expression ::=
+	 ( '--' | '++' ) _expression | _expression ( '--' | '++' )
+
+cast_expression ::=
+	 '(' ( type_descriptor | block_abstract_declarator ) ')' _expression
+
+type_descriptor ::=
+	 type_qualifier* _type_specifier type_qualifier* _abstract_declarator?
+
+sizeof_expression ::=
+	 'sizeof' ( _expression | '(' type_descriptor ')' )
+
+subscript_expression ::=
+	 _expression '[' _expression ']'
+
+call_expression ::=
+	 _expression argument_list
+
+argument_list ::=
+	 '(' ( _expression ( ',' _expression )* )? ')'
+
+field_expression ::=
+	 _expression ( '.' | '->' ) _field_identifier
+
+compound_literal_expression ::=
+	 '(' type_descriptor ')' initializer_list
+
+parenthesized_expression ::=
+	 '(' ( _expression | comma_expression ) ')'
+
+initializer_list ::=
+	 '{' ( ( initializer_pair | _expression | initializer_list ) ( ',' ( initializer_pair | _expression | initializer_list ) )* )? ','? '}'
+
+initializer_pair ::=
+	 ( subscript_designator | field_designator )+ '=' ( _expression | initializer_list )
+
+subscript_designator ::=
+	 '[' _expression ']'
+
+field_designator ::=
+	 '.' _field_identifier
+
+number_literal ::=
+	 ( [-\+]? ( '0x' | '0b' )? ( ( [0-9]+ ( "'"  [0-9]+ )* | '0b' [0-9]+ ( "'"  [0-9]+ )* | '0x' [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* ) ( '.' ( [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* )? )? | '.' [0-9]+ ( "'"  [0-9]+ )* ) ( [eEpP] ( [-\+]? [0-9a-fA-F]+ ( "'"  [0-9a-fA-F]+ )* )? )? ( 'u' | 'l' | 'U' | 'L' | 'f' | 'F' )* )
+
+char_literal ::=
+	 ( "L'" | "u'" | "U'" | "u8'" | "'"  ) ( escape_sequence | [^#x0A'] ) "'" 
+
+concatenated_string ::=
+	 string_literal string_literal+
+
+string_literal ::=
+	 ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( [^\"#x0A]+ | escape_sequence )* '"' 
+
+escape_sequence ::=
+	 '\\'  ( [^xuU] | [0-9]'{2,3}' | 'x'[0-9a-fA-F]'{2,}' | 'u'[0-9a-fA-F]'{4}' | 'U'[0-9a-fA-F]'{8}' )
+
+system_lib_string ::=
+	 ( '<' ( [^>#x0A] | '\>' )* '>' )
+
+true ::=
+	 ( 'TRUE' | 'true' )
+
+false ::=
+	 ( 'FALSE' | 'false' )
+
+null ::=
+	 'NULL'
+
+identifier ::=
+	 [$a-zA-Z_]([a-zA-Z_]|'\$')*
+
+_type_identifier ::=
+	 identifier
+
+_field_identifier ::=
+	 identifier
+
+_statement_identifier ::=
+	 identifier
+
+_empty_declaration ::=
+	 _type_specifier ';'
+
+macro_type_specifier ::=
+	 identifier '(' type_descriptor ')'
+
+comment ::=
+	 ( '//' ('\'('.'|'#x0D'?'#x0A')|[^\#x0A])* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+_name ::=
+	 identifier
+
+_import ::=
+	 preproc_import
+	| module_import
+
+preproc_import ::=
+	 '#import' ( system_lib_string | string_literal )
+
+module_import ::=
+	 '@import' module_string
+
+module_string ::=
+	 [a-zA-Z_][a-zA-Z_]*('.'[a-zA-Z_][a-zA-Z_]*)*
+
+_ns_assume_nonnull_declaration ::=
+	 'NS_ASSUME_NONNULL_BEGIN'|'NS_ASSUME_NONNULL_END'|'CF_EXTERN_C_BEGIN'|'CF_EXTERN_C_END'
+
+compatibility_alias_declaration ::=
+	 '@compatibility_alias' identifier identifier ';'
+
+protocol_forward_declaration ::=
+	 '@protocol' _name ( ',' _name )* ';'
+
+class_forward_declaration ::=
+	 '@class' _name ( protocol_qualifiers | parameterized_class_type_arguments )? ( ',' _name ( protocol_qualifiers | parameterized_class_type_arguments )? )* ';'
+
+class_interface ::=
+	 class_interface_attribute_sepcifier? swift_name_attribute_sepcifier? attribute_specifier* '@interface' ( _name parameterized_class_type_arguments? | generics_type_reference ) superclass_reference? parameterized_class_type_arguments? protocol_qualifiers _instance_variables? _interface_declaration? '@end'
+	| class_interface_attribute_sepcifier? swift_name_attribute_sepcifier? attribute_specifier* '@interface' ( _name parameterized_class_type_arguments? protocol_qualifiers? | generics_type_reference ) superclass_reference? _instance_variables? _interface_declaration? '@end'
+
+category_interface ::=
+	 '@interface' ( _name parameterized_class_type_arguments? protocol_qualifiers? | generics_type_reference ) '(' identifier? ')' protocol_qualifiers? _instance_variables? _interface_declaration? '@end'
+
+protocol_declaration ::=
+	 swift_name_attribute_sepcifier? attribute_specifier? '@protocol' _name protocol_qualifiers? _interface_declaration? '@end'
+
+superclass_reference ::=
+	 ':' _name generic_type_references?
+
+protocol_qualifiers ::=
+	 '<' _protocol_identifier ( ',' _protocol_identifier )* '>'
+
+_protocol_identifier ::=
+	 identifier
+
+parameterized_class_type_arguments ::=
+	 '<' _parameterized_class_type_arguments ( ',' _parameterized_class_type_arguments )* '>'
+
+_parameterized_class_type_arguments ::=
+	 ( '__covariant' | '__contravariant' )? identifier ( ':' type_descriptor )?
+
+generics_type_reference ::=
+	 '__GENERICS' '(' _name ( ',' _type_specifier )* ')'
+
+_instance_variables ::=
+	 '{' _instance_variable_declaration* '}'
+
+_instance_variable_declaration ::=
+	 _visibility_specification
+	| field_declaration
+
+_visibility_specification ::=
+	 private
+	| public
+	| protected
+	| package
+
+private ::=
+	 '@private'
+
+public ::=
+	 '@public'
+
+protected ::=
+	 '@protected'
+
+package ::=
+	 '@package'
+
+_interface_declaration ::=
+	 ( _ns_assume_nonnull_declaration | _interface_declaration_specifier | declaration | method_declaration | property_declaration | _empty_declaration | type_definition | preproc_def | preproc_function_def )+
+
+_interface_declaration_specifier ::=
+	 optional
+	| required
+
+optional ::=
+	 '@optional'
+
+required ::=
+	 '@required'
+
+method_declaration ::=
+	 _class_member_scope _method_argument_type_specifier? _method_selector ( attribute_specifier | swift_name_attribute_sepcifier )* ';'
+
+_class_member_scope ::=
+	 class_scope
+	| instance_scope
+
+class_scope ::=
+	 '+'
+
+instance_scope ::=
+	 '-'
+
+property_declaration ::=
+	 '@property' property_attributes? attribute_specifier? type_qualifier* _type_specifier attribute_specifier? type_qualifier* _declarator ( ',' _declarator )* attribute_specifier* swift_name_attribute_sepcifier? ';'
+
+property_attributes ::=
+	 '(' ( _property_attribute ( ',' _property_attribute )* )? ')'
+
+_property_attribute ::=
+	 getter
+	| setter
+	| nonnull
+	| nullable
+	| null_resettable
+	| unsafe_unretained
+	| null_unspecified
+	| direct
+	| readwrite
+	| readonly
+	| strong
+	| weak
+	| copy
+	| assign
+	| retain
+	| atomic
+	| nonatomic
+	| class
+	| NS_NONATOMIC_IOSONLY
+	| DISPATCH_QUEUE_REFERENCE_TYPE
+
+class_interface_attribute_sepcifier ::=
+	 'IB_DESIGNABLE'|'NS_ROOT_CLASS'
+
+method_attribute_specifier ::=
+	 'NS_DESIGNATED_INITIALIZER'|'NS_REQUIRES_SUPER'|'CF_RETURNS_RETAINED'|'CF_RETURNS_NOT_RETAINED'|'NS_REQUIRES_NIL_TERMINATION'|'NS_DIRECT'
+
+method_variadic_arguments_attribute_specifier ::=
+	 ( 'NS_FORMAT_FUNCTION' | 'CF_FORMAT_FUNCTION' ) '(' number_literal ',' number_literal ')'
+
+availability_attribute_specifier ::=
+	 'NS_UNAVAILABLE' | 'DEPRECATED_ATTRIBUTE' | 'UI_APPEARANCE_SELECTOR' | 'UNAVAILABLE_ATTRIBUTE' | ( 'NS_AVAILABLE' | '__IOS_AVAILABLE' | 'NS_AVAILABLE_IOS' | 'API_AVAILABLE' | 'API_UNAVAILABLE' | 'API_DEPRECATED' | 'NS_ENUM_AVAILABLE_IOS' | 'NS_DEPRECATED_IOS' | 'NS_ENUM_DEPRECATED_IOS' | 'DEPRECATED_MSG_ATTRIBUTE' | '__deprecated_msg' | '__deprecated_enum_msg' | 'NS_SWIFT_UNAVAILABLE' | 'NS_EXTENSION_UNAVAILABLE_IOS' | 'NS_CLASS_AVAILABLE_IOS' | 'NS_CLASS_DEPRECATED_IOS' ) '(' ( string_literal | platform_version ) ( ',' ( string_literal | platform_version ) )* ')'
+
+platform_version ::=
+	 [0-9]+'_'[0-9]+
+	| number_literal
+	| platform
+	| platform '(' ( ( [0-9]+'_'[0-9]+ | number_literal | identifier ) ( ',' ( [0-9]+'_'[0-9]+ | number_literal | identifier ) )* ) ')'
+
+platform ::=
+	 'ios'
+	| 'tvos'
+	| 'macos'
+	| 'macosx'
+	| 'watchos'
+
+swift_name_attribute_sepcifier ::=
+	 'NS_REFINED_FOR_SWIFT'
+	| 'NS_SWIFT_NAME' '(' identifier? identifier ( '(' ( _type_specifier* ':' )* ')' )? ')'
+
+getter ::=
+	 'getter' '=' _name
+
+setter ::=
+	 'setter' '=' _name ':'?
+
+nonnull ::=
+	 'nonnull'
+
+nullable ::=
+	 'nullable'
+
+null_resettable ::=
+	 'null_resettable'
+
+unsafe_unretained ::=
+	 'unsafe_unretained'
+
+null_unspecified ::=
+	 'null_unspecified'
+
+direct ::=
+	 'direct'
+
+readwrite ::=
+	 'readwrite'
+
+readonly ::=
+	 'readonly'
+
+strong ::=
+	 'strong'
+
+weak ::=
+	 'weak'
+
+copy ::=
+	 'copy'
+
+assign ::=
+	 'assign'
+
+retain ::=
+	 'retain'
+
+atomic ::=
+	 'atomic'
+
+nonatomic ::=
+	 'nonatomic'
+
+class ::=
+	 'class'
+
+NS_NONATOMIC_IOSONLY ::=
+	 'NS_NONATOMIC_IOSONLY'
+
+DISPATCH_QUEUE_REFERENCE_TYPE ::=
+	 'DISPATCH_QUEUE_REFERENCE_TYPE'
+
+class_implementation ::=
+	 attribute_specifier? '@implementation' _name superclass_reference? 'NS_UNAVAILABLE'? _instance_variables? _implementation_definition? '@end'
+
+category_implementation ::=
+	 attribute_specifier? '@implementation' _name '(' identifier ')' _implementation_definition? '@end'
+
+_implementation_definition ::=
+	 ( _ns_assume_nonnull_declaration | function_definition | declaration | synthesize_definition | dynamic_definition | method_definition | type_definition | preproc_def | preproc_function_def )+
+
+synthesize_definition ::=
+	 '@synthesize' synthesize_property ( ',' synthesize_property )* ';'
+
+synthesize_property ::=
+	 identifier ( '=' identifier )?
+
+dynamic_definition ::=
+	 '@dynamic' identifier ( ',' identifier )* ';'
+
+method_definition ::=
+	 _class_member_scope _method_argument_type_specifier? _method_selector attribute_specifier? ';'? compound_statement ';'?
+
+_method_selector ::=
+	 _unary_selector
+	| keyword_selector ( ',' '...' )?
+
+_unary_selector ::=
+	 identifier
+
+keyword_selector ::=
+	 keyword_declarator+
+
+keyword_declarator ::=
+	 identifier? ':' _method_argument_type_specifier? _name '__unused'?
+
+_method_argument_type_specifier ::=
+	 '(' _argument_type_declarator ')' attribute_specifier?
+
+_argument_type_declarator ::=
+	 ( nullable | nonnull )? 'NS_NOESCAPE'? _declaration_specifiers ( _declarator | _abstract_declarator )? attribute_specifier*
+
+ns_enum_specifier ::=
+	 ( 'NS_ENUM' | 'NS_ERROR_ENUM' | 'NS_OPTIONS' ) '(' _type_specifier ( ',' _type_identifier )? ')' enumerator_list?
+
+typeof_specifier ::=
+	 ( 'typeof' | '__typeof' | '__typeof__' ) '(' _expression ')'
+
+atomic_specifier ::=
+	 '_Atomic' '(' type_descriptor ')'
+
+generic_type_specifier ::=
+	 ( _type_identifier | id | Class ) ( protocol_qualifiers | generic_type_references )+
+
+generic_type_references ::=
+	 '<' type_descriptor ( ',' type_descriptor )* '>'
+
+block_abstract_declarator ::=
+	 '(' 'NS_NOESCAPE'? type_qualifier? '^' type_qualifier? ')' parameter_list
+
+block_declarator ::=
+	 '(' '^' ( type_qualifier* identifier type_qualifier* | block_declarator ) ')' parameter_list
+
+block_expression ::=
+	 '^' ( type_descriptor | type_qualifier )? parameter_list? compound_statement
+
+self ::=
+	 'self'
+
+super ::=
+	 'super'
+
+nil ::=
+	 'nil'
+
+id ::=
+	 'id'
+
+instancetype ::=
+	 'instancetype'
+
+Class ::=
+	 'Class'
+
+Method ::=
+	 'Method'
+
+SEL ::=
+	 'SEL'
+
+IMP ::=
+	 'IMP'
+
+BOOL ::=
+	 'BOOL'
+
+auto ::=
+	 '__auto_type'
+
+autoreleasepool_statement ::=
+	 '@autoreleasepool' _statement
+
+synchronized_statement ::=
+	 '@synchronized' parenthesized_expression _statement
+
+for_in_statement ::=
+	 'for' '(' _argument_type_declarator 'in' _expression ')' _statement
+
+try_catch_statement ::=
+	 '@try' _statement ( '@catch' ( '(' ( parameter_declaration | '...' ) ')' ) _statement )* ( '@finally' _statement )?
+
+throw_statement ::=
+	 '@throw' ( _expression | comma_expression )? ';'
+
+message_expression ::=
+	 '[' _receiver _message_selector ']'
+
+_receiver ::=
+	 _type_specifier
+	| _expression
+
+_message_selector ::=
+	 identifier
+	| keyword_argument_list
+
+keyword_argument_list ::=
+	 keyword_argument+
+
+keyword_argument ::=
+	 identifier? ':' ( _expression | _variadic_arguments )
+
+_variadic_arguments ::=
+	 _expression ( ',' _expression )*
+
+selector_expression ::=
+	 '@selector' '(' _selector_name ')'
+
+_selector_name ::=
+	 _name
+	| _keyword_name+
+
+_keyword_name ::=
+	 _name ':'
+	| ':'
+
+protocol_expression ::=
+	 '@protocol' '(' _name ')'
+
+encode_expression ::=
+	 '@encode' '(' type_descriptor ')'
+
+number_expression ::=
+	 '@' ( '(' ( number_literal | "'"  [A-Za-z0-9] "'"  ) ')' | ( number_literal | "'"  [A-Za-z0-9] "'"  ) )
+
+string_expression ::=
+	 '@' string_literal ( '@'? string_literal )*
+
+object_expression ::=
+	 '@' '(' _expression? ')'
+
+dictionary_expression ::=
+	 '@' '{' _dictionary_key_value_list? '}'
+
+_dictionary_key_value_list ::=
+	 _dictionary_key_value_pair ( ',' _dictionary_key_value_pair )* ','?
+
+_dictionary_key_value_pair ::=
+	 _expression ':' _expression
+
+array_expression ::=
+	 '@' '[' ( _expression ( ',' _expression )* )? ','? ']'
+
+YES ::=
+	 'YES'
+
+NO ::=
+	 'NO'
+
+boolean_expression ::=
+	 '@' ( YES | NO | '__objc_no' | '__objc_yes' )
+
+available_expression ::=
+	 ( '__builtin_available' | '@available' ) '(' identifier [0-9]+('.'[0-9]+)* ( ',' identifier [0-9]+('.'[0-9]+)* )* ( ',' '*' )? ')'
+
+statement_expression ::=
+	 '(' _statement ')'
+
+va_arg_expression ::=
+	 'va_arg' '(' _expression ',' type_descriptor ')'
+
+preproc_has_include ::=
+	 '__has_include' '(' ( string_literal | system_lib_string | module_string ) ')'
+
+pragma ::=
+	 '#'[ #x09]*('pragma'|'warning'|'error')[^#x0D#x0A]*'#x0D'?'#x0A'
+
+_ifdef_if_retain ::=
+	 ( '#if'[^#x0D#x0A]*'#x0D'?'#x0A' | '#if'[^#x0D\#x0A]*'\#x0D'?'#x0A' [^#x0D\#x0A]*'\#x0D'?'#x0A'* [^#x23\#x0A]+'#x0D'?'#x0A' | '#if'[^#x0D#x0A]*'#x0D'?'#x0A' '#else'[ #x09]*'#x0D'?'#x0A' )
+
+_ifdef_elif_ignore ::=
+	 ( '#elif'[^#x0D#x0A]*'#x0D'?'#x0A' ( ([ #x09]*[^#x23][^#x23]*)?'#x0D'?'#x0A' | [ #x09]*'#'[ #x09]*('elif'|'else'|'import'|'include'|'pragma'|'define'|'undef'|'line'|'warning'|'error')'.'*'#x0D'?'#x0A' )* [ #x09]*'#endif' )
+
+_ifdef_else_ignore ::=
+	 ( '#else' | '#else'[ #x09]*'#x0D'?'#x0A' ( ([ #x09]*[^#x23][^#x23]*)?'#x0D'?'#x0A' | [ #x09]*'#'[ #x09]*('import'|'include'|'pragma'|'define'|'undef'|'line'|'warning'|'error')'.'*'#x0D'?'#x0A' )* [ #x09]*'#endif' )
+
+_ifdef_endif_retain ::=
+	 '#endif'[^#x0D#x0A]*'#x0D'?'#x0A'?
+
+_ifdef_undef_retain ::=
+	 '#undef'[^#x0D#x0A]*'#x0D'?'#x0A'?
+

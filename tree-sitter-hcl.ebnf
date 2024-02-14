@@ -1,0 +1,232 @@
+//
+// From tree-sitter-hcl/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+config_file ::=
+	 body | object
+
+body ::=
+	 ( attribute | block )+
+
+attribute ::=
+	 identifier '=' expression
+
+block ::=
+	 identifier ( string_lit | identifier )* block_start body? block_end
+
+block_start ::=
+	 '{'
+
+block_end ::=
+	 '}'
+
+identifier ::=
+	 ( ( '\p{ID_Start}' | '_' ) ( '\p{ID_Continue}' | '-' )* )
+
+expression ::=
+	 _expr_term | conditional
+
+_expr_term ::=
+	 literal_value
+	| template_expr
+	| collection_value
+	| variable_expr
+	| function_call
+	| for_expr
+	| operation
+	| _expr_term index
+	| _expr_term get_attr
+	| _expr_term splat
+	| '(' expression ')'
+
+literal_value ::=
+	 numeric_lit
+	| bool_lit
+	| null_lit
+	| string_lit
+
+numeric_lit ::=
+	 [0-9]+('.'[0-9]+([eE][-+]?[0-9]+)?)?
+	| '0x'[0-9a-zA-Z]+
+
+bool_lit ::=
+	 'true'
+	| 'false'
+
+null_lit ::=
+	 'null'
+
+string_lit ::=
+	 quoted_template_start template_literal? quoted_template_end
+
+collection_value ::=
+	 tuple
+	| object
+
+_comma ::=
+	 ','
+
+tuple ::=
+	 tuple_start _tuple_elems? tuple_end
+
+tuple_start ::=
+	 '['
+
+tuple_end ::=
+	 ']'
+
+_tuple_elems ::=
+	 expression ( _comma expression )* _comma?
+
+object ::=
+	 object_start _object_elems? object_end
+
+object_start ::=
+	 '{'
+
+object_end ::=
+	 '}'
+
+_object_elems ::=
+	 object_elem ( _comma? object_elem )* _comma?
+
+object_elem ::=
+	 expression ( '=' | ':' ) expression
+
+index ::=
+	 new_index
+	| legacy_index
+
+new_index ::=
+	 '[' expression ']'
+
+legacy_index ::=
+	 '.' [0-9]+
+
+get_attr ::=
+	 '.' identifier
+
+splat ::=
+	 attr_splat
+	| full_splat
+
+attr_splat ::=
+	 '.*' ( get_attr | index )*
+
+full_splat ::=
+	 '[*]' ( get_attr | index )*
+
+for_expr ::=
+	 for_tuple_expr
+	| for_object_expr
+
+for_tuple_expr ::=
+	 tuple_start for_intro expression for_cond? tuple_end
+
+for_object_expr ::=
+	 object_start for_intro expression '=>' expression ellipsis? for_cond? object_end
+
+for_intro ::=
+	 'for' identifier ( ',' identifier )? 'in' expression ':'
+
+for_cond ::=
+	 'if' expression
+
+variable_expr ::=
+	 identifier
+
+function_call ::=
+	 identifier _function_call_start function_arguments? _function_call_end
+
+_function_call_start ::=
+	 '('
+
+_function_call_end ::=
+	 ')'
+
+function_arguments ::=
+	 expression ( _comma expression )* ( _comma | ellipsis )?
+
+ellipsis ::=
+	 '...'
+
+conditional ::=
+	 expression '?' expression ':' expression
+
+operation ::=
+	 unary_operation
+	| binary_operation
+
+unary_operation ::=
+	 ( '-' | '!' ) _expr_term
+
+binary_operation ::=
+	 _expr_term ( '*' | '/' | '%' ) _expr_term
+	| _expr_term ( '+' | '-' ) _expr_term
+	| _expr_term ( '>' | '>=' | '<' | '<=' ) _expr_term
+	| _expr_term ( '==' | '!=' ) _expr_term
+	| _expr_term ( '&&' ) _expr_term
+	| _expr_term ( '||' ) _expr_term
+
+template_expr ::=
+	 quoted_template
+	| heredoc_template
+
+quoted_template ::=
+	 quoted_template_start _template? quoted_template_end
+
+heredoc_template ::=
+	 heredoc_start heredoc_identifier _template? heredoc_identifier
+
+heredoc_start ::=
+	 '<<'
+	| '<<-'
+
+strip_marker ::=
+	 '~'
+
+_template ::=
+	 ( template_interpolation | template_directive | template_literal )+
+
+template_literal ::=
+	 _template_literal_chunk+
+
+template_interpolation ::=
+	 template_interpolation_start strip_marker? expression? strip_marker? template_interpolation_end
+
+template_directive ::=
+	 template_for
+	| template_if
+
+template_for ::=
+	 template_for_start _template? template_for_end
+
+template_for_start ::=
+	 template_directive_start strip_marker? 'for' identifier ( ',' identifier )? 'in' expression strip_marker? template_directive_end
+
+template_for_end ::=
+	 template_directive_start strip_marker? 'endfor' strip_marker? template_directive_end
+
+template_if ::=
+	 template_if_intro _template? ( template_else_intro _template? )? template_if_end
+
+template_if_intro ::=
+	 template_directive_start strip_marker? 'if' expression strip_marker? template_directive_end
+
+template_else_intro ::=
+	 template_directive_start strip_marker? 'else' strip_marker? template_directive_end
+
+template_if_end ::=
+	 template_directive_start strip_marker? 'endif' strip_marker? template_directive_end
+
+comment ::=
+	 ( '#' '.'* | '//' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+_whitespace ::=
+	 [ #x09#x0A#x0B#x0C#x0D]
+

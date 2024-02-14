@@ -1,0 +1,83 @@
+//
+// From tree-sitter-dot/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+source_file ::=
+	 [sS][tT][rR][iI][cC][tT]? ( [gG][rR][aA][pP][hH] | [dD][iI][gG][rR][aA][pP][hH] ) id? block
+
+block ::=
+	 '{' stmt_list? '}'
+
+stmt_list ::=
+	 ( _stmt ';'? )+
+
+_stmt ::=
+	 subgraph
+	| node_stmt
+	| edge_stmt
+	| attr_stmt
+	| attribute
+
+subgraph ::=
+	 ( [sS][uU][bB][gG][rR][aA][pP][hH] id? )? block
+
+node_stmt ::=
+	 node_id attr_list?
+
+edge_stmt ::=
+	 ( node_id | subgraph ) ( edgeop ( node_id | subgraph ) )+ attr_list?
+
+attr_stmt ::=
+	 ( [gG][rR][aA][pP][hH] | [nN][oO][dD][eE] | [eE][dD][gG][eE] ) attr_list
+
+node_id ::=
+	 id port?
+
+port ::=
+	 ':' id ( ':' id )?
+
+attr_list ::=
+	 ( '[' _a_list? ']' )+
+
+_a_list ::=
+	 ( attribute ( ';' | ',' )? )+
+
+attribute ::=
+	 id '=' id
+
+id ::=
+	 identifier
+	| number_literal
+	| html_string
+	| string_literal ( '+' string_literal )*
+
+identifier ::=
+	 [_\p{XID_Start}][_\p{XID_Continue}]*
+
+number_literal ::=
+	 '-'?('.'[0-9]+|[0-9]+('.'[0-9]*)?)
+
+string_literal ::=
+	 '"'  ([^"\]+|'\.')*'"'
+
+html_string ::=
+	 '<' _html_internal? '>'
+
+_html_internal ::=
+	 ( [^<>]+ | '<' _html_internal? '>' )+
+
+edgeop ::=
+	 '->'
+	| '--'
+
+comment ::=
+	 ( '//' '.'* | '/*' [^*]*'\'*+([^/*][^*]*'\'*+)* '/' )
+
+preproc ::=
+	 '#' '.'*
+

@@ -1,247 +1,563 @@
-/*
-Grammar originally from https://github.com/tree-sitter/tree-sitter-python
-Converted by excuting:
-	qjs json2ebnf.js
-Then manualy fixing the problems reported by https://www.bottlecaps.de/rr/ui in a way to allow visualization (correctnes is not the priority now)
-*/
+//
+// From tree-sitter-python/src/grammar.json
+//
+//
+// EBNF to generate railroad diagram at 
+//      (IPV6) https://www.bottlecaps.de/rr/ui
+//      (IPV4) https://rr.red-dove.com/ui
+//
+
+module ::=
+	 _statement*
+
+_statement ::=
+	 _simple_statements
+	| _compound_statement
+
+_simple_statements ::=
+	 _simple_statement ( ';' _simple_statement )* ';'? _newline
+
+_simple_statement ::=
+	 future_import_statement
+	| import_statement
+	| import_from_statement
+	| print_statement
+	| assert_statement
+	| expression_statement
+	| return_statement
+	| delete_statement
+	| raise_statement
+	| pass_statement
+	| break_statement
+	| continue_statement
+	| global_statement
+	| nonlocal_statement
+	| exec_statement
+	| type_alias_statement
+
+import_statement ::=
+	 'import' _import_list
+
+import_prefix ::=
+	 '.'+
+
+relative_import ::=
+	 import_prefix dotted_name?
+
+future_import_statement ::=
+	 'from' '__future__' 'import' ( _import_list | '(' _import_list ')' )
+
+import_from_statement ::=
+	 'from' ( relative_import | dotted_name ) 'import' ( wildcard_import | _import_list | '(' _import_list ')' )
+
+_import_list ::=
+	 ( dotted_name | aliased_import ) ( ',' ( dotted_name | aliased_import ) )* ','?
+
+aliased_import ::=
+	 dotted_name 'as' identifier
+
+wildcard_import ::=
+	 '*'
 
-module ::=  (  _statement )*
+print_statement ::=
+	 'print' chevron ( ',' expression )* ','?
+	| 'print' expression ( ',' expression )* ','?
 
-_statement ::=  ( _simple_statements |  _compound_statement )
+chevron ::=
+	 '>>' expression
 
-_simple_statements ::=  ( _simple_statement ( (  ( _semicolon _simple_statement )  )*  )?  ( _semicolon )?  _newline )
+assert_statement ::=
+	 'assert' expression ( ',' expression )*
 
-_simple_statement ::=  ( future_import_statement |  import_statement |  import_from_statement |  print_statement |  assert_statement |  expression_statement |  return_statement |  delete_statement |  raise_statement |  pass_statement |  break_statement |  continue_statement |  global_statement |  nonlocal_statement |  exec_statement )
+expression_statement ::=
+	 expression
+	| expression ( ',' expression )* ','?
+	| assignment
+	| augmented_assignment
+	| yield
 
-import_statement ::=  ( 'import'  _import_list )
+named_expression ::=
+	 _named_expression_lhs ':=' expression
 
-import_prefix ::=  ( '.'  )+
+_named_expression_lhs ::=
+	 identifier
+	| keyword_identifier
 
-relative_import ::=  ( import_prefix ( dotted_name )?  )
+return_statement ::=
+	 'return' _expressions?
 
-future_import_statement ::=  ( 'from'  '__future__'  'import'  ( _import_list |  ( '('  _import_list ')'  )  )  )
+delete_statement ::=
+	 'del' _expressions
 
-import_from_statement ::=  ( 'from'  (  ( relative_import |  dotted_name )  )  'import'  ( wildcard_import |  _import_list |  ( '('  _import_list ')'  )  )  )
+_expressions ::=
+	 expression
+	| expression_list
 
-_import_list ::=  ( ( (  ( dotted_name |  aliased_import )  )  (  ( ','  (  ( dotted_name |  aliased_import )  )  )  )*  )  ( ','  )?  )
+raise_statement ::=
+	 'raise' _expressions? ( 'from' expression )?
 
-aliased_import ::=  ( (  dotted_name )  'as'  (  identifier )  )
+pass_statement ::=
+	 'pass'
 
-wildcard_import ::=  '*'
+break_statement ::=
+	 'break'
 
-print_statement ::=  (  (  ( 'print'  chevron (  ( ','  (  expression )  )  )*  ( ','  )?  )  )  |   (  ( 'print'  ( (  expression )  (  ( ','  (  expression )  )  )*  )  ( ','  )?  )  )  )
+continue_statement ::=
+	 'continue'
 
-chevron ::=  ( '>>'  expression )
+_compound_statement ::=
+	 if_statement
+	| for_statement
+	| while_statement
+	| try_statement
+	| with_statement
+	| function_definition
+	| class_definition
+	| decorated_definition
+	| match_statement
 
-assert_statement ::=  ( 'assert'  ( expression (  ( ','  expression )  )*  )  )
+if_statement ::=
+	 'if' expression ':' _suite elif_clause* else_clause?
 
-expression_statement ::=  ( expression |  ( ( expression (  ( ','  expression )  )*  )  ( ','  )?  )  |  assignment |  augmented_assignment |  yield )
+elif_clause ::=
+	 'elif' expression ':' _suite
 
-named_expression ::=  ( (  identifier )  ':='  (  expression )  )
+else_clause ::=
+	 'else' ':' _suite
 
-return_statement ::=  ( 'return'  ( _expressions )?  )
+match_statement ::=
+	 'match' expression ( ',' expression )* ','? ':' _match_block
 
-delete_statement ::=  ( 'del'  _expressions )
+_match_block ::=
+	 _indent case_clause* _dedent
+	| _newline
 
-_expressions ::=  ( expression |  expression_list )
+case_clause ::=
+	 'case' case_pattern ( ',' case_pattern )* ','? if_clause? ':' _suite
 
-raise_statement ::=  ( 'raise'  ( _expressions )?  ( ( 'from'  (  expression )  )  )?  )
+for_statement ::=
+	 'async'? 'for' _left_hand_side 'in' _expressions ':' _suite else_clause?
 
-pass_statement ::=   (  'pass'  )
+while_statement ::=
+	 'while' expression ':' _suite else_clause?
 
-break_statement ::=   (  'break'  )
+try_statement ::=
+	 'try' ':' _suite ( except_clause+ else_clause? finally_clause? | except_group_clause+ else_clause? finally_clause? | finally_clause )
 
-continue_statement ::=   (  'continue'  )
+except_clause ::=
+	 'except' ( expression ( ( 'as' | ',' ) expression )? )? ':' _suite
 
-_compound_statement ::=  ( if_statement |  for_statement |  while_statement |  try_statement |  with_statement |  function_definition |  class_definition |  decorated_definition )
+except_group_clause ::=
+	 'except*' expression ( 'as' expression )? ':' _suite
 
-if_statement ::=  ( 'if'  (  expression )  ':'  (  _suite )  (  (  elif_clause )  )*  ( (  else_clause )  )?  )
+finally_clause ::=
+	 'finally' ':' _suite
 
-elif_clause ::=  ( 'elif'  (  expression )  ':'  (  _suite )  )
+with_statement ::=
+	 'async'? 'with' with_clause ':' _suite
 
-else_clause ::=  ( 'else'  ':'  (  _suite )  )
+with_clause ::=
+	 with_item ( ',' with_item )* ','?
+	| '(' with_item ( ',' with_item )* ','? ')'
 
-for_statement ::=  ( ( 'async'  )?  'for'  (  _left_hand_side )  'in'  (  _expressions )  ':'  (  _suite )  (  ( else_clause )?  )  )
+with_item ::=
+	 expression
 
-while_statement ::=  ( 'while'  (  expression )  ':'  (  _suite )  ( (  else_clause )  )?  )
+function_definition ::=
+	 'async'? 'def' identifier type_parameter? parameters ( '->' type )? ':' _suite
 
-try_statement ::=  ( 'try'  ':'  (  _suite )  ( ( ( except_clause )+  ( else_clause )?  ( finally_clause )?  )  |  finally_clause )  )
+parameters ::=
+	 '(' _parameters? ')'
 
-except_clause ::=  ( 'except'  ( ( expression ( ( ( 'as'  |  ','  )  expression )  )?  )  )?  ':'  _suite )
+lambda_parameters ::=
+	 _parameters
 
-finally_clause ::=  ( 'finally'  ':'  _suite )
+list_splat ::=
+	 '*' expression
 
-with_statement ::=  ( ( 'async'  )?  'with'  with_clause ':'  (  _suite )  )
+dictionary_splat ::=
+	 '**' expression
 
-with_clause ::=  ( ( with_item (  ( ','  with_item )  )*  )  |  ( '('  ( with_item (  ( ','  with_item )  )*  )  ')'  )  )
+global_statement ::=
+	 'global' identifier ( ',' identifier )*
 
-with_item ::=   (  ( (  expression )  ( ( 'as'  (  pattern )  )  )?  )  )
+nonlocal_statement ::=
+	 'nonlocal' identifier ( ',' identifier )*
 
-function_definition ::=  ( ( 'async'  )?  'def'  (  identifier )  (  parameters )  ( ( '->'  (  type )  )  )?  ':'  (  _suite )  )
+exec_statement ::=
+	 'exec' ( string | identifier ) ( 'in' expression ( ',' expression )* )?
 
-parameters ::=  ( '('  ( _parameters )?  ')'  )
+type_alias_statement ::=
+	 'type' type '=' type
 
-lambda_parameters ::=  _parameters
+class_definition ::=
+	 'class' identifier type_parameter? argument_list? ':' _suite
 
-list_splat ::=  ( '*'  expression )
+type_parameter ::=
+	 '[' type ( ',' type )* ']'
 
-dictionary_splat ::=  ( '**'  expression )
+parenthesized_list_splat ::=
+	 '(' ( parenthesized_list_splat | list_splat ) ')'
 
-global_statement ::=  ( 'global'  ( identifier (  ( ','  identifier )  )*  )  )
+argument_list ::=
+	 '(' ( ( expression | list_splat | dictionary_splat | parenthesized_list_splat | keyword_argument ) ( ',' ( expression | list_splat | dictionary_splat | parenthesized_list_splat | keyword_argument ) )* )? ','? ')'
 
-nonlocal_statement ::=  ( 'nonlocal'  ( identifier (  ( ','  identifier )  )*  )  )
+decorated_definition ::=
+	 decorator+ ( class_definition | function_definition )
 
-exec_statement ::=  ( 'exec'  (  string )  ( ( 'in'  ( expression (  ( ','  expression )  )*  )  )  )?  )
+decorator ::=
+	 '@' expression _newline
 
-class_definition ::=  ( 'class'  (  identifier )  (  ( argument_list )?  )  ':'  (  _suite )  )
+_suite ::=
+	 _simple_statements
+	| _indent block
+	| _newline
 
-parenthesized_list_splat ::=   (  ( '('  ( (  parenthesized_list_splat )  |  list_splat )  ')'  )  )
+block ::=
+	 _statement* _dedent
 
-argument_list ::=  ( '('  ( ( ( expression |  list_splat |  dictionary_splat |  (  parenthesized_list_splat )  |  keyword_argument )  (  ( ','  ( expression |  list_splat |  dictionary_splat |  (  parenthesized_list_splat )  |  keyword_argument )  )  )*  )  )?  ( ','  )?  ')'  )
+expression_list ::=
+	 expression ( ',' | ( ',' expression )+ ','? )
 
-decorated_definition ::=  ( ( decorator )+  (  ( class_definition |  function_definition )  )  )
+dotted_name ::=
+	 identifier ( '.' identifier )*
 
-decorator ::=  ( '@'  primary_expression _newline )
+case_pattern ::=
+	 _as_pattern | keyword_pattern | _simple_pattern
 
-_suite ::=  ( (  _simple_statements )  |  ( _indent block )  |  (  _newline )  )
+_simple_pattern ::=
+	 class_pattern | splat_pattern | union_pattern | _list_pattern | _tuple_pattern | dict_pattern | string | concatenated_string | true | false | none | '-'? ( integer | float ) | complex_pattern | dotted_name | '_'
 
-block ::=  ( (  _statement )*  _dedent )
+_as_pattern ::=
+	 case_pattern 'as' identifier
 
-expression_list ::=   (  ( expression ( ','  |  ( ( ( ','  expression )  )+  ( ','  )?  )  )  )  )
+union_pattern ::=
+	 _simple_pattern '|' _simple_pattern+
 
-dotted_name ::=  ( identifier (  ( '.'  identifier )  )*  )
+_list_pattern ::=
+	 '[' ( case_pattern ( ',' case_pattern )* ','? )? ']'
 
-_parameters ::=  ( ( parameter (  ( ','  parameter )  )*  )  ( ','  )?  )
+_tuple_pattern ::=
+	 '(' ( case_pattern ( ',' case_pattern )* ','? )? ')'
 
-_patterns ::=  ( ( pattern (  ( ','  pattern )  )*  )  ( ','  )?  )
+dict_pattern ::=
+	 '{' ( ( _key_value_pattern | splat_pattern ) ( ',' ( _key_value_pattern | splat_pattern ) )* ','? )? '}'
 
-parameter ::=  ( identifier |  typed_parameter |  default_parameter |  typed_default_parameter |  list_splat_pattern |  tuple_pattern |  (  '*'  )  |  dictionary_splat_pattern )
+_key_value_pattern ::=
+	 _simple_pattern ':' case_pattern
 
-pattern ::=  ( identifier |  keyword_identifier |  subscript |  attribute |  list_splat_pattern |  tuple_pattern |  list_pattern )
+keyword_pattern ::=
+	 identifier '=' _simple_pattern
 
-tuple_pattern ::=  ( '('  ( _patterns )?  ')'  )
+splat_pattern ::=
+	 ( '*' | '**' ) ( identifier | '_' )
 
-list_pattern ::=  ( '['  ( _patterns )?  ']'  )
+class_pattern ::=
+	 dotted_name '(' ( case_pattern ( ',' case_pattern )* ','? )? ')'
 
-default_parameter ::=  ( (  identifier )  '='  (  expression )  )
+complex_pattern ::=
+	 '-'? ( integer | float ) ( '+' | '-' ) ( integer | float )
 
-typed_default_parameter ::=   (  ( (  identifier )  ':'  (  type )  '='  (  expression )  )  )
+_parameters ::=
+	 parameter ( ',' parameter )* ','?
 
-list_splat_pattern ::=  ( '*'  ( identifier |  keyword_identifier |  subscript |  attribute )  )
+_patterns ::=
+	 pattern ( ',' pattern )* ','?
+
+parameter ::=
+	 identifier
+	| typed_parameter
+	| default_parameter
+	| typed_default_parameter
+	| list_splat_pattern
+	| tuple_pattern
+	| keyword_separator
+	| positional_separator
+	| dictionary_splat_pattern
+
+pattern ::=
+	 identifier
+	| keyword_identifier
+	| subscript
+	| attribute
+	| list_splat_pattern
+	| tuple_pattern
+	| list_pattern
+
+tuple_pattern ::=
+	 '(' _patterns? ')'
 
-dictionary_splat_pattern ::=  ( '**'  ( identifier |  keyword_identifier |  subscript |  attribute )  )
+list_pattern ::=
+	 '[' _patterns? ']'
 
-_expression_within_for_in_clause ::=  ( expression |  (  lambda_within_for_in_clause )  )
+default_parameter ::=
+	 ( identifier | tuple_pattern ) '=' expression
 
-expression ::=  ( comparison_operator |  not_operator |  boolean_operator |  await |  lambda |  primary_expression |  conditional_expression |  named_expression )
+typed_default_parameter ::=
+	 identifier ':' type '=' expression
 
-primary_expression ::=  ( binary_operator |  identifier |  keyword_identifier |  string |  concatenated_string |  integer |  float |  true |  false |  none |  unary_operator |  attribute |  subscript |  call |  list |  list_comprehension |  dictionary |  dictionary_comprehension |  set |  set_comprehension |  tuple |  parenthesized_expression |  generator_expression |  ellipsis )
+list_splat_pattern ::=
+	 '*' ( identifier | keyword_identifier | subscript | attribute )
 
-not_operator ::=   (  ( 'not'  (  expression )  )  )
+dictionary_splat_pattern ::=
+	 '**' ( identifier | keyword_identifier | subscript | attribute )
+
+as_pattern ::=
+	 expression 'as' expression
+
+_expression_within_for_in_clause ::=
+	 expression
+	| lambda_within_for_in_clause
 
-boolean_operator ::=  (  (  ( (  expression )  (  'and'  )  (  expression )  )  )  |   (  ( (  expression )  (  'or'  )  (  expression )  )  )  )
+expression ::=
+	 comparison_operator
+	| not_operator
+	| boolean_operator
+	| lambda
+	| primary_expression
+	| conditional_expression
+	| named_expression
+	| as_pattern
 
-binary_operator ::=  (  (  ( (  primary_expression )  (  '+'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '-'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '*'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '@'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '/'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '%'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '//'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '**'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '|'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '&'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '^'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '<<'  )  (  primary_expression )  )  )  |   (  ( (  primary_expression )  (  '>>'  )  (  primary_expression )  )  )  )
+primary_expression ::=
+	 await
+	| binary_operator
+	| identifier
+	| keyword_identifier
+	| string
+	| concatenated_string
+	| integer
+	| float
+	| true
+	| false
+	| none
+	| unary_operator
+	| attribute
+	| subscript
+	| call
+	| list
+	| list_comprehension
+	| dictionary
+	| dictionary_comprehension
+	| set
+	| set_comprehension
+	| tuple
+	| parenthesized_expression
+	| generator_expression
+	| ellipsis
+	| list_splat_pattern
 
-unary_operator ::=   (  ( (  ( '+'  |  '-'  |  '~'  )  )  (  primary_expression )  )  )
+not_operator ::=
+	 'not' expression
 
-comparison_operator ::=   (  ( primary_expression (  ( ( ( '<'  |  '<='  |  '=='  |  '!='  |  '>='  |  '>'  |  '<>'  |  'in'  |  ( 'not'  'in'  )  |  'is'  |  ( 'is'  'not'  )  )  primary_expression )  )+  )  )  )
+boolean_operator ::=
+	 expression 'and' expression
+	| expression 'or' expression
 
-lambda ::=   (  ( 'lambda'  (  ( lambda_parameters )?  )  ':'  (  expression )  )  )
+binary_operator ::=
+	 primary_expression '+' primary_expression
+	| primary_expression '-' primary_expression
+	| primary_expression '*' primary_expression
+	| primary_expression '@' primary_expression
+	| primary_expression '/' primary_expression
+	| primary_expression '%' primary_expression
+	| primary_expression '//' primary_expression
+	| primary_expression '**' primary_expression
+	| primary_expression '|' primary_expression
+	| primary_expression '&' primary_expression
+	| primary_expression '^' primary_expression
+	| primary_expression '<<' primary_expression
+	| primary_expression '>>' primary_expression
 
-lambda_within_for_in_clause ::=  ( 'lambda'  (  ( lambda_parameters )?  )  ':'  (  _expression_within_for_in_clause )  )
+unary_operator ::=
+	 ( '+' | '-' | '~' ) primary_expression
 
-assignment ::=  ( (  _left_hand_side )  ( ( '='  (  _right_hand_side )  )  |  ( ':'  (  type )  )  |  ( ':'  (  type )  '='  (  _right_hand_side )  )  )  )
+comparison_operator ::=
+	 primary_expression ( ( '<' | '<=' | '==' | '!=' | '>=' | '>' | '<>' | 'in' | ( 'not' 'in' ) | 'is' | ( 'is' 'not' ) ) primary_expression )+
 
-augmented_assignment ::=  ( (  _left_hand_side )  (  ( '+='  |  '-='  |  '*='  |  '/='  |  '@='  |  '//='  |  '%='  |  '**='  |  '>>='  |  '<<='  |  '&='  |  '^='  |  '|='  )  )  (  _right_hand_side )  )
+lambda ::=
+	 'lambda' lambda_parameters? ':' expression
 
-_left_hand_side ::=  ( pattern |  pattern_list )
+lambda_within_for_in_clause ::=
+	 'lambda' lambda_parameters? ':' _expression_within_for_in_clause
 
-pattern_list ::=  ( pattern ( ','  |  ( ( ( ','  pattern )  )+  ( ','  )?  )  )  )
+assignment ::=
+	 _left_hand_side ( '=' _right_hand_side | ':' type | ':' type '=' _right_hand_side )
 
-_right_hand_side ::=  ( expression |  expression_list |  assignment |  augmented_assignment |  yield )
+augmented_assignment ::=
+	 _left_hand_side ( '+=' | '-=' | '*=' | '/=' | '@=' | '//=' | '%=' | '**=' | '>>=' | '<<=' | '&=' | '^=' | '|=' ) _right_hand_side
 
-yield ::=   (  ( 'yield'  ( ( 'from'  expression )  |  ( _expressions )?  )  )  )
+_left_hand_side ::=
+	 pattern
+	| pattern_list
 
-attribute ::=   (  ( (  primary_expression )  '.'  (  identifier )  )  )
+pattern_list ::=
+	 pattern ( ',' | ( ',' pattern )+ ','? )
 
-subscript ::=   (  ( (  primary_expression )  '['  ( (  ( expression |  slice )  )  (  ( ','  (  ( expression |  slice )  )  )  )*  )  ( ','  )?  ']'  )  )
+_right_hand_side ::=
+	 expression
+	| expression_list
+	| assignment
+	| augmented_assignment
+	| pattern_list
+	| yield
 
-slice ::=  ( ( expression )?  ':'  ( expression )?  ( ( ':'  ( expression )?  )  )?  )
+yield ::=
+	 'yield' ( 'from' expression | _expressions )
 
-ellipsis ::=  '...'
+attribute ::=
+	 primary_expression '.' identifier
 
-call ::=   (  ( (  primary_expression )  (  ( generator_expression |  argument_list )  )  )  )
+subscript ::=
+	 primary_expression '[' ( expression | slice ) ( ',' ( expression | slice ) )* ','? ']'
 
-typed_parameter ::=   (  ( ( identifier |  list_splat_pattern |  dictionary_splat_pattern )  ':'  (  type )  )  )
+slice ::=
+	 expression? ':' expression? ( ':' expression? )?
 
-type ::=  expression
+ellipsis ::=
+	 '...'
 
-keyword_argument ::=  ( (  ( identifier |  keyword_identifier )  )  '='  (  expression )  )
+call ::=
+	 primary_expression ( generator_expression | argument_list )
 
-list ::=  ( '['  ( _collection_elements )?  ']'  )
+typed_parameter ::=
+	 ( identifier | list_splat_pattern | dictionary_splat_pattern ) ':' type
 
-set ::=  ( '{'  _collection_elements '}'  )
+type ::=
+	 expression
+	| splat_type
+	| generic_type
+	| union_type
+	| constrained_type
+	| member_type
 
-tuple ::=  ( '('  ( _collection_elements )?  ')'  )
+splat_type ::=
+	 ( '*' | '**' ) identifier
 
-dictionary ::=  ( '{'  ( ( ( pair |  dictionary_splat )  (  ( ','  ( pair |  dictionary_splat )  )  )*  )  )?  ( ','  )?  '}'  )
+generic_type ::=
+	 identifier type_parameter
 
-pair ::=  ( (  expression )  ':'  (  expression )  )
+union_type ::=
+	 type '|' type
 
-list_comprehension ::=  ( '['  (  expression )  _comprehension_clauses ']'  )
+constrained_type ::=
+	 type ':' type
 
-dictionary_comprehension ::=  ( '{'  (  pair )  _comprehension_clauses '}'  )
+member_type ::=
+	 type '.' identifier
 
-set_comprehension ::=  ( '{'  (  expression )  _comprehension_clauses '}'  )
+keyword_argument ::=
+	 ( identifier | keyword_identifier ) '=' expression
 
-generator_expression ::=  ( '('  (  expression )  _comprehension_clauses ')'  )
+list ::=
+	 '[' _collection_elements? ']'
 
-_comprehension_clauses ::=  ( for_in_clause (  ( for_in_clause |  if_clause )  )*  )
+set ::=
+	 '{' _collection_elements '}'
 
-parenthesized_expression ::=   (  ( '('  ( expression |  yield )  ')'  )  )
+tuple ::=
+	 '(' _collection_elements? ')'
 
-_collection_elements ::=  ( ( ( expression |  yield |  list_splat |  parenthesized_list_splat )  (  ( ','  ( expression |  yield |  list_splat |  parenthesized_list_splat )  )  )*  )  ( ','  )?  )
+dictionary ::=
+	 '{' ( ( pair | dictionary_splat ) ( ',' ( pair | dictionary_splat ) )* )? ','? '}'
 
-for_in_clause ::=   (  ( ( 'async'  )?  'for'  (  _left_hand_side )  'in'  (  ( _expression_within_for_in_clause (  ( ','  _expression_within_for_in_clause )  )*  )  )  ( ','  )?  )  )
+pair ::=
+	 expression ':' expression
 
-if_clause ::=  ( 'if'  expression )
+list_comprehension ::=
+	 '[' expression _comprehension_clauses ']'
 
-conditional_expression ::=   (  ( expression 'if'  expression 'else'  expression )  )
+dictionary_comprehension ::=
+	 '{' pair _comprehension_clauses '}'
 
-concatenated_string ::=  ( string ( string )+  )
+set_comprehension ::=
+	 '{' expression _comprehension_clauses '}'
 
-string ::=  ( (  _string_start )  (  ( interpolation |  escape_sequence |  _not_escape_sequence |  _string_content )  )*  (  _string_end )  )
+generator_expression ::=
+	 '(' expression _comprehension_clauses ')'
 
-interpolation ::=  ( '{'  expression ( type_conversion )?  ( format_specifier )?  '}'  )
+_comprehension_clauses ::=
+	 for_in_clause ( for_in_clause | if_clause )*
 
-escape_sequence ::=  (   (  ( '\\'  ( 'u'[a-fA-F0-9]+/*{4}*/ |  'U'[a-fA-F0-9]+/*{8}*/ |  'x'[a-fA-F0-9]+/*{2}*/ |  [0-9]+/*{3}*/ |  '\r'?'\n' |  ['"abfrntv\\] )  )  )  )
+parenthesized_expression ::=
+	 '(' ( expression | yield ) ')'
 
-_not_escape_sequence ::=  '\\'
+_collection_elements ::=
+	 ( expression | yield | list_splat | parenthesized_list_splat ) ( ',' ( expression | yield | list_splat | parenthesized_list_splat ) )* ','?
 
-format_specifier ::=  ( ':'  (  ( (   (  [^{}\n]+ )  )  |  format_expression )  )*  )
+for_in_clause ::=
+	 'async'? 'for' _left_hand_side 'in' ( _expression_within_for_in_clause ( ',' _expression_within_for_in_clause )* ) ','?
 
-format_expression ::=  ( '{'  expression '}'  )
+if_clause ::=
+	 'if' expression
 
-type_conversion ::=  '!'[a-z]
+conditional_expression ::=
+	 expression 'if' expression 'else' expression
 
-integer ::=  (  ( ( ( '0x'  |  '0X'  )  ( '_'?[a-fA-F0-9]+ )+  ( [Ll] )?  )  |  ( ( '0o'  |  '0O'  )  ( '_'?[0-7]+ )+  ( [Ll] )?  )  |  ( ( '0b'  |  '0B'  )  ( '_'?[0-1]+ )+  ( [Ll] )?  )  |  ( ( [0-9]+'_'? )+  ( ( [Ll] )?  |  ( [jJ] )?  )  )  )  )
+concatenated_string ::=
+	 string string+
 
-float ::=  (  ( ( ( ( [0-9]+'_'? )+  '.'  ( ( [0-9]+'_'? )+  )?  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( ( [0-9]+'_'? )+  )?  '.'  ( [0-9]+'_'? )+  ( ( [eE][+-]? ( [0-9]+'_'? )+  )  )?  )  |  ( ( [0-9]+'_'? )+  ( [eE][+-]? ( [0-9]+'_'? )+  )  )  )  ( ( [Ll] |  [jJ] )  )?  )  )
+string ::=
+	 string_start ( interpolation | string_content )* string_end
 
-identifier ::=  [_\p{XID_Start}][_\p{XID_Continue}]*
+string_content ::=
+	 ( escape_interpolation | escape_sequence | _not_escape_sequence | _string_content )+
 
-keyword_identifier ::=   (  (  ( 'print'  |  'exec'  |  'async'  |  'await'  )  )  )
+interpolation ::=
+	 '{' _f_expression '='? type_conversion? format_specifier? '}'
 
-true ::=  'True'
+_f_expression ::=
+	 expression
+	| expression_list
+	| pattern_list
+	| yield
 
-false ::=  'False'
+escape_sequence ::=
+	 '\\'  ( 'u'[a-fA-F0-9]'{4}' | 'U'[a-fA-F0-9]'{8}' | 'x'[a-fA-F0-9]'{2}' | [0-9]'{3}' | '#x0D'?'#x0A' | ['"abfrntv\] | 'N\{'[^}]+'\}' )
 
-none ::=  'None'
+_not_escape_sequence ::=
+	 '\\' 
 
-await ::=   (  ( 'await'  expression )  )
+format_specifier ::=
+	 ':' ( [^{}#x0A]+ | interpolation )*
 
-comment ::=  (  ( '#'  .* )  )
+type_conversion ::=
+	 '!'[a-z]
 
-_semicolon ::=  ';'
+integer ::=
+	 ( ( '0x' | '0X' ) '_'?[A-Fa-f0-9]++ [Ll]? | ( '0o' | '0O' ) '_'?[0-7]++ [Ll]? | ( '0b' | '0B' ) '_'?[0-1]++ [Ll]? | [0-9]+'_'?+ ( [Ll] | [jJ] ) )
+
+float ::=
+	 ( ( [0-9]+'_'?+ '.' [0-9]+'_'?+? ( [eE][\+-]? [0-9]+'_'?+ )? | [0-9]+'_'?+? '.' [0-9]+'_'?+ ( [eE][\+-]? [0-9]+'_'?+ )? | [0-9]+'_'?+ [eE][\+-]? [0-9]+'_'?+ ) ( [Ll] | [jJ] )? )
+
+identifier ::=
+	 [_\p{XID_Start}][_\p{XID_Continue}]*
+
+keyword_identifier ::=
+	 ( 'print' | 'exec' | 'async' | 'await' | 'match' )
+	| 'type'
+
+true ::=
+	 'True'
+
+false ::=
+	 'False'
+
+none ::=
+	 'None'
+
+await ::=
+	 'await' primary_expression
+
+comment ::=
+	 ( '#' '.'* )
+
+line_continuation ::=
+	 ( '\\'  ( '\r' ? '\n'  | '\0'  ) )
+
+positional_separator ::=
+	 '/'
+
+keyword_separator ::=
+	 '*'
 
