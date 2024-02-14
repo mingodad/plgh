@@ -133,7 +133,9 @@
 		json = JSON.parse(json);
 		//print(json);
 		var result = "";
-		result += "//\n// EBNF to generate railroad diagram at https://www.bottlecaps.de/rr/ui\n//\n";
+		result += "//\n// EBNF to generate railroad diagram at\n";
+		result +=     "//      (IPV6) https://www.bottlecaps.de/rr/ui\n";
+		result +=     "//      (IPV4) https://rr.red-dove.com/ui\n";
 		result += "//\n// From " + lang_raw_url + "\n//\n\n";
 
 		let isRuleOptional = function(rule) {

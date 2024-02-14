@@ -4,10 +4,14 @@
 
 **Individual grammars can have different license in the origin !**
 
-Initially this project is using a Javascript (QuickJS) program that converts the  `tree-sitter` generated "src/grammar.json" to an
-`EBNF` format that can be used on https://www.bottlecaps.de/rr/ui (some grammars still require a bit of manual editing the generated `EBNF`, most of the ones here were manually edited just enough to alow then be viewed as `rail road diagram`).
+**Notice: The online railroad generator has changed to IPV6 only and soemone else hosted it on an IPV4 address.**
 
-To view the `rail road diagram` copy the `EBNF` file and paste on https://www.bottlecaps.de/rr/ui in the `Edit Grammar` tab then switch to the `View Diagram` tab.
+The railroad generator project can be found here https://github.com/GuntherRademacher/rr .
+
+Initially this project is using a Javascript (QuickJS) program that converts the  `tree-sitter` generated "src/grammar.json" to an
+`EBNF` format that can be used on (IPV6) https://www.bottlecaps.de/rr/ui or (IPV4) https://rr.red-dove.com/ui (some grammars still require a bit of manual editing the generated `EBNF`, most of the ones here were manually edited just enough to alow then be viewed as `rail road diagram`).
+
+To view the `rail road diagram` copy the `EBNF` file and paste on (IPV6) https://www.bottlecaps.de/rr/ui or (IPV4) https://rr.red-dove.com/ui in the `Edit Grammar` tab then switch to the `View Diagram` tab.
 
 Short guide of the equivalences between **tree-sitter Javascript** notation and **EBNF from rail road diagram** (notice that **rr** does some optmizations and simplifications that help tidy the grammar):
 
