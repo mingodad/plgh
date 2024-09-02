@@ -341,7 +341,7 @@
 	//const  base_url = "https://github.com/";
 	const  base_url = "https://raw.githubusercontent.com/";
 	//https://raw.githubusercontent.com/tree-sitter/tree-sitter/master/docs/index.md
-	const tree_sitter_list_url = "https://github.com/tree-sitter/tree-sitter/wiki/List-of-parsers";
+	const tree_sitter_list_url = "https://raw.githubusercontent.com/wiki/tree-sitter/tree-sitter/List-of-parsers.md";
 	//const base_url = window.location.origin + "/";
 	//const tree_sitter_list_url = base_url + "tree-sitter/docs/index.md";
 
@@ -411,8 +411,8 @@
 			{
 				let mydiv = document.getElementById( element_id );
 				let txt = this.responseText;
-				let parser_list = txt.match(/<div class="markdown-body">.+?<\/div>/gms);
-				const lang_regexp = /<li>\s*<a href="([^"]+)">([^<]+)<\/a>/g;
+				let parser_list = txt;
+				const lang_regexp = /- \[([^\]]+)\]\(([^)]+)\)/g;
 
 				let match, lang_list = "<option>Select one</option>\n";
 				const https_github_len = "https://github".length;
@@ -422,8 +422,8 @@
 				//https://raw.githubusercontent.com/maxxnino/tree-sitter-zig/main/src/grammar.json
 
 				while ((match = lang_regexp.exec(parser_list)) !== null) {
-					let lang_url = match[1];
-					let lang_name = match[2];
+					let lang_name = match[1];
+					let lang_url = match[2];
 					let author_lang = lang_url.slice(https_github_com_len).replace("/", "_");
 					//https://raw.githubusercontent.com/briot/tree-sitter-ada/master/src/grammar.json
 					//https://raw.githubusercontent.com/tree-sitter/tree-sitter-agda/main/src/grammar.json
