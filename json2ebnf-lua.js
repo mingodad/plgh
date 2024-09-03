@@ -72,7 +72,7 @@ const fname_list = [
 	//"tree-sitter-fennel/src/grammar.json",
 	//"tree-sitter-fortran/src/grammar.json",
 	//"tree-sitter-fsharp/fsharp/src/grammar.json",
-	//"tree-sitter-gleam/src/grammar.json",
+	"tree-sitter-gleam/src/grammar.json",
 	//"tree-sitter-glsl/src/grammar.json",
 	//"tree-sitter-go/src/grammar.json",
 	//"tree-sitter-graphql/src/grammar.json",
@@ -155,7 +155,7 @@ const fname_list = [
 	//"tree-sitter-wasm/wat/src/grammar.json",
 	//"tree-sitter-wgsl/src/grammar.json",
 	//"tree-sitter-yaml/src/grammar.json",
-	"tree-sitter-zig/src/grammar.json",
+	//"tree-sitter-zig/src/grammar.json",
 	//"minizinc.json",
 ];
 
@@ -226,8 +226,11 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				manageRule(rule.type, rule.content, depth+1);
 				if(needGroup) fd.printf(" )");
 				if(isOptional) fd.printf("?");
-				if(rule.value == '"') fd.printf(" -> '%s'", rule.value)
-				else fd.printf(" -> \"%s\"", rule.value)
+				if(rule.value == '"') fd.printf(" -> '%s'", rule.value);
+				else {
+					if(rule.named) fd.printf(" -> %s", rule.value)
+					else fd.printf(" -> \"%s\"", rule.value);
+				}
 			}
 			break;
 
