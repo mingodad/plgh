@@ -1,3 +1,7 @@
+/*
+This script to convert all tree-sitter grammars shown in https://mingodad.github.io/lua-wasm-playground/
+*/
+
 import * as std from "std";
 import * as os from "os";
 
@@ -25,9 +29,12 @@ const fname_list = [
 	//"tree-sitter-abnf/src/grammar.json",
 	//"tree-sitter-ada/src/grammar.json",
 	//"tree-sitter-agda/src/grammar.json",
+	//"tree-sitter-angular/src/grammar.json",
+	//"tree-sitter-awk/src/grammar.json",
 	//"tree-sitter-bash/src/grammar.json",
 	//"tree-sitter-beancount2/src/grammar.json",
 	//"tree-sitter-beancount/src/grammar.json",
+	//"tree-sitter-bison/src/grammar.json",
 	//"tree-sitter-c3-2/src/grammar.json",
 	//"tree-sitter-c3/src/grammar.json",
 	//"tree-sitter-carp/src/grammar.json",
@@ -64,6 +71,8 @@ const fname_list = [
 	//"tree-sitter-erlang/src/grammar.json",
 	//"tree-sitter-fennel/src/grammar.json",
 	//"tree-sitter-fortran/src/grammar.json",
+	//"tree-sitter-fsharp/fsharp/src/grammar.json",
+	//"tree-sitter-gleam/src/grammar.json",
 	//"tree-sitter-glsl/src/grammar.json",
 	//"tree-sitter-go/src/grammar.json",
 	//"tree-sitter-graphql/src/grammar.json",
@@ -97,7 +106,7 @@ const fname_list = [
 	//"tree-sitter-nim/src/grammar.json",
 	//"tree-sitter-nix/src/grammar.json",
 	//"tree-sitter-objc/src/grammar.json",
-	"tree-sitter-ocaml/grammars/ocaml/src/grammar.json",
+	//"tree-sitter-ocaml/grammars/ocaml/src/grammar.json",
 	//"tree-sitter-ocaml/ocaml/src/grammar.json",
 	//"tree-sitter-perl/src/grammar.json",
 	//"tree-sitter-php/php_only/src/grammar.json",
@@ -123,6 +132,7 @@ const fname_list = [
 	//"tree-sitter-sqlite-dad/src/grammar.json",
 	//"tree-sitter-sqlite/src/grammar.json",
 	//"tree-sitter-sql/src/grammar.json",
+	//"tree-sitter-squirrel/src/grammar.json",
 	//"tree-sitter-stan/src/grammar.json",
 	//"tree-sitter-svelte/src/grammar.json",
 	//"tree-sitter-swift/src/grammar.json",
@@ -138,12 +148,14 @@ const fname_list = [
 	//"tree-sitter-vhdl/src/grammar.json",
 	//"v-analyzer/tree_sitter_v/src/grammar.json",
 	//"tree-sitter-v/src/grammar.json",
+	//"tree-sitter-vim/src/grammar.json",
+	//"tree-sitter-vimdoc/src/grammar.json",
 	//"tree-sitter-vue/src/grammar.json",
 	//"tree-sitter-wasm/wast/src/grammar.json",
 	//"tree-sitter-wasm/wat/src/grammar.json",
 	//"tree-sitter-wgsl/src/grammar.json",
 	//"tree-sitter-yaml/src/grammar.json",
-	//"tree-sitter-zig/src/grammar.json",
+	"tree-sitter-zig/src/grammar.json",
 	//"minizinc.json",
 ];
 
@@ -214,7 +226,8 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				manageRule(rule.type, rule.content, depth+1);
 				if(needGroup) fd.printf(" )");
 				if(isOptional) fd.printf("?");
-				fd.printf(" -> \"%s\"", rule.value)
+				if(rule.value == '"') fd.printf(" -> '%s'", rule.value)
+				else fd.printf(" -> \"%s\"", rule.value)
 			}
 			break;
 
@@ -269,31 +282,27 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			break;
 
 			case "PREC": {
-				let non_zero = rule.value != 0;
-				if(non_zero) fd.printf("  %s( ", rule.value);
+				fd.printf("  %s( ", rule.value);
 				manageRule(rule.type, rule.content, depth+1);
-				if(non_zero) fd.printf(" ) ");
+				fd.printf(" ) ");
 			}
 			break;
 			case "PREC_DYNAMIC": {
-				let non_zero = rule.value != 0;
-				if(non_zero) fd.printf("  ~%s( ", rule.value);
+				fd.printf("  ~%s( ", rule.value);
 				manageRule(rule.type, rule.content, depth+1);
-				if(non_zero) fd.printf(" ) ");
+				fd.printf(" ) ");
 			}
 			break;
 			case "PREC_LEFT": {
-				let non_zero = rule.value != 0;
-				if(non_zero) fd.printf("  <%s( ", rule.value);
+				fd.printf("  <%s( ", rule.value);
 				manageRule(rule.type, rule.content, depth+1);
-				if(non_zero) fd.printf(" ) ");
+				fd.printf(" ) ");
 			}
 			break;
 			case "PREC_RIGHT": {
-				let non_zero = rule.value != 0;
-				if(non_zero) fd.printf("  >%s( ", rule.value);
+				fd.printf("  >%s( ", rule.value);
 				manageRule(rule.type, rule.content, depth+1);
-				if(non_zero) fd.printf(" ) ");
+				fd.printf(" ) ");
 			}
 			break;
 
@@ -387,7 +396,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		}
 	}
 
-	if( json.externals ) {
+	if( json.externals && json.externals.length ) {
 		fd.printf("\nexternals ::= {");
 		for(var idx in json.externals) {
 			fd.printf("\n\t%s",   json.externals[idx].name);
@@ -395,7 +404,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		fd.printf("\n\t}\n");
 	}
 
-	if( json.extras ) {
+	if( json.extras && json.extras.length ) {
 		fd.printf("\nextras ::= {");
 		for(var idx in json.extras) {
 			let elm =  json.extras[idx];
@@ -414,7 +423,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		fd.printf("\n\t}\n");
 	}
 
-	if( json.precedences && json.precedences.length) {
+	if( json.precedences && json.precedences.length ) {
 		fd.printf("\nprecedences ::= {");
 		for(var idx in json.precedences) {
 			let elm =  json.precedences[idx];
@@ -437,7 +446,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		fd.printf("\n\t}\n");
 	}
 
-	if( json.supertypes ) {
+	if( json.supertypes && json.supertypes.length ) {
 		fd.printf("\nsupertypes ::= {");
 		for(var idx in json.supertypes) {
 			fd.printf("\n\t%s",   json.supertypes[idx]);
@@ -445,7 +454,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		fd.printf("\n\t}\n");
 	}
 
-	if( json.inline ) {
+	if( json.inline && json.inline.length ) {
 		fd.printf("\ninline ::= {");
 		for(var idx in json.inline) {
 			fd.printf("\n\t%s",   json.inline[idx]);
@@ -453,7 +462,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		fd.printf("\n\t}\n");
 	}
 
-	if( json.conflicts ) {
+	if( json.conflicts && json.conflicts.length ) {
 		fd.printf("\nconflicts ::= {");
 		for(var idx in json.conflicts) {
 			fd.printf("\n\t{");
