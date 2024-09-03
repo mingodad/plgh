@@ -82,6 +82,7 @@ const fname_list = [
 	//"tree-sitter-julia/src/grammar.json",
 	//"tree-sitter-kotlin/src/grammar.json",
 	//"tree-sitter-lbnf/src/grammar.json",
+	//"tree-sitter-latex/src/grammar.json",
 	//"tree-sitter-ld/src/grammar.json",
 	//"tree-sitter-lean/src/grammar.json",
 	//"tree-sitter-ledger/src/grammar.json",
@@ -96,7 +97,7 @@ const fname_list = [
 	//"tree-sitter-nim/src/grammar.json",
 	//"tree-sitter-nix/src/grammar.json",
 	//"tree-sitter-objc/src/grammar.json",
-	//"tree-sitter-ocaml/interface/src/grammar.json",
+	"tree-sitter-ocaml/grammars/ocaml/src/grammar.json",
 	//"tree-sitter-ocaml/ocaml/src/grammar.json",
 	//"tree-sitter-perl/src/grammar.json",
 	//"tree-sitter-php/php_only/src/grammar.json",
@@ -124,7 +125,7 @@ const fname_list = [
 	//"tree-sitter-sql/src/grammar.json",
 	//"tree-sitter-stan/src/grammar.json",
 	//"tree-sitter-svelte/src/grammar.json",
-	"tree-sitter-swift/src/grammar.json",
+	//"tree-sitter-swift/src/grammar.json",
 	//"tree-sitter-systemrdl/src/grammar.json",
 	//"tree-sitter-tablegen/src/grammar.json",
 	//"tree-sitter-teal/src/grammar.json",
@@ -135,6 +136,7 @@ const fname_list = [
 	//"tree-sitter-typescript/typescript/src/grammar.json",
 	//"tree-sitter-verilog/src/grammar.json",
 	//"tree-sitter-vhdl/src/grammar.json",
+	//"v-analyzer/tree_sitter_v/src/grammar.json",
 	//"tree-sitter-v/src/grammar.json",
 	//"tree-sitter-vue/src/grammar.json",
 	//"tree-sitter-wasm/wast/src/grammar.json",
@@ -418,7 +420,17 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			let elm =  json.precedences[idx];
 			fd.printf("\n\t{");
 			for(var idx2 in elm) {
-				fd.printf(" %s",   elm[idx2].name);
+				let elm2 = elm[idx2];
+				switch(elm2.type) {
+					case "STRING":
+						fd.printf(" '%s'",  elm2.value);
+					break;
+					case "SYMBOL":
+						fd.printf(" %s",  elm2.name);
+					break;
+					default:
+						fd.printf("\n\t??:%s",  elm2.type);
+				}
 			}
 			fd.printf(" }");
 		}
