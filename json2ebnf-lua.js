@@ -204,7 +204,6 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 	fd.printf(";      https://mingodad.github.io/lua-wasm-playground/\n");
 	fd.printf(";      based on https://github.com/eatkins/tree-sitter-ebnf-generator\n");
 	fd.printf(";      see also https://mingodad.github.io/plgh/json2ebnf.html\n\n");
-	fd.printf(";*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1\n\n");
 
 	let isRuleOptional = function(rule) {
 		let isChoice = rule.type == "CHOICE";
@@ -242,7 +241,16 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				let members = rule.members;
 				let isOptional = isRuleOptional(rule);
 				if(isOptional) {
-					manageRule(rule.type, members[0], depth+1);
+					switch(members[0].type) {
+						case "FIELD":
+						case "ALIAS":
+							fd.printf(" (");
+							manageRule(rule.type, members[0], depth+1);
+							fd.printf(" )");
+						break;
+						default:
+							manageRule(rule.type, members[0], depth+1);
+					}
 				}
 				else
 				{
