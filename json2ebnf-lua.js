@@ -473,7 +473,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		let high_prec = json.precedences.length;
 		for(var idx in json.precedences) {
 			let elm =  json.precedences[idx];
-			fd.printf("\n\t/*%0.2d*/{", high_prec--);
+			fd.printf("\n\t;;%0.2d\n\t{", high_prec--);
 			for(var idx2 in elm) {
 				let elm2 = elm[idx2];
 				switch(elm2.type) {
