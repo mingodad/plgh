@@ -72,7 +72,7 @@ const fname_list = [
 	//"tree-sitter-fennel/src/grammar.json",
 	//"tree-sitter-fortran/src/grammar.json",
 	//"tree-sitter-fsharp/fsharp/src/grammar.json",
-	"tree-sitter-gleam/src/grammar.json",
+	//"tree-sitter-gleam/src/grammar.json",
 	//"tree-sitter-glsl/src/grammar.json",
 	//"tree-sitter-go/src/grammar.json",
 	//"tree-sitter-graphql/src/grammar.json",
@@ -181,7 +181,8 @@ function extractPattern(json) {
 
 function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR)
 {
-	let fd = std.open(fname_base + fname, "r");
+	//let fd = std.open(fname_base + fname, "r");
+	let fd = std.open(fname, "r");
 	let json;
 	try {
 		json = fd.readAsString();
@@ -195,12 +196,12 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 	let out_fname = fname.replace(/\/.+/, ".ebnf");
 	//print(out_fname); return;
 	//fd = std.open(out_fname, "w");
-	fd = std.open("/dev/stdout", "w"); //std.stdout;
+	fd = std.out
 
 	json = JSON.parse(json);
 	//print(json);
-	fd.printf("\n; From %s\n", fname);
-	fd.printf("; EBNF to generate grammar.js at \n");
+	fd.printf("; From %s\n", fname);
+	fd.printf("; EBNF to generate grammar.js at\n");
 	fd.printf(";      https://mingodad.github.io/lua-wasm-playground/\n");
 	fd.printf(";      based on https://github.com/eatkins/tree-sitter-ebnf-generator\n");
 	fd.printf(";      see also https://mingodad.github.io/plgh/json2ebnf.html\n\n");
@@ -228,7 +229,14 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				if(rule.value == '"') fd.printf(" -> '%s'", rule.value);
 				else {
 					if(rule.named) fd.printf(" -> %s", rule.value)
-					else fd.printf(" -> \"%s\"", rule.value);
+					else {
+						let evalue = rule.value.replace("\\", "\\\\");
+						if(evalue == rule.value && evalue.indexOf('"') >= 0) {
+							fd.printf(" -> '%s'", evalue);
+						} else {
+							fd.printf(" -> \"%s\"", evalue);
+						}
+					}
 				}
 			}
 			break;
@@ -258,6 +266,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 					for(var idx in members) {
 						let child = members[idx];
 						let isChildChoice = child.type == "CHOICE";
+						let isOptional = isRuleOptional(child);
 						if(idx > 0) {
 							if((depth <1)) {
 								fd.printf("\n%s%s", INDENT, choice_sep);
@@ -270,6 +279,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 							}
 						}
 						manageRule(rule.type, child, (isChildChoice ? depth : depth+1));
+						if(isOptional) fd.printf("?");
 					}
 				}
 			}
@@ -277,18 +287,27 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 
 			case "FIELD": {
 				//print(rule.type, rule.name);
+				let needGroup = rule.content.hasOwnProperty('members');
 				let isOptional = isRuleOptional(rule.content);
-				fd.printf(" (");
+				if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
+					needGroup = false;
+				}
+				if(rule.content.type == "ALIAS" || rule.content.type == "FIELD") needGroup = true;
+				if(needGroup) fd.printf(" (");
 				manageRule(rule.type, rule.content, depth+1);
-				fd.printf(" )");
+				if(needGroup) fd.printf(" )");
 				if(isOptional) fd.printf("?");
 				fd.printf(":%s", rule.name);
 			}
 			break;
 
 			case "PATTERN": {
-				let value =  rule.value.replaceAll("\t", "\\t");
+				let value =  rule.value.replaceAll("\t", "\\t")
+								  .replaceAll("\r", "\\r")
+								  .replaceAll("\n", "\\n")
+								  .replaceAll("\f", "\\f");
 				fd.printf(" /%s/", value);
+				if(rule.flags) fd.printf("%s", rule.flags);
 			}
 			break;
 
@@ -319,6 +338,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 
 			case "REPEAT": {
 				let needGroup = rule.content.hasOwnProperty('members');
+				if(rule.content.type == "ALIAS" || rule.content.type == "FIELD") needGroup = true;
 				if(needGroup) fd.printf(" (");
 				manageRule(rule.type, rule.content, 1, depth+1);
 				if(needGroup) fd.printf(" )");
@@ -328,6 +348,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 
 			case "REPEAT1": {
 				let needGroup = rule.content.hasOwnProperty('members');
+				if(rule.content.type == "ALIAS" || rule.content.type == "FIELD") needGroup = true;
 				if(needGroup) fd.printf(" (");
 				manageRule(rule.type, rule.content, depth+1);
 				if(needGroup) fd.printf(" )");
@@ -358,18 +379,18 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				let value = rule.value;
 				//print(rule.type, value);
 				switch(value) {
-					case "\0": fd.printf(" '\\0' "); break;
-					case "\b": fd.printf(" '\\b' "); break;
-					case "\f": fd.printf(" '\\f' "); break;
-					case "\n": fd.printf(" '\\n' "); break;
-					case "\r": fd.printf(" '\\r' "); break;
-					case "\t": fd.printf(" '\\t' "); break;
-					case "\v": fd.printf(" '\\v' "); break;
-					case "\\": fd.printf(" '\\\\' "); break;
-					case "'": fd.printf(" \"'\" "); break;
-					case "\"": fd.printf(" '\"' "); break;
+					case "\0": fd.printf(" '\\0'"); break;
+					case "\b": fd.printf(" '\\b'"); break;
+					case "\f": fd.printf(" '\\f'"); break;
+					case "\n": fd.printf(" '\\n'"); break;
+					case "\r": fd.printf(" '\\r'"); break;
+					case "\t": fd.printf(" '\\t'"); break;
+					case "\v": fd.printf(" '\\v'"); break;
+					case "\\": fd.printf(" '\\\\'"); break;
+					case "'": fd.printf(" \"'\""); break;
+					case "\"": fd.printf(" '\"'"); break;
 					default:
-						//value = value.replaceAll(/\\/g, "\\\\");
+						value = value.replaceAll(/\\/g, "\\\\");
 						value = value.replaceAll(/\t/g, "\\t"); //order matter
 						value = value.replaceAll(/\n/g, "\\n"); //order matter
 						value = value.replaceAll(/\r/g, "\\r"); //order matter
@@ -410,7 +431,20 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 	if( json.externals && json.externals.length ) {
 		fd.printf("\nexternals ::= {");
 		for(var idx in json.externals) {
-			fd.printf("\n\t%s",   json.externals[idx].name);
+			let elm = json.externals[idx];
+			switch(elm.type) {
+				case "PATTERN":
+					fd.printf("\n\t/%s/",  elm.value);
+				break;
+				case "STRING":
+					fd.printf("\n\t'%s'",  elm.value);
+				break;
+				case "SYMBOL":
+					fd.printf("\n\t%s",  elm.name);
+				break;
+				default:
+					fd.printf("\n\t??:%s",  elm.type);
+			}
 		}
 		fd.printf("\n\t}\n");
 	}
@@ -422,6 +456,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			switch(elm.type) {
 				case "PATTERN":
 					fd.printf("\n\t/%s/",  elm.value);
+					if(elm.flags) fd.printf("%s", elm.flags);
 				break;
 				case "SYMBOL":
 					fd.printf("\n\t%s",  elm.name);
@@ -429,7 +464,6 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				default:
 					fd.printf("\n\t??:%s",  elm.type);
 			}
-
 		}
 		fd.printf("\n\t}\n");
 	}
@@ -502,6 +536,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 	fd.close();
 }
 
+/*
 for(let idx in fname_list)
 {
 	let fname = fname_list[idx];
@@ -509,4 +544,14 @@ for(let idx in fname_list)
 	parseJsonGrammar(fname, "::=", "|", "", true);
 	//parseJsonGrammar(fname, ":\n\t", "\n\t|", "\n\t;\n", true);
 	//parseJsonGrammar(fname, "<-", "/", false);
+}
+*/
+
+if(scriptArgs.length > 1) {
+	let fname = scriptArgs[1];
+	//print(fname);
+	parseJsonGrammar(fname, "::=", "|", "", true);
+}
+else {
+	std.printf("usage: %s grammar_json_file_name\n", scriptArgs[0]);
 }
