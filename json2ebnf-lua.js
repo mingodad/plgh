@@ -212,6 +212,15 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 		return isOptional;
 	};
 
+	let escapeString = function(str) {
+		let str2 = str.replaceAll("\\", "\\\\");
+		str2 = str2.replaceAll("\t", "\\t");
+		str2 = str2.replaceAll("\r", "\\r");
+		str2 = str2.replaceAll("\n", "\\n");
+		str2 = str2.replaceAll("\f", "\\f");
+		return str2;
+	};
+
 	let manageRule = function (name, rule, depth) {
 		//print(name, rule.type); //, typeof rule);
 		switch(rule.type)
@@ -437,7 +446,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 					fd.printf("\n\t/%s/",  elm.value);
 				break;
 				case "STRING":
-					fd.printf("\n\t'%s'",  elm.value);
+					fd.printf("\n\t'%s'",  escapeString(elm.value));
 				break;
 				case "SYMBOL":
 					fd.printf("\n\t%s",  elm.name);
@@ -461,6 +470,13 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				case "SYMBOL":
 					fd.printf("\n\t%s",  elm.name);
 				break;
+				case "STRING":
+					fd.printf("\n\t'%s'",  escapeString(elm.value));
+				break;
+				case "ALIAS":
+					fd.printf("\n\t");
+					manageRule(elm.type, elm, 0);
+				break;
 				default:
 					fd.printf("\n\t??:%s",  elm.type);
 			}
@@ -478,7 +494,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				let elm2 = elm[idx2];
 				switch(elm2.type) {
 					case "STRING":
-						fd.printf(" '%s'",  elm2.value);
+						fd.printf(" '%s'",  escapeString(elm2.value));
 					break;
 					case "SYMBOL":
 						fd.printf(" %s",  elm2.name);
