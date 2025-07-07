@@ -18,6 +18,7 @@
 		let inString = "";
 		let ch = "";
 		var result = "";
+		//result += "{{" + pattern + "}}";
 		var chAt = function(idx) {if(idx < imax) return pattern[idx]; return null;}
 		var addCh = function(ach) {if(inClass) result += ach; else inString += ach;}
 		var checkAddStr = function() {
@@ -85,7 +86,10 @@
 							case 'v': addCh("#x0B"); i=i2; break;
 							case 'f': addCh("#x0C"); i=i2; break;
 							case 'r': addCh("#x0D"); i=i2; break;
-							case '\\': addCh("\\"); i=i2; break;
+							case '*': //fallthrough
+							case '+': //fallthrough
+							case '?': //fallthrough
+							case '\\': addCh(ch2); i=i2; break;
 							case 's': addClass(" #x09#x0A#x0B#x0C#x0D");i=i2; break;
 							case 'd': addClass("0-9");i=i2; break;
 							case 'w': addClass("a-zA-Z_");i=i2; break;
@@ -144,16 +148,21 @@
 			return isOptional;
 		};
 
+		let doNeedGroup = function(rule, isOptional) {
+			let needGroup = rule.content.hasOwnProperty('members');
+			if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
+				needGroup = false;
+			}
+			return needGroup;
+		};
+
 		let manageRule = function (name, rule, depth) {
-			//print(name, rule.type); //, typeof rule);
+			//result += "{{" + name +":"+ rule.type + "}}"; //, typeof rule);
 			switch(rule.type)
 			{
 				case "ALIAS": {
-					let needGroup = rule.content.hasOwnProperty('members');
 					let isOptional = isRuleOptional(rule.content);
-					if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
-						needGroup = false;
-					}
+					let needGroup = doNeedGroup(rule, isOptional);
 					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
 					if(needGroup) result += " )";
@@ -193,11 +202,8 @@
 
 				case "FIELD": {
 					//print(rule.type, rule.name);
-					let needGroup = rule.content.hasOwnProperty('members');
 					let isOptional = isRuleOptional(rule.content);
-					if(isOptional && !rule.content.members[0].hasOwnProperty('members')) {
-						needGroup = false;
-					}
+					let needGroup = doNeedGroup(rule, isOptional);
 					if(needGroup) result += " (";
 					manageRule(rule.type, rule.content, depth+1);
 					if(needGroup) result += " )";
@@ -266,10 +272,22 @@
 						if(isOptional && !child.members[0].hasOwnProperty('members')) {
 							needGroup = false;
 						}
+						let result_saved = result;
+						result = "";
 						if(needGroup) result += " (";
 						manageRule(rule.type, child, depth+1);
 						if(needGroup) result += " )";
-						if(isOptional) result += "?";
+						if(isOptional) {
+							switch(result[result.length-1]) {
+								case '?':
+								case '*':
+								case '+':
+								result = '(' + result + ')';
+								break;
+							}
+							result += "?";
+						}
+						result = result_saved + result;
 					}
 				}
 				break;
