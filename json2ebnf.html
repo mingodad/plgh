@@ -379,7 +379,7 @@
 						getGramarJson(element_id, lang_raw_url, false);
 					}
 					else {
-						alert("Could not find \"grammar.json\" on default path !");
+						alert("Could not find \"grammar.json\" on default path !\nExpected: '" + lang_raw_url + "'");
 					}
 				}
 				else if(this.status == 200)
