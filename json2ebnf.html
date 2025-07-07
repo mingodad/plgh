@@ -413,7 +413,7 @@
 				let mydiv = document.getElementById( element_id );
 				let txt = this.responseText;
 				let parser_list = txt;
-				const lang_regexp = /- \[([^\]]+)\]\(([^)]+)\)/g;
+				const lang_regexp = /\|\s+(\w\S+)\s+\| \[([^\]]+)\]\(([^)]+)\)/g;
 
 				let match, lang_list = "<option>Select one</option>\n";
 				const https_github_len = "https://github".length;
@@ -423,15 +423,16 @@
 				//https://raw.githubusercontent.com/maxxnino/tree-sitter-zig/main/src/grammar.json
 
 				while ((match = lang_regexp.exec(parser_list)) !== null) {
-					let lang_name = match[1];
-					let lang_url = match[2];
+					let lang_name0 = match[1];
+					let lang_name = match[2];
+					let lang_url = match[3];
 					let author_lang = lang_url.slice(https_github_com_len).replace("/", "_");
 					//https://raw.githubusercontent.com/briot/tree-sitter-ada/master/src/grammar.json
 					//https://raw.githubusercontent.com/tree-sitter/tree-sitter-agda/main/src/grammar.json
 					let lang_raw_url = "https://raw.githubusercontent" + lang_url.slice(https_github_len) + "/master/src/grammar.json";
 					//lang_list += `${lang_name} -> ${lang_url} -> ${lang_raw_url} -> ${author_lang}\n`;
 					//lang_list += `<p><a href="${lang_url}">${lang_name} -> ${author_lang} -> ${lang_raw_url}</a></p>\n`;
-					lang_list += `<option value="${lang_raw_url}">${lang_name} -> ${author_lang}</option>\n`;
+					lang_list += `<option value="${lang_raw_url}">${lang_name0} -> ${author_lang}</option>\n`;
 					//getGramarJson("gramarList2", lang_raw_url, true);
 					//break;
 				}
