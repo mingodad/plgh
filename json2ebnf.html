@@ -262,6 +262,11 @@
 				}
 				break;
 
+				case "RESERVED": {
+					manageRule(rule.type, rule.content, depth+1);
+				}
+				break;
+
 				case "SEQ": {
 					let members = rule.members;
 					for(var idx in members) {
