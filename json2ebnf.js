@@ -31,8 +31,11 @@ const fname_list = [
 	//"tree-sitter-c3-2/src/grammar.json",
 	//"tree-sitter-c3/src/grammar.json",
 	//"tree-sitter-carp/src/grammar.json",
+	//"tree-sitter-carbon/src/grammar.json",
+	"tree-sitter-c/src/grammar.json",
 	//"tree-sitter-c-dad/src/grammar.json",
 	//"tree-sitter-clojure/src/grammar.json",
+	//"tree-sitter-cgsql/src/grammar.json",
 	//"tree-sitter-cmake/src/grammar.json",
 	//"tree-sitter-commonlisp/src/grammar.json",
 	//"tree-sitter-cpp-dad/src/grammar.json",
@@ -64,11 +67,13 @@ const fname_list = [
 	//"tree-sitter-fennel/src/grammar.json",
 	//"tree-sitter-fortran/src/grammar.json",
 	//"tree-sitter-glsl/src/grammar.json",
+	//"tree-sitter-gams/src/grammar.json",
 	//"tree-sitter-go/src/grammar.json",
 	//"tree-sitter-graphql/src/grammar.json",
 	//"tree-sitter-hack/src/grammar.json",
 	//"tree-sitter-hare/src/grammar.json",
 	//"tree-sitter-haskell/src/grammar.json",
+	//"tree-sitter-haxe/src/grammar.json",
 	//"tree-sitter-hcl/dialects/terraform/src/grammar.json",
 	//"tree-sitter-hcl/src/grammar.json",
 	//"tree-sitter-html/src/grammar.json",
@@ -88,6 +93,7 @@ const fname_list = [
 	//"tree-sitter-lua/src/grammar.json",
 	//"tree-sitter-make/src/grammar.json",
 	//"tree-sitter-markdown/src/grammar.json",
+	//"tree-sitter-mathprog-dad/src/grammar.json",
 	//"tree-sitter-menhir/src/grammar.json",
 	//"tree-sitter-minizinc/src/grammar.json",
 	//"tree-sitter-nim2/src/grammar.json",
@@ -107,6 +113,7 @@ const fname_list = [
 	//"tree-sitter-quakec/src/grammar.json",
 	//"tree-sitter-reason/src/grammar.json",
 	//"tree-sitter-regex/src/grammar.json",
+	//"tree-sitter-rell-lang-dad/src/grammar.json",
 	//"tree-sitter-r/src/grammar.json",
 	//"tree-sitter-ruby/src/grammar.json",
 	//"tree-sitter-rust/src/grammar.json",
@@ -123,6 +130,7 @@ const fname_list = [
 	//"tree-sitter-stan/src/grammar.json",
 	//"tree-sitter-svelte/src/grammar.json",
 	//"tree-sitter-swift/src/grammar.json",
+	//"tree-sitter-swift-alex-pinkus/src/grammar.json",
 	//"tree-sitter-systemrdl/src/grammar.json",
 	//"tree-sitter-tablegen/src/grammar.json",
 	//"tree-sitter-teal/src/grammar.json",
@@ -229,7 +237,10 @@ function pattern2ebnf(pattern) {
 						case 'v': addCh("#x0B"); i=i2; break;
 						case 'f': addCh("#x0C"); i=i2; break;
 						case 'r': addCh("#x0D"); i=i2; break;
-						case '\\': addCh("\\"); i=i2; break;
+						case '*': //fallthrough
+						case '+': //fallthrough
+						case '?': //fallthrough
+						case '\\': addCh(ch2); i=i2; break;
 						case 's': addClass(" #x09#x0A#x0B#x0C#x0D");i=i2; break;
 						case 'd': addClass("0-9");i=i2; break;
 						case 'w': addClass("a-zA-Z_");i=i2; break;
@@ -286,7 +297,9 @@ function extractPattern(json) {
 
 function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR)
 {
-	let fd = std.open(fname_base + fname, "r");
+	let json_fname = fname_base + fname;
+	print(json_fname);
+	let fd = std.open(json_fname, "r");
 	let json;
 	try {
 		json = fd.readAsString();
@@ -299,8 +312,8 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 
 	let out_fname = fname.replace(/\/.+/, ".ebnf");
 	//print(out_fname); return;
-	fd = std.open(out_fname, "w");
-	//fd = std.open("/dev/stdout", "w"); //std.stdout;
+	//fd = std.open(out_fname, "w");
+	fd = std.open("/dev/stdout", "w"); //std.stdout;
 
 	json = JSON.parse(json);
 	//print(json);
@@ -397,7 +410,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			case "REPEAT": {
 				let needGroup = rule.content.hasOwnProperty('members');
 				if(needGroup) fd.printf(" (");
-				manageRule(rule.type, rule.content, 1, depth+1);
+				manageRule(rule.type, rule.content, depth+1);
 				if(needGroup) fd.printf(" )");
 				fd.printf("*");
 			}
@@ -423,6 +436,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 					if(isOptional && !child.members[0].hasOwnProperty('members')) {
 						needGroup = false;
 					}
+					//need rethink needGroup, see json2ebnf.html
 					if(needGroup) fd.printf(" (");
 					manageRule(rule.type, child, depth+1);
 					if(needGroup) fd.printf(" )");

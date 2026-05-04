@@ -247,7 +247,7 @@
 				case "REPEAT": {
 					let needGroup = rule.content.hasOwnProperty('members');
 					if(needGroup) result += " (";
-					manageRule(rule.type, rule.content, 1, depth+1);
+					manageRule(rule.type, rule.content, depth+1);
 					if(needGroup) result += " )";
 					result += "*";
 				}

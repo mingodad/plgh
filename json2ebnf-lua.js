@@ -349,7 +349,7 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 				let needGroup = rule.content.hasOwnProperty('members');
 				if(rule.content.type == "ALIAS" || rule.content.type == "FIELD") needGroup = true;
 				if(needGroup) fd.printf(" (");
-				manageRule(rule.type, rule.content, 1, depth+1);
+				manageRule(rule.type, rule.content, depth+1);
 				if(needGroup) fd.printf(" )");
 				fd.printf("*");
 			}
@@ -415,7 +415,6 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			break;
 
 			case "IMMEDIATE_TOKEN": {
-				let needGroup = rule.content.hasOwnProperty('members');
 				fd.printf(" !(");
 				manageRule(rule.type, rule.content, depth+1);
 				fd.printf(" )");
@@ -423,7 +422,6 @@ function parseJsonGrammar(fname, rule_sep, choice_sep, rule_terminator, isEbnfRR
 			break;
 
 			case "TOKEN": {
-				let needGroup = rule.content.hasOwnProperty('members');
 				fd.printf(" @(");
 				manageRule(rule.type, rule.content, depth+1);
 				fd.printf(" )");
